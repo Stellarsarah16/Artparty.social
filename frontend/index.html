@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StellarCollabApp - Collaborative Pixel Art</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading StellarCollabApp...</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-palette"></i>
+                <span>StellarCollabApp</span>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <div class="nav-item">
+                    <button class="nav-link btn-primary" id="login-btn">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                </div>
+                <div class="nav-item">
+                    <button class="nav-link btn-secondary" id="register-btn">
+                        <i class="fas fa-user-plus"></i> Register
+                    </button>
+                </div>
+                <div class="nav-item user-info hidden" id="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span class="username" id="username"></span>
+                    <div class="user-dropdown">
+                        <button class="dropdown-btn" id="profile-btn">
+                            <i class="fas fa-user-cog"></i> Profile
+                        </button>
+                        <button class="dropdown-btn" id="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        
+        <!-- Welcome Section -->
+        <section class="welcome-section" id="welcome-section">
+            <div class="welcome-container">
+                <h1>Welcome to StellarCollabApp</h1>
+                <p>Create, share, and collaborate on pixel art in real-time with artists around the world.</p>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-paint-brush"></i>
+                        <h3>32x32 Pixel Art</h3>
+                        <p>Create detailed pixel art with our intuitive editor</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-users"></i>
+                        <h3>Real-time Collaboration</h3>
+                        <p>See other artists' work appear instantly on shared canvases</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-heart"></i>
+                        <h3>Positive Community</h3>
+                        <p>Support fellow artists with our like-only feedback system</p>
+                    </div>
+                </div>
+                <div class="welcome-actions">
+                    <button class="btn btn-primary btn-large" id="get-started-btn">
+                        <i class="fas fa-rocket"></i> Get Started
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Canvas Selection -->
+        <section class="canvas-section hidden" id="canvas-section">
+            <div class="section-header">
+                <h2>Choose a Canvas</h2>
+                <div class="section-actions">
+                    <button class="btn btn-primary" id="create-canvas-btn">
+                        <i class="fas fa-plus"></i> Create Canvas
+                    </button>
+                    <button class="btn btn-secondary" id="refresh-canvases-btn">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="canvas-grid" id="canvas-grid">
+                <!-- Canvas cards will be dynamically inserted here -->
+            </div>
+        </section>
+
+        <!-- Canvas Editor -->
+        <section class="editor-section hidden" id="editor-section">
+            <div class="editor-header">
+                <div class="editor-title">
+                    <h2 id="canvas-title">Canvas Name</h2>
+                    <div class="canvas-info">
+                        <span id="canvas-users">0 users online</span>
+                        <span id="canvas-dimensions">32x32</span>
+                    </div>
+                </div>
+                <div class="editor-actions">
+                    <button class="btn btn-secondary" id="back-to-canvases-btn">
+                        <i class="fas fa-arrow-left"></i> Back to Canvases
+                    </button>
+                    <button class="btn btn-primary" id="save-tile-btn" disabled>
+                        <i class="fas fa-save"></i> Save Tile
+                    </button>
+                </div>
+            </div>
+            
+            <div class="editor-layout">
+                <!-- Pixel Art Editor -->
+                <div class="editor-panel">
+                    <div class="editor-tools">
+                        <h3>Tools</h3>
+                        <div class="tool-group">
+                            <button class="tool-btn active" id="paint-tool" title="Paint">
+                                <i class="fas fa-paintbrush"></i>
+                            </button>
+                            <button class="tool-btn" id="eraser-tool" title="Eraser">
+                                <i class="fas fa-eraser"></i>
+                            </button>
+                            <button class="tool-btn" id="picker-tool" title="Color Picker">
+                                <i class="fas fa-eye-dropper"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="color-palette">
+                            <h4>Colors</h4>
+                            <div class="color-grid" id="color-palette">
+                                <!-- Color squares will be generated by JavaScript -->
+                            </div>
+                            <div class="custom-color">
+                                <input type="color" id="custom-color-picker" value="#000000">
+                                <label for="custom-color-picker">Custom</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="canvas-container">
+                        <canvas id="pixel-canvas" width="512" height="512"></canvas>
+                        <div class="canvas-overlay">
+                            <div class="position-indicator" id="position-indicator">
+                                Position: (0, 0)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Shared Canvas View -->
+                <div class="shared-panel">
+                    <div class="shared-header">
+                        <h3>Shared Canvas</h3>
+                        <div class="view-controls">
+                            <button class="btn btn-sm" id="zoom-out-btn">
+                                <i class="fas fa-search-minus"></i>
+                            </button>
+                            <span id="zoom-level">100%</span>
+                            <button class="btn btn-sm" id="zoom-in-btn">
+                                <i class="fas fa-search-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="shared-canvas-container">
+                        <canvas id="shared-canvas" width="800" height="600"></canvas>
+                        <div class="mini-map">
+                            <canvas id="mini-map-canvas" width="200" height="150"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="online-users">
+                        <h4>Online Users</h4>
+                        <div class="user-list" id="online-users-list">
+                            <!-- Online users will be shown here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tile Gallery -->
+        <section class="gallery-section hidden" id="gallery-section">
+            <div class="section-header">
+                <h2>Your Tiles</h2>
+                <div class="gallery-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="liked">Most Liked</button>
+                    <button class="filter-btn" data-filter="recent">Recent</button>
+                </div>
+            </div>
+            <div class="tile-grid" id="tile-grid">
+                <!-- Tile cards will be dynamically inserted here -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modals -->
+    
+    <!-- Login Modal -->
+    <div class="modal" id="login-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Login</h3>
+                <button class="close-btn" id="close-login-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="register-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Register</h3>
+                <button class="close-btn" id="close-register-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-username">Username</label>
+                    <input type="text" id="register-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-display-name">Display Name (Optional)</label>
+                    <input type="text" id="register-display-name">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Register</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Canvas Modal -->
+    <div class="modal" id="create-canvas-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Canvas</h3>
+                <button class="close-btn" id="close-create-canvas-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="create-canvas-form">
+                <div class="form-group">
+                    <label for="canvas-name">Canvas Name</label>
+                    <input type="text" id="canvas-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="canvas-description">Description</label>
+                    <textarea id="canvas-description" rows="3"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="canvas-width">Width</label>
+                        <select id="canvas-width">
+                            <option value="1024">1024px</option>
+                            <option value="2048">2048px</option>
+                            <option value="4096">4096px</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="canvas-height">Height</label>
+                        <select id="canvas-height">
+                            <option value="1024">1024px</option>
+                            <option value="2048">2048px</option>
+                            <option value="4096">4096px</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="max-tiles">Max Tiles per User</label>
+                    <input type="number" id="max-tiles" min="1" max="100" value="10">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="canvas-public" checked>
+                        Make this canvas public
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Create Canvas</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast">
+        <div class="toast-content">
+            <i class="toast-icon"></i>
+            <span class="toast-message"></span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/canvas.js"></script>
+    <script src="js/pixel-editor.js"></script>
+    <script src="js/websocket.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html> 

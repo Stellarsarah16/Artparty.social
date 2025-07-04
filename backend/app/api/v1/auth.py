@@ -15,7 +15,7 @@ router = APIRouter()
 security = HTTPBearer()
 
 
-@router.post("/register", response_model=Dict[str, Any])
+@router.post("/register", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED)
 async def register(user_create: UserCreate, db: Session = Depends(get_db)):
     """Register a new user account"""
     try:

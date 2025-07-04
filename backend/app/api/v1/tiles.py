@@ -1,12 +1,13 @@
 """
 Tiles management endpoints
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from ...core.database import get_db
+from ...core.websocket import connection_manager
 from ...services.auth import auth_service
 from ...models.user import User
 from ...models.canvas import Canvas
@@ -28,7 +29,7 @@ async def get_current_user_dependency(
     return auth_service.get_current_user(db, token)
 
 
-@router.post("/", response_model=Dict[str, Any])
+@router.post("/", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED)
 async def create_tile(
     tile_create: TileCreate,
     current_user: User = Depends(get_current_user_dependency),
@@ -98,6 +99,23 @@ async def create_tile(
         # Update user stats
         setattr(current_user, 'tiles_created', current_user.tiles_created + 1)
         db.commit()
+        
+        # Broadcast tile creation to WebSocket clients
+        tile_data = {
+            "id": tile.id,
+            "canvas_id": tile.canvas_id,
+            "creator_id": tile.creator_id,
+            "x": tile.x,
+            "y": tile.y,
+            "pixel_data": tile.pixel_data,
+            "title": tile.title,
+            "description": tile.description,
+            "is_public": tile.is_public,
+            "like_count": tile.like_count,
+            "created_at": tile.created_at.isoformat(),
+            "updated_at": tile.updated_at.isoformat() if tile.updated_at else None
+        }
+        await connection_manager.broadcast_tile_created(tile.canvas_id, tile_data, current_user.id)
         
         return {
             "message": "Tile created successfully",

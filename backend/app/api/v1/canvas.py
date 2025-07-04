@@ -80,7 +80,7 @@ async def get_canvas_details(
     )
 
 
-@router.post("/", response_model=Dict[str, Any])
+@router.post("/", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED)
 async def create_canvas(
     canvas_create: CanvasCreate,
     current_user: User = Depends(get_current_user_dependency),
