@@ -22,10 +22,20 @@ class Settings(BaseSettings):
     POSTGRES_PORT: str = "5432"
     DATABASE_URL: Optional[str] = None
     
+    # Use SQLite for development if PostgreSQL is not available
+    USE_SQLITE: bool = True
+    SQLITE_DB_PATH: str = "./pixel_canvas.db"
+    
     @validator("DATABASE_URL", pre=True)
     def assemble_db_connection(cls, v: Optional[str], values: dict) -> str:
         if isinstance(v, str):
             return v
+        
+        # Use SQLite for development if enabled
+        if values.get("USE_SQLITE", True):
+            return f"sqlite:///{values.get('SQLITE_DB_PATH', './pixel_canvas.db')}"
+        
+        # Otherwise use PostgreSQL
         return (
             f"postgresql://{values.get('POSTGRES_USER')}:"
             f"{values.get('POSTGRES_PASSWORD')}@"
@@ -34,11 +44,12 @@ class Settings(BaseSettings):
             f"{values.get('POSTGRES_DB')}"
         )
     
-    # Redis
+    # Redis - Use in-memory fallback if Redis not available
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
     REDIS_URL: Optional[str] = None
+    USE_REDIS: bool = False  # Disable Redis for now
     
     @validator("REDIS_URL", pre=True)
     def assemble_redis_connection(cls, v: Optional[str], values: dict) -> str:
