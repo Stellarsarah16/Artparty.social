@@ -16,80 +16,87 @@ let appState = {
     isLoading: false
 };
 
-// DOM elements
-const elements = {
-    // Loading
-    loadingScreen: document.getElementById('loading-screen'),
-    
-    // Navigation
-    navbar: document.getElementById('navbar'),
-    loginBtn: document.getElementById('login-btn'),
-    registerBtn: document.getElementById('register-btn'),
-    userInfo: document.getElementById('user-info'),
-    username: document.getElementById('username'),
-    profileBtn: document.getElementById('profile-btn'),
-    logoutBtn: document.getElementById('logout-btn'),
-    
-    // Sections
-    welcomeSection: document.getElementById('welcome-section'),
-    canvasSection: document.getElementById('canvas-section'),
-    editorSection: document.getElementById('editor-section'),
-    gallerySection: document.getElementById('gallery-section'),
-    
-    // Welcome
-    getStartedBtn: document.getElementById('get-started-btn'),
-    
-    // Canvas
-    createCanvasBtn: document.getElementById('create-canvas-btn'),
-    refreshCanvasesBtn: document.getElementById('refresh-canvases-btn'),
-    canvasGrid: document.getElementById('canvas-grid'),
-    
-    // Editor
-    canvasTitle: document.getElementById('canvas-title'),
-    canvasUsers: document.getElementById('canvas-users'),
-    canvasDimensions: document.getElementById('canvas-dimensions'),
-    backToCanvasesBtn: document.getElementById('back-to-canvases-btn'),
-    saveTileBtn: document.getElementById('save-tile-btn'),
-    
-    // Tools
-    paintTool: document.getElementById('paint-tool'),
-    eraserTool: document.getElementById('eraser-tool'),
-    pickerTool: document.getElementById('picker-tool'),
-    colorPalette: document.getElementById('color-palette'),
-    customColorPicker: document.getElementById('custom-color-picker'),
-    
-    // Canvas
-    pixelCanvas: document.getElementById('pixel-canvas'),
-    sharedCanvas: document.getElementById('shared-canvas'),
-    miniMapCanvas: document.getElementById('mini-map-canvas'),
-    positionIndicator: document.getElementById('position-indicator'),
-    
-    // Zoom controls
-    zoomOutBtn: document.getElementById('zoom-out-btn'),
-    zoomInBtn: document.getElementById('zoom-in-btn'),
-    zoomLevel: document.getElementById('zoom-level'),
-    
-    // Online users
-    onlineUsersList: document.getElementById('online-users-list'),
-    
-    // Modals
-    loginModal: document.getElementById('login-modal'),
-    registerModal: document.getElementById('register-modal'),
-    createCanvasModal: document.getElementById('create-canvas-modal'),
-    
-    // Modal controls
-    closeLoginModal: document.getElementById('close-login-modal'),
-    closeRegisterModal: document.getElementById('close-register-modal'),
-    closeCreateCanvasModal: document.getElementById('close-create-canvas-modal'),
-    
-    // Forms
-    loginForm: document.getElementById('login-form'),
-    registerForm: document.getElementById('register-form'),
-    createCanvasForm: document.getElementById('create-canvas-form'),
-    
-    // Toast
-    toast: document.getElementById('toast')
-};
+// DOM elements (initialized after DOM is ready)
+let elements = {};
+
+/**
+ * Initialize DOM elements after DOM is ready
+ */
+function initializeElements() {
+    elements = {
+        // Loading
+        loadingScreen: document.getElementById('loading-screen'),
+        
+        // Navigation
+        navbar: document.getElementById('navbar'),
+        loginBtn: document.getElementById('login-btn'),
+        registerBtn: document.getElementById('register-btn'),
+        userInfo: document.getElementById('user-info'),
+        username: document.getElementById('username'),
+        profileBtn: document.getElementById('profile-btn'),
+        logoutBtn: document.getElementById('logout-btn'),
+        
+        // Sections
+        welcomeSection: document.getElementById('welcome-section'),
+        canvasSection: document.getElementById('canvas-section'),
+        editorSection: document.getElementById('editor-section'),
+        gallerySection: document.getElementById('gallery-section'),
+        
+        // Welcome
+        getStartedBtn: document.getElementById('get-started-btn'),
+        
+        // Canvas
+        createCanvasBtn: document.getElementById('create-canvas-btn'),
+        refreshCanvasesBtn: document.getElementById('refresh-canvases-btn'),
+        canvasGrid: document.getElementById('canvas-grid'),
+        
+        // Editor
+        canvasTitle: document.getElementById('canvas-title'),
+        canvasUsers: document.getElementById('canvas-users'),
+        canvasDimensions: document.getElementById('canvas-dimensions'),
+        backToCanvasesBtn: document.getElementById('back-to-canvases-btn'),
+        saveTileBtn: document.getElementById('save-tile-btn'),
+        
+        // Tools
+        paintTool: document.getElementById('paint-tool'),
+        eraserTool: document.getElementById('eraser-tool'),
+        pickerTool: document.getElementById('picker-tool'),
+        colorPalette: document.getElementById('color-palette'),
+        customColorPicker: document.getElementById('custom-color-picker'),
+        
+        // Canvas
+        pixelCanvas: document.getElementById('pixel-canvas'),
+        sharedCanvas: document.getElementById('shared-canvas'),
+        miniMapCanvas: document.getElementById('mini-map-canvas'),
+        positionIndicator: document.getElementById('position-indicator'),
+        
+        // Zoom controls
+        zoomOutBtn: document.getElementById('zoom-out-btn'),
+        zoomInBtn: document.getElementById('zoom-in-btn'),
+        zoomLevel: document.getElementById('zoom-level'),
+        
+        // Online users
+        onlineUsersList: document.getElementById('online-users-list'),
+        
+        // Modals
+        loginModal: document.getElementById('login-modal'),
+        registerModal: document.getElementById('register-modal'),
+        createCanvasModal: document.getElementById('create-canvas-modal'),
+        
+        // Modal controls
+        closeLoginModal: document.getElementById('close-login-modal'),
+        closeRegisterModal: document.getElementById('close-register-modal'),
+        closeCreateCanvasModal: document.getElementById('close-create-canvas-modal'),
+        
+        // Forms
+        loginForm: document.getElementById('login-form'),
+        registerForm: document.getElementById('register-form'),
+        createCanvasForm: document.getElementById('create-canvas-form'),
+        
+        // Toast
+        toast: document.getElementById('toast')
+    };
+}
 
 /**
  * Initialize the application
@@ -98,6 +105,9 @@ async function initializeApp() {
     console.log('🚀 Initializing StellarCollabApp...');
     
     try {
+        // Initialize DOM elements first
+        initializeElements();
+        
         // Check authentication status
         if (CONFIG_UTILS.isAuthenticated()) {
             const userData = CONFIG_UTILS.getUserData();
