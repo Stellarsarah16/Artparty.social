@@ -860,11 +860,34 @@ function handleSaveTile() {
     showToast('Tile saved successfully!', 'success');
 }
 
-function handleCreateCanvas(e) {
+async function handleCreateCanvas(e) {
     e.preventDefault();
-    console.log('Create canvas form submitted');
-    hideModal('create-canvas');
-    showToast('Canvas created successfully!', 'success');
+    
+    const formData = new FormData(e.target);
+    const canvasData = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        width: parseInt(formData.get('width')) || 1024,
+        height: parseInt(formData.get('height')) || 1024,
+        tile_size: parseInt(formData.get('tile_size')) || 32,
+        max_tiles_per_user: parseInt(formData.get('max_tiles_per_user')) || 5
+    };
+    
+    try {
+        const response = await API.canvas.create(canvasData);
+        
+        // Check if response is successful (might be different structure)
+        if (response && !response.error) {
+            hideModal('create-canvas');
+            showToast('Canvas created successfully!', 'success');
+            await loadCanvases(); // Reload the canvas list
+        } else {
+            showToast('Failed to create canvas', 'error');
+        }
+    } catch (error) {
+        console.error('Create canvas error:', error);
+        showToast('Failed to create canvas', 'error');
+    }
 }
 
 function adjustZoom(delta) {

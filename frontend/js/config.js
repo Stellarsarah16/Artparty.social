@@ -5,7 +5,7 @@
 // API Configuration
 const API_CONFIG = {
     // Base URL for API calls
-    BASE_URL: 'http://127.0.0.1:8000',
+    BASE_URL: 'http://104.248.124.8:8000',
     
     // API endpoints
     ENDPOINTS: {
@@ -48,7 +48,7 @@ const API_CONFIG = {
 // WebSocket Configuration
 const WS_CONFIG = {
     // WebSocket URL
-    BASE_URL: 'ws://127.0.0.1:8000',
+    BASE_URL: 'ws://104.248.124.8:8000',
     
     // Connection settings
     RECONNECT_ATTEMPTS: 5,
