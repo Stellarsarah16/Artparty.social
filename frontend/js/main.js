@@ -102,7 +102,7 @@ function initializeElements() {
  * Initialize the application
  */
 async function initializeApp() {
-    console.log('🚀 Initializing StellarCollabApp...');
+    console.log('🚀 Initializing StellarArtCollab...');
     
     try {
         // Initialize DOM elements first
@@ -393,25 +393,38 @@ async function handleLogin(e) {
 }
 
 /**
- * Handle register form submission
- * @param {Event} e - Form submission event
+ * Handle user registration
  */
 async function handleRegister(e) {
     e.preventDefault();
     
-    const formData = new FormData(e.target);
-    const username = formData.get('username') || document.getElementById('register-username').value;
-    const email = formData.get('email') || document.getElementById('register-email').value;
-    const password = formData.get('password') || document.getElementById('register-password').value;
-    const displayName = formData.get('display_name') || document.getElementById('register-display-name').value;
+    // Clear previous errors
+    clearFormErrors('register-form');
     
-    if (!username || !email || !password) {
-        showToast('Please fill in all required fields', 'error');
+    const formData = new FormData(e.target);
+    const username = (formData.get('username') || document.getElementById('register-username').value || '').trim();
+    const email = (formData.get('email') || document.getElementById('register-email').value || '').trim();
+    const firstName = (formData.get('first_name') || document.getElementById('register-first-name').value || '').trim();
+    const lastName = (formData.get('last_name') || document.getElementById('register-last-name').value || '').trim();
+    const password = formData.get('password') || document.getElementById('register-password').value || '';
+    const confirmPassword = formData.get('confirm_password') || document.getElementById('register-confirm-password').value || '';
+    
+    // Client-side validation
+    const validationErrors = validateRegistrationForm({
+        username, email, firstName, lastName, password, confirmPassword
+    });
+    
+    if (validationErrors.length > 0) {
+        displayFormErrors(validationErrors);
         return;
     }
     
+    // Disable form during submission
+    const submitButton = document.querySelector('#register-form button[type="submit"]');
+    const originalButtonText = submitButton.textContent;
+    setFormLoading(true, submitButton, 'Creating Account...');
+    
     try {
-        showLoading();
         const response = await fetch(CONFIG_UTILS.getApiUrl(API_CONFIG.ENDPOINTS.REGISTER), {
             method: 'POST',
             headers: {
@@ -421,7 +434,8 @@ async function handleRegister(e) {
                 username, 
                 email, 
                 password, 
-                display_name: displayName || null
+                first_name: firstName,
+                last_name: lastName
             })
         });
         
@@ -442,15 +456,214 @@ async function handleRegister(e) {
             showSection('canvas');
             await loadCanvases();
             
-            showToast(APP_CONFIG.SUCCESS.REGISTER, 'success');
+            showToast(`Welcome, ${data.user.first_name}! Your account has been created successfully.`, 'success');
         } else {
-            showToast(data.detail || 'Registration failed', 'error');
+            handleRegistrationError(response.status, data);
         }
     } catch (error) {
         console.error('Registration error:', error);
-        showToast(APP_CONFIG.ERRORS.NETWORK_ERROR, 'error');
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            showToast('Unable to connect to the server. Please check your internet connection and try again.', 'error');
+        } else {
+            showToast('An unexpected error occurred. Please try again later.', 'error');
+        }
     } finally {
-        hideLoading();
+        setFormLoading(false, submitButton, originalButtonText);
+    }
+}
+
+/**
+ * Validate registration form data
+ */
+function validateRegistrationForm(data) {
+    const errors = [];
+    
+    // Username validation
+    if (!data.username) {
+        errors.push({ field: 'username', message: 'Username is required' });
+    } else if (data.username.length < 3) {
+        errors.push({ field: 'username', message: 'Username must be at least 3 characters long' });
+    } else if (data.username.length > 50) {
+        errors.push({ field: 'username', message: 'Username must be less than 50 characters' });
+    } else if (!/^[a-zA-Z0-9_]+$/.test(data.username)) {
+        errors.push({ field: 'username', message: 'Username can only contain letters, numbers, and underscores' });
+    }
+    
+    // Email validation
+    if (!data.email) {
+        errors.push({ field: 'email', message: 'Email is required' });
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+        errors.push({ field: 'email', message: 'Please enter a valid email address' });
+    } else if (data.email.length > 100) {
+        errors.push({ field: 'email', message: 'Email address is too long' });
+    }
+    
+    // First name validation
+    if (!data.firstName) {
+        errors.push({ field: 'first_name', message: 'First name is required' });
+    } else if (data.firstName.length > 50) {
+        errors.push({ field: 'first_name', message: 'First name must be less than 50 characters' });
+    } else if (!/^[a-zA-Z\s\-']+$/.test(data.firstName)) {
+        errors.push({ field: 'first_name', message: 'First name can only contain letters, spaces, hyphens, and apostrophes' });
+    }
+    
+    // Last name validation
+    if (!data.lastName) {
+        errors.push({ field: 'last_name', message: 'Last name is required' });
+    } else if (data.lastName.length > 50) {
+        errors.push({ field: 'last_name', message: 'Last name must be less than 50 characters' });
+    } else if (!/^[a-zA-Z\s\-']+$/.test(data.lastName)) {
+        errors.push({ field: 'last_name', message: 'Last name can only contain letters, spaces, hyphens, and apostrophes' });
+    }
+    
+    // Password validation
+    if (!data.password) {
+        errors.push({ field: 'password', message: 'Password is required' });
+    } else if (data.password.length < 8) {
+        errors.push({ field: 'password', message: 'Password must be at least 8 characters long' });
+    } else if (data.password.length > 128) {
+        errors.push({ field: 'password', message: 'Password is too long (maximum 128 characters)' });
+    } else {
+        // Check password strength
+        if (!/[a-z]/.test(data.password)) {
+            errors.push({ field: 'password', message: 'Password must contain at least one lowercase letter' });
+        }
+        if (!/[A-Z0-9]/.test(data.password)) {
+            errors.push({ field: 'password', message: 'Password must contain at least one uppercase letter or number' });
+        }
+        const weakPasswords = ['password', '12345678', 'qwerty123', 'abc12345'];
+        if (weakPasswords.includes(data.password.toLowerCase())) {
+            errors.push({ field: 'password', message: 'Password is too common, please choose a stronger password' });
+        }
+    }
+    
+    // Confirm password validation
+    if (!data.confirmPassword) {
+        errors.push({ field: 'confirm_password', message: 'Please confirm your password' });
+    } else if (data.password !== data.confirmPassword) {
+        errors.push({ field: 'confirm_password', message: 'Passwords do not match' });
+    }
+    
+    return errors;
+}
+
+/**
+ * Handle registration error responses
+ */
+function handleRegistrationError(status, data) {
+    let errorMessage = 'Registration failed';
+    
+    switch (status) {
+        case 400:
+            errorMessage = data.detail || 'Invalid registration data';
+            break;
+        case 422:
+            // Handle validation errors
+            if (data.detail && Array.isArray(data.detail)) {
+                const fieldErrors = data.detail.map(error => ({
+                    field: error.loc[error.loc.length - 1],
+                    message: error.msg
+                }));
+                displayFormErrors(fieldErrors);
+                return;
+            } else if (data.detail && typeof data.detail === 'string') {
+                errorMessage = data.detail;
+            } else {
+                errorMessage = 'Please check your form data and try again';
+            }
+            break;
+        case 409:
+            errorMessage = 'Username or email already exists';
+            break;
+        case 429:
+            errorMessage = 'Too many registration attempts. Please try again later.';
+            break;
+        case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+        default:
+            errorMessage = data.detail || `Registration failed (Error ${status})`;
+    }
+    
+    showToast(errorMessage, 'error');
+}
+
+/**
+ * Display form validation errors
+ */
+function displayFormErrors(errors) {
+    errors.forEach(error => {
+        const field = document.getElementById(`register-${error.field.replace('_', '-')}`);
+        if (field) {
+            showFieldError(field, error.message);
+        }
+    });
+    
+    // Show general error message if multiple fields have errors
+    if (errors.length > 1) {
+        showToast('Please correct the errors in the form', 'error');
+    }
+}
+
+/**
+ * Show error for specific field
+ */
+function showFieldError(field, message) {
+    // Remove existing error
+    clearFieldError(field);
+    
+    // Add error class
+    field.classList.add('error');
+    
+    // Create error message element
+    const errorElement = document.createElement('div');
+    errorElement.className = 'field-error';
+    errorElement.textContent = message;
+    
+    // Insert error message after the field
+    field.parentNode.insertBefore(errorElement, field.nextSibling);
+}
+
+/**
+ * Clear error for specific field
+ */
+function clearFieldError(field) {
+    field.classList.remove('error');
+    const errorElement = field.parentNode.querySelector('.field-error');
+    if (errorElement) {
+        errorElement.remove();
+    }
+}
+
+/**
+ * Clear all form errors
+ */
+function clearFormErrors(formId) {
+    const form = document.getElementById(formId);
+    if (form) {
+        form.querySelectorAll('.error').forEach(field => {
+            field.classList.remove('error');
+        });
+        form.querySelectorAll('.field-error').forEach(errorElement => {
+            errorElement.remove();
+        });
+    }
+}
+
+/**
+ * Set form loading state
+ */
+function setFormLoading(isLoading, submitButton, loadingText) {
+    const form = submitButton.closest('form');
+    const inputs = form.querySelectorAll('input, button');
+    
+    if (isLoading) {
+        inputs.forEach(input => input.disabled = true);
+        submitButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${loadingText}`;
+        submitButton.classList.add('loading');
+    } else {
+        inputs.forEach(input => input.disabled = false);
+        submitButton.classList.remove('loading');
     }
 }
 
@@ -936,7 +1149,7 @@ function handleTileUnliked(message) {
 document.addEventListener('DOMContentLoaded', initializeApp);
 
 // Export for other modules
-window.StellarCollabApp = {
+window.StellarArtCollab = {
     appState,
     elements,
     showSection,

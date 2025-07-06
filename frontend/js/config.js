@@ -1,11 +1,11 @@
 /**
- * Configuration for StellarCollabApp Frontend
+ * Configuration for StellarArtCollab Frontend
  */
 
 // API Configuration
 const API_CONFIG = {
     // Base URL for API calls
-    BASE_URL: 'http://104.248.124.8:8000',
+    BASE_URL: 'http://localhost:8000',
     
     // API endpoints
     ENDPOINTS: {
@@ -48,7 +48,7 @@ const API_CONFIG = {
 // WebSocket Configuration
 const WS_CONFIG = {
     // WebSocket URL
-    BASE_URL: 'ws://104.248.124.8:8000',
+    BASE_URL: 'ws://localhost:8000',
     
     // Connection settings
     RECONNECT_ATTEMPTS: 5,
@@ -80,7 +80,7 @@ const WS_CONFIG = {
 // Application Configuration
 const APP_CONFIG = {
     // Application info
-    NAME: 'StellarCollabApp',
+    NAME: 'StellarArtCollab',
     VERSION: '1.0.0',
     DESCRIPTION: 'Collaborative Pixel Art Platform',
     
@@ -130,10 +130,10 @@ const APP_CONFIG = {
     
     // Storage keys
     STORAGE: {
-        AUTH_TOKEN: 'stellarcollab_auth_token',
-        USER_DATA: 'stellarcollab_user_data',
-        THEME: 'stellarcollab_theme',
-        PREFERENCES: 'stellarcollab_preferences'
+        AUTH_TOKEN: 'stellarartcollab_auth_token',
+        USER_DATA: 'stellarartcollab_user_data',
+        THEME: 'stellarartcollab_theme',
+        PREFERENCES: 'stellarartcollab_preferences'
     },
     
     // Error messages

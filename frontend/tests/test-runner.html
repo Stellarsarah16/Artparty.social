@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StellarCollabApp Frontend Tests</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-results {
+            margin: 10px 0;
+        }
+        .test-pass {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .test-fail {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .test-summary {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #28a745;
+            transition: width 0.3s;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #test-output {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #f8f9fa;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 StellarCollabApp Frontend Tests</h1>
+        <p>Testing frontend JavaScript functionality</p>
+        
+        <div class="test-controls">
+            <button onclick="runAllTests()">▶️ Run All Tests</button>
+            <button onclick="runConfigTests()">⚙️ Config Tests</button>
+            <button onclick="runApiTests()">🌐 API Tests</button>
+            <button onclick="runUiTests()">🖼️ UI Tests</button>
+            <button onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+
+        <div class="test-summary" id="test-summary">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+            <p id="summary-text">Ready to run tests</p>
+        </div>
+
+        <div id="test-output"></div>
+    </div>
+
+    <!-- Load the application scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/ui.js"></script>
+
+    <script>
+        // Simple test framework
+        class TestRunner {
+            constructor() {
+                this.tests = [];
+                this.results = [];
+                this.output = document.getElementById('test-output');
+                this.summaryText = document.getElementById('summary-text');
+                this.progressFill = document.getElementById('progress-fill');
+            }
+
+            test(name, testFn) {
+                this.tests.push({ name, testFn });
+            }
+
+            async runTests() {
+                this.results = [];
+                this.clearOutput();
+                
+                for (let i = 0; i < this.tests.length; i++) {
+                    const test = this.tests[i];
+                    this.log(`🧪 Running: ${test.name}`);
+                    
+                    try {
+                        await test.testFn();
+                        this.results.push({ name: test.name, passed: true });
+                        this.log(`✅ PASS: ${test.name}`, 'test-pass');
+                    } catch (error) {
+                        this.results.push({ name: test.name, passed: false, error: error.message });
+                        this.log(`❌ FAIL: ${test.name} - ${error.message}`, 'test-fail');
+                    }
+                    
+                    // Update progress
+                    const progress = ((i + 1) / this.tests.length) * 100;
+                    this.progressFill.style.width = `${progress}%`;
+                }
+                
+                this.showSummary();
+            }
+
+            log(message, className = '') {
+                const div = document.createElement('div');
+                div.textContent = message;
+                if (className) div.className = className;
+                this.output.appendChild(div);
+                this.output.scrollTop = this.output.scrollHeight;
+            }
+
+            clearOutput() {
+                this.output.innerHTML = '';
+            }
+
+            showSummary() {
+                const passed = this.results.filter(r => r.passed).length;
+                const total = this.results.length;
+                const percentage = total > 0 ? Math.round((passed / total) * 100) : 0;
+                
+                this.summaryText.innerHTML = `
+                    <strong>Test Results:</strong> ${passed}/${total} passed (${percentage}%)
+                    ${passed === total ? '🎉 All tests passed!' : '⚠️ Some tests failed'}
+                `;
+                
+                this.progressFill.style.backgroundColor = passed === total ? '#28a745' : '#dc3545';
+            }
+
+            assert(condition, message = 'Assertion failed') {
+                if (!condition) {
+                    throw new Error(message);
+                }
+            }
+
+            assertEqual(actual, expected, message = '') {
+                if (actual !== expected) {
+                    throw new Error(`${message} Expected: ${expected}, Got: ${actual}`);
+                }
+            }
+
+            assertExists(value, message = 'Value should exist') {
+                if (value === null || value === undefined) {
+                    throw new Error(message);
+                }
+            }
+        }
+
+        const testRunner = new TestRunner();
+
+        // Config Tests
+        testRunner.test('Config object exists', () => {
+            testRunner.assertExists(window.CONFIG, 'CONFIG object should be defined');
+        });
+
+        testRunner.test('Config has required properties', () => {
+            testRunner.assertExists(CONFIG.API_BASE_URL, 'API_BASE_URL should be defined');
+            testRunner.assertExists(CONFIG.WS_BASE_URL, 'WS_BASE_URL should be defined');
+            testRunner.assert(typeof CONFIG.API_BASE_URL === 'string', 'API_BASE_URL should be a string');
+        });
+
+        // API Tests
+        testRunner.test('API object exists', () => {
+            testRunner.assertExists(window.API, 'API object should be defined');
+        });
+
+        testRunner.test('API has required methods', () => {
+            const requiredMethods = ['register', 'login', 'logout', 'getCanvases', 'createCanvas'];
+            requiredMethods.forEach(method => {
+                testRunner.assert(typeof API[method] === 'function', `API.${method} should be a function`);
+            });
+        });
+
+        testRunner.test('API.buildUrl works correctly', () => {
+            if (typeof API.buildUrl === 'function') {
+                const url = API.buildUrl('/test');
+                testRunner.assert(url.includes('/test'), 'buildUrl should include the endpoint');
+            }
+        });
+
+        // Local Storage Tests
+        testRunner.test('LocalStorage token management', () => {
+            // Mock localStorage for testing
+            const originalLocalStorage = window.localStorage;
+            const mockStorage = {
+                store: {},
+                getItem: function(key) { return this.store[key] || null; },
+                setItem: function(key, value) { this.store[key] = value; },
+                removeItem: function(key) { delete this.store[key]; },
+                clear: function() { this.store = {}; }
+            };
+            Object.defineProperty(window, 'localStorage', { value: mockStorage });
+
+            // Test token operations
+            if (typeof API.setToken === 'function') {
+                API.setToken('test-token');
+                testRunner.assertEqual(localStorage.getItem('auth_token'), 'test-token', 'Token should be stored');
+            }
+
+            if (typeof API.getToken === 'function') {
+                const token = API.getToken();
+                testRunner.assertEqual(token, 'test-token', 'Token should be retrieved');
+            }
+
+            if (typeof API.clearToken === 'function') {
+                API.clearToken();
+                testRunner.assertEqual(localStorage.getItem('auth_token'), null, 'Token should be cleared');
+            }
+
+            // Restore original localStorage
+            Object.defineProperty(window, 'localStorage', { value: originalLocalStorage });
+        });
+
+        // UI Tests
+        testRunner.test('UI object exists', () => {
+            testRunner.assertExists(window.UI, 'UI object should be defined');
+        });
+
+        testRunner.test('DOM manipulation functions exist', () => {
+            const expectedFunctions = ['showSection', 'hideSection', 'showLoading', 'hideLoading'];
+            expectedFunctions.forEach(func => {
+                if (UI[func]) {
+                    testRunner.assert(typeof UI[func] === 'function', `UI.${func} should be a function`);
+                }
+            });
+        });
+
+        // Element Creation Tests
+        testRunner.test('Create DOM elements', () => {
+            const div = document.createElement('div');
+            div.id = 'test-element';
+            div.textContent = 'Test';
+            
+            testRunner.assertExists(div, 'Should be able to create DOM elements');
+            testRunner.assertEqual(div.id, 'test-element', 'Element should have correct ID');
+            testRunner.assertEqual(div.textContent, 'Test', 'Element should have correct text');
+        });
+
+        // Canvas Tests
+        testRunner.test('Canvas creation', () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            
+            testRunner.assertExists(canvas, 'Should be able to create canvas element');
+            testRunner.assertEqual(canvas.width, 32, 'Canvas should have correct width');
+            testRunner.assertEqual(canvas.height, 32, 'Canvas should have correct height');
+            
+            const ctx = canvas.getContext('2d');
+            testRunner.assertExists(ctx, 'Should be able to get 2D context');
+        });
+
+        // Color validation tests
+        testRunner.test('Color validation', () => {
+            // Test hex color validation
+            const validColors = ['#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff'];
+            const invalidColors = ['#gggggg', 'not-a-color', '123456', '#ff'];
+            
+            validColors.forEach(color => {
+                const isValid = /^#[0-9A-F]{6}$/i.test(color);
+                testRunner.assert(isValid, `${color} should be a valid hex color`);
+            });
+            
+            invalidColors.forEach(color => {
+                const isValid = /^#[0-9A-F]{6}$/i.test(color);
+                testRunner.assert(!isValid, `${color} should be an invalid hex color`);
+            });
+        });
+
+        // WebSocket mock test
+        testRunner.test('WebSocket functionality', () => {
+            // Create a mock WebSocket
+            const mockWS = {
+                readyState: 1, // OPEN
+                send: function(data) { this.lastSent = data; },
+                close: function() { this.readyState = 3; }, // CLOSED
+                addEventListener: function(event, handler) { this.handlers = this.handlers || {}; this.handlers[event] = handler; }
+            };
+            
+            testRunner.assertExists(mockWS, 'WebSocket mock should exist');
+            testRunner.assertEqual(mockWS.readyState, 1, 'WebSocket should be open');
+            
+            mockWS.send('test message');
+            testRunner.assertEqual(mockWS.lastSent, 'test message', 'WebSocket should send messages');
+        });
+
+        // Utility Functions
+        function runAllTests() {
+            testRunner.runTests();
+        }
+
+        function runConfigTests() {
+            const configTests = testRunner.tests.filter(t => t.name.toLowerCase().includes('config'));
+            runSpecificTests(configTests);
+        }
+
+        function runApiTests() {
+            const apiTests = testRunner.tests.filter(t => t.name.toLowerCase().includes('api') || t.name.toLowerCase().includes('localstorage'));
+            runSpecificTests(apiTests);
+        }
+
+        function runUiTests() {
+            const uiTests = testRunner.tests.filter(t => 
+                t.name.toLowerCase().includes('ui') || 
+                t.name.toLowerCase().includes('dom') || 
+                t.name.toLowerCase().includes('canvas') ||
+                t.name.toLowerCase().includes('color') ||
+                t.name.toLowerCase().includes('websocket')
+            );
+            runSpecificTests(uiTests);
+        }
+
+        async function runSpecificTests(tests) {
+            const originalTests = testRunner.tests;
+            testRunner.tests = tests;
+            await testRunner.runTests();
+            testRunner.tests = originalTests;
+        }
+
+        function clearResults() {
+            testRunner.clearOutput();
+            testRunner.summaryText.textContent = 'Ready to run tests';
+            testRunner.progressFill.style.width = '0%';
+            testRunner.progressFill.style.backgroundColor = '#28a745';
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testRunner.log('🚀 Test runner loaded. Click "Run All Tests" to begin.');
+            }, 500);
+        });
+    </script>
+</body>
+</html> 

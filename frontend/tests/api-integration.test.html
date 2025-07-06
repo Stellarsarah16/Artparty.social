@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Integration Tests</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .pass { background: #d4edda; color: #155724; }
+        .fail { background: #f8d7da; color: #721c24; }
+        .pending { background: #fff3cd; color: #856404; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #results { margin-top: 20px; max-height: 400px; overflow-y: auto; }
+        .error-details { font-family: monospace; font-size: 12px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔌 API Integration Tests</h1>
+    <p>Testing live API endpoints</p>
+    
+    <button onclick="runHealthTest()">Health Check</button>
+    <button onclick="runCanvasListTest()">Canvas List</button>
+    <button onclick="runAuthTests()">Auth Tests</button>
+    <button onclick="runCanvasCreateTest()">Canvas Create Test</button>
+    <button onclick="runAllApiTests()">Run All API Tests</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        function log(message, type = 'pending') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function formatError(error) {
+            if (typeof error === 'string') return error;
+            if (error && typeof error === 'object') {
+                if (error.detail) return error.detail;
+                if (error.message) return error.message;
+                return JSON.stringify(error, null, 2);
+            }
+            return String(error);
+        }
+
+        async function runHealthTest() {
+            log('Testing health endpoint...', 'pending');
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'healthy') {
+                    log('✅ Health check passed', 'pass');
+                } else {
+                    log(`❌ Health check failed: ${formatError(data)}`, 'fail');
+                }
+            } catch (error) {
+                log(`❌ Health check error: ${error.message}`, 'fail');
+            }
+        }
+
+        async function runCanvasListTest() {
+            log('Testing canvas list endpoint...', 'pending');
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/canvas/`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Canvas list retrieved: ${Array.isArray(data) ? data.length : 'Unknown'} canvases`, 'pass');
+                    
+                    // Log some details if canvases exist
+                    if (Array.isArray(data) && data.length > 0) {
+                        log(`Canvas details: ${data.map(c => c.name || 'Unnamed').join(', ')}`, 'pending');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Canvas list failed: ${response.status} ${response.statusText} - ${errorText}`, 'fail');
+                }
+            } catch (error) {
+                log(`❌ Canvas list error: ${error.message}`, 'fail');
+            }
+        }
+
+        async function runCanvasCreateTest() {
+            log('Testing canvas creation (requires auth)...', 'pending');
+            
+            // First, create and authenticate a user
+            const timestamp = Date.now();
+            const testUser = {
+                username: `canvastest_${timestamp}`,
+                email: `canvastest_${timestamp}@example.com`,
+                password: 'testpassword123',
+                display_name: 'Canvas Test User'
+            };
+
+            try {
+                // Register user
+                const registerResponse = await fetch(`${API_BASE}/api/v1/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testUser)
+                });
+
+                if (!registerResponse.ok) {
+                    const errorData = await registerResponse.json();
+                    log(`❌ Canvas test failed: Could not register user - ${formatError(errorData)}`, 'fail');
+                    return;
+                }
+
+                const registerData = await registerResponse.json();
+                const token = registerData.access_token;
+
+                // Create canvas
+                const canvasData = {
+                    name: `Test Canvas ${timestamp}`,
+                    description: 'A test canvas created by integration tests',
+                    width: 1024,
+                    height: 1024,
+                    max_tiles_per_user: 5
+                };
+
+                const createResponse = await fetch(`${API_BASE}/api/v1/canvas/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(canvasData)
+                });
+
+                if (createResponse.ok) {
+                    const createdCanvas = await createResponse.json();
+                    log(`✅ Canvas creation successful: "${createdCanvas.canvas?.name || 'Unknown'}"`, 'pass');
+                } else {
+                    const errorData = await createResponse.json();
+                    log(`❌ Canvas creation failed: ${formatError(errorData)}`, 'fail');
+                }
+
+            } catch (error) {
+                log(`❌ Canvas creation error: ${error.message}`, 'fail');
+            }
+        }
+
+        async function runAuthTests() {
+            log('Testing authentication flow...', 'pending');
+            
+            // Generate unique test user
+            const timestamp = Date.now();
+            const testUser = {
+                username: `testuser_${timestamp}`,
+                email: `test_${timestamp}@example.com`,
+                password: 'testpassword123',
+                display_name: 'Test User'
+            };
+
+            try {
+                // Test registration
+                log('Attempting user registration...', 'pending');
+                const registerResponse = await fetch(`${API_BASE}/api/v1/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testUser)
+                });
+
+                if (registerResponse.ok) {
+                    const registerData = await registerResponse.json();
+                    log('✅ User registration successful', 'pass');
+                    
+                    // Test login
+                    log('Attempting user login...', 'pending');
+                    const loginResponse = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: testUser.username,
+                            password: testUser.password
+                        })
+                    });
+
+                    if (loginResponse.ok) {
+                        const loginData = await loginResponse.json();
+                        log('✅ User login successful', 'pass');
+                        
+                        if (loginData.access_token) {
+                            // Test authenticated endpoint
+                            log('Testing authenticated endpoint...', 'pending');
+                            const meResponse = await fetch(`${API_BASE}/api/v1/auth/me`, {
+                                headers: { 'Authorization': `Bearer ${loginData.access_token}` }
+                            });
+
+                            if (meResponse.ok) {
+                                const meData = await meResponse.json();
+                                log(`✅ Authenticated endpoint works: ${meData.username}`, 'pass');
+                            } else {
+                                const errorText = await meResponse.text();
+                                log(`❌ Authenticated endpoint failed: ${meResponse.status} - ${errorText}`, 'fail');
+                            }
+                        }
+                    } else {
+                        const errorData = await loginResponse.json();
+                        log(`❌ Login failed: ${loginResponse.status} - ${formatError(errorData)}`, 'fail');
+                    }
+                } else {
+                    const errorData = await registerResponse.json();
+                    log(`❌ Registration failed: ${registerResponse.status} - ${formatError(errorData)}`, 'fail');
+                    
+                    // Add more debugging info
+                    if (registerResponse.status === 422) {
+                        log(`💡 Registration validation error. Check if username/email already exists or password requirements.`, 'pending');
+                    }
+                }
+            } catch (error) {
+                log(`❌ Auth test error: ${error.message}`, 'fail');
+            }
+        }
+
+        async function runAllApiTests() {
+            log('🚀 Starting complete API test suite...', 'pending');
+            await runHealthTest();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await runCanvasListTest();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await runAuthTests();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await runCanvasCreateTest();
+            log('🏁 API test suite completed', 'pending');
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // Auto-run health check on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                log('🔧 API Integration Test Suite Ready', 'pending');
+                log(`📍 Testing against: ${API_BASE}`, 'pending');
+                runHealthTest();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

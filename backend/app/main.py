@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Handle startup and shutdown events"""
     # Startup
-    logger.info("Starting up StellarCollabApp backend...")
+    logger.info("Starting up StellarArtCollab backend...")
     
     # Create database tables
     Base.metadata.create_all(bind=engine)
@@ -29,12 +29,12 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    logger.info("Shutting down StellarCollabApp backend...")
+    logger.info("Shutting down StellarArtCollab backend...")
 
 
 # Create FastAPI app
 app = FastAPI(
-    title="StellarCollabApp API",
+    title="StellarArtCollab API",
     description="Collaborative pixel art canvas platform",
     version="1.0.0",
     lifespan=lifespan
@@ -60,7 +60,7 @@ app.include_router(websockets.router, prefix="/api/v1/ws", tags=["websockets"])
 @app.get("/")
 async def root():
     """Welcome message"""
-    return {"message": "Welcome to StellarCollabApp API"}
+    return {"message": "Welcome to StellarArtCollab API"}
 
 
 @app.get("/health")

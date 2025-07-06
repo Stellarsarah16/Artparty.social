@@ -1,157 +1,128 @@
 """
-Authentication endpoints
+Authentication API endpoints
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from typing import Dict, Any
+from sqlalchemy.exc import IntegrityError
+from pydantic import ValidationError
+import logging
 
 from ...core.database import get_db
-from ...services.auth import auth_service
 from ...schemas.user import UserCreate, UserLogin, UserResponse
-from ...schemas.auth import Token
+from ...services.authentication import authentication_service
+from ...models.user import User
 
 router = APIRouter()
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
 
-@router.post("/register", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED)
-async def register(user_create: UserCreate, db: Session = Depends(get_db)):
-    """Register a new user account"""
+@router.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED)
+async def register(
+    user_create: UserCreate,
+    db: Session = Depends(get_db)
+):
+    """Register a new user"""
     try:
-        # Create new user
-        user = auth_service.create_user(db, user_create)
+        logger.info(f"Registration attempt for username: {user_create.username}")
         
-        # Generate JWT token
-        token_response = auth_service.create_token_response(user)
+        # Use the new authentication service
+        token_response = authentication_service.register_user(db, user_create)
         
-        return {
-            "message": "User registered successfully",
-            "user": token_response["user"],
-            "access_token": token_response["access_token"],
-            "token_type": token_response["token_type"],
-            "expires_in": token_response["expires_in"]
-        }
+        logger.info(f"User registered successfully: {user_create.username}")
+        return token_response
+        
     except HTTPException as e:
+        logger.warning(f"Registration failed for {user_create.username}: {e.detail}")
         raise e
+    except ValidationError as e:
+        logger.error(f"Validation error during registration: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Validation error: " + str(e)
+        )
+    except IntegrityError as e:
+        logger.error(f"Database integrity error during registration: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username or email already exists"
+        )
     except Exception as e:
+        logger.error(f"Unexpected error during registration: {e}")
+        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error during registration"
+            detail="Registration failed due to server error"
         )
 
 
-@router.post("/login", response_model=Dict[str, Any])
-async def login(user_login: UserLogin, db: Session = Depends(get_db)):
-    """Authenticate user and return JWT token"""
+@router.post("/login", response_model=dict)
+async def login(
+    user_login: UserLogin,
+    db: Session = Depends(get_db)
+):
+    """Authenticate user and return access token"""
     try:
-        # Authenticate user
-        user = auth_service.authenticate_user(db, user_login.username, user_login.password)
+        logger.info(f"Login attempt for username: {user_login.username}")
         
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid username or password"
-            )
+        # Use the new authentication service
+        token_response = authentication_service.login_user(
+            db, user_login.username, user_login.password
+        )
         
-        # Generate JWT token
-        token_response = auth_service.create_token_response(user)
+        logger.info(f"User logged in successfully: {user_login.username}")
+        return token_response
         
-        return {
-            "message": "Login successful",
-            "user": token_response["user"],
-            "access_token": token_response["access_token"],
-            "token_type": token_response["token_type"],
-            "expires_in": token_response["expires_in"]
-        }
     except HTTPException as e:
+        logger.warning(f"Login failed for {user_login.username}: {e.detail}")
         raise e
     except Exception as e:
+        logger.error(f"Unexpected error during login: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error during login"
+            detail="Login failed due to server error"
         )
 
 
-@router.get("/me", response_model=UserResponse)
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
-):
-    """Get current user information from JWT token"""
-    try:
-        # Extract token from Authorization header
-        token = credentials.credentials
-        
-        # Get current user
-        user = auth_service.get_current_user(db, token)
-        
-        return UserResponse(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            display_name=user.display_name,
-            is_active=user.is_active,
-            is_verified=user.is_verified,
-            total_points=user.total_points,
-            tiles_created=user.tiles_created,
-            likes_received=user.likes_received,
-            created_at=user.created_at,
-            updated_at=user.updated_at
-        )
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error getting user info"
-        )
+) -> User:
+    """Dependency to get current authenticated user"""
+    token = credentials.credentials
+    return authentication_service.get_current_user(db, token)
 
 
-@router.post("/refresh", response_model=Dict[str, Any])
-async def refresh_token(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user)
 ):
-    """Refresh JWT token"""
-    try:
-        # Extract token from Authorization header
-        token = credentials.credentials
-        
-        # Get current user (this validates the token)
-        user = auth_service.get_current_user(db, token)
-        
-        # Generate new token
-        token_response = auth_service.create_token_response(user)
-        
-        return {
-            "message": "Token refreshed successfully",
-            "access_token": token_response["access_token"],
-            "token_type": token_response["token_type"],
-            "expires_in": token_response["expires_in"]
-        }
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error refreshing token"
-        )
+    """Get current user information"""
+    return UserResponse(
+        id=current_user.id,
+        username=current_user.username,
+        email=current_user.email,
+        first_name=current_user.first_name,
+        last_name=current_user.last_name,
+        is_active=current_user.is_active,
+        is_verified=current_user.is_verified,
+        total_points=current_user.total_points,
+        tiles_created=current_user.tiles_created,
+        likes_received=current_user.likes_received,
+        created_at=current_user.created_at,
+        updated_at=current_user.updated_at
+    )
 
 
 @router.post("/logout")
 async def logout():
     """Logout user (client-side token removal)"""
-    return {
-        "message": "Logout successful. Please remove the token from client storage."
-    }
+    return {"message": "Logged out successfully"}
 
 
-# Dependency to get current user (reusable)
-async def get_current_user_dependency(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
-):
-    """Dependency to get current authenticated user"""
-    token = credentials.credentials
-    return auth_service.get_current_user(db, token) 
+@router.get("/health")
+async def auth_health():
+    """Health check for authentication service"""
+    return {"status": "healthy", "service": "authentication"} 

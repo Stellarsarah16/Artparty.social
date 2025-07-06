@@ -730,7 +730,7 @@ class WebSocketClient {
     updatePageIndicators(status) {
         // Update document title
         const title = document.title;
-        const baseTitle = 'StellarCollabApp';
+        const baseTitle = 'StellarArtCollab';
         
         switch (status) {
             case 'connected':
@@ -770,11 +770,11 @@ const wsClient = new WebSocketClient();
 window.WebSocketClient = wsClient;
 
 // Integration with main app
-if (window.StellarCollabApp) {
+if (window.StellarArtCollab) {
     // Add WebSocket methods to main app
-    window.StellarCollabApp.connectToCanvas = (canvasId) => wsClient.connect(canvasId);
-    window.StellarCollabApp.disconnectFromCanvas = () => wsClient.disconnect();
-    window.StellarCollabApp.sendMessage = (message) => wsClient.send(message);
+    window.StellarArtCollab.connectToCanvas = (canvasId) => wsClient.connect(canvasId);
+    window.StellarArtCollab.disconnectFromCanvas = () => wsClient.disconnect();
+    window.StellarArtCollab.sendMessage = (message) => wsClient.send(message);
     
     // Set up event handlers for app integration
     wsClient.on('connected', (data) => {
