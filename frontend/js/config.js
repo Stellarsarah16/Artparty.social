@@ -329,4 +329,10 @@ if (typeof module !== 'undefined' && module.exports) {
         APP_CONFIG,
         CONFIG_UTILS
     };
-} 
+}
+
+// Make configurations available globally
+window.API_CONFIG = API_CONFIG;
+window.WS_CONFIG = WS_CONFIG;
+window.APP_CONFIG = APP_CONFIG;
+window.CONFIG_UTILS = CONFIG_UTILS; 

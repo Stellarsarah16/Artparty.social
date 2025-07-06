@@ -7,6 +7,41 @@
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Modal Fix - Ensure modals display correctly */
+        .modal {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0, 0, 0, 0.8) !important;
+            z-index: 999999 !important;
+            display: none !important;
+            justify-content: center !important;
+            align-items: center !important;
+        }
+
+        .modal[style*="flex"], 
+        .modal.active {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        .modal-content {
+            background: white !important;
+            border-radius: 8px !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+            max-width: 500px !important;
+            width: 90% !important;
+            max-height: 90vh !important;
+            overflow-y: auto !important;
+            position: relative !important;
+            transform: none !important;
+            margin: auto !important;
+        }
+    </style>
 </head>
 <body>
     <!-- Loading Screen -->
@@ -118,6 +153,9 @@
                     <button class="btn btn-secondary" id="back-to-canvases-btn">
                         <i class="fas fa-arrow-left"></i> Back to Canvases
                     </button>
+                    <button class="btn btn-secondary" id="back-to-grid-btn" style="display: none;">
+                        <i class="fas fa-th"></i> Back to Grid View
+                    </button>
                     <button class="btn btn-primary" id="save-tile-btn" disabled>
                         <i class="fas fa-save"></i> Save Tile
                     </button>
@@ -226,11 +264,11 @@
             <form id="login-form">
                 <div class="form-group">
                     <label for="login-username">Username</label>
-                    <input type="text" id="login-username" required>
+                    <input type="text" id="login-username" name="username" required>
                 </div>
                 <div class="form-group">
                     <label for="login-password">Password</label>
-                    <input type="password" id="login-password" required>
+                    <input type="password" id="login-password" name="password" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-full">Login</button>
             </form>
@@ -249,27 +287,27 @@
             <form id="register-form">
                 <div class="form-group">
                     <label for="register-username">Username</label>
-                    <input type="text" id="register-username" required>
+                    <input type="text" id="register-username" name="username" required>
                 </div>
                 <div class="form-group">
                     <label for="register-email">Email</label>
-                    <input type="email" id="register-email" required>
+                    <input type="email" id="register-email" name="email" required>
                 </div>
                 <div class="form-group">
                     <label for="register-first-name">First Name</label>
-                    <input type="text" id="register-first-name" required>
+                    <input type="text" id="register-first-name" name="first_name" required>
                 </div>
                 <div class="form-group">
                     <label for="register-last-name">Last Name</label>
-                    <input type="text" id="register-last-name" required>
+                    <input type="text" id="register-last-name" name="last_name" required>
                 </div>
                 <div class="form-group">
                     <label for="register-password">Password</label>
-                    <input type="password" id="register-password" required>
+                    <input type="password" id="register-password" name="password" required>
                 </div>
                 <div class="form-group">
                     <label for="register-confirm-password">Confirm Password</label>
-                    <input type="password" id="register-confirm-password" required>
+                    <input type="password" id="register-confirm-password" name="confirm_password" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-full">Register</button>
             </form>
@@ -336,13 +374,14 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/form-validation.js"></script>
+    <script type="module" src="js/form-validation.js"></script>
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/canvas-viewer.js"></script>
     <script src="js/pixel-editor.js"></script>
     <script src="js/websocket.js"></script>
     <script src="js/ui.js"></script>
-    <script src="js/main.js"></script>
+    <script src="debug-auth.js"></script>
+    <script type="module" src="js/main-refactored.js"></script>
 </body>
 </html> 

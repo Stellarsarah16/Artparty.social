@@ -351,5 +351,49 @@ class FormValidator {
 // Initialize form validator
 const formValidator = new FormValidator();
 
-// Export for use in main.js
-window.FormValidator = FormValidator; 
+// Export for use in main.js (legacy compatibility)
+window.FormValidator = FormValidator;
+
+// ES6 Module exports for the refactored modules
+export const initializeFormValidation = () => {
+    return formValidator;
+};
+
+export const clearFormErrors = (formId) => {
+    const form = document.getElementById(formId);
+    if (!form) {
+        console.warn(`Form not found: ${formId}`);
+        return;
+    }
+    
+    // Clear all field errors
+    const errorElements = form.querySelectorAll('.field-error');
+    errorElements.forEach(error => error.remove());
+    
+    // Remove error classes from all fields
+    const fields = form.querySelectorAll('input, select, textarea');
+    fields.forEach(field => {
+        field.classList.remove('error', 'success');
+    });
+};
+
+export const validateForm = (formId) => {
+    return formValidator.validateForm(formId);
+};
+
+export const showFieldError = (fieldName, message) => {
+    const field = document.querySelector(`#${fieldName}`);
+    if (field) {
+        formValidator.showFieldError(field, message);
+    }
+};
+
+export const clearFieldError = (fieldName) => {
+    const field = document.querySelector(`#${fieldName}`);
+    if (field) {
+        formValidator.clearFieldError(field);
+    }
+};
+
+// Export the FormValidator class as default
+export default FormValidator; 

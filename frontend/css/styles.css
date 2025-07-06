@@ -428,6 +428,8 @@ body {
 .canvas-card-description {
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
+    margin-bottom: var(--space-md);
+    line-height: 1.4;
 }
 
 .canvas-card-stats {
@@ -443,6 +445,12 @@ body {
     align-items: center;
     gap: var(--space-xs);
     color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.canvas-stat i {
+    color: var(--primary-color);
+    width: 12px;
 }
 
 /* Editor Section */
@@ -1060,4 +1068,42 @@ form {
 
 .tile-likes i {
     color: var(--error-color);
+} 
+
+/* Canvas Grid Enhancements */
+.loading, .error {
+    text-align: center;
+    padding: var(--space-xl);
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.error {
+    color: var(--error-color);
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--space-xl);
+    color: var(--text-secondary);
+}
+
+.empty-state h3 {
+    margin-bottom: var(--space-sm);
+    color: var(--text-primary);
+}
+
+.empty-state p {
+    margin-bottom: var(--space-lg);
+}
+
+.canvas-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-sm);
+}
+
+.canvas-card-actions {
+    margin-left: var(--space-sm);
 } 

@@ -7,15 +7,18 @@ import appState from './app-state.js';
 
 class NavigationManager {
     constructor() {
+        console.log('🔧 Initializing NavigationManager...');
         this.elements = this.initializeElements();
         this.setupEventListeners();
+        console.log('✅ NavigationManager initialized');
     }
     
     /**
      * Initialize DOM elements
      */
     initializeElements() {
-        return {
+        console.log('🔧 Initializing DOM elements...');
+        const elements = {
             // Navigation
             navbar: document.getElementById('navbar'),
             loginBtn: document.getElementById('login-btn'),
@@ -41,12 +44,19 @@ class NavigationManager {
             closeRegisterModal: document.getElementById('close-register-modal'),
             closeCreateCanvasModal: document.getElementById('close-create-canvas-modal')
         };
+        
+        console.log('📋 DOM elements found:', Object.keys(elements).filter(key => elements[key] !== null));
+        console.log('❌ DOM elements missing:', Object.keys(elements).filter(key => elements[key] === null));
+        
+        return elements;
     }
     
     /**
      * Setup event listeners
      */
     setupEventListeners() {
+        console.log('🔧 Setting up event listeners...');
+        
         // Modal close events
         this.elements.closeLoginModal?.addEventListener('click', () => this.hideModal('login'));
         this.elements.closeRegisterModal?.addEventListener('click', () => this.hideModal('register'));
@@ -74,27 +84,32 @@ class NavigationManager {
         appState.subscribe('currentUser', (user) => {
             this.updateUserInfo(user);
         });
+        
+        console.log('✅ Event listeners set up');
     }
     
     /**
-     * Show a specific section
+     * Show a section and hide others
      */
     showSection(sectionName) {
-        // Hide all sections
+        console.log(`Showing section: ${sectionName}`);
+        
+        // Hide all sections by adding hidden class
         Object.values(this.elements).forEach(element => {
             if (element && element.id && element.id.endsWith('-section')) {
-                element.style.display = 'none';
+                element.classList.add('hidden');
             }
         });
         
-        // Show requested section
+        // Show requested section by removing hidden class
         const section = this.elements[`${sectionName}Section`];
         if (section) {
-            section.style.display = 'block';
+            section.classList.remove('hidden');
             appState.setCurrentSection(sectionName);
             
             // Update URL without triggering page reload
             history.pushState({ section: sectionName }, '', `#${sectionName}`);
+            console.log(`Section shown: ${sectionName}`);
         } else {
             console.warn(`Section not found: ${sectionName}`);
         }
@@ -104,9 +119,26 @@ class NavigationManager {
      * Show a modal
      */
     showModal(modalName) {
-        const modal = this.elements[`${modalName}Modal`];
+        console.log(`Showing modal: ${modalName}`);
+        
+        // Handle different modal naming conventions
+        let modal;
+        
+        if (modalName === 'create-canvas') {
+            modal = this.elements.createCanvasModal;
+        } else if (modalName === 'login') {
+            modal = this.elements.loginModal;
+        } else if (modalName === 'register') {
+            modal = this.elements.registerModal;
+        } else {
+            // Fallback to direct DOM lookup
+            modal = document.getElementById(`${modalName}-modal`);
+        }
+        
         if (modal) {
+            // Show modal using CSS classes and inline styles
             modal.style.display = 'flex';
+            modal.classList.add('active');
             document.body.classList.add('modal-open');
             
             // Focus first input in modal
@@ -114,8 +146,10 @@ class NavigationManager {
             if (firstInput) {
                 setTimeout(() => firstInput.focus(), 100);
             }
+            
+            console.log(`Modal opened: ${modalName}`);
         } else {
-            console.warn(`Modal not found: ${modalName}`);
+            console.error(`Modal not found: ${modalName}`);
         }
     }
     
@@ -123,10 +157,33 @@ class NavigationManager {
      * Hide a modal
      */
     hideModal(modalName) {
-        const modal = this.elements[`${modalName}Modal`];
+        console.log(`Hiding modal: ${modalName}`);
+        
+        let modal;
+        
+        if (modalName === 'create-canvas') {
+            modal = this.elements.createCanvasModal;
+        } else if (modalName === 'login') {
+            modal = this.elements.loginModal;
+        } else if (modalName === 'register') {
+            modal = this.elements.registerModal;
+        } else {
+            // Fallback to direct DOM lookup
+            modal = document.getElementById(`${modalName}-modal`);
+        }
+        
         if (modal) {
-            modal.style.display = 'none';
+            // Remove active class and hide
+            modal.classList.remove('active');
+            // Wait for CSS transition to complete before hiding
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 200);
+            
             document.body.classList.remove('modal-open');
+            console.log(`Modal closed: ${modalName}`);
+        } else {
+            console.warn(`Modal not found for hiding: ${modalName}`);
         }
     }
     
@@ -134,12 +191,20 @@ class NavigationManager {
      * Hide all modals
      */
     hideAllModals() {
-        Object.values(this.elements).forEach(element => {
-            if (element && element.id && element.id.endsWith('-modal')) {
-                element.style.display = 'none';
-            }
+        console.log('Hiding all modals...');
+        
+        // Hide using CSS classes
+        const allModals = document.querySelectorAll('.modal');
+        allModals.forEach(modal => {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 200);
         });
+        
         document.body.classList.remove('modal-open');
+        
+        console.log('All modals hidden');
     }
     
     /**
@@ -155,17 +220,32 @@ class NavigationManager {
      */
     updateNavigation() {
         const isAuthenticated = appState.get('isAuthenticated');
+        console.log(`Updating navigation, authenticated: ${isAuthenticated}`);
         
         if (isAuthenticated) {
             // Show authenticated navigation
-            if (this.elements.loginBtn) this.elements.loginBtn.style.display = 'none';
-            if (this.elements.registerBtn) this.elements.registerBtn.style.display = 'none';
-            if (this.elements.userInfo) this.elements.userInfo.style.display = 'flex';
+            if (this.elements.loginBtn) {
+                this.elements.loginBtn.style.display = 'none';
+            }
+            if (this.elements.registerBtn) {
+                this.elements.registerBtn.style.display = 'none';
+            }
+            if (this.elements.userInfo) {
+                this.elements.userInfo.classList.remove('hidden');
+                this.elements.userInfo.style.display = 'flex';
+            }
         } else {
             // Show unauthenticated navigation
-            if (this.elements.loginBtn) this.elements.loginBtn.style.display = 'inline-block';
-            if (this.elements.registerBtn) this.elements.registerBtn.style.display = 'inline-block';
-            if (this.elements.userInfo) this.elements.userInfo.style.display = 'none';
+            if (this.elements.loginBtn) {
+                this.elements.loginBtn.style.display = 'inline-block';
+            }
+            if (this.elements.registerBtn) {
+                this.elements.registerBtn.style.display = 'inline-block';
+            }
+            if (this.elements.userInfo) {
+                this.elements.userInfo.classList.add('hidden');
+                this.elements.userInfo.style.display = 'none';
+            }
         }
     }
     
@@ -175,6 +255,7 @@ class NavigationManager {
     updateUserInfo(user) {
         if (user && this.elements.username) {
             this.elements.username.textContent = user.username;
+            console.log(`User info updated: ${user.username}`);
         }
     }
     
@@ -208,7 +289,6 @@ class NavigationManager {
         if (loadingScreen) {
             loadingScreen.style.display = 'flex';
         }
-        appState.setLoading(true);
     }
     
     /**
@@ -219,14 +299,13 @@ class NavigationManager {
         if (loadingScreen) {
             loadingScreen.style.display = 'none';
         }
-        appState.setLoading(false);
     }
 }
 
 // Create singleton instance
 const navigationManager = new NavigationManager();
 
-// Export functions for backwards compatibility
+// Export methods for external use
 export const showSection = (sectionName) => navigationManager.showSection(sectionName);
 export const showModal = (modalName) => navigationManager.showModal(modalName);
 export const hideModal = (modalName) => navigationManager.hideModal(modalName);

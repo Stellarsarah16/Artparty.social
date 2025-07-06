@@ -6,6 +6,7 @@
 import appState from './app-state.js';
 import { showToast } from './ui-utils.js';
 import { showSection, hideModal } from './navigation.js';
+import navigationManager from './navigation.js';
 import { initializeFormValidation, clearFormErrors } from '../form-validation.js';
 
 class AuthManager {
@@ -44,19 +45,21 @@ class AuthManager {
             
             if (response.ok) {
                 // Store authentication data
-                CONFIG_UTILS.setToken(data.access_token);
-                CONFIG_UTILS.setUserData(data.user);
+                window.CONFIG_UTILS.setAuthToken(data.access_token);
+                window.CONFIG_UTILS.setUserData(data.user);
                 
                 // Update app state
                 appState.setAuthenticated(data.user);
+                
+                // Update navigation UI to show logged-in state
+                const navigationManager = (await import('./navigation.js')).default;
+                navigationManager.updateNavigation();
+                navigationManager.updateUserInfo(data.user);
                 
                 // Update UI
                 hideModal('login');
                 showSection('canvas');
                 showToast(`Welcome back, ${data.user.first_name}!`, 'success');
-                
-                // Load canvases
-                await this.loadCanvases();
                 
                 // Reset form
                 form.reset();
@@ -114,19 +117,21 @@ class AuthManager {
             
             if (response.ok) {
                 // Store authentication data
-                CONFIG_UTILS.setToken(data.access_token);
-                CONFIG_UTILS.setUserData(data.user);
+                window.CONFIG_UTILS.setAuthToken(data.access_token);
+                window.CONFIG_UTILS.setUserData(data.user);
                 
                 // Update app state
                 appState.setAuthenticated(data.user);
+                
+                // Update navigation UI to show logged-in state
+                const navigationManager = (await import('./navigation.js')).default;
+                navigationManager.updateNavigation();
+                navigationManager.updateUserInfo(data.user);
                 
                 // Update UI
                 hideModal('register');
                 showSection('canvas');
                 showToast(`Welcome to StellarArtCollab, ${data.user.first_name}!`, 'success');
-                
-                // Load canvases
-                await this.loadCanvases();
                 
                 // Reset form
                 form.reset();
@@ -157,7 +162,8 @@ class AuthManager {
             }
             
             // Clear authentication data
-            CONFIG_UTILS.clearAuthData();
+            window.CONFIG_UTILS.removeAuthToken();
+            window.CONFIG_UTILS.removeUserData();
             
             // Update app state
             appState.setUnauthenticated();
@@ -178,7 +184,7 @@ class AuthManager {
      * Verify authentication token
      */
     async verifyToken() {
-        const token = CONFIG_UTILS.getToken();
+        const token = window.CONFIG_UTILS.getAuthToken();
         if (!token) {
             return false;
         }
@@ -193,18 +199,20 @@ class AuthManager {
             
             if (response.ok) {
                 const userData = await response.json();
-                CONFIG_UTILS.setUserData(userData);
+                window.CONFIG_UTILS.setUserData(userData);
                 appState.setAuthenticated(userData);
                 return true;
             } else {
                 // Token is invalid
-                CONFIG_UTILS.clearAuthData();
+                window.CONFIG_UTILS.removeAuthToken();
+                window.CONFIG_UTILS.removeUserData();
                 return false;
             }
             
         } catch (error) {
             console.error('Token verification error:', error);
-            CONFIG_UTILS.clearAuthData();
+            window.CONFIG_UTILS.removeAuthToken();
+            window.CONFIG_UTILS.removeUserData();
             return false;
         }
     }
@@ -315,16 +323,6 @@ class AuthManager {
             submitButton.disabled = false;
             submitButton.innerHTML = submitButton.getAttribute('data-original-text') || 'Submit';
         }
-    }
-    
-    /**
-     * Load canvases (moved from main.js)
-     */
-    async loadCanvases() {
-        // This will be implemented by the canvas manager
-        const { CanvasManager } = await import('./canvas.js');
-        const canvasManager = new CanvasManager();
-        return canvasManager.loadCanvases();
     }
 }
 

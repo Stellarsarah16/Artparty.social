@@ -61,7 +61,7 @@ async def get_canvas_details(
             "x": tile.x,
             "y": tile.y,
             "pixel_data": tile.pixel_data,
-            "user_id": tile.user_id,
+            "creator_id": tile.creator_id,
             "created_at": tile.created_at,
             "updated_at": tile.updated_at
         })
@@ -245,7 +245,7 @@ async def get_canvas_region(
             "x": tile.x,
             "y": tile.y,
             "pixel_data": tile.pixel_data,
-            "user_id": tile.user_id,
+            "creator_id": tile.creator_id,
             "created_at": tile.created_at,
             "updated_at": tile.updated_at
         })
@@ -278,7 +278,7 @@ async def get_canvas_stats(
     
     # Get canvas statistics
     total_tiles = int(db.query(Tile).filter(Tile.canvas_id == canvas_id).count())
-    unique_users = int(db.query(Tile.user_id).filter(Tile.canvas_id == canvas_id).distinct().count())
+    unique_users = int(db.query(Tile.creator_id).filter(Tile.canvas_id == canvas_id).distinct().count())
     
     # Calculate coverage percentage
     max_tiles = (canvas.width // canvas.tile_size) * (canvas.height // canvas.tile_size)
