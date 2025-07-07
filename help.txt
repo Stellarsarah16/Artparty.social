@@ -1,0 +1,24 @@
+get into bash: 
+    docker-compose exec backend bash
+
+Navigate To directory:
+    cd StellarCollabApp
+
+Start the App:
+    docker-compose up --build
+
+# View all logs
+    docker-compose logs -f
+
+# View specific service logs
+    docker-compose logs -f backend
+    docker-compose logs -f frontend
+
+stop the App:
+    docker-compose down
+
+Start fresh with clean DB:
+    docker-compose down -v
+
+# Test the health endpoint:
+    curl http://localhost:8000/health

@@ -1,11 +1,85 @@
 /**
  * Configuration for StellarArtCollab Frontend
+ * Production-ready configuration without debug code
  */
+
+// Enhanced environment detection
+const ENVIRONMENT = {
+    isDevelopment: window.location.hostname === 'localhost' || 
+                   window.location.hostname === '127.0.0.1' ||
+                   window.location.hostname.includes('local') ||
+                   window.location.hostname.includes('dev'),
+    isStaging: window.location.hostname.includes('staging'),
+    isProduction: !window.location.hostname.includes('localhost') && 
+                  !window.location.hostname.includes('127.0.0.1') &&
+                  !window.location.hostname.includes('local') &&
+                  !window.location.hostname.includes('staging')
+};
+
+// Enhanced base URLs based on environment
+const getBaseUrls = () => {
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    const port = window.location.port;
+    
+    // Development detection (local development)
+    if (ENVIRONMENT.isDevelopment) {
+        return {
+            API_BASE_URL: 'http://localhost:8000',
+            WS_BASE_URL: 'ws://localhost:8000'
+        };
+    }
+    
+    // Staging environment
+    if (ENVIRONMENT.isStaging) {
+        return {
+            API_BASE_URL: `${protocol}//staging-api.stellarcollab.com`,
+            WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//staging-api.stellarcollab.com`
+        };
+    }
+    
+    // Production - Same domain with nginx proxy (recommended approach)
+    if (port === '80' || port === '443' || port === '') {
+        return {
+            API_BASE_URL: `${protocol}//${hostname}`,
+            WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//${hostname}`
+        };
+    }
+    
+    // Custom port (testing/development with custom ports)
+    return {
+        API_BASE_URL: `${protocol}//${hostname}:${port}`,
+        WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//${hostname}:${port}`
+    };
+};
+
+const { API_BASE_URL, WS_BASE_URL } = getBaseUrls();
+
+// Fallback API URLs in case primary fails
+const FALLBACK_URLS = {
+    development: [
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+        'http://localhost:8001'
+    ],
+    staging: [
+        `${window.location.protocol}//staging-api.stellarcollab.com`,
+        `${window.location.protocol}//staging.stellarcollab.com/api`
+    ],
+    production: [
+        `${window.location.protocol}//${window.location.hostname}`,
+        `${window.location.protocol}//${window.location.hostname}/api`
+    ]
+};
 
 // API Configuration
 const API_CONFIG = {
-    // Base URL for API calls
-    BASE_URL: 'http://localhost:8000',
+    // Base URL for API calls - dynamically set based on environment
+    BASE_URL: API_BASE_URL,
+    
+    // Fallback URLs
+    FALLBACK_URLS: FALLBACK_URLS[ENVIRONMENT.isDevelopment ? 'development' : 
+                                  ENVIRONMENT.isStaging ? 'staging' : 'production'],
     
     // API endpoints
     ENDPOINTS: {
@@ -41,14 +115,18 @@ const API_CONFIG = {
         // WebSocket
         WS_STATS: '/api/v1/ws/stats',
         WS_CANVAS: '/api/v1/ws/canvas/{id}',
-        WS_BROADCAST: '/api/v1/ws/broadcast/{id}'
+        WS_BROADCAST: '/api/v1/ws/broadcast/{id}',
+        
+        // Debug/Testing
+        CORS_DEBUG: '/cors-debug',
+        CORS_TEST: '/api/v1/cors-test'
     }
 };
 
 // WebSocket Configuration
 const WS_CONFIG = {
-    // WebSocket URL
-    BASE_URL: 'ws://localhost:8000',
+    // WebSocket URL - dynamically set based on environment
+    BASE_URL: WS_BASE_URL,
     
     // Connection settings
     RECONNECT_ATTEMPTS: 5,
@@ -130,10 +208,10 @@ const APP_CONFIG = {
     
     // Storage keys
     STORAGE: {
-        AUTH_TOKEN: 'stellarartcollab_auth_token',
-        USER_DATA: 'stellarartcollab_user_data',
-        THEME: 'stellarartcollab_theme',
-        PREFERENCES: 'stellarartcollab_preferences'
+        AUTH_TOKEN: 'stellarcollab_token',
+        USER_DATA: 'stellarcollab_user',
+        THEME: 'stellarcollab_theme',
+        PREFERENCES: 'stellarcollab_preferences'
     },
     
     // Error messages
@@ -146,7 +224,8 @@ const APP_CONFIG = {
         WEBSOCKET_ERROR: 'Real-time connection failed. Some features may not work.',
         CANVAS_LOAD_ERROR: 'Failed to load canvas. Please try again.',
         TILE_SAVE_ERROR: 'Failed to save tile. Please try again.',
-        LIKE_ERROR: 'Failed to like tile. Please try again.'
+        LIKE_ERROR: 'Failed to like tile. Please try again.',
+        CORS_ERROR: 'Cross-origin request failed. Please check your network connection.'
     },
     
     // Success messages
@@ -167,157 +246,178 @@ const APP_CONFIG = {
 const CONFIG_UTILS = {
     /**
      * Get full API URL by combining base URL with endpoint
-     * @param {string} endpoint - API endpoint
-     * @param {Object} params - URL parameters to replace
-     * @returns {string} Full API URL
      */
-    getApiUrl: (endpoint, params = {}) => {
-        let url = API_CONFIG.BASE_URL + endpoint;
+    getApiUrl(endpoint) {
+        return `${API_CONFIG.BASE_URL}${endpoint}`;
+    },
+    
+    /**
+     * Get API URL with fallback support
+     */
+    getApiUrlWithFallback(endpoint, fallbackIndex = 0) {
+        if (fallbackIndex === 0) {
+            return `${API_CONFIG.BASE_URL}${endpoint}`;
+        }
         
-        // Replace URL parameters
-        Object.keys(params).forEach(key => {
-            url = url.replace(`{${key}}`, params[key]);
-        });
+        const fallbacks = API_CONFIG.FALLBACK_URLS;
+        if (fallbackIndex - 1 < fallbacks.length) {
+            return `${fallbacks[fallbackIndex - 1]}${endpoint}`;
+        }
         
-        return url;
+        return `${API_CONFIG.BASE_URL}${endpoint}`;
     },
     
     /**
      * Get WebSocket URL for canvas
-     * @param {number} canvasId - Canvas ID
-     * @param {string} token - Authentication token
-     * @returns {string} WebSocket URL
      */
-    getWsUrl: (canvasId, token) => {
-        return `${WS_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WS_CANVAS.replace('{id}', canvasId)}?token=${token}`;
+    getWebSocketUrl(canvasId) {
+        return `${WS_CONFIG.BASE_URL}/ws/canvas/${canvasId}`;
+    },
+
+    /**
+     * Get WebSocket URL with authentication
+     */
+    getWsUrl(canvasId, token) {
+        const baseUrl = WS_CONFIG.BASE_URL;
+        const wsUrl = `${baseUrl}/ws/canvas/${canvasId}`;
+        return token ? `${wsUrl}?token=${token}` : wsUrl;
+    },
+    
+    // Authentication methods
+    
+    /**
+     * Check if user is authenticated
+     */
+    isAuthenticated() {
+        const token = this.getAuthToken();
+        const userData = this.getUserData();
+        return !!(token && userData);
     },
     
     /**
-     * Get stored auth token
-     * @returns {string|null} Auth token
+     * Get authentication token from localStorage
      */
-    getAuthToken: () => {
+    getAuthToken() {
         return localStorage.getItem(APP_CONFIG.STORAGE.AUTH_TOKEN);
     },
     
     /**
-     * Store auth token
-     * @param {string} token - Auth token
+     * Set authentication token in localStorage
      */
-    setAuthToken: (token) => {
+    setAuthToken(token) {
         localStorage.setItem(APP_CONFIG.STORAGE.AUTH_TOKEN, token);
     },
     
     /**
-     * Remove auth token
+     * Remove authentication token from localStorage
      */
-    removeAuthToken: () => {
+    removeAuthToken() {
         localStorage.removeItem(APP_CONFIG.STORAGE.AUTH_TOKEN);
     },
     
     /**
-     * Get stored user data
-     * @returns {Object|null} User data
+     * Get user data from localStorage
      */
-    getUserData: () => {
-        const data = localStorage.getItem(APP_CONFIG.STORAGE.USER_DATA);
-        return data ? JSON.parse(data) : null;
+    getUserData() {
+        try {
+            const userData = localStorage.getItem(APP_CONFIG.STORAGE.USER_DATA);
+            return userData ? JSON.parse(userData) : null;
+        } catch (error) {
+            console.error('Error parsing user data:', error);
+            return null;
+        }
     },
     
     /**
-     * Store user data
-     * @param {Object} userData - User data
+     * Set user data in localStorage
      */
-    setUserData: (userData) => {
+    setUserData(userData) {
+        try {
         localStorage.setItem(APP_CONFIG.STORAGE.USER_DATA, JSON.stringify(userData));
+        } catch (error) {
+            console.error('Error storing user data:', error);
+        }
     },
     
     /**
-     * Remove user data
+     * Remove user data from localStorage
      */
-    removeUserData: () => {
+    removeUserData() {
         localStorage.removeItem(APP_CONFIG.STORAGE.USER_DATA);
     },
     
     /**
-     * Check if user is authenticated
-     * @returns {boolean} Is authenticated
+     * Get authentication headers for API requests
      */
-    isAuthenticated: () => {
-        const token = CONFIG_UTILS.getAuthToken();
-        return token !== null && token !== '';
+    getAuthHeaders() {
+        const token = this.getAuthToken();
+        return {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+        };
     },
     
-    /**
-     * Get authorization headers
-     * @returns {Object} Authorization headers
-     */
-    getAuthHeaders: () => {
-        const token = CONFIG_UTILS.getAuthToken();
-        return token ? { 'Authorization': `Bearer ${token}` } : {};
-    },
+    // Utility methods
     
     /**
-     * Format error message
-     * @param {string|Error} error - Error message or object
-     * @returns {string} Formatted error message
+     * Debounce function to limit function calls
      */
-    formatError: (error) => {
-        if (typeof error === 'string') {
-            return error;
-        }
-        if (error.message) {
-            return error.message;
-        }
-        if (error.detail) {
-            return error.detail;
-        }
-        return APP_CONFIG.ERRORS.SERVER_ERROR;
-    },
-    
-    /**
-     * Debounce function
-     * @param {Function} func - Function to debounce
-     * @param {number} delay - Delay in milliseconds
-     * @returns {Function} Debounced function
-     */
-    debounce: (func, delay) => {
+    debounce(func, delay = APP_CONFIG.UI.DEBOUNCE_DELAY) {
         let timeoutId;
-        return function (...args) {
+        return function(...args) {
             clearTimeout(timeoutId);
             timeoutId = setTimeout(() => func.apply(this, args), delay);
         };
     },
     
     /**
-     * Format date for display
-     * @param {string|Date} date - Date to format
-     * @returns {string} Formatted date
-     */
-    formatDate: (date) => {
-        const d = new Date(date);
-        return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
-    },
-    
-    /**
-     * Format number with commas
-     * @param {number} num - Number to format
-     * @returns {string} Formatted number
-     */
-    formatNumber: (num) => {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    },
-    
-    /**
      * Generate UUID
-     * @returns {string} UUID
      */
-    generateUuid: () => {
+    generateUuid() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             const r = Math.random() * 16 | 0;
             const v = c === 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
         });
+    },
+    
+    /**
+     * Test CORS configuration
+     */
+    async testCors() {
+        try {
+            const response = await fetch(this.getApiUrl(API_CONFIG.ENDPOINTS.CORS_TEST), {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                return { success: true, data };
+            } else {
+                return { success: false, error: `HTTP ${response.status}` };
+            }
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    },
+    
+    /**
+     * Get environment information
+     */
+    getEnvironmentInfo() {
+        return {
+            environment: ENVIRONMENT,
+            api_base_url: API_CONFIG.BASE_URL,
+            ws_base_url: WS_CONFIG.BASE_URL,
+            fallback_urls: API_CONFIG.FALLBACK_URLS,
+            hostname: window.location.hostname,
+            protocol: window.location.protocol,
+            port: window.location.port,
+            origin: window.location.origin
+        };
     }
 };
 
@@ -327,12 +427,20 @@ if (typeof module !== 'undefined' && module.exports) {
         API_CONFIG,
         WS_CONFIG,
         APP_CONFIG,
-        CONFIG_UTILS
+        CONFIG_UTILS,
+        ENVIRONMENT
     };
 }
 
 // Make configurations available globally
+window.APP_CONFIG = APP_CONFIG;
 window.API_CONFIG = API_CONFIG;
 window.WS_CONFIG = WS_CONFIG;
-window.APP_CONFIG = APP_CONFIG;
 window.CONFIG_UTILS = CONFIG_UTILS; 
+window.ENVIRONMENT = ENVIRONMENT;
+
+// Simple initialization log
+console.log('✅ StellarArtCollab configuration loaded');
+if (ENVIRONMENT.isDevelopment) {
+    console.log('🔧 Development mode - API:', API_CONFIG.BASE_URL);
+} 

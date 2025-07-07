@@ -3,8 +3,9 @@ Application configuration settings
 """
 from typing import List, Optional
 from pydantic_settings import BaseSettings
-from pydantic import validator
+from pydantic import field_validator
 import os
+import json
 
 
 class Settings(BaseSettings):
@@ -26,23 +27,14 @@ class Settings(BaseSettings):
     USE_SQLITE: bool = True
     SQLITE_DB_PATH: str = "./pixel_canvas.db"
     
-    @validator("DATABASE_URL", pre=True)
-    def assemble_db_connection(cls, v: Optional[str], values: dict) -> str:
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def assemble_db_connection(cls, v: Optional[str]) -> str:
         if isinstance(v, str):
             return v
         
-        # Use SQLite for development if enabled
-        if values.get("USE_SQLITE", True):
-            return f"sqlite:///{values.get('SQLITE_DB_PATH', './pixel_canvas.db')}"
-        
-        # Otherwise use PostgreSQL
-        return (
-            f"postgresql://{values.get('POSTGRES_USER')}:"
-            f"{values.get('POSTGRES_PASSWORD')}@"
-            f"{values.get('POSTGRES_SERVER')}:"
-            f"{values.get('POSTGRES_PORT')}/"
-            f"{values.get('POSTGRES_DB')}"
-        )
+        # For development/demo - use SQLite
+        return "sqlite:///./pixel_canvas.db"
     
     # Redis - Use in-memory fallback if Redis not available
     REDIS_HOST: str = "localhost"
@@ -51,25 +43,86 @@ class Settings(BaseSettings):
     REDIS_URL: Optional[str] = None
     USE_REDIS: bool = False  # Disable Redis for now
     
-    @validator("REDIS_URL", pre=True)
-    def assemble_redis_connection(cls, v: Optional[str], values: dict) -> str:
+    @field_validator("REDIS_URL", mode="before")
+    @classmethod
+    def assemble_redis_connection(cls, v: Optional[str]) -> str:
         if isinstance(v, str):
             return v
-        return f"redis://{values.get('REDIS_HOST')}:{values.get('REDIS_PORT')}/{values.get('REDIS_DB')}"
+        return f"redis://localhost:6379/0"
     
     # Security
     SECRET_KEY: str = "your-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
-    # CORS
-    BACKEND_CORS_ORIGINS: List[str] = [
+    # CORS - Dynamic based on environment
+    BACKEND_CORS_ORIGINS: List[str] = []
+    
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Optional[List[str]]) -> List[str]:
+        if isinstance(v, list) and len(v) > 0:
+            return v
+        
+        # Parse CORS_ORIGINS from environment variable if it exists
+        cors_origins = os.getenv("CORS_ORIGINS")
+        if cors_origins:
+            try:
+                # Try parsing as JSON array first
+                return json.loads(cors_origins)
+            except json.JSONDecodeError:
+                # If not valid JSON, split by comma and clean up
+                origins = [origin.strip() for origin in cors_origins.split(",")]
+                # Filter out empty strings
+                return [origin for origin in origins if origin]
+        
+        # Default CORS origins based on environment
+        environment = os.getenv("ENVIRONMENT", "development")
+        
+        if environment == "production":
+            # Production CORS origins - Replace with your actual domains
+            production_origins = [
+                "https://stellarcollab.com",
+                "https://www.stellarcollab.com",
+                "https://app.stellarcollab.com",
+            ]
+            
+            # Allow additional production domains from env
+            additional_origins = os.getenv("ADDITIONAL_CORS_ORIGINS", "")
+            if additional_origins:
+                try:
+                    additional = json.loads(additional_origins)
+                    production_origins.extend(additional)
+                except json.JSONDecodeError:
+                    additional = [origin.strip() for origin in additional_origins.split(",")]
+                    production_origins.extend([origin for origin in additional if origin])
+            
+            return production_origins
+            
+        elif environment == "staging":
+            # Staging environment
+            return [
+                "https://staging.stellarcollab.com",
+                "https://staging-app.stellarcollab.com",
+                "http://localhost:3000",  # For testing
+                "http://localhost:8080",
+            ]
+        else:
+            # Development CORS origins
+            return [
         "http://localhost:3000",
         "http://localhost:8000",
         "http://localhost:8080",
+                "http://localhost",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:8000",
         "http://127.0.0.1:8080",
+                "http://127.0.0.1",
+                # Add common development ports
+                "http://localhost:3001",
+                "http://localhost:5000",
+                "http://localhost:5173",  # Vite default
+                "http://localhost:4200",  # Angular default
     ]
     
     # Canvas settings

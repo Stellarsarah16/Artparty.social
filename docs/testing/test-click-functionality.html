@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click Functionality Test - StellarCollabApp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-section h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        .canvas-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            border: 2px solid #333;
+            background: #f8f8f8;
+            margin: 20px auto;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button.success {
+            background: #28a745;
+        }
+        button.warning {
+            background: #ffc107;
+            color: #000;
+        }
+        button.danger {
+            background: #dc3545;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .info-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .console-output {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .instructions {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #2196F3;
+        }
+        .tile-map {
+            display: grid;
+            grid-template-columns: repeat(8, 40px);
+            gap: 2px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .tile-box {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        .tile-box.has-tile {
+            background: #4CAF50;
+            color: white;
+        }
+        .tile-box:hover {
+            border-color: #007bff;
+            border-width: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖱️ Click Functionality Test - StellarCollabApp</h1>
+        
+        <div class="instructions">
+            <h3>📋 Test Instructions</h3>
+            <ol>
+                <li><strong>Visual Check:</strong> You should see colorful tiles on the canvas</li>
+                <li><strong>Cursor Test:</strong> Move mouse over tiles (should show pointer) and empty space (should show default arrow)</li>
+                <li><strong>Click Test:</strong> Click on any colored tile to open the pixel editor</li>
+                <li><strong>Pan Test:</strong> Hold middle mouse button and drag to pan the canvas</li>
+                <li><strong>Zoom Test:</strong> Use mouse wheel to zoom in/out</li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <h2>🎨 Canvas Viewer</h2>
+            <div class="canvas-container">
+                <canvas id="test-canvas"></canvas>
+            </div>
+            <div class="controls">
+                <button onclick="runBasicTest()">Run Basic Test</button>
+                <button onclick="addMoreTiles()" class="success">Add More Tiles</button>
+                <button onclick="enableDebugMode()" class="warning">Enable Debug Mode</button>
+                <button onclick="clearCanvas()" class="danger">Clear Canvas</button>
+                <button onclick="resetTest()">Reset Test</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📊 Tile Map</h2>
+            <p>Visual representation of tiles on the canvas. Green squares have tiles. Click to test:</p>
+            <div class="tile-map" id="tile-map"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📋 Test Results</h2>
+            <div id="test-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>ℹ️ Canvas Information</h2>
+            <div class="info-grid">
+                <div class="info-box">
+                    <h3>Canvas Stats</h3>
+                    <div id="canvas-stats"></div>
+                </div>
+                <div class="info-box">
+                    <h3>Mouse Position</h3>
+                    <div id="mouse-position">Move mouse over canvas</div>
+                </div>
+                <div class="info-box">
+                    <h3>Last Interaction</h3>
+                    <div id="last-interaction">None</div>
+                </div>
+                <div class="info-box">
+                    <h3>Cursor State</h3>
+                    <div id="cursor-state">default</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📝 Console Output</h2>
+            <div class="console-output" id="console-output"></div>
+        </div>
+    </div>
+
+    <!-- Include the scripts -->
+    <script src="frontend/js/config.js"></script>
+    <script src="frontend/js/canvas-viewer.js"></script>
+
+    <script>
+        let testCanvasViewer = null;
+        let testResults = [];
+        
+        // Mock the main app functions
+        window.showToast = (message, type) => {
+            logToConsole(`TOAST [${type}]: ${message}`);
+            updateLastInteraction(`Toast: ${message}`);
+        };
+        
+        function logToConsole(message) {
+            const console = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            console.innerHTML += `[${timestamp}] ${message}\n`;
+            console.scrollTop = console.scrollHeight;
+            
+            // Keep only last 100 lines
+            const lines = console.innerHTML.split('\n');
+            if (lines.length > 100) {
+                console.innerHTML = lines.slice(-100).join('\n');
+            }
+        }
+        
+        function updateTestResult(testName, status, details) {
+            const result = { testName, status, details, timestamp: new Date() };
+            testResults.push(result);
+            
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${status}`;
+            resultDiv.innerHTML = `
+                <strong>${testName}:</strong> ${status.toUpperCase()}
+                <br><small>${details}</small>
+            `;
+            resultsDiv.appendChild(resultDiv);
+            
+            logToConsole(`TEST [${status}] ${testName}: ${details}`);
+        }
+        
+        function updateCanvasStats() {
+            if (!testCanvasViewer) return;
+            
+            const stats = testCanvasViewer.getStats();
+            document.getElementById('canvas-stats').innerHTML = `
+                <strong>Tiles:</strong> ${stats.tileCount}<br>
+                <strong>Zoom:</strong> ${(stats.zoom * 100).toFixed(1)}%<br>
+                <strong>Viewport:</strong> (${stats.viewportX.toFixed(1)}, ${stats.viewportY.toFixed(1)})<br>
+                <strong>Performance Issues:</strong> ${stats.performanceIssues}
+            `;
+        }
+        
+        function updateMousePosition(e) {
+            const rect = document.getElementById('test-canvas').getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            document.getElementById('mouse-position').innerHTML = `X: ${x.toFixed(0)}, Y: ${y.toFixed(0)}`;
+        }
+        
+        function updateLastInteraction(interaction) {
+            document.getElementById('last-interaction').textContent = interaction;
+        }
+        
+        function updateCursorState() {
+            const canvas = document.getElementById('test-canvas');
+            const cursor = getComputedStyle(canvas).cursor;
+            document.getElementById('cursor-state').textContent = cursor;
+        }
+        
+        function updateTileMap() {
+            const tileMap = document.getElementById('tile-map');
+            tileMap.innerHTML = '';
+            
+            // Create 8x6 grid
+            for (let y = 0; y < 6; y++) {
+                for (let x = 0; x < 8; x++) {
+                    const tileBox = document.createElement('div');
+                    tileBox.className = 'tile-box';
+                    tileBox.innerHTML = `${x},${y}`;
+                    
+                    // Check if there's a tile at this position
+                    if (testCanvasViewer) {
+                        const hasTile = Array.from(testCanvasViewer.tiles.values()).some(tile => 
+                            tile.x === x && tile.y === y
+                        );
+                        if (hasTile) {
+                            tileBox.classList.add('has-tile');
+                        }
+                    }
+                    
+                    // Add click handler
+                    tileBox.addEventListener('click', () => {
+                        testClickAtTile(x, y);
+                    });
+                    
+                    tileMap.appendChild(tileBox);
+                }
+            }
+        }
+        
+        function testClickAtTile(tileX, tileY) {
+            if (!testCanvasViewer) return;
+            
+            logToConsole(`Testing click at tile (${tileX}, ${tileY})`);
+            
+            // Calculate canvas coordinates (64px tile size)
+            const canvasX = (tileX * 64) + 32; // Center of tile
+            const canvasY = (tileY * 64) + 32;
+            
+            // Get canvas bounds
+            const canvas = document.getElementById('test-canvas');
+            const rect = canvas.getBoundingClientRect();
+            
+            // Create mock event
+            const mockEvent = {
+                clientX: rect.left + canvasX,
+                clientY: rect.top + canvasY,
+                button: 0
+            };
+            
+            const tile = testCanvasViewer.getTileAtPosition(mockEvent.clientX, mockEvent.clientY);
+            if (tile) {
+                logToConsole(`✅ Found tile: ${tile.id} at (${tile.x}, ${tile.y})`);
+                testCanvasViewer.onTileClick(tile);
+                updateTestResult(`Click Test (${tileX},${tileY})`, 'success', `Successfully clicked tile ${tile.id}`);
+            } else {
+                logToConsole(`❌ No tile found at (${tileX}, ${tileY})`);
+                updateTestResult(`Click Test (${tileX},${tileY})`, 'error', 'No tile found at coordinates');
+            }
+        }
+        
+        function createTestTiles() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'];
+            const tiles = [];
+            
+            for (let i = 0; i < 5; i++) {
+                const tile = {
+                    id: `test-tile-${i}`,
+                    x: 2 + i,
+                    y: 2,
+                    pixel_data: createTestPixelData(colors[i]),
+                    created_at: new Date().toISOString(),
+                    user_id: 'test-user'
+                };
+                tiles.push(tile);
+            }
+            
+            return tiles;
+        }
+        
+        function createTestPixelData(color) {
+            const pixelData = [];
+            for (let y = 0; y < 32; y++) {
+                const row = [];
+                for (let x = 0; x < 32; x++) {
+                    if (x === 0 || x === 31 || y === 0 || y === 31) {
+                        row.push('#000000'); // Black border
+                    } else if (x < 4 || x > 27 || y < 4 || y > 27) {
+                        row.push('#ffffff'); // White inner border
+                    } else {
+                        row.push(color); // Main color
+                    }
+                }
+                pixelData.push(row);
+            }
+            return pixelData;
+        }
+        
+        function initializeTest() {
+            logToConsole('🧪 Initializing click functionality test...');
+            
+            const canvas = document.getElementById('test-canvas');
+            
+            // Initialize canvas viewer
+            testCanvasViewer = new CanvasViewer();
+            testCanvasViewer.init(canvas);
+            
+            // Set canvas data
+            testCanvasViewer.setCanvasData({
+                width: 800,
+                height: 600,
+                title: "Click Test Canvas"
+            });
+            
+            // Set up click handler
+            testCanvasViewer.onTileClick = (tile) => {
+                logToConsole(`🎯 Tile clicked: (${tile.x}, ${tile.y}) - ${tile.id}`);
+                updateLastInteraction(`Clicked tile (${tile.x}, ${tile.y})`);
+                
+                // Mock opening pixel editor
+                setTimeout(() => {
+                    alert(`Pixel editor would open for tile (${tile.x}, ${tile.y})\nTile ID: ${tile.id}`);
+                }, 100);
+            };
+            
+            // Set up hover handler
+            testCanvasViewer.onTileHover = (tile) => {
+                updateLastInteraction(`Hovering tile (${tile.x}, ${tile.y})`);
+            };
+            
+            // Add test tiles
+            const testTiles = createTestTiles();
+            testTiles.forEach(tile => {
+                testCanvasViewer.addTile(tile, false);
+            });
+            
+            // Set up event listeners
+            canvas.addEventListener('mousemove', (e) => {
+                updateMousePosition(e);
+                updateCursorState();
+            });
+            
+            // Update displays
+            updateCanvasStats();
+            updateTileMap();
+            
+            logToConsole('✅ Test initialized successfully');
+            updateTestResult('Initialization', 'success', 'Canvas viewer initialized with test tiles');
+        }
+        
+        function runBasicTest() {
+            logToConsole('🧪 Running basic functionality test...');
+            
+            // Test 1: Canvas viewer exists
+            if (testCanvasViewer) {
+                updateTestResult('Canvas Viewer', 'success', 'Canvas viewer instance exists');
+            } else {
+                updateTestResult('Canvas Viewer', 'error', 'Canvas viewer not initialized');
+                return;
+            }
+            
+            // Test 2: Tiles loaded
+            const tileCount = testCanvasViewer.tiles.size;
+            if (tileCount > 0) {
+                updateTestResult('Tile Loading', 'success', `${tileCount} tiles loaded`);
+            } else {
+                updateTestResult('Tile Loading', 'error', 'No tiles loaded');
+            }
+            
+            // Test 3: Click handler set
+            if (testCanvasViewer.onTileClick) {
+                updateTestResult('Click Handler', 'success', 'Click handler is set');
+            } else {
+                updateTestResult('Click Handler', 'error', 'Click handler not set');
+            }
+            
+            // Test 4: Auto-click test
+            setTimeout(() => {
+                testClickAtTile(2, 2); // Should have a red tile
+            }, 1000);
+            
+            logToConsole('✅ Basic test completed');
+        }
+        
+        function addMoreTiles() {
+            if (!testCanvasViewer) return;
+            
+            const colors = ['#orange', '#purple', '#cyan', '#pink', '#lime'];
+            const newTiles = [];
+            
+            for (let i = 0; i < 5; i++) {
+                const tile = {
+                    id: `extra-tile-${Date.now()}-${i}`,
+                    x: 1 + i,
+                    y: 4,
+                    pixel_data: createTestPixelData(colors[i] || '#gray'),
+                    created_at: new Date().toISOString(),
+                    user_id: 'test-user'
+                };
+                newTiles.push(tile);
+                testCanvasViewer.addTile(tile, true);
+            }
+            
+            updateCanvasStats();
+            updateTileMap();
+            logToConsole(`🎨 Added ${newTiles.length} more tiles`);
+        }
+        
+        function enableDebugMode() {
+            if (!testCanvasViewer) return;
+            
+            testCanvasViewer.enableDebugOverlay();
+            testCanvasViewer.showGrid = true;
+            testCanvasViewer.showTileOutlines = true;
+            testCanvasViewer.requestRender();
+            
+            logToConsole('🔍 Debug mode enabled');
+            updateTestResult('Debug Mode', 'info', 'Debug overlay and grid enabled');
+        }
+        
+        function clearCanvas() {
+            if (!testCanvasViewer) return;
+            
+            const tileIds = Array.from(testCanvasViewer.tiles.keys());
+            tileIds.forEach(id => testCanvasViewer.removeTile(id, false));
+            
+            updateCanvasStats();
+            updateTileMap();
+            logToConsole(`🗑️ Cleared ${tileIds.length} tiles`);
+        }
+        
+        function resetTest() {
+            clearCanvas();
+            
+            setTimeout(() => {
+                const testTiles = createTestTiles();
+                testTiles.forEach(tile => {
+                    testCanvasViewer.addTile(tile, false);
+                });
+                
+                updateCanvasStats();
+                updateTileMap();
+                logToConsole('🔄 Test reset with fresh tiles');
+            }, 500);
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            setTimeout(initializeTest, 500);
+        });
+    </script>
+</body>
+</html> 

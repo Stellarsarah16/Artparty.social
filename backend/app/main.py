@@ -26,6 +26,11 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     logger.info("Database tables created successfully")
     
+    # Log CORS configuration for debugging
+    logger.info(f"CORS origins configured: {settings.BACKEND_CORS_ORIGINS}")
+    logger.info(f"Environment: {settings.ENVIRONMENT}")
+    logger.info(f"Debug mode: {settings.DEBUG}")
+    
     yield
     
     # Shutdown
@@ -40,12 +45,12 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS middleware
+# CORS middleware - Use settings-based configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure this in production
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
 )
 
@@ -67,6 +72,31 @@ async def root():
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy"}
+
+
+@app.get("/cors-debug")
+async def cors_debug():
+    """Debug endpoint to check CORS configuration"""
+    return {
+        "cors_origins": settings.BACKEND_CORS_ORIGINS,
+        "environment": settings.ENVIRONMENT,
+        "debug": settings.DEBUG,
+        "cors_configuration": {
+            "allow_credentials": True,
+            "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+            "allow_headers": ["*"]
+        }
+    }
+
+
+@app.get("/api/v1/cors-test")
+async def cors_test():
+    """Test endpoint for CORS functionality"""
+    return {
+        "message": "CORS test successful",
+        "timestamp": "2024-01-01T00:00:00Z",
+        "origin_info": "This endpoint can be used to test CORS configuration"
+    }
 
 
 if __name__ == "__main__":

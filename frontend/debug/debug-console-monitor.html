@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Console Monitor - Debug Tool</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #333;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        button.pause {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        button.resume {
+            background: #4ecdc4;
+            color: white;
+        }
+        
+        button.clear {
+            background: #ffa502;
+            color: white;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background: #2d2d2d;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff00;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        .console-container {
+            height: 60vh;
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 5px;
+            overflow-y: auto;
+            padding: 10px;
+            position: relative;
+        }
+        
+        .console-line {
+            margin: 2px 0;
+            padding: 2px 5px;
+            border-radius: 2px;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .console-line.log {
+            color: #00ff00;
+        }
+        
+        .console-line.warn {
+            color: #ffaa00;
+            background: rgba(255, 170, 0, 0.1);
+        }
+        
+        .console-line.error {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+        
+        .console-line.info {
+            color: #74b9ff;
+        }
+        
+        .console-line.debug {
+            color: #999;
+        }
+        
+        .timestamp {
+            color: #666;
+            font-size: 10px;
+            margin-right: 10px;
+        }
+        
+        .frequency-alert {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #ff6b6b;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .pattern-analysis {
+            background: #2d2d2d;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .pattern-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .pattern-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #444;
+        }
+        
+        .pattern-count {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 Console Monitor - Debug Tool</h1>
+        <div class="controls">
+            <button id="pauseBtn" class="pause">⏸️ Pause</button>
+            <button id="clearBtn" class="clear">🗑️ Clear</button>
+            <button id="exportBtn" class="resume">📤 Export</button>
+        </div>
+    </div>
+    
+    <div class="stats">
+        <div class="stat-box">
+            <div class="stat-value" id="totalLogs">0</div>
+            <div class="stat-label">Total Logs</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="logsPerSecond">0</div>
+            <div class="stat-label">Logs/Second</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="errorCount">0</div>
+            <div class="stat-label">Errors</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="warningCount">0</div>
+            <div class="stat-label">Warnings</div>
+        </div>
+    </div>
+    
+    <div class="console-container" id="consoleContainer">
+        <div class="console-line info">
+            <span class="timestamp">--:--:--</span>
+            🔍 Console Monitor Started - Intercepting console messages...
+        </div>
+        <div class="console-line info">
+            <span class="timestamp">--:--:--</span>
+            💡 Open your main app in another tab to see console activity here
+        </div>
+    </div>
+    
+    <div class="pattern-analysis">
+        <h3>📊 Most Frequent Messages</h3>
+        <div class="pattern-list" id="patternList">
+            <div class="pattern-item">
+                <span>No patterns detected yet...</span>
+                <span class="pattern-count">0</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="frequency-alert" id="frequencyAlert">
+        ⚠️ High frequency logging detected! This may cause browser freeze.
+    </div>
+    
+    <script>
+        // State management
+        let isPaused = false;
+        let logCount = 0;
+        let errorCount = 0;
+        let warningCount = 0;
+        let lastSecondCount = 0;
+        let messagePatterns = new Map();
+        
+        // DOM elements
+        const pauseBtn = document.getElementById('pauseBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const consoleContainer = document.getElementById('consoleContainer');
+        const totalLogsEl = document.getElementById('totalLogs');
+        const logsPerSecondEl = document.getElementById('logsPerSecond');
+        const errorCountEl = document.getElementById('errorCount');
+        const warningCountEl = document.getElementById('warningCount');
+        const patternListEl = document.getElementById('patternList');
+        const frequencyAlert = document.getElementById('frequencyAlert');
+        
+        // Store original console methods
+        const originalConsole = {
+            log: console.log,
+            warn: console.warn,
+            error: console.error,
+            info: console.info,
+            debug: console.debug
+        };
+        
+        // Console interception
+        function interceptConsole() {
+            ['log', 'warn', 'error', 'info', 'debug'].forEach(method => {
+                console[method] = function(...args) {
+                    // Call original method
+                    originalConsole[method].apply(console, args);
+                    
+                    // Track and display
+                    if (!isPaused) {
+                        trackMessage(method, args);
+                    }
+                };
+            });
+        }
+        
+        // Track message patterns
+        function trackMessage(type, args) {
+            logCount++;
+            
+            if (type === 'error') errorCount++;
+            if (type === 'warn') warningCount++;
+            
+            // Create message summary
+            const messageText = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg).substring(0, 100) : String(arg)
+            ).join(' ').substring(0, 200);
+            
+            // Track patterns
+            const pattern = messageText.substring(0, 50);
+            messagePatterns.set(pattern, (messagePatterns.get(pattern) || 0) + 1);
+            
+            // Add to display
+            addLogLine(type, messageText);
+            
+            // Update stats
+            updateStats();
+            
+            // Check for high frequency
+            checkHighFrequency();
+        }
+        
+        // Add log line to display
+        function addLogLine(type, message) {
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            line.innerHTML = `
+                <span class="timestamp">${timestamp}</span>
+                ${message}
+            `;
+            
+            consoleContainer.appendChild(line);
+            
+            // Keep only last 1000 lines
+            const lines = consoleContainer.children;
+            if (lines.length > 1000) {
+                consoleContainer.removeChild(lines[0]);
+            }
+            
+            // Auto-scroll
+            consoleContainer.scrollTop = consoleContainer.scrollHeight;
+        }
+        
+        // Update statistics
+        function updateStats() {
+            totalLogsEl.textContent = logCount;
+            errorCountEl.textContent = errorCount;
+            warningCountEl.textContent = warningCount;
+            
+            // Update patterns
+            updatePatternAnalysis();
+        }
+        
+        // Update pattern analysis
+        function updatePatternAnalysis() {
+            const sortedPatterns = Array.from(messagePatterns.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+                
+            patternListEl.innerHTML = '';
+            
+            if (sortedPatterns.length === 0) {
+                patternListEl.innerHTML = '<div class="pattern-item"><span>No patterns detected yet...</span><span class="pattern-count">0</span></div>';
+                return;
+            }
+            
+            sortedPatterns.forEach(([pattern, count]) => {
+                const item = document.createElement('div');
+                item.className = 'pattern-item';
+                item.innerHTML = `
+                    <span>${pattern}${pattern.length >= 50 ? '...' : ''}</span>
+                    <span class="pattern-count">${count}</span>
+                `;
+                patternListEl.appendChild(item);
+            });
+        }
+        
+        // Check for high frequency logging
+        function checkHighFrequency() {
+            const now = Date.now();
+            const currentSecond = Math.floor(now / 1000);
+            
+            if (currentSecond !== Math.floor(Date.now() / 1000 - 1)) {
+                lastSecondCount = 0;
+            }
+            
+            lastSecondCount++;
+            logsPerSecondEl.textContent = lastSecondCount;
+            
+            if (lastSecondCount > 50) {
+                showFrequencyAlert();
+            } else {
+                hideFrequencyAlert();
+            }
+        }
+        
+        // Show frequency alert
+        function showFrequencyAlert() {
+            frequencyAlert.style.display = 'block';
+            setTimeout(() => {
+                frequencyAlert.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Hide frequency alert
+        function hideFrequencyAlert() {
+            frequencyAlert.style.display = 'none';
+        }
+        
+        // Event listeners
+        pauseBtn.addEventListener('click', () => {
+            isPaused = !isPaused;
+            pauseBtn.textContent = isPaused ? '▶️ Resume' : '⏸️ Pause';
+            pauseBtn.className = isPaused ? 'resume' : 'pause';
+        });
+        
+        clearBtn.addEventListener('click', () => {
+            consoleContainer.innerHTML = '';
+            logCount = 0;
+            errorCount = 0;
+            warningCount = 0;
+            messagePatterns.clear();
+            updateStats();
+            
+            addLogLine('info', '🗑️ Console cleared');
+        });
+        
+        exportBtn.addEventListener('click', () => {
+            const data = {
+                totalLogs: logCount,
+                errors: errorCount,
+                warnings: warningCount,
+                patterns: Array.from(messagePatterns.entries()),
+                timestamp: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `console-analysis-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+        
+        // Initialize
+        interceptConsole();
+        
+        // Test the monitor
+        setTimeout(() => {
+            addLogLine('info', '✅ Console monitor initialized');
+            addLogLine('info', '💡 Tip: If you see "High frequency logging detected", that\'s what\'s causing the freeze!');
+        }, 1000);
+        
+        // Reset logs per second counter
+        setInterval(() => {
+            lastSecondCount = 0;
+        }, 1000);
+    </script>
+</body>
+</html> 

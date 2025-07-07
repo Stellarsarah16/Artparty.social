@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Mouse Controls Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+            /* Prevent page scrolling when middle mouse is used */
+            overflow-x: hidden;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .instructions {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+            color: #2c5282;
+        }
+        
+        .test-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .test-actions button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .test-actions .primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .test-actions .secondary {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .status {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.info {
+            background: #cce7ff;
+            color: #004085;
+        }
+        
+        #canvas {
+            border: 2px solid #333;
+            border-radius: 5px;
+            background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+                        linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+                        linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            cursor: default;
+            /* Prevent browser scrolling on middle mouse */
+            overscroll-behavior: none;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🖱️ Canvas Mouse Controls Test</h1>
+        
+        <div class="instructions">
+            <h3>How to Test:</h3>
+            <p><strong>Middle Mouse Button (Wheel):</strong> Press and hold + drag to pan/scroll the canvas</p>
+            <p><strong>Left Mouse Button:</strong> Click to select tiles (no panning)</p>
+            <p><strong>Mouse Wheel:</strong> Scroll to zoom in/out</p>
+        </div>
+        
+        <div class="test-actions">
+            <button class="primary" onclick="loadCanvasViewer()">Load Canvas Viewer</button>
+            <button class="secondary" onclick="toggleDebugMode()">Toggle Debug Mode</button>
+            <button class="secondary" onclick="resetCanvas()">Reset Canvas</button>
+        </div>
+        
+        <div id="status-log"></div>
+        
+        <canvas id="canvas" width="600" height="400"></canvas>
+        
+        <div id="mouse-info" style="margin-top: 10px; font-family: monospace; font-size: 12px;">
+            Mouse Info: Move mouse over canvas to see details
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/canvas-viewer.js"></script>
+    <script>
+        let testCanvasViewer = null;
+        let debugMode = false;
+        
+        function logStatus(message, type = 'info') {
+            const statusLog = document.getElementById('status-log');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            statusLog.appendChild(div);
+            
+            // Keep only last 5 messages
+            while (statusLog.children.length > 5) {
+                statusLog.removeChild(statusLog.firstChild);
+            }
+        }
+        
+        function loadCanvasViewer() {
+            try {
+                const canvas = document.getElementById('canvas');
+                
+                // Enable debug mode for testing
+                APP_CONFIG.DEBUG_CANVAS = debugMode;
+                
+                // Create CanvasViewer instance (no parameters in constructor)
+                testCanvasViewer = new CanvasViewer();
+                
+                // Initialize with canvas element
+                testCanvasViewer.init(canvas);
+                
+                // Set canvas data (required for rendering)
+                testCanvasViewer.setCanvasData({
+                    width: 2000,
+                    height: 1200,
+                    title: "Test Canvas"
+                });
+                
+                // Set canvas size to match HTML attributes
+                canvas.width = 600;
+                canvas.height = 400;
+                
+                // Set up callback functions
+                testCanvasViewer.onTileClick = (tile) => {
+                    logStatus(`Tile clicked: (${tile.x}, ${tile.y})`, 'success');
+                };
+                
+                testCanvasViewer.onViewportChange = (x, y, zoom) => {
+                    if (debugMode) {
+                        logStatus(`Viewport changed: x=${x.toFixed(1)}, y=${y.toFixed(1)}, zoom=${zoom.toFixed(2)}`, 'info');
+                    }
+                };
+                
+                // Set tile size
+                testCanvasViewer.tileSize = 32;
+                
+                // Add some test tiles
+                let tileCount = 0;
+                for (let x = 0; x < 20; x++) {
+                    for (let y = 0; y < 15; y++) {
+                        const color = `hsl(${(x * 18 + y * 12) % 360}, 70%, 60%)`;
+                        
+                        // Create 32x32 pixel data (expected format)
+                        const pixelData = [];
+                        for (let py = 0; py < 32; py++) {
+                            pixelData[py] = [];
+                            for (let px = 0; px < 32; px++) {
+                                pixelData[py][px] = color;
+                            }
+                        }
+                        
+                        testCanvasViewer.addTile({
+                            id: `tile-${x}-${y}`,
+                            x: x,
+                            y: y,
+                            color: color,
+                            pixel_data: pixelData // Correct property name and format
+                        });
+                        tileCount++;
+                    }
+                }
+                
+                testCanvasViewer.render();
+                logStatus(`Canvas viewer loaded successfully! Added ${tileCount} tiles`, 'success');
+                
+                // Add mouse event monitoring
+                canvas.addEventListener('mousedown', (e) => {
+                    const buttonName = e.button === 0 ? 'Left' : e.button === 1 ? 'Middle' : e.button === 2 ? 'Right' : 'Unknown';
+                    logStatus(`Mouse down: ${buttonName} button (${e.button})`, 'info');
+                    
+                    // Prevent all default browser behavior for middle mouse
+                    if (e.button === 1) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                });
+                
+                // Additional middle mouse button event prevention
+                canvas.addEventListener('mouseup', (e) => {
+                    if (e.button === 1) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                });
+                
+                canvas.addEventListener('click', (e) => {
+                    if (e.button === 1) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                });
+                
+                canvas.addEventListener('auxclick', (e) => {
+                    // Prevent middle mouse clicks from opening links or scrolling
+                    if (e.button === 1) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                });
+                
+                canvas.addEventListener('mousemove', (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    document.getElementById('mouse-info').textContent = 
+                        `Mouse: (${x.toFixed(0)}, ${y.toFixed(0)}) | ` +
+                        `Dragging: ${testCanvasViewer?.isDragging ? 'YES' : 'NO'} | ` +
+                        `Drag Button: ${testCanvasViewer?.dragButton ?? 'None'} | ` +
+                        `Cursor: ${canvas.style.cursor || 'default'}`;
+                });
+                
+            } catch (error) {
+                logStatus(`Error loading canvas: ${error.message}`, 'error');
+            }
+        }
+        
+        function toggleDebugMode() {
+            debugMode = !debugMode;
+            APP_CONFIG.DEBUG_CANVAS = debugMode;
+            if (testCanvasViewer) {
+                testCanvasViewer.debugOverlay.enabled = debugMode;
+            }
+            logStatus(`Debug mode: ${debugMode ? 'ON' : 'OFF'}`, 'info');
+        }
+        
+        function resetCanvas() {
+            if (testCanvasViewer) {
+                testCanvasViewer.viewportX = 0;
+                testCanvasViewer.viewportY = 0;
+                testCanvasViewer.zoom = 1;
+                testCanvasViewer.render();
+                logStatus('Canvas reset to default position', 'info');
+            }
+        }
+        
+        // Load canvas viewer automatically
+        window.addEventListener('load', loadCanvasViewer);
+    </script>
+</body>
+</html> 

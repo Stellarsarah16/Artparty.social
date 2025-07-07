@@ -1,0 +1,69 @@
+{
+  "name": "stellar-collab-app",
+  "version": "1.0.0",
+  "description": "Collaborative pixel canvas application",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --coverage --watchAll=false",
+    "test:frontend:unit": "jest --testPathPattern=frontend/unit",
+    "test:backend:unit": "jest --testPathPattern=backend/unit",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:e2e": "jest --testPathPattern=e2e",
+    "test:frontend": "jest --testPathPattern=frontend",
+    "test:backend": "jest --testPathPattern=backend"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "jest-environment-node": "^29.7.0",
+    "@testing-library/jest-dom": "^6.1.4",
+    "@testing-library/dom": "^9.3.3",
+    "jsdom": "^23.0.1",
+    "babel-jest": "^29.7.0",
+    "@babel/core": "^7.23.5",
+    "@babel/preset-env": "^7.23.5",
+    "puppeteer": "^21.5.0",
+    "jest-junit": "^16.0.0",
+    "jest-html-reporter": "^3.10.2"
+  },
+  "dependencies": {},
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/tests/setup-frontend.js"],
+    "testMatch": ["<rootDir>/tests/**/*.test.js"],
+    "collectCoverageFrom": [
+      "frontend/js/**/*.js",
+      "backend/app/**/*.py",
+      "!frontend/js/config.js",
+      "!backend/app/main.py",
+      "!**/node_modules/**",
+      "!**/venv/**",
+      "!**/*.config.js",
+      "!**/*.test.js"
+    ],
+    "coverageDirectory": "<rootDir>/tests/coverage",
+    "coverageReporters": ["text", "lcov", "html", "json"],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/frontend/js/$1",
+      "^@backend/(.*)$": "<rootDir>/backend/app/$1",
+      "^@tests/(.*)$": "<rootDir>/tests/$1"
+    },
+    "testTimeout": 30000,
+    "clearMocks": true,
+    "restoreMocks": true
+  },
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current"
+          }
+        }
+      ]
+    ]
+  }
+} 

@@ -1,0 +1,330 @@
+/**
+ * Unit Tests for CanvasService
+ * Testing canvas API operations, error handling, and service lifecycle
+ */
+
+// Mock dependencies
+const mockEventManager = {
+    emit: jest.fn()
+};
+
+const mockUiUtils = {
+    showToast: jest.fn()
+};
+
+const mockConfigUtils = {
+    getApiUrl: jest.fn(),
+    getAuthHeaders: jest.fn()
+};
+
+// Mock global fetch
+global.fetch = jest.fn();
+
+// Mock global CONFIG_UTILS and API_CONFIG
+global.CONFIG_UTILS = mockConfigUtils;
+global.API_CONFIG = {
+    ENDPOINTS: {
+        CANVAS: '/canvas',
+        TILES: '/tiles'
+    }
+};
+
+// Import the CanvasService (would need to be adapted for actual module loading)
+import { CanvasService } from '../../../../frontend/js/services/canvas.js';
+
+describe('CanvasService', () => {
+    let canvasService;
+
+    beforeEach(() => {
+        // Reset all mocks
+        jest.clearAllMocks();
+        
+        // Create fresh instance
+        canvasService = new CanvasService();
+        
+        // Mock global dependencies
+        canvasService.eventManager = mockEventManager;
+        canvasService.uiUtils = mockUiUtils;
+        
+        // Setup default mock returns
+        mockConfigUtils.getApiUrl.mockImplementation(endpoint => `http://localhost:8000${endpoint}`);
+        mockConfigUtils.getAuthHeaders.mockReturnValue({
+            'Authorization': 'Bearer token123',
+            'Content-Type': 'application/json'
+        });
+    });
+
+    describe('Initialization', () => {
+        test('should initialize correctly', () => {
+            expect(canvasService.initialized).toBe(false);
+            
+            canvasService.init();
+            
+            expect(canvasService.initialized).toBe(true);
+        });
+
+        test('should not initialize twice', () => {
+            const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+            
+            canvasService.init();
+            canvasService.init();
+            
+            expect(consoleSpy).toHaveBeenCalledWith('Canvas service already initialized');
+            consoleSpy.mockRestore();
+        });
+    });
+
+    describe('Get Canvases', () => {
+        const mockCanvases = [
+            { id: 1, name: 'Canvas 1', width: 100, height: 100 },
+            { id: 2, name: 'Canvas 2', width: 200, height: 200 }
+        ];
+
+        test('should fetch canvases successfully', async () => {
+            fetch.mockResolvedValueOnce({
+                ok: true,
+                json: async () => mockCanvases
+            });
+
+            const result = await canvasService.getCanvases();
+
+            expect(fetch).toHaveBeenCalledWith(
+                'http://localhost:8000/canvas',
+                expect.objectContaining({
+                    headers: expect.objectContaining({
+                        'Authorization': 'Bearer token123'
+                    })
+                })
+            );
+
+            expect(result).toEqual(mockCanvases);
+        });
+
+        test('should handle fetch failure', async () => {
+            fetch.mockResolvedValueOnce({
+                ok: false,
+                status: 404
+            });
+
+            await expect(canvasService.getCanvases()).rejects.toThrow('Failed to fetch canvases: 404');
+            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Failed to load canvases', 'error');
+        });
+
+        test('should handle network error', async () => {
+            const networkError = new Error('Network error');
+            fetch.mockRejectedValueOnce(networkError);
+
+            await expect(canvasService.getCanvases()).rejects.toThrow('Network error');
+            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Failed to load canvases', 'error');
+        });
+    });
+
+    describe('Get Canvas Data', () => {
+        const mockCanvasData = {
+            id: 1,
+            name: 'Test Canvas',
+            width: 100,
+            height: 100,
+            tiles: [
+                { x: 0, y: 0, color: '#FF0000' },
+                { x: 1, y: 0, color: '#00FF00' }
+            ]
+        };
+
+        test('should fetch canvas data successfully', async () => {
+            fetch.mockResolvedValueOnce({
+                ok: true,
+                json: async () => mockCanvasData
+            });
+
+            const result = await canvasService.getCanvasData(1);
+
+            expect(fetch).toHaveBeenCalledWith(
+                'http://localhost:8000/canvas/1',
+                expect.objectContaining({
+                    headers: expect.objectContaining({
+                        'Authorization': 'Bearer token123'
+                    })
+                })
+            );
+
+            expect(result).toEqual(mockCanvasData);
+        });
+
+        test('should handle fetch failure', async () => {
+            fetch.mockResolvedValueOnce({
+                ok: false,
+                status: 404
+            });
+
+            await expect(canvasService.getCanvasData(1)).rejects.toThrow('Failed to fetch canvas data: 404');
+            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Failed to load canvas data', 'error');
+        });
+    });
+
+    describe('Create Canvas', () => {
+        const mockCanvasData = {
+            name: 'New Canvas',
+            width: 100,
+            height: 100,
+            public: true
+        };
+
+        const mockResponse = {
+            id: 3,
+            name: 'New Canvas',
+            width: 100,
+            height: 100,
+            public: true,
+            created_at: '2023-01-01T00:00:00Z'
+        };
+
+        test('should create canvas successfully', async () => {
+            fetch.mockResolvedValueOnce({
+                ok: true,
+                json: async () => mockResponse
+            });
+
+            const result = await canvasService.createCanvas(mockCanvasData);
+
+            expect(fetch).toHaveBeenCalledWith(
+                'http://localhost:8000/canvas',
+                expect.objectContaining({
+                    method: 'POST',
+                    headers: expect.objectContaining({
+                        'Authorization': 'Bearer token123',
+                        'Content-Type': 'application/json'
+                    }),
+                    body: JSON.stringify(mockCanvasData)
+                })
+            );
+
+            expect(mockEventManager.emit).toHaveBeenCalledWith('canvas:created', mockResponse);
+            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Canvas created successfully!', 'success');
+            expect(result).toEqual({ success: true, canvas: mockResponse });
+        });
+
+        test('should handle creation failure', async () => {
+            const mockError = { detail: 'Canvas name already exists' };
+            fetch.mockResolvedValueOnce({
+                ok: false,
+                json: async () => mockError
+            });
+
+            const result = await canvasService.createCanvas(mockCanvasData);
+
+            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Canvas name already exists', 'error');
+            expect(result).toEqual({ success: false, error: mockError });
+        });
+
+        test('should handle network error', async () => {
+            const networkError = new Error('Network error');
+            fetch.mockRejectedValueOnce(networkError);
+
+            const result = await canvasService.createCanvas(mockCanvasData);
+
+            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Network error during canvas creation', 'error');
+            expect(result).toEqual({ success: false, error: { message: 'Network error' } });
+        });
+    });
+
+    describe('Save Tile', () => {
+        const mockTileData = {
+            canvas_id: 1,
+            x: 5,
+            y: 10,
+            color: '#FF0000'
+        };
+
+        const mockResponse = {
+            id: 123,
+            canvas_id: 1,
+            x: 5,
+            y: 10,
+            color: '#FF0000',
+            created_at: '2023-01-01T00:00:00Z'
+        };
+
+        test('should save tile successfully', async () => {
+            fetch.mockResolvedValueOnce({
+                ok: true,
+                json: async () => mockResponse
+            });
+
+            const result = await canvasService.saveTile(mockTileData);
+
+            expect(fetch).toHaveBeenCalledWith(
+                'http://localhost:8000/tiles',
+                expect.objectContaining({
+                    method: 'POST',
+                    headers: expect.objectContaining({
+                        'Authorization': 'Bearer token123',
+                        'Content-Type': 'application/json'
+                    }),
+                    body: JSON.stringify(mockTileData)
+                })
+            );
+
+            expect(mockEventManager.emit).toHaveBeenCalledWith('tile:saved', mockResponse);
+            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Tile saved successfully!', 'success');
+            expect(result).toEqual({ success: true, tile: mockResponse });
+        });
+
+        test('should handle save failure', async () => {
+            const mockError = { detail: 'Tile coordinates out of bounds' };
+            fetch.mockResolvedValueOnce({
+                ok: false,
+                json: async () => mockError
+            });
+
+            const result = await canvasService.saveTile(mockTileData);
+
+            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Tile coordinates out of bounds', 'error');
+            expect(result).toEqual({ success: false, error: mockError });
+        });
+
+        test('should handle network error', async () => {
+            const networkError = new Error('Network error');
+            fetch.mockRejectedValueOnce(networkError);
+
+            const result = await canvasService.saveTile(mockTileData);
+
+            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Network error during tile save', 'error');
+            expect(result).toEqual({ success: false, error: { message: 'Network error' } });
+        });
+    });
+
+    describe('Error Handling', () => {
+        test('should handle malformed JSON response', async () => {
+            fetch.mockResolvedValueOnce({
+                ok: true,
+                json: async () => {
+                    throw new Error('Invalid JSON');
+                }
+            });
+
+            await expect(canvasService.getCanvases()).rejects.toThrow('Invalid JSON');
+        });
+
+        test('should handle missing response body', async () => {
+            fetch.mockResolvedValueOnce({
+                ok: false,
+                json: async () => null
+            });
+
+            const result = await canvasService.createCanvas({});
+
+            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Failed to create canvas', 'error');
+            expect(result).toEqual({ success: false, error: null });
+        });
+    });
+
+    describe('Service Lifecycle', () => {
+        test('should destroy service properly', () => {
+            canvasService.init();
+            canvasService.destroy();
+            
+            expect(canvasService.initialized).toBe(false);
+        });
+    });
+}); 

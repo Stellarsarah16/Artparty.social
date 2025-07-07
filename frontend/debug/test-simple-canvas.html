@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Canvas Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        #canvas {
+            border: 2px solid #333;
+            background: white;
+            display: block;
+            margin: 20px 0;
+        }
+        
+        .info {
+            padding: 10px;
+            background: #e8f4fd;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .error {
+            padding: 10px;
+            background: #f8d7da;
+            color: #721c24;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            padding: 10px;
+            background: #d4edda;
+            color: #155724;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Canvas Debug Test</h1>
+    
+    <div class="info">
+        <h3>Debug Steps:</h3>
+        <div id="debug-steps"></div>
+    </div>
+    
+    <canvas id="canvas" width="600" height="400"></canvas>
+    
+    <div id="canvas-info">Canvas info will appear here...</div>
+    
+    <button onclick="testBasicCanvas()">Test Basic Canvas</button>
+    <button onclick="testCanvasViewer()">Test Canvas Viewer</button>
+    <button onclick="testWithTiles()">Test With Tiles</button>
+    <button onclick="clearCanvas()">Clear Canvas</button>
+
+    <script>
+        function logStep(message, type = 'info') {
+            const stepsDiv = document.getElementById('debug-steps');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            stepsDiv.appendChild(div);
+            console.log(message);
+        }
+        
+        function testBasicCanvas() {
+            try {
+                logStep('Starting basic canvas test...', 'info');
+                
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                logStep('Canvas element found', 'success');
+                logStep(`Canvas size: ${canvas.width}x${canvas.height}`, 'info');
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw a simple test pattern
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(50, 50, 100, 100);
+                
+                ctx.fillStyle = '#00ff00';
+                ctx.fillRect(200, 100, 100, 100);
+                
+                ctx.fillStyle = '#0000ff';
+                ctx.fillRect(350, 150, 100, 100);
+                
+                // Draw some text
+                ctx.fillStyle = '#333';
+                ctx.font = '20px Arial';
+                ctx.fillText('Basic Canvas Test', 50, 30);
+                
+                logStep('Basic canvas drawing complete!', 'success');
+                
+            } catch (error) {
+                logStep(`Error in basic canvas test: ${error.message}`, 'error');
+                console.error('Basic canvas error:', error);
+            }
+        }
+        
+        function testCanvasViewer() {
+            try {
+                logStep('Testing Canvas Viewer loading...', 'info');
+                
+                // Check if config is loaded
+                if (typeof APP_CONFIG === 'undefined') {
+                    logStep('APP_CONFIG not found, loading config...', 'error');
+                    return;
+                }
+                
+                logStep('APP_CONFIG loaded successfully', 'success');
+                
+                // Check if CanvasViewer is loaded
+                if (typeof CanvasViewer === 'undefined') {
+                    logStep('CanvasViewer class not found!', 'error');
+                    return;
+                }
+                
+                logStep('CanvasViewer class found', 'success');
+                
+                // Create canvas viewer
+                const canvasViewer = new CanvasViewer();
+                logStep('CanvasViewer instance created', 'success');
+                
+                const canvas = document.getElementById('canvas');
+                canvasViewer.init(canvas);
+                logStep('CanvasViewer initialized', 'success');
+                
+                // Try to render
+                canvasViewer.render();
+                logStep('CanvasViewer render called', 'success');
+                
+            } catch (error) {
+                logStep(`Error in CanvasViewer test: ${error.message}`, 'error');
+                console.error('CanvasViewer error:', error);
+            }
+        }
+        
+        function testWithTiles() {
+            try {
+                logStep('Testing CanvasViewer with tiles...', 'info');
+                
+                const canvas = document.getElementById('canvas');
+                const canvasViewer = new CanvasViewer();
+                canvasViewer.init(canvas);
+                
+                // Set canvas data (required for rendering)
+                canvasViewer.setCanvasData({
+                    width: 1000,
+                    height: 600,
+                    title: "Test Canvas"
+                });
+                logStep('Canvas data set successfully', 'success');
+                
+                // Set smaller tile size for testing
+                canvasViewer.tileSize = 50;
+                
+                // Add a few test tiles
+                for (let x = 0; x < 5; x++) {
+                    for (let y = 0; y < 3; y++) {
+                        const color = `hsl(${(x * 60 + y * 30) % 360}, 70%, 50%)`;
+                        
+                        // Create 32x32 pixel data (expected format)
+                        const pixelData = [];
+                        for (let py = 0; py < 32; py++) {
+                            pixelData[py] = [];
+                            for (let px = 0; px < 32; px++) {
+                                pixelData[py][px] = color;
+                            }
+                        }
+                        
+                        const tile = {
+                            id: `test-tile-${x}-${y}`,
+                            x: x,
+                            y: y,
+                            color: color,
+                            pixel_data: pixelData // Correct property name and format
+                        };
+                        
+                        canvasViewer.addTile(tile);
+                        logStep(`Added tile: ${tile.id} at (${x}, ${y}) with color ${color}`, 'info');
+                    }
+                }
+                
+                logStep(`Total tiles in viewer: ${canvasViewer.tiles.size}`, 'info');
+                
+                // Force a render
+                canvasViewer.render();
+                logStep('Render complete - check canvas for colored tiles', 'success');
+                
+            } catch (error) {
+                logStep(`Error in tile test: ${error.message}`, 'error');
+                console.error('Tile test error:', error);
+            }
+        }
+        
+        function clearCanvas() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            logStep('Canvas cleared', 'info');
+        }
+        
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            logStep('Page loaded, starting tests...', 'info');
+            testBasicCanvas();
+        });
+    </script>
+    
+    <!-- Load config and canvas viewer -->
+    <script src="js/config.js"></script>
+    <script src="js/canvas-viewer.js"></script>
+</body>
+</html> 

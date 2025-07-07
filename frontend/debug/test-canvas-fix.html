@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Navigation Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        
+        #test-canvas {
+            border: 2px solid #333;
+            background: #f0f0f0;
+            cursor: grab;
+        }
+        
+        #test-canvas:active {
+            cursor: grabbing;
+        }
+        
+        .info {
+            margin: 20px 0;
+            padding: 10px;
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .controls {
+            margin: 10px 0;
+        }
+        
+        button {
+            margin: 5px;
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        #debug-info {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Canvas Navigation Test</h1>
+    
+    <div class="info">
+        <h3>✅ Canvas Navigation Fixes</h3>
+        <ul>
+            <li><strong>Left Mouse Button</strong>: Drag to pan canvas</li>
+            <li><strong>Middle Mouse Button</strong>: Drag to pan canvas (fixed!)</li>
+            <li><strong>Mouse Wheel</strong>: Zoom in/out</li>
+            <li><strong>Performance</strong>: Throttled rendering (no more crashes!)</li>
+        </ul>
+    </div>
+    
+    <div class="controls">
+        <button onclick="testCanvas.zoomIn()">Zoom In</button>
+        <button onclick="testCanvas.zoomOut()">Zoom Out</button>
+        <button onclick="testCanvas.resetZoom()">Reset Zoom</button>
+        <button onclick="testCanvas.centerView()">Center View</button>
+        <button onclick="addTestTile()">Add Test Tile</button>
+    </div>
+    
+    <canvas id="test-canvas" width="800" height="600"></canvas>
+    
+    <div id="debug-info">
+        <strong>Debug Info:</strong><br>
+        <span id="debug-text">Canvas loaded, ready for testing...</span>
+    </div>
+    
+    <script>
+        // Simplified canvas test implementation
+        class TestCanvas {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.viewportX = 0;
+                this.viewportY = 0;
+                this.zoom = 1;
+                this.isDragging = false;
+                this.dragButton = null;
+                this.lastMouseX = 0;
+                this.lastMouseY = 0;
+                this.tiles = [];
+                this.renderRequested = false;
+                this.lastRenderTime = 0;
+                
+                this.setupEvents();
+                this.render();
+            }
+            
+            setupEvents() {
+                // Prevent context menu
+                this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+                
+                this.canvas.addEventListener('mousedown', (e) => {
+                    // Handle both left (0) and middle (1) mouse buttons
+                    if (e.button === 0 || e.button === 1) {
+                        e.preventDefault();
+                        this.isDragging = true;
+                        this.dragButton = e.button;
+                        this.lastMouseX = e.clientX;
+                        this.lastMouseY = e.clientY;
+                        this.canvas.style.cursor = e.button === 1 ? 'move' : 'grabbing';
+                        this.updateDebug(`Started dragging with ${e.button === 0 ? 'left' : 'middle'} mouse button`);
+                    }
+                });
+                
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if (this.isDragging) {
+                        e.preventDefault();
+                        const deltaX = e.clientX - this.lastMouseX;
+                        const deltaY = e.clientY - this.lastMouseY;
+                        
+                        this.viewportX -= deltaX / this.zoom;
+                        this.viewportY -= deltaY / this.zoom;
+                        
+                        this.lastMouseX = e.clientX;
+                        this.lastMouseY = e.clientY;
+                        
+                        this.requestRender();
+                        this.updateDebug(`Dragging: viewport(${Math.round(this.viewportX)}, ${Math.round(this.viewportY)})`);
+                    }
+                });
+                
+                this.canvas.addEventListener('mouseup', (e) => {
+                    if (e.button === this.dragButton) {
+                        this.isDragging = false;
+                        this.dragButton = null;
+                        this.canvas.style.cursor = 'grab';
+                        this.updateDebug('Stopped dragging');
+                    }
+                });
+                
+                this.canvas.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                    this.zoom = Math.max(0.1, Math.min(5, this.zoom * delta));
+                    this.requestRender();
+                    this.updateDebug(`Zoom: ${Math.round(this.zoom * 100)}%`);
+                });
+            }
+            
+            requestRender() {
+                if (!this.renderRequested) {
+                    this.renderRequested = true;
+                    requestAnimationFrame(() => {
+                        this.render();
+                        this.renderRequested = false;
+                    });
+                }
+            }
+            
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Background
+                this.ctx.fillStyle = '#f8f8f8';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.ctx.save();
+                this.ctx.scale(this.zoom, this.zoom);
+                this.ctx.translate(-this.viewportX, -this.viewportY);
+                
+                // Draw grid
+                this.drawGrid();
+                
+                // Draw test tiles
+                this.tiles.forEach(tile => {
+                    this.ctx.fillStyle = tile.color;
+                    this.ctx.fillRect(tile.x, tile.y, 32, 32);
+                    this.ctx.strokeStyle = '#333';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.strokeRect(tile.x, tile.y, 32, 32);
+                });
+                
+                this.ctx.restore();
+                
+                // Draw info
+                this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                this.ctx.fillRect(10, 10, 200, 60);
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = '12px Arial';
+                this.ctx.fillText(`Zoom: ${Math.round(this.zoom * 100)}%`, 15, 25);
+                this.ctx.fillText(`X: ${Math.round(this.viewportX)}, Y: ${Math.round(this.viewportY)}`, 15, 40);
+                this.ctx.fillText(`Tiles: ${this.tiles.length}`, 15, 55);
+            }
+            
+            drawGrid() {
+                this.ctx.strokeStyle = '#ddd';
+                this.ctx.lineWidth = 0.5 / this.zoom;
+                
+                const startX = Math.floor(this.viewportX / 32) * 32;
+                const startY = Math.floor(this.viewportY / 32) * 32;
+                const endX = this.viewportX + (this.canvas.width / this.zoom);
+                const endY = this.viewportY + (this.canvas.height / this.zoom);
+                
+                for (let x = startX; x <= endX; x += 32) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, this.viewportY);
+                    this.ctx.lineTo(x, this.viewportY + (this.canvas.height / this.zoom));
+                    this.ctx.stroke();
+                }
+                
+                for (let y = startY; y <= endY; y += 32) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.viewportX, y);
+                    this.ctx.lineTo(this.viewportX + (this.canvas.width / this.zoom), y);
+                    this.ctx.stroke();
+                }
+            }
+            
+            zoomIn() {
+                this.zoom = Math.min(5, this.zoom * 1.2);
+                this.requestRender();
+                this.updateDebug(`Zoom In: ${Math.round(this.zoom * 100)}%`);
+            }
+            
+            zoomOut() {
+                this.zoom = Math.max(0.1, this.zoom / 1.2);
+                this.requestRender();
+                this.updateDebug(`Zoom Out: ${Math.round(this.zoom * 100)}%`);
+            }
+            
+            resetZoom() {
+                this.zoom = 1;
+                this.requestRender();
+                this.updateDebug('Reset Zoom: 100%');
+            }
+            
+            centerView() {
+                this.viewportX = -this.canvas.width / 2;
+                this.viewportY = -this.canvas.height / 2;
+                this.requestRender();
+                this.updateDebug('Centered view');
+            }
+            
+            addTile(x, y, color) {
+                this.tiles.push({ x, y, color });
+                this.requestRender();
+                this.updateDebug(`Added tile at (${x}, ${y})`);
+            }
+            
+            updateDebug(message) {
+                document.getElementById('debug-text').textContent = message;
+            }
+        }
+        
+        // Initialize test canvas
+        const canvas = document.getElementById('test-canvas');
+        const testCanvas = new TestCanvas(canvas);
+        
+        // Add some test tiles
+        function addTestTile() {
+            const colors = ['#ff4444', '#44ff44', '#4444ff', '#ffff44', '#ff44ff', '#44ffff'];
+            const x = Math.floor(Math.random() * 400) * 32;
+            const y = Math.floor(Math.random() * 300) * 32;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            testCanvas.addTile(x, y, color);
+        }
+        
+        // Add initial tiles
+        for (let i = 0; i < 5; i++) {
+            addTestTile();
+        }
+        
+        console.log('✅ Canvas test loaded - try middle mouse drag!');
+    </script>
+</body>
+</html> 
