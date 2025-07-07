@@ -33,6 +33,12 @@
     "testEnvironment": "jsdom",
     "setupFilesAfterEnv": ["<rootDir>/tests/setup-frontend.js"],
     "testMatch": ["<rootDir>/tests/**/*.test.js"],
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(frontend)/)"
+    ],
     "collectCoverageFrom": [
       "frontend/js/**/*.js",
       "backend/app/**/*.py",
@@ -61,7 +67,8 @@
         {
           "targets": {
             "node": "current"
-          }
+          },
+          "modules": "commonjs"
         }
       ]
     ]
