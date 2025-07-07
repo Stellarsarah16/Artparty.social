@@ -126,3 +126,8 @@ const eventManager = new EventManager();
 // Export for use in other modules
 export { eventManager };
 export default eventManager; 
+
+// CommonJS exports for testing
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { EventManager, eventManager };
+} 

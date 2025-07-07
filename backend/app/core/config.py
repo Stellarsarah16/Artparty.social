@@ -33,6 +33,24 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v
         
+        # Check if we're in production environment
+        environment = os.getenv("ENVIRONMENT", "development")
+        debug = os.getenv("DEBUG", "true").lower() == "true"
+        
+        # If DATABASE_URL is provided as environment variable, use it
+        database_url = os.getenv("DATABASE_URL")
+        if database_url:
+            return database_url
+        
+        # For production, use PostgreSQL
+        if environment == "production" or not debug:
+            postgres_server = os.getenv("POSTGRES_SERVER", "localhost")
+            postgres_user = os.getenv("POSTGRES_USER", "postgres")
+            postgres_password = os.getenv("POSTGRES_PASSWORD", "password")
+            postgres_db = os.getenv("POSTGRES_DB", "pixel_canvas")
+            postgres_port = os.getenv("POSTGRES_PORT", "5432")
+            return f"postgresql://{postgres_user}:{postgres_password}@{postgres_server}:{postgres_port}/{postgres_db}"
+        
         # For development/demo - use SQLite
         return "sqlite:///./pixel_canvas.db"
     

@@ -390,3 +390,8 @@ const uiUtils = new UIUtils();
 // Export for use in other modules
 export { uiUtils };
 export default uiUtils; 
+
+// CommonJS exports for testing
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { UIUtils, uiUtils };
+} 

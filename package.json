@@ -2,6 +2,7 @@
   "name": "stellar-collab-app",
   "version": "1.0.0",
   "description": "Collaborative pixel canvas application",
+  "type": "module",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
@@ -30,6 +31,11 @@
   },
   "dependencies": {},
   "jest": {
+    "globals": {
+      "jest": {
+        "useESM": true
+      }
+    },
     "testEnvironment": "jsdom",
     "setupFilesAfterEnv": ["<rootDir>/tests/setup-frontend.js"],
     "testMatch": ["<rootDir>/tests/**/*.test.js"],
@@ -37,7 +43,7 @@
       "^.+\\.js$": "babel-jest"
     },
     "transformIgnorePatterns": [
-      "node_modules/(?!(frontend)/)"
+      "node_modules/(?!frontend)"
     ],
     "collectCoverageFrom": [
       "frontend/js/**/*.js",

@@ -362,3 +362,8 @@ const authService = new AuthService();
 // Export for use in other modules
 export { authService };
 export default authService; 
+
+// CommonJS exports for testing
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { AuthService, authService };
+} 
