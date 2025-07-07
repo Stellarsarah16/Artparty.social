@@ -26,15 +26,11 @@ COPY . /usr/share/nginx/html
 # Copy custom nginx configuration
 COPY nginx.prod.conf /etc/nginx/nginx.conf
 
-# Create nginx user
-RUN addgroup -g 101 -S nginx && \
-    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx
-
-# Set proper permissions
-RUN chown -R nginx:nginx /usr/share/nginx/html
-RUN chown -R nginx:nginx /var/cache/nginx
-RUN chown -R nginx:nginx /var/log/nginx
-RUN chown -R nginx:nginx /etc/nginx/conf.d
+# Set proper permissions (nginx user already exists in nginx:alpine)
+RUN chown -R nginx:nginx /usr/share/nginx/html \
+    && chown -R nginx:nginx /var/cache/nginx \
+    && chown -R nginx:nginx /var/log/nginx \
+    && chown -R nginx:nginx /etc/nginx/conf.d
 
 # Switch to nginx user
 USER nginx

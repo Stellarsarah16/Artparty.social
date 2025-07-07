@@ -22,3 +22,18 @@ Start fresh with clean DB:
 
 # Test the health endpoint:
     curl http://localhost:8000/health
+
+# Stop all Docker containers
+    docker stop $(docker ps -aq)
+
+# Remove all containers (both old and new)
+    docker rm $(docker ps -aq)
+
+# Remove all unused images
+    docker image prune -a -f
+
+# Remove all unused volumes (optional - this will delete your database data)
+    docker volume prune -f
+
+# Remove all unused networks
+    docker network prune -f
