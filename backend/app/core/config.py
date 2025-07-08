@@ -19,13 +19,13 @@ class Settings(BaseSettings):
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "password"
-    POSTGRES_DB: str = "pixel_canvas"
+    POSTGRES_DB: str = "artparty_social"
     POSTGRES_PORT: str = "5432"
     DATABASE_URL: Optional[str] = None
     
     # Use SQLite for development if PostgreSQL is not available
     USE_SQLITE: bool = True
-    SQLITE_DB_PATH: str = "./pixel_canvas.db"
+    SQLITE_DB_PATH: str = "./artparty_social.db"
     
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
@@ -47,12 +47,12 @@ class Settings(BaseSettings):
             postgres_server = os.getenv("POSTGRES_SERVER", "localhost")
             postgres_user = os.getenv("POSTGRES_USER", "postgres")
             postgres_password = os.getenv("POSTGRES_PASSWORD", "password")
-            postgres_db = os.getenv("POSTGRES_DB", "pixel_canvas")
+            postgres_db = os.getenv("POSTGRES_DB", "artparty_social")
             postgres_port = os.getenv("POSTGRES_PORT", "5432")
             return f"postgresql://{postgres_user}:{postgres_password}@{postgres_server}:{postgres_port}/{postgres_db}"
         
         # For development/demo - use SQLite
-        return "sqlite:///./pixel_canvas.db"
+        return "sqlite:///./artparty_social.db"
     
     # Redis - Use in-memory fallback if Redis not available
     REDIS_HOST: str = "localhost"
@@ -100,9 +100,9 @@ class Settings(BaseSettings):
         if environment == "production":
             # Production CORS origins - Replace with your actual domains
             production_origins = [
-                "https://stellarcollab.com",
-                "https://www.stellarcollab.com",
-                "https://app.stellarcollab.com",
+                "https://artparty.social",
+                "https://www.artparty.social",
+                "https://app.artparty.social",
             ]
             
             # Allow additional production domains from env
@@ -120,8 +120,8 @@ class Settings(BaseSettings):
         elif environment == "staging":
             # Staging environment
             return [
-                "https://staging.stellarcollab.com",
-                "https://staging-app.stellarcollab.com",
+                "https://staging.artparty.social",
+                "https://staging-app.artparty.social",
                 "http://localhost:3000",  # For testing
                 "http://localhost:8080",
             ]

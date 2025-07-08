@@ -1,4 +1,4 @@
-# Production Dockerfile for StellarCollabApp Frontend
+# Production Dockerfile for ArtPartySocial Frontend
 
 # Build stage
 FROM node:18-alpine as build

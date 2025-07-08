@@ -1,6 +1,6 @@
-# StellarCollabApp Testing Suite
+# ArtPartySocial Testing Suite
 
-This directory contains a comprehensive testing suite for the StellarCollabApp project, organized by concern and testing level.
+This directory contains a comprehensive testing suite for the ArtPartySocial project, organized by concern and testing level.
 
 ## Directory Structure
 

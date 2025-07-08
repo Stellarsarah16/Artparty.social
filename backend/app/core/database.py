@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # Create database engine
 engine = create_engine(
-    settings.DATABASE_URL or "sqlite:///pixel_canvas.db",
+    settings.DATABASE_URL or "sqlite:///artparty_social.db",
     echo=settings.DEBUG,  # Log SQL statements in debug mode
     pool_pre_ping=True,
     pool_size=10,

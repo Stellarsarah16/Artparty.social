@@ -37,3 +37,34 @@ Start fresh with clean DB:
 
 # Remove all unused networks
     docker network prune -f
+
+--- CLEANUP ---------
+
+# backup if needed
+    mv your-app-folder your-app-folder-backup
+
+# remove existing folder
+    rm -rf your-app-folder
+
+
+
+# Restart App
+    sudo systemctl restart your-app.service
+
+
+--- PULL FROM GITHUB------------------
+
+# SSH into bash
+    ssh root@your_ip
+
+# Pull new changes
+    git pull origin main
+
+
+
+
+    -------------------------------------
+DB_PASSWORD  HWIjL5ORT1YYMck
+REDIS_PASSWORD  FHfY9WVgoSKcGIRrRGuqVajz5ZR2aG3W
+64 bit string
+    gPEL0ZEHFztN3VqmPQpZbMjWsyWvIM5erlcJhUkWw6NePPNu3SrnR6oB3BCY7G6O

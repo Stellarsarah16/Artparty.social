@@ -1,68 +1,57 @@
-# StellarCollabApp - Local Production Testing Script for Windows
-# This script tests the production Docker setup locally
+# ArtPartySocial - Local Production Testing Script for Windows
 
-Write-Host "Testing StellarCollabApp Production Setup Locally..." -ForegroundColor Green
+# Test locally before deploying to production
+Write-Host "Testing ArtPartySocial Production Setup Locally..." -ForegroundColor Green
 
-# Check if Docker Desktop is running
-Write-Host "Checking Docker..." -ForegroundColor Blue
-try {
-    docker --version | Out-Null
-    docker info | Out-Null
-    Write-Host "Docker is running" -ForegroundColor Green
+# Clean up any existing containers
+Write-Host "Cleaning up existing containers..." -ForegroundColor Yellow
+docker-compose -f docker-compose.prod.yml down -v 2>$null
+docker system prune -f >$null 2>&1
+
+# Create production-like environment file
+Write-Host "Creating production test environment..." -ForegroundColor Yellow
+@"
+# Production test environment
+ENVIRONMENT=production
+DEBUG=false
+
+# Database
+DATABASE_URL=postgresql://artparty:test_password_123@db:5432/artparty_social_prod
+POSTGRES_SERVER=db
+POSTGRES_USER=artparty
+POSTGRES_DB=artparty_social_prod
+POSTGRES_PASSWORD=test_password_123
+
+# App
+APP_NAME=ArtPartySocial
+APP_VERSION=1.0.0
+
+# Security
+SECRET_KEY=test-secret-key-for-local-testing-only-change-in-production
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Redis
+REDIS_URL=redis://redis:6379/0
+REDIS_PASSWORD=test_redis_password
+
+# Rate limiting
+RATE_LIMIT_PER_MINUTE=100
+PAINT_RATE_LIMIT_PER_MINUTE=20
+
+# CORS - Allow local testing
+CORS_ORIGINS=["http://localhost","http://127.0.0.1","http://localhost:80","http://127.0.0.1:80"]
+"@ | Out-File -FilePath ".env" -Encoding UTF8
+
+# Create SSL certificates for HTTPS testing
+Write-Host "Creating SSL certificates for HTTPS testing..." -ForegroundColor Yellow
+if (-not (Test-Path "ssl")) {
+    New-Item -ItemType Directory -Path "ssl" >$null
 }
-catch {
-    Write-Host "Docker Desktop is not running or not installed" -ForegroundColor Red
-    Write-Host "Please install and start Docker Desktop from https://docker.com/products/docker-desktop" -ForegroundColor Yellow
-    exit 1
-}
+& openssl req -x509 -newkey rsa:2048 -keyout ssl/key.pem -out ssl/cert.pem -days 365 -nodes -subj "/C=US/ST=Test/L=Local/O=ArtPartySocial/CN=localhost" 2>$null
 
 # Navigate to deployment directory
 Set-Location deployment
-
-# Create local test environment file
-Write-Host "Creating local test configuration..." -ForegroundColor Blue
-
-$envContent = @"
-# Local Production Test Environment
-DB_PASSWORD=test_password_123
-SECRET_KEY=test_secret_key_for_local_testing_12345678901234567890
-CORS_ORIGINS=["https://localhost","https://127.0.0.1"]
-POSTGRES_DB=stellarcollab_prod
-POSTGRES_USER=stellarcollab
-DATABASE_URL=postgresql://stellarcollab:test_password_123@db:5432/stellarcollab_prod
-APP_NAME=StellarCollabApp
-APP_VERSION=1.0.0
-DEBUG=false
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-HOST=0.0.0.0
-PORT=8000
-WORKERS=4
-REDIS_URL=redis://redis:6379
-UPLOAD_DIR=/app/uploads
-MAX_FILE_SIZE=10485760
-RATE_LIMIT_REQUESTS=100
-RATE_LIMIT_WINDOW=60
-LOG_LEVEL=INFO
-"@
-
-$envContent | Out-File -FilePath ".env.prod" -Encoding UTF8
-Write-Host "Created .env.prod for local testing" -ForegroundColor Green
-
-# Create SSL directory and certificates
-Write-Host "Creating SSL certificates for local testing..." -ForegroundColor Blue
-New-Item -ItemType Directory -Force -Path "ssl" | Out-Null
-
-# Generate self-signed certificate for local testing
-try {
-    & openssl req -x509 -newkey rsa:2048 -keyout ssl/key.pem -out ssl/cert.pem -days 365 -nodes -subj "/C=US/ST=Test/L=Local/O=StellarCollabApp/CN=localhost" 2>$null
-    Write-Host "SSL certificates created" -ForegroundColor Green
-}
-catch {
-    Write-Host "OpenSSL not found, creating dummy certificate files" -ForegroundColor Yellow
-    "dummy cert" | Out-File -FilePath "ssl/cert.pem" -Encoding UTF8
-    "dummy key" | Out-File -FilePath "ssl/key.pem" -Encoding UTF8
-}
 
 # Create other required directories
 New-Item -ItemType Directory -Force -Path "uploads" | Out-Null

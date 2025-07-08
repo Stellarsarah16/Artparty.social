@@ -127,9 +127,9 @@ function initAuthButtons() {
             const data = await response.json();
             
             if (response.ok) {
-                // Store auth data
-                localStorage.setItem('stellarcollab_token', data.access_token);
-                localStorage.setItem('stellarcollab_user', JSON.stringify(data.user));
+                // Store token and user data
+                localStorage.setItem('artparty_social_token', data.access_token);
+                localStorage.setItem('artparty_social_user', JSON.stringify(data.user));
                 
                 // Update UI
                 updateNavigation(true, data.user);
@@ -190,9 +190,9 @@ function initAuthButtons() {
             const data = await response.json();
             
             if (response.ok) {
-                // Store auth data
-                localStorage.setItem('stellarcollab_token', data.access_token);
-                localStorage.setItem('stellarcollab_user', JSON.stringify(data.user));
+                // Store token and user data
+                localStorage.setItem('artparty_social_token', data.access_token);
+                localStorage.setItem('artparty_social_user', JSON.stringify(data.user));
                 
                 // Update UI
                 updateNavigation(true, data.user);
@@ -320,8 +320,8 @@ function initAuthButtons() {
     });
     
     // Check for existing authentication
-    const token = localStorage.getItem('stellarcollab_token');
-    const userData = localStorage.getItem('stellarcollab_user');
+    const token = localStorage.getItem('artparty_social_token');
+    const userData = localStorage.getItem('artparty_social_user');
     
     if (token && userData) {
         try {
@@ -330,8 +330,8 @@ function initAuthButtons() {
             showSection('canvas');
         } catch (e) {
             console.error('Error parsing user data:', e);
-            localStorage.removeItem('stellarcollab_token');
-            localStorage.removeItem('stellarcollab_user');
+            localStorage.removeItem('artparty_social_token');
+            localStorage.removeItem('artparty_social_user');
         }
     }
     

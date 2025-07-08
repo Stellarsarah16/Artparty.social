@@ -6,9 +6,9 @@ services:
     image: postgres:13
     restart: always
     environment:
-      POSTGRES_DB: artparty_social
+      POSTGRES_DB: artparty_social_dev
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: dev_password
     ports:
       - "5432:5432"
     volumes:
@@ -25,9 +25,8 @@ services:
   redis:
     image: redis:7-alpine
     restart: always
-    # SECURITY: Redis is only accessible internally (no external ports)
-    # ports:
-    #   - "6379:6379"  # Removed for security
+    ports:
+      - "6379:6379"  # Exposed for local development debugging
     volumes:
       - redis_data:/data
     networks:
@@ -41,17 +40,18 @@ services:
   # FastAPI Backend
   backend:
     build:
-      context: ./backend
+      context: ../../backend
       dockerfile: Dockerfile
     restart: always
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/artparty_social
+      - DATABASE_URL=postgresql://postgres:dev_password@db:5432/artparty_social_dev
       - REDIS_URL=redis://redis:6379/0
-      - SECRET_KEY=your-super-secret-key-change-in-production-please
+      - SECRET_KEY=dev-secret-key-change-in-production
       - ENVIRONMENT=development
       - DEBUG=true
+      - CORS_ORIGINS=["http://localhost:3000","http://localhost:8080","http://localhost:8000","http://localhost","http://127.0.0.1:3000","http://127.0.0.1:8080","http://127.0.0.1:8000","http://127.0.0.1"]
     depends_on:
       db:
         condition: service_healthy
@@ -60,7 +60,7 @@ services:
     networks:
       - app-network
     volumes:
-      - ./backend:/app
+      - ../../backend:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   # Frontend (Static file server for development)
@@ -70,7 +70,8 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./frontend:/usr/share/nginx/html
+      - ../../frontend:/usr/share/nginx/html
+      - ./nginx.local.conf:/etc/nginx/nginx.conf
     networks:
       - app-network
     depends_on:

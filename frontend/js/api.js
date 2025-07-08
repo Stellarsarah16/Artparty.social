@@ -210,9 +210,10 @@ class APIClient {
             CONFIG_UTILS.removeAuthToken();
             CONFIG_UTILS.removeUserData();
             
-            if (window.StellarCollabApp) {
-                window.StellarCollabApp.showSection('welcome');
-                window.StellarCollabApp.updateNavigation();
+            // Update main app interface
+            if (window.ArtPartySocial) {
+                window.ArtPartySocial.showSection('welcome');
+                window.ArtPartySocial.updateNavigation();
             }
             
             if (window.UIManager) {
@@ -590,9 +591,9 @@ window.API = API;
 window.APIClient = apiClient;
 
 // Integration with main app
-if (window.StellarCollabApp) {
+if (window.ArtPartySocial) {
     // Add API methods to main app
-    window.StellarCollabApp.api = API;
+    window.ArtPartySocial.api = API;
     
     // Setup automatic token refresh
     setInterval(async () => {

@@ -1,6 +1,6 @@
-# StellarCollabApp Frontend
+# ArtPartySocial Frontend
 
-Clean, organized frontend structure for the StellarCollabApp collaborative pixel art platform.
+Clean, organized frontend structure for the ArtPartySocial collaborative pixel art platform.
 
 ## Directory Structure
 
@@ -86,7 +86,7 @@ frontend/
 ### Production
 ```bash
 # Build and deploy using Docker
-docker build -f Dockerfile.prod -t stellarcollab-frontend .
+docker build -f Dockerfile.prod -t artpartysocial-frontend .
 ```
 
 ## Module Overview
@@ -99,59 +99,4 @@ Main application entry point that orchestrates all other modules.
 #### `core/app.js`
 Core application class that manages initialization and module coordination.
 
-#### `core/state.js`
-Centralized state management with reactive updates and persistence.
-
-### Services
-
-#### `services/auth.js`
-Authentication service for login, registration, and token management.
-
-#### `services/canvas.js`
-Canvas service for canvas-related API operations.
-
-### Components
-
-#### `components/navigation.js`
-Navigation manager for UI sections and modals.
-
-### Utils
-
-#### `utils/events.js`
-Event management system for application-wide event handling.
-
-#### `utils/ui.js`
-UI utilities for common operations like toasts, modals, and form handling.
-
-## Configuration
-
-The application automatically detects the environment and configures API endpoints accordingly:
-
-- **Development**: `http://localhost:8000`
-- **Staging**: `https://staging-api.stellarcollab.com`
-- **Production**: Same-origin with nginx proxy (recommended)
-
-## Migration from Legacy Code
-
-The legacy `main.js` and `main-refactored.js` files have been replaced with a clean, modular architecture. Key improvements:
-
-1. **Reduced File Size**: Main entry point is now ~200 lines instead of 1400+
-2. **Better Organization**: Related functionality grouped into logical modules
-3. **Improved Maintainability**: Each module has a single responsibility
-4. **Cleaner Dependencies**: Clear import/export structure
-5. **No Debug Code**: Production-ready without debug artifacts
-
-## Browser Support
-
-- Modern browsers with ES6 module support
-- Chrome 61+
-- Firefox 54+
-- Safari 10.1+
-- Edge 16+
-
-## Development Notes
-
-- Use browser dev tools for debugging
-- All console spam prevention has been removed
-- Clean, readable console output
-- Proper error handling and user feedback 
+#### `

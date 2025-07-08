@@ -1,9 +1,9 @@
 // Debug authentication state - paste this into browser console
 console.log('=== Authentication Debug ===');
 
-// Check stored authentication data
-const token = localStorage.getItem('stellarcollab_token');
-const userData = localStorage.getItem('stellarcollab_user');
+// Check local storage
+const token = localStorage.getItem('artparty_social_token');
+const userData = localStorage.getItem('artparty_social_user');
 
 console.log('Stored token:', token ? 'Present' : 'Missing');
 console.log('Stored user data:', userData ? 'Present' : 'Missing');

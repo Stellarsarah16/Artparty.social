@@ -681,14 +681,14 @@ const pixelEditor = new PixelEditor();
 window.PixelEditor = pixelEditor;
 
 // Integration with main app
-if (window.StellarCollabApp) {
+if (window.ArtPartySocial) {
     // Set up event listeners for integration
     pixelEditor.onToolChanged = (tool) => {
-        window.StellarCollabApp.selectTool(tool);
+        window.ArtPartySocial.selectTool(tool);
     };
     
     pixelEditor.onColorChanged = (color) => {
-        window.StellarCollabApp.selectColor(color);
+        window.ArtPartySocial.selectColor(color);
     };
     
     pixelEditor.onPixelChanged = (pixelData) => {

@@ -4,9 +4,9 @@ console.log('=== Authentication Debug ===');
 // Check if CONFIG_UTILS exists
 console.log('CONFIG_UTILS available:', typeof window.CONFIG_UTILS !== 'undefined');
 
-// Check stored authentication data
-const token = localStorage.getItem('stellarcollab_token');
-const userData = localStorage.getItem('stellarcollab_user');
+// Get token and user data
+const token = localStorage.getItem('artparty_social_token');
+const userData = localStorage.getItem('artparty_social_user');
 
 console.log('Stored token:', token ? 'Present' : 'Missing');
 console.log('Stored user data:', userData ? 'Present' : 'Missing');

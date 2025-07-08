@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CORS Test Utility - StellarCollabApp</title>
+    <title>CORS Test Utility - ArtPartySocial</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -200,7 +200,7 @@
                     <button class="preset-btn" onclick="setPresetUrl('http://localhost:8000')">Localhost:8000</button>
                     <button class="preset-btn" onclick="setPresetUrl('http://127.0.0.1:8000')">127.0.0.1:8000</button>
                     <button class="preset-btn" onclick="setPresetUrl(window.location.origin)">Same Origin</button>
-                    <button class="preset-btn" onclick="setPresetUrl('https://api.stellarcollab.com')">Production API</button>
+                    <button class="preset-btn" onclick="setPresetUrl('https://api.artparty.social')">Production API</button>
                 </div>
                 
                 <div class="input-group">
@@ -515,9 +515,9 @@ The tests will check:
         
         async function runProductionTests() {
             const productionUrls = [
-                'https://stellarcollab.com',
-                'https://www.stellarcollab.com',
-                'https://api.stellarcollab.com'
+                'https://artparty.social',
+                'https://www.artparty.social',
+                'https://api.artparty.social'
             ];
             
             log('Testing production URLs...', 'info');

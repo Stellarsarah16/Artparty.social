@@ -885,12 +885,12 @@ const uiManager = new UIManager();
 // Export for use in other modules
 window.UIManager = uiManager;
 
-// Integration with main app
-if (window.StellarCollabApp) {
-    // Override main app's modal functions
-    window.StellarCollabApp.showModal = (modalId, options) => uiManager.showModal(modalId, options);
-    window.StellarCollabApp.hideModal = (modalId, options) => uiManager.hideModal(modalId, options);
-    window.StellarCollabApp.showToast = (message, type, options) => uiManager.showToast(message, type, options);
+// Register with global app instance if available
+if (window.ArtPartySocial) {
+    // Register common UI functions globally
+    window.ArtPartySocial.showModal = (modalId, options) => uiManager.showModal(modalId, options);
+    window.ArtPartySocial.hideModal = (modalId, options) => uiManager.hideModal(modalId, options);
+    window.ArtPartySocial.showToast = (message, type, options) => uiManager.showToast(message, type, options);
 }
 
 console.log('✅ UI Manager loaded'); 

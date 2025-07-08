@@ -33,16 +33,16 @@ const getBaseUrls = () => {
     // Staging environment
     if (ENVIRONMENT.isStaging) {
         return {
-            API_BASE_URL: `${protocol}//staging-api.stellarcollab.com`,
-            WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//staging-api.stellarcollab.com`
+            API_BASE_URL: `${protocol}//staging-api.artparty.social`,
+            WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//staging-api.artparty.social`
         };
     }
     
     // Production - Same domain with nginx proxy (recommended approach)
     if (port === '80' || port === '443' || port === '') {
         return {
-            API_BASE_URL: `${protocol}//${hostname}`,
-            WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//${hostname}`
+            API_BASE_URL: `${protocol}//api.artparty.social`,
+            WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//api.artparty.social`
         };
     }
     
@@ -63,12 +63,12 @@ const FALLBACK_URLS = {
         'http://localhost:8001'
     ],
     staging: [
-        `${window.location.protocol}//staging-api.stellarcollab.com`,
-        `${window.location.protocol}//staging.stellarcollab.com/api`
+        `${window.location.protocol}//staging-api.artparty.social`,
+        `${window.location.protocol}//staging.artparty.social/api`
     ],
     production: [
-        `${window.location.protocol}//${window.location.hostname}`,
-        `${window.location.protocol}//${window.location.hostname}/api`
+        `${window.location.protocol}//api.artparty.social`,
+        `${window.location.protocol}//artparty.social/api`
     ]
 };
 
@@ -206,12 +206,12 @@ const APP_CONFIG = {
         }
     },
     
-    // Storage keys
-    STORAGE: {
-        AUTH_TOKEN: 'stellarcollab_token',
-        USER_DATA: 'stellarcollab_user',
-        THEME: 'stellarcollab_theme',
-        PREFERENCES: 'stellarcollab_preferences'
+    // LocalStorage keys
+    STORAGE_KEYS: {
+        AUTH_TOKEN: 'artparty_social_token',
+        USER_DATA: 'artparty_social_user',
+        THEME: 'artparty_social_theme',
+        PREFERENCES: 'artparty_social_preferences'
     },
     
     // Error messages
@@ -298,21 +298,21 @@ const CONFIG_UTILS = {
      * Get authentication token from localStorage
      */
     getAuthToken() {
-        return localStorage.getItem(APP_CONFIG.STORAGE.AUTH_TOKEN);
+        return localStorage.getItem(APP_CONFIG.STORAGE_KEYS.AUTH_TOKEN);
     },
     
     /**
      * Set authentication token in localStorage
      */
     setAuthToken(token) {
-        localStorage.setItem(APP_CONFIG.STORAGE.AUTH_TOKEN, token);
+        localStorage.setItem(APP_CONFIG.STORAGE_KEYS.AUTH_TOKEN, token);
     },
     
     /**
      * Remove authentication token from localStorage
      */
     removeAuthToken() {
-        localStorage.removeItem(APP_CONFIG.STORAGE.AUTH_TOKEN);
+        localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.AUTH_TOKEN);
     },
     
     /**
@@ -320,7 +320,7 @@ const CONFIG_UTILS = {
      */
     getUserData() {
         try {
-            const userData = localStorage.getItem(APP_CONFIG.STORAGE.USER_DATA);
+            const userData = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.USER_DATA);
             return userData ? JSON.parse(userData) : null;
         } catch (error) {
             console.error('Error parsing user data:', error);
@@ -333,7 +333,7 @@ const CONFIG_UTILS = {
      */
     setUserData(userData) {
         try {
-        localStorage.setItem(APP_CONFIG.STORAGE.USER_DATA, JSON.stringify(userData));
+        localStorage.setItem(APP_CONFIG.STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
         } catch (error) {
             console.error('Error storing user data:', error);
         }
@@ -343,7 +343,7 @@ const CONFIG_UTILS = {
      * Remove user data from localStorage
      */
     removeUserData() {
-        localStorage.removeItem(APP_CONFIG.STORAGE.USER_DATA);
+        localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.USER_DATA);
     },
     
     /**

@@ -1,25 +1,12 @@
 {
-  "name": "stellarcollab-frontend",
+  "name": "artparty-social-frontend",
   "version": "1.0.0",
-  "description": "Frontend tests for StellarCollabApp",
+  "description": "Frontend tests for ArtPartySocial",
+  "main": "index.js",
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "devDependencies": {
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
-    "@testing-library/jest-dom": "^6.1.4",
-    "@testing-library/dom": "^9.3.3"
-  },
-  "jest": {
-    "testEnvironment": "jsdom",
-    "setupFilesAfterEnv": ["<rootDir>/tests/setup.js"],
-    "testMatch": ["<rootDir>/tests/**/*.test.js"],
-    "collectCoverageFrom": [
-      "js/**/*.js",
-      "!js/config.js"
-    ]
-  }
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 } 
