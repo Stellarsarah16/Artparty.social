@@ -418,7 +418,93 @@ const CONFIG_UTILS = {
             port: window.location.port,
             origin: window.location.origin
         };
-    }
+    },
+
+    // Logging utilities
+    
+    /**
+     * Safe logging that won't cause errors
+     */
+    safeLog(...args) {
+        try {
+            console.log(...args);
+        } catch (error) {
+            // Fallback to basic logging
+            try {
+                console.log(args.join(' '));
+            } catch (e) {
+                // Silent fail - don't break the app
+            }
+        }
+    },
+
+    /**
+     * Throttled logging to prevent console spam
+     */
+    throttledLog: (() => {
+        const logCounts = new Map();
+        const resetInterval = 5000; // Reset counters every 5 seconds
+        
+        setInterval(() => {
+            logCounts.clear();
+        }, resetInterval);
+        
+        return (level, ...args) => {
+            const key = args.join(' ');
+            const count = logCounts.get(key) || 0;
+            
+            if (count < 3) { // Allow max 3 logs per message per 5 seconds
+                logCounts.set(key, count + 1);
+                
+                try {
+                    if (level === 'warn') {
+                        console.warn(...args);
+                    } else if (level === 'error') {
+                        console.error(...args);
+                    } else {
+                        console.log(...args);
+                    }
+                } catch (error) {
+                    // Silent fail
+                }
+            }
+        };
+    })(),
+
+    /**
+     * Debug logging (only in development)
+     */
+    debug(...args) {
+        if (ENVIRONMENT.isDevelopment) {
+            try {
+                console.log('🐛 DEBUG:', ...args);
+            } catch (error) {
+                // Silent fail
+            }
+        }
+    },
+
+    /**
+     * Prevent console spam by throttling repeated messages
+     */
+    preventConsoleSpam: (() => {
+        const spamTracker = new Map();
+        const spamThreshold = 10; // Max 10 identical messages per minute
+        const resetInterval = 60000; // Reset every minute
+        
+        setInterval(() => {
+            spamTracker.clear();
+        }, resetInterval);
+        
+        return (message) => {
+            const count = spamTracker.get(message) || 0;
+            if (count < spamThreshold) {
+                spamTracker.set(message, count + 1);
+                return false; // Not spam
+            }
+            return true; // Is spam
+        };
+    })()
 };
 
 // Export configuration for use in other modules
