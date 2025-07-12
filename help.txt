@@ -1,3 +1,17 @@
+# ---- Future deployments --------------
+# On your server
+cd /opt/artparty-social
+git pull origin main
+
+# Rebuild and restart
+cd deployment/production
+docker-compose -f docker-compose.prod.yml build --no-cache
+docker-compose -f docker-compose.prod.yml up -d
+
+# No more restart loops or SSL issues! 🎉
+
+--------------------------
+
 get into bash: 
     docker-compose exec backend bash
 
