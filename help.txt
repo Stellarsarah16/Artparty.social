@@ -1,14 +1,16 @@
 # ---- Future deployments --------------
-# On your server
-cd /opt/artparty-social
+
+# Navigate to your deployment directory
+cd /opt/artparty-social/deployment/production
+
+# Pull the latest changes
 git pull origin main
 
-# Rebuild and restart
-cd deployment/production
-docker-compose -f docker-compose.prod.yml build --no-cache
-docker-compose -f docker-compose.prod.yml up -d
+# Rebuild and restart the frontend container
+docker-compose -f docker-compose.prod.yml up -d --build frontend
 
-# No more restart loops or SSL issues! 🎉
+# Verify everything is running
+docker-compose -f docker-compose.prod.yml ps
 
 --------------------------
 
