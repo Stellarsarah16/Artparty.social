@@ -4,7 +4,7 @@
 
 import * as Navigation from './modules/navigation.js';
 import * as Auth from './modules/auth.js';
-import * as AppState from './modules/app-state.js';
+import AppState from './modules/app-state.js';
 
 class ArtPartySocial {
     constructor() {
@@ -38,9 +38,8 @@ class ArtPartySocial {
     }
 
     async initializeModules() {
-        // Initialize app state first
-        this.modules.appState = new AppState.AppStateManager();
-        await this.modules.appState.init();
+        // Initialize app state first (singleton instance)
+        this.modules.appState = AppState;
         
         // Initialize authentication
         this.modules.auth = new Auth.AuthManager();
@@ -71,11 +70,11 @@ class ArtPartySocial {
     handleAuthStateChange(authState) {
         if (authState.isAuthenticated) {
             // User logged in
-            this.modules.appState.setUser(authState.user);
+            this.modules.appState.setAuthenticated(authState.user);
             this.modules.navigation.showAuthenticatedView();
         } else {
             // User logged out
-            this.modules.appState.clearUser();
+            this.modules.appState.setUnauthenticated();
             this.modules.navigation.showUnauthenticatedView();
         }
     }
@@ -99,7 +98,7 @@ class ArtPartySocial {
     }
 
     getCurrentUser() {
-        return this.modules.appState?.getCurrentUser();
+        return this.modules.appState?.get('currentUser');
     }
 
     isAuthenticated() {
