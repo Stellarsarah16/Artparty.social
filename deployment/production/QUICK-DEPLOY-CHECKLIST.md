@@ -51,3 +51,39 @@ docker-compose -f docker-compose.prod.yml up -d
 - `ARTPARTY-SOCIAL-SETUP.md` ✅ (detailed guide)
 
 **Everything is configured for artparty.social! 🎉** 
+
+**On your Ubuntu server, run:**
+
+```bash
+# The issue is that I created the Dockerfile in the wrong place
+# Let's check where Docker is looking for it
+cd /opt/artparty-social/frontend
+
+# Check the current broken Dockerfile
+head -35 Dockerfile.prod
+```
+
+You'll see it's still broken. Let me create the Dockerfile in the correct location:
+
+**Create the Dockerfile in the correct frontend directory:**
+
+```bash
+<code_block_to_apply_changes_from>
+```
+
+**After 10 seconds, test:**
+
+```bash
+# Check if it's working
+curl -I http://localhost:80
+
+# Check the logs
+docker-compose -f docker-compose.prod.yml logs --tail=5 frontend
+```
+
+This should finally work because:
+1. ✅ Dockerfile is in the correct `/opt/artparty-social/frontend` directory
+2. ✅ Simple nginx config with no SSL
+3. ✅ No complex Docker syntax that could break
+
+Let me know what you see!

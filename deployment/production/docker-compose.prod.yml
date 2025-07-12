@@ -31,7 +31,6 @@ services:
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     command: redis-server --requirepass ${REDIS_PASSWORD} --bind 0.0.0.0 --protected-mode yes
-    # SECURITY: No external ports exposed - only accessible internally
 
   # ArtPartySocial Backend
   backend:
@@ -61,7 +60,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    # No external ports - accessed through nginx
 
   # Frontend (Nginx serving static files and reverse proxy)
   frontend:
@@ -77,8 +75,8 @@ services:
     networks:
       - app-network
     volumes:
-      - ./nginx.prod.conf:/etc/nginx/nginx.conf
-      - ./ssl:/etc/ssl/certs  # SSL certificates
+      - ./ssl:/etc/ssl/certs:ro
+      - ./nginx.ssl.conf:/etc/nginx/nginx.conf:ro
       - ./logs:/var/log/nginx
     environment:
       - BACKEND_URL=http://backend:8000
