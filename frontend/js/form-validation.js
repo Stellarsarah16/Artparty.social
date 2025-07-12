@@ -354,12 +354,12 @@ const formValidator = new FormValidator();
 // Export for use in main.js (legacy compatibility)
 window.FormValidator = FormValidator;
 
-// ES6 Module exports for the refactored modules
-export const initializeFormValidation = () => {
+// Global exports for use in modules (legacy compatibility)
+window.initializeFormValidation = () => {
     return formValidator;
 };
 
-export const clearFormErrors = (formId) => {
+window.clearFormErrors = (formId) => {
     const form = document.getElementById(formId);
     if (!form) {
         console.warn(`Form not found: ${formId}`);
@@ -377,23 +377,20 @@ export const clearFormErrors = (formId) => {
     });
 };
 
-export const validateForm = (formId) => {
+window.validateForm = (formId) => {
     return formValidator.validateForm(formId);
 };
 
-export const showFieldError = (fieldName, message) => {
+window.showFieldError = (fieldName, message) => {
     const field = document.querySelector(`#${fieldName}`);
     if (field) {
         formValidator.showFieldError(field, message);
     }
 };
 
-export const clearFieldError = (fieldName) => {
+window.clearFieldError = (fieldName) => {
     const field = document.querySelector(`#${fieldName}`);
     if (field) {
         formValidator.clearFieldError(field);
     }
-};
-
-// Export the FormValidator class as default
-export default FormValidator; 
+}; 

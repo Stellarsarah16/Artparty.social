@@ -13,7 +13,7 @@ class UIManager {
         this.toastDuration = APP_CONFIG.UI.TOAST_DURATION;
         
         // UI state
-        this.theme = localStorage.getItem(APP_CONFIG.STORAGE.THEME) || 'light';
+        this.theme = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.THEME) || 'light';
         this.sidebarCollapsed = false;
         this.notifications = [];
         
@@ -37,6 +37,24 @@ class UIManager {
         this.setupAccessibility();
         
         console.log('✅ UI Manager initialized');
+    }
+    
+    /**
+     * Debounce utility function
+     * @param {Function} func - Function to debounce
+     * @param {number} wait - Wait time in milliseconds
+     * @returns {Function} Debounced function
+     */
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
     }
     
     /**
@@ -139,7 +157,7 @@ class UIManager {
                 if (field) {
                     // Add validation on blur and input
                     field.addEventListener('blur', () => this.validateField(field, validator[fieldName]));
-                    field.addEventListener('input', CONFIG_UTILS.debounce(
+                    field.addEventListener('input', this.debounce(
                         () => this.validateField(field, validator[fieldName]), 
                         APP_CONFIG.UI.DEBOUNCE_DELAY
                     ));
@@ -359,7 +377,7 @@ class UIManager {
         }
         
         // Respect system preference if no saved theme
-        if (!localStorage.getItem(APP_CONFIG.STORAGE.THEME)) {
+        if (!localStorage.getItem(APP_CONFIG.STORAGE_KEYS.THEME)) {
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             if (prefersDark) {
                 this.setTheme('dark');
@@ -368,7 +386,7 @@ class UIManager {
         
         // Listen for system theme changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-            if (!localStorage.getItem(APP_CONFIG.STORAGE.THEME)) {
+            if (!localStorage.getItem(APP_CONFIG.STORAGE_KEYS.THEME)) {
                 this.setTheme(e.matches ? 'dark' : 'light');
             }
         });
@@ -716,7 +734,7 @@ class UIManager {
         document.body.classList.add(`theme-${theme}`);
         
         this.theme = theme;
-        localStorage.setItem(APP_CONFIG.STORAGE.THEME, theme);
+        localStorage.setItem(APP_CONFIG.STORAGE_KEYS.THEME, theme);
         
         console.log(`🎨 Theme changed to: ${theme}`);
     }

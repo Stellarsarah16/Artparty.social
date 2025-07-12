@@ -7,7 +7,6 @@ import appState from './app-state.js';
 import { showToast } from './ui-utils.js';
 import { showSection, hideModal } from './navigation.js';
 import navigationManager from './navigation.js';
-import { initializeFormValidation, clearFormErrors } from '../form-validation.js';
 
 class AuthManager {
     constructor() {
@@ -31,7 +30,7 @@ class AuthManager {
         
         try {
             this.setFormLoading(true, submitButton, 'Signing in...');
-            clearFormErrors('login-form');
+            window.clearFormErrors('login-form');
             
             const response = await fetch(`${this.baseUrl}/api/v1/auth/login`, {
                 method: 'POST',
@@ -103,7 +102,7 @@ class AuthManager {
         
         try {
             this.setFormLoading(true, submitButton, 'Creating account...');
-            clearFormErrors('register-form');
+            window.clearFormErrors('register-form');
             
             const response = await fetch(`${this.baseUrl}/api/v1/auth/register`, {
                 method: 'POST',
