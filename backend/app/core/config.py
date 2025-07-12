@@ -2,7 +2,7 @@
 Application configuration settings
 """
 from typing import List, Optional
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 import os
 import json
@@ -10,6 +10,13 @@ import json
 
 class Settings(BaseSettings):
     """Application settings"""
+    
+    # Configure Pydantic to ignore extra fields
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra='ignore'
+    )
     
     # Project info
     PROJECT_NAME: str = "Collaborative Pixel Canvas Game"
@@ -159,10 +166,6 @@ class Settings(BaseSettings):
     # Environment
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
 
 
 # Create settings instance
