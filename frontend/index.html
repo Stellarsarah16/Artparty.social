@@ -139,6 +139,97 @@
             </div>
         </section>
 
+        <!-- Canvas Viewer -->
+        <section class="viewer-section hidden" id="viewer-section">
+            <div class="viewer-header">
+                <div class="viewer-title">
+                    <h2 id="viewer-canvas-title">Canvas Name</h2>
+                    <div class="canvas-info">
+                        <span id="viewer-canvas-users">0 users online</span>
+                        <span id="viewer-canvas-dimensions">32x32</span>
+                        <span id="viewer-instructions">Click on a tile to edit it</span>
+                    </div>
+                </div>
+                <div class="viewer-actions">
+                    <button class="btn btn-secondary" id="viewer-back-to-canvases-btn">
+                        <i class="fas fa-arrow-left"></i> Back to Canvases
+                    </button>
+                    <button class="btn btn-secondary" id="viewer-refresh-btn">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                    <button class="btn btn-primary" id="viewer-zoom-fit-btn">
+                        <i class="fas fa-expand"></i> Fit to Screen
+                    </button>
+                </div>
+            </div>
+            
+            <div class="viewer-layout">
+                <!-- Main Canvas Viewer -->
+                <div class="viewer-main">
+                    <div class="canvas-viewer-container">
+                        <canvas id="canvas-viewer" width="800" height="600"></canvas>
+                        <div class="viewer-overlay">
+                            <div class="zoom-indicator" id="viewer-zoom-level">100%</div>
+                            <div class="tile-info" id="viewer-tile-info">
+                                Hover over tiles to see details
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="viewer-controls">
+                        <div class="zoom-controls">
+                            <button class="btn btn-sm" id="viewer-zoom-out-btn">
+                                <i class="fas fa-search-minus"></i>
+                            </button>
+                            <span id="viewer-zoom-display">100%</span>
+                            <button class="btn btn-sm" id="viewer-zoom-in-btn">
+                                <i class="fas fa-search-plus"></i>
+                            </button>
+                        </div>
+                        <div class="view-options">
+                            <button class="btn btn-sm" id="toggle-grid-btn" title="Toggle Grid">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button class="btn btn-sm" id="toggle-user-indicators-btn" title="Toggle User Names">
+                                <i class="fas fa-user"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mini Map and Info -->
+                <div class="viewer-sidebar">
+                    <div class="mini-map-container">
+                        <h4>Mini Map</h4>
+                        <canvas id="viewer-mini-map" width="200" height="150"></canvas>
+                    </div>
+                    
+                    <div class="canvas-stats">
+                        <h4>Canvas Stats</h4>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Tiles:</span>
+                            <span class="stat-value" id="viewer-total-tiles">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Active Users:</span>
+                            <span class="stat-value" id="viewer-active-users">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Your Tiles:</span>
+                            <span class="stat-value" id="viewer-user-tiles">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="online-users">
+                        <h4>Online Users</h4>
+                        <div class="user-list" id="viewer-users-list">
+                            <!-- Online users will be shown here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Canvas Editor -->
         <section class="editor-section hidden" id="editor-section">
             <div class="editor-header">

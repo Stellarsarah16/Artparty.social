@@ -42,7 +42,13 @@ class CanvasService {
             
         } catch (error) {
             console.error('Failed to get canvases:', error);
-            uiUtils.showToast('Failed to load canvases', 'error');
+            
+            // Show toast if uiUtils is available
+            if (window.uiUtils || uiUtils) {
+                const ui = window.uiUtils || uiUtils;
+                ui.showToast('Failed to load canvases', 'error');
+            }
+            
             throw error;
         }
     }

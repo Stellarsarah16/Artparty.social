@@ -9,6 +9,7 @@ class AppState {
             isAuthenticated: false,
             currentUser: null,
             currentCanvas: null,
+            currentTile: null,
             currentSection: 'welcome',
             websocket: null,
             onlineUsers: [],
@@ -110,6 +111,18 @@ class AppState {
      */
     setCurrentCanvas(canvas) {
         this.set('currentCanvas', canvas);
+    }
+    
+    getCurrentCanvas() {
+        return this.get('currentCanvas');
+    }
+    
+    setCurrentTile(tile) {
+        this.set('currentTile', tile);
+    }
+    
+    getCurrentTile() {
+        return this.get('currentTile');
     }
     
     setCanvasList(canvases) {

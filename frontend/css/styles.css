@@ -1107,3 +1107,139 @@ form {
 .canvas-card-actions {
     margin-left: var(--space-sm);
 } 
+
+/* Enhanced Login & Register Button Styles */
+.nav-link.btn-primary,
+.nav-link.btn-secondary {
+    padding: 3px 4px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-transform: none;
+    letter-spacing: 0.5px;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.nav-link.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.nav-link.btn-primary:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.nav-link.btn-secondary {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.nav-link.btn-secondary:hover {
+    background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.nav-link.btn-primary:active,
+.nav-link.btn-secondary:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.nav-link.btn-primary i,
+.nav-link.btn-secondary i {
+    font-size: 14px;
+    margin-right: 8px;
+    transition: transform 0.3s ease;
+}
+
+.nav-link.btn-primary:hover i,
+.nav-link.btn-secondary:hover i {
+    transform: scale(1.1);
+}
+
+/* Focus states for accessibility */
+.nav-link.btn-primary:focus,
+.nav-link.btn-secondary:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .nav-link.btn-primary,
+    .nav-link.btn-secondary {
+        padding: 2px 3px;
+        font-size: 14px;
+        margin: 2px 4px;
+        width: auto;
+        min-width: 60px;
+        border-width: 1.5px;
+    }
+    
+    .nav-menu {
+        gap: 6px;
+    }
+    
+    .nav-item {
+        width: auto;
+    }
+}
+
+/* Even smaller screens - make buttons more compact */
+@media (max-width: 480px) {
+    .nav-link.btn-primary,
+    .nav-link.btn-secondary {
+        padding: 1px 2px;
+        font-size: 13px;
+        margin: 2px;
+        border-radius: 6px;
+        border-width: 1px;
+        min-width: 50px;
+    }
+    
+    .nav-link.btn-primary i,
+    .nav-link.btn-secondary i {
+        font-size: 12px;
+        margin-right: 4px;
+    }
+}
+
+/* Loading state for buttons */
+.nav-link.btn-primary.loading,
+.nav-link.btn-secondary.loading {
+    cursor: not-allowed;
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+.nav-link.btn-primary.loading::after,
+.nav-link.btn-secondary.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+} 
