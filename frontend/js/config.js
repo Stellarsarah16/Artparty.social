@@ -41,8 +41,8 @@ const getBaseUrls = () => {
     // Production - Same domain with nginx proxy (recommended approach)
     if (port === '80' || port === '443' || port === '') {
         return {
-            API_BASE_URL: `${protocol}//api.artparty.social`,
-            WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//api.artparty.social`
+            API_BASE_URL: `${protocol}//${hostname}`,
+            WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//${hostname}`
         };
     }
     
@@ -67,8 +67,8 @@ const FALLBACK_URLS = {
         `${window.location.protocol}//staging.artparty.social/api`
     ],
     production: [
-        `${window.location.protocol}//api.artparty.social`,
-        `${window.location.protocol}//artparty.social/api`
+        `${window.location.protocol}//${window.location.hostname}`,
+        `${window.location.protocol}//artparty.social`
     ]
 };
 
