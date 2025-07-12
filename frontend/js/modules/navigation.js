@@ -10,6 +10,7 @@ class NavigationManager {
         console.log('🔧 Initializing NavigationManager...');
         this.elements = this.initializeElements();
         this.setupEventListeners();
+        this.setupFormHandlers();
         console.log('✅ NavigationManager initialized');
     }
     
@@ -57,6 +58,30 @@ class NavigationManager {
     setupEventListeners() {
         console.log('🔧 Setting up event listeners...');
         
+        // Login and Register button click events
+        this.elements.loginBtn?.addEventListener('click', () => {
+            console.log('Login button clicked');
+            this.showModal('login');
+        });
+        
+        this.elements.registerBtn?.addEventListener('click', () => {
+            console.log('Register button clicked');
+            this.showModal('register');
+        });
+        
+        // Get Started button click event
+        const getStartedBtn = document.getElementById('get-started-btn');
+        getStartedBtn?.addEventListener('click', () => {
+            console.log('Get Started button clicked');
+            this.showModal('register');
+        });
+        
+        // Logout button click event
+        this.elements.logoutBtn?.addEventListener('click', async () => {
+            console.log('Logout button clicked');
+            await this.handleLogout();
+        });
+        
         // Modal close events
         this.elements.closeLoginModal?.addEventListener('click', () => this.hideModal('login'));
         this.elements.closeRegisterModal?.addEventListener('click', () => this.hideModal('register'));
@@ -86,6 +111,201 @@ class NavigationManager {
         });
         
         console.log('✅ Event listeners set up');
+    }
+
+    /**
+     * Setup form submission handlers
+     */
+    setupFormHandlers() {
+        console.log('🔧 Setting up form handlers...');
+        
+        // Login form submission
+        const loginForm = document.getElementById('login-form');
+        loginForm?.addEventListener('submit', this.handleLoginSubmit.bind(this));
+        
+        // Register form submission
+        const registerForm = document.getElementById('register-form');
+        registerForm?.addEventListener('submit', this.handleRegisterSubmit.bind(this));
+        
+        console.log('✅ Form handlers set up');
+    }
+
+    /**
+     * Handle login form submission
+     */
+    async handleLoginSubmit(event) {
+        event.preventDefault();
+        console.log('Login form submitted');
+        
+        const form = event.target;
+        const formData = new FormData(form);
+        
+        const credentials = {
+            username: formData.get('username'),
+            password: formData.get('password')
+        };
+        
+        console.log('Login credentials:', { username: credentials.username, password: '[HIDDEN]' });
+        
+        try {
+            // Show loading state
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            submitButton.textContent = 'Logging in...';
+            submitButton.disabled = true;
+            
+            // Make API call
+            const response = await fetch(CONFIG_UTILS.getApiUrl(API_CONFIG.ENDPOINTS.LOGIN), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(credentials)
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                console.log('Login successful:', data);
+                
+                // Store authentication data
+                CONFIG_UTILS.setAuthToken(data.access_token);
+                CONFIG_UTILS.setUserData(data.user);
+                
+                // Update app state
+                appState.setAuthenticated(data.user);
+                
+                // Update navigation
+                this.updateNavigation();
+                this.updateUserInfo(data.user);
+                
+                // Hide modal and show canvas
+                this.hideModal('login');
+                this.showSection('canvas');
+                
+                // Reset form
+                form.reset();
+                
+                console.log('✅ Login completed successfully');
+                
+            } else {
+                console.error('Login failed:', data);
+                // Show error message
+                this.showLoginError(data.detail || 'Login failed');
+            }
+            
+        } catch (error) {
+            console.error('Login error:', error);
+            this.showLoginError('Network error. Please try again.');
+        } finally {
+            // Restore button state
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.textContent = originalText;
+            submitButton.disabled = false;
+        }
+    }
+
+    /**
+     * Handle register form submission
+     */
+    async handleRegisterSubmit(event) {
+        event.preventDefault();
+        console.log('Register form submitted');
+        
+        const form = event.target;
+        const formData = new FormData(form);
+        
+        const userData = {
+            username: formData.get('username'),
+            email: formData.get('email'),
+            first_name: formData.get('first_name'),
+            last_name: formData.get('last_name'),
+            password: formData.get('password'),
+            confirm_password: formData.get('confirm_password')
+        };
+        
+        console.log('Register data:', { ...userData, password: '[HIDDEN]', confirm_password: '[HIDDEN]' });
+        
+        // Basic validation
+        if (userData.password !== userData.confirm_password) {
+            this.showRegisterError('Passwords do not match');
+            return;
+        }
+        
+        try {
+            // Show loading state
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            submitButton.textContent = 'Creating account...';
+            submitButton.disabled = true;
+            
+            // Make API call
+            const response = await fetch(CONFIG_UTILS.getApiUrl(API_CONFIG.ENDPOINTS.REGISTER), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                console.log('Registration successful:', data);
+                
+                // Store authentication data
+                CONFIG_UTILS.setAuthToken(data.access_token);
+                CONFIG_UTILS.setUserData(data.user);
+                
+                // Update app state
+                appState.setAuthenticated(data.user);
+                
+                // Update navigation
+                this.updateNavigation();
+                this.updateUserInfo(data.user);
+                
+                // Hide modal and show canvas
+                this.hideModal('register');
+                this.showSection('canvas');
+                
+                // Reset form
+                form.reset();
+                
+                console.log('✅ Registration completed successfully');
+                
+            } else {
+                console.error('Registration failed:', data);
+                // Show error message
+                this.showRegisterError(data.detail || 'Registration failed');
+            }
+            
+        } catch (error) {
+            console.error('Registration error:', error);
+            this.showRegisterError('Network error. Please try again.');
+        } finally {
+            // Restore button state
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.textContent = originalText;
+            submitButton.disabled = false;
+        }
+    }
+
+    /**
+     * Show login error message
+     */
+    showLoginError(message) {
+        console.error('Login error:', message);
+        // You can implement a proper error display here
+        alert(`Login Error: ${message}`);
+    }
+
+    /**
+     * Show register error message
+     */
+    showRegisterError(message) {
+        console.error('Register error:', message);
+        // You can implement a proper error display here
+        alert(`Registration Error: ${message}`);
     }
     
     /**
@@ -256,6 +476,31 @@ class NavigationManager {
         if (user && this.elements.username) {
             this.elements.username.textContent = user.username;
             console.log(`User info updated: ${user.username}`);
+        }
+    }
+
+    /**
+     * Handle logout
+     */
+    async handleLogout() {
+        try {
+            // Clear authentication data
+            CONFIG_UTILS.removeAuthToken();
+            CONFIG_UTILS.removeUserData();
+            
+            // Update app state
+            appState.setUnauthenticated();
+            
+            // Update navigation
+            this.updateNavigation();
+            
+            // Show welcome section
+            this.showSection('welcome');
+            
+            console.log('✅ User logged out successfully');
+            
+        } catch (error) {
+            console.error('Logout error:', error);
         }
     }
     
