@@ -25,6 +25,9 @@ class ArtPartySocial {
             // Initialize core modules
             await this.initializeModules();
             
+            // Check initial authentication state
+            await this.checkInitialAuthState();
+            
             // Set up event listeners
             this.setupEventListeners();
             
@@ -45,6 +48,31 @@ class ArtPartySocial {
         
         // All modules are already initialized as singletons
         console.log('✅ All modules initialized');
+    }
+
+    async checkInitialAuthState() {
+        console.log('🔍 Checking initial authentication state...');
+        
+        // Check if user is authenticated based on stored tokens
+        const isAuthenticated = CONFIG_UTILS.isAuthenticated();
+        const userData = CONFIG_UTILS.getUserData();
+        
+        if (isAuthenticated && userData) {
+            // User has valid authentication data
+            console.log('✅ User is authenticated, showing canvas section');
+            this.modules.appState.setAuthenticated(userData);
+            this.modules.navigation.showSection('canvas');
+        } else {
+            // User is not authenticated, show welcome/login section
+            console.log('ℹ️ User not authenticated, showing welcome section');
+            this.modules.appState.setUnauthenticated();
+            this.modules.navigation.showSection('welcome');
+        }
+        
+        // Update navigation UI
+        this.modules.navigation.updateNavigation();
+        
+        console.log('✅ Initial authentication state checked');
     }
 
     setupEventListeners() {
@@ -69,10 +97,12 @@ class ArtPartySocial {
             // User logged in
             this.modules.appState.setAuthenticated(authState.user);
             this.modules.navigation.updateNavigation();
+            this.modules.navigation.showSection('canvas');
         } else {
             // User logged out
             this.modules.appState.setUnauthenticated();
             this.modules.navigation.updateNavigation();
+            this.modules.navigation.showSection('welcome');
         }
     }
 
