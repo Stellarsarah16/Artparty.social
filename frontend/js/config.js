@@ -158,7 +158,7 @@ const WS_CONFIG = {
 // Application Configuration
 const APP_CONFIG = {
     // Application info
-    NAME: 'StellarArtCollab',
+    NAME: 'Artparty.Social',
     VERSION: '1.0.0',
     DESCRIPTION: 'Collaborative Pixel Art Platform',
     
@@ -526,7 +526,7 @@ window.CONFIG_UTILS = CONFIG_UTILS;
 window.ENVIRONMENT = ENVIRONMENT;
 
 // Simple initialization log
-console.log('✅ StellarArtCollab configuration loaded');
+console.log('✅ Artparty.Social configuration loaded');
 if (ENVIRONMENT.isDevelopment) {
     console.log('🔧 Development mode - API:', API_CONFIG.BASE_URL);
 } 

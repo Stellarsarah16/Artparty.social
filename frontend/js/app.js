@@ -36,6 +36,13 @@ class ArtPartySocial {
             
         } catch (error) {
             console.error('❌ Failed to initialize ArtPartySocial:', error);
+            
+            // Ensure loading screen is hidden even on error
+            this.hideLoadingScreen();
+            
+            // Show error message to user
+            this.showErrorState('Failed to initialize application. Please refresh the page.');
+            
             throw error;
         }
     }
@@ -72,7 +79,51 @@ class ArtPartySocial {
         // Update navigation UI
         this.modules.navigation.updateNavigation();
         
+        // Hide loading screen now that initialization is complete
+        this.hideLoadingScreen();
+        
         console.log('✅ Initial authentication state checked');
+    }
+
+    /**
+     * Hide the loading screen
+     */
+    hideLoadingScreen() {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+            console.log('✅ Loading screen hidden');
+        } else {
+            console.warn('⚠️ Loading screen element not found');
+        }
+    }
+
+    /**
+     * Show error state to user
+     */
+    showErrorState(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10000;
+            text-align: center;
+            max-width: 400px;
+        `;
+        errorDiv.innerHTML = `
+            <h3 style="color: #e74c3c; margin-top: 0;">Application Error</h3>
+            <p style="margin: 10px 0;">${message}</p>
+            <button onclick="window.location.reload()" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
+                Refresh Page
+            </button>
+        `;
+        document.body.appendChild(errorDiv);
     }
 
     setupEventListeners() {
