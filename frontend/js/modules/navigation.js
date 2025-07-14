@@ -105,6 +105,8 @@ class NavigationManager {
         backToGridBtn?.addEventListener('click', () => {
             console.log('Back to Grid View button clicked');
             this.showSection('viewer');
+            // Refresh canvas viewer to ensure tiles are up to date
+            this.refreshCanvasViewer();
         });
         
         // Viewer Back to Canvases button click event
@@ -197,6 +199,11 @@ class NavigationManager {
         // Listen for canvas selection events
         eventManager.on('canvas:selected', (canvas) => {
             this.openCanvas(canvas);
+        });
+        
+        // Listen for tile editor events
+        eventManager.on('tile:opened', (tile) => {
+            this.initializeTileEditor(tile);
         });
         
         console.log('✅ Event listeners set up');
@@ -667,8 +674,16 @@ class NavigationManager {
             // Update canvas stats
             this.updateCanvasStats(canvas);
             
+            // Set initial user count (fallback if WebSocket fails)
+            this.setInitialUserCount();
+            
             // Initialize canvas viewer
             await this.initializeCanvasViewer(canvas, canvasData);
+            
+            // Connect to WebSocket for real-time updates (optional)
+            this.connectWebSocket(canvas.id).catch(error => {
+                console.warn('WebSocket connection failed, continuing without real-time updates:', error);
+            });
             
             // Emit canvas opened event for other listeners
             eventManager.emit('canvas:opened', canvasData);
@@ -690,7 +705,6 @@ class NavigationManager {
             
             // Get canvas elements
             const canvasElement = document.getElementById('canvas-viewer');
-            const miniMapElement = document.getElementById('viewer-mini-map');
             
             if (!canvasElement) {
                 throw new Error('Canvas viewer element not found');
@@ -698,12 +712,17 @@ class NavigationManager {
             
             // Initialize canvas viewer
             if (window.CanvasViewer) {
-                window.CanvasViewer.init(canvasElement, miniMapElement);
+                window.CanvasViewer.init(canvasElement);
                 window.CanvasViewer.setCanvasData(canvasData);
+                
+                if (window.ENVIRONMENT && window.ENVIRONMENT.isDevelopment) {
+                    console.log('🔧 Setting up canvas viewer callbacks');
+                    console.log('🔧 Canvas data:', canvasData);
+                }
                 
                 // Set up tile click handler to open editor
                 window.CanvasViewer.onTileClick = (tile) => {
-                    console.log('Tile clicked, opening editor for tile:', tile);
+                    console.log('🎯 Navigation: Tile clicked, opening editor for tile:', tile);
                     this.openTileEditor(tile);
                 };
                 
@@ -719,10 +738,14 @@ class NavigationManager {
                 
                 // Load tiles if available
                 if (canvasData.tiles && canvasData.tiles.length > 0) {
+                    console.log('📦 Loading tiles into canvas viewer:', canvasData.tiles.length);
                     window.CanvasViewer.loadTiles(canvasData.tiles);
+                } else {
+                    console.log('⚠️ No tiles available to load');
                 }
                 
                 console.log('✅ Canvas viewer initialized');
+                console.log('🔧 onTileClick callback set:', !!window.CanvasViewer.onTileClick);
             } else {
                 throw new Error('Canvas viewer not available');
             }
@@ -738,7 +761,48 @@ class NavigationManager {
      */
     async openTileEditor(tile) {
         try {
-            console.log('Opening tile editor for tile:', tile);
+            console.log('🚀 Opening tile editor for tile:', tile);
+            console.log('🚀 Tile data structure:', {
+                id: tile.id,
+                x: tile.x,
+                y: tile.y,
+                isEmpty: tile.isEmpty,
+                isNew: tile.isNew,
+                hasPixelData: !!tile.pixel_data,
+                pixelDataType: typeof tile.pixel_data,
+                pixelDataLength: tile.pixel_data ? (typeof tile.pixel_data === 'string' ? tile.pixel_data.length : Array.isArray(tile.pixel_data) ? tile.pixel_data.length : 'unknown') : 'none'
+            });
+            
+            // Handle empty tile (create new tile)
+            if (tile.isEmpty) {
+                console.log('🚀 Creating new tile at position:', tile.x, tile.y);
+                tile = {
+                    x: tile.x,
+                    y: tile.y,
+                    pixel_data: this.createEmptyPixelData(),
+                    isNew: true
+                };
+            }
+            
+            // For existing tiles, ensure we have complete tile data
+            if (!tile.isEmpty && !tile.isNew && tile.id) {
+                console.log('🔍 Fetching complete tile data from API...');
+                try {
+                    const completeTile = await API.tiles.get(tile.id);
+                    console.log('🔍 API Response:', completeTile);
+                    if (completeTile && completeTile.pixel_data) {
+                        tile = completeTile;
+                        console.log('🔍 Fetched complete tile data:', tile);
+                        console.log('🔍 Pixel data type:', typeof tile.pixel_data);
+                        console.log('🔍 Pixel data length:', tile.pixel_data ? tile.pixel_data.length : 'null');
+                    } else {
+                        console.warn('🔍 No pixel data in API response:', completeTile);
+                    }
+                } catch (error) {
+                    console.error('🔍 Failed to fetch complete tile data:', error);
+                    console.error('🔍 Error details:', error.message, error.status, error.data);
+                }
+            }
             
             // Set current tile in app state
             appState.setCurrentTile(tile);
@@ -755,17 +819,323 @@ class NavigationManager {
             
             const tileCoords = document.getElementById('current-tile-coords');
             if (tileCoords) {
-                tileCoords.textContent = `Tile: (${tile.x}, ${tile.y})`;
+                const statusText = tile.isNew ? 'New Tile' : 'Tile';
+                tileCoords.textContent = `${statusText}: (${tile.x}, ${tile.y})`;
             }
             
             // Emit tile opened event
             eventManager.emit('tile:opened', tile);
             
-            console.log('✅ Tile editor opened');
+            console.log('✅ Tile editor opened successfully');
             
         } catch (error) {
-            console.error('Failed to open tile editor:', error);
+            console.error('❌ Failed to open tile editor:', error);
             this.showCanvasError(`Failed to open tile editor: ${error.message}`);
+        }
+    }
+
+    /**
+     * Create empty pixel data for a new tile
+     */
+    createEmptyPixelData() {
+        const pixelData = [];
+        for (let y = 0; y < 32; y++) {
+            pixelData[y] = [];
+            for (let x = 0; x < 32; x++) {
+                pixelData[y][x] = 'transparent';
+            }
+        }
+        return JSON.stringify(pixelData);
+    }
+    
+    /**
+     * Connect to WebSocket for real-time updates
+     */
+    async connectWebSocket(canvasId) {
+        try {
+            console.log('🔗 Attempting to connect to WebSocket for canvas:', canvasId);
+            
+            if (!window.WebSocketClient) {
+                console.warn('WebSocket client not available - skipping real-time updates');
+                return;
+            }
+            
+            // Set up WebSocket event handlers
+            window.WebSocketClient.on('canvas_state', (message) => {
+                console.log('📊 Canvas state received:', message);
+                this.updateUserCountFromWebSocket(message.user_count, message.active_users);
+            });
+            
+            window.WebSocketClient.on('user_joined', (message) => {
+                console.log('👋 User joined:', message);
+                this.updateUserCountFromWebSocket(message.user_count);
+            });
+            
+            window.WebSocketClient.on('user_left', (message) => {
+                console.log('👋 User left:', message);
+                this.updateUserCountFromWebSocket(message.user_count);
+            });
+            
+            // Connect to WebSocket with timeout
+            const connectPromise = window.WebSocketClient.connect(canvasId);
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('WebSocket connection timeout')), 5000);
+            });
+            
+            await Promise.race([connectPromise, timeoutPromise]);
+            console.log('✅ WebSocket connected successfully');
+            
+        } catch (error) {
+            console.warn('WebSocket connection failed:', error.message);
+            // Show user that they won't get real-time updates
+            this.showWebSocketError();
+            throw error; // Re-throw so the catch in openCanvas can handle it
+        }
+    }
+    
+    /**
+     * Show WebSocket connection error to user
+     */
+    showWebSocketError() {
+        const statusElement = document.getElementById('viewer-canvas-users');
+        if (statusElement) {
+            statusElement.textContent = 'Real-time updates unavailable';
+            statusElement.style.color = '#f59e0b';
+            statusElement.title = 'WebSocket connection failed - user count may not be up to date';
+        }
+    }
+    
+    /**
+     * Set initial user count (fallback when WebSocket is not available)
+     */
+    setInitialUserCount() {
+        // If WebSocket is not connected, show at least current user
+        setTimeout(() => {
+            const statusElement = document.getElementById('viewer-canvas-users');
+            if (statusElement && statusElement.textContent === '0 users online') {
+                statusElement.textContent = '1 user online';
+                statusElement.title = 'You are currently viewing this canvas';
+            }
+        }, 1000); // Give WebSocket a chance to connect first
+    }
+    
+    /**
+     * Update user count from WebSocket messages
+     */
+    updateUserCountFromWebSocket(userCount, activeUsers = null) {
+        try {
+            // Update canvas header user count
+            const canvasUsers = document.getElementById('viewer-canvas-users');
+            if (canvasUsers) {
+                canvasUsers.textContent = `${userCount} users online`;
+            }
+            
+            // Update sidebar active users count
+            const activeUsersElement = document.getElementById('viewer-active-users');
+            if (activeUsersElement) {
+                activeUsersElement.textContent = userCount;
+            }
+            
+            // Update online users list if available
+            if (activeUsers) {
+                const usersList = document.getElementById('viewer-users-list');
+                if (usersList) {
+                    usersList.innerHTML = '';
+                    activeUsers.forEach(user => {
+                        const userElement = document.createElement('div');
+                        userElement.className = 'user-item';
+                        userElement.innerHTML = `
+                            <i class="fas fa-user"></i>
+                            <span>${user.username}</span>
+                        `;
+                        usersList.appendChild(userElement);
+                    });
+                }
+            }
+            
+            console.log('📊 User count updated to:', userCount);
+        } catch (error) {
+            console.error('Failed to update user count:', error);
+        }
+    }
+    
+    /**
+     * Initialize tile editor with pixel data
+     */
+    initializeTileEditor(tile) {
+        try {
+            console.log('🎨 Initializing tile editor for tile:', tile);
+            
+            // Get the pixel editor canvas element
+            const pixelCanvas = document.getElementById('pixel-canvas');
+            if (!pixelCanvas) {
+                console.error('Pixel canvas element not found');
+                return;
+            }
+            
+            // Initialize the pixel editor
+            if (window.PixelEditor) {
+                window.PixelEditor.init(pixelCanvas);
+                
+                // Load the tile's pixel data
+                console.log('🎨 Tile data received:', tile);
+                console.log('🎨 Pixel data exists:', !!tile.pixel_data);
+                console.log('🎨 Pixel data type:', typeof tile.pixel_data);
+                
+                if (tile.pixel_data) {
+                    let pixelData;
+                    if (typeof tile.pixel_data === 'string') {
+                        try {
+                            pixelData = JSON.parse(tile.pixel_data);
+                            console.log('🎨 Parsed pixel data from string:', pixelData);
+                            console.log('🎨 Parsed data type:', typeof pixelData);
+                            console.log('🎨 Parsed data length:', Array.isArray(pixelData) ? pixelData.length : 'not array');
+                        } catch (e) {
+                            console.error('Failed to parse pixel data:', e);
+                            console.error('Raw pixel data:', tile.pixel_data);
+                            pixelData = window.PixelEditor.createEmptyPixelData();
+                        }
+                    } else {
+                        pixelData = tile.pixel_data;
+                        console.log('🎨 Using pixel data as-is:', pixelData);
+                        console.log('🎨 Data type:', typeof pixelData);
+                        console.log('🎨 Data length:', Array.isArray(pixelData) ? pixelData.length : 'not array');
+                    }
+                    
+                    // Validate pixel data structure
+                    if (Array.isArray(pixelData) && pixelData.length === 32) {
+                        window.PixelEditor.loadPixelData(pixelData);
+                        console.log('🎨 Loaded pixel data into editor successfully');
+                    } else {
+                        console.warn('Invalid pixel data structure, using empty tile:', pixelData);
+                        console.warn('Expected: Array with 32 elements, got:', typeof pixelData, Array.isArray(pixelData) ? pixelData.length : 'not array');
+                        window.PixelEditor.loadPixelData(window.PixelEditor.createEmptyPixelData());
+                    }
+                } else {
+                    console.log('🎨 No pixel data, starting with empty tile');
+                    window.PixelEditor.loadPixelData(window.PixelEditor.createEmptyPixelData());
+                }
+                
+                // Set up save button handler
+                this.setupSaveButton(tile);
+                
+                // Set up tool buttons
+                this.setupToolButtons();
+                
+                console.log('✅ Tile editor initialized successfully');
+            } else {
+                console.error('PixelEditor not available');
+            }
+            
+        } catch (error) {
+            console.error('Failed to initialize tile editor:', error);
+        }
+    }
+    
+    /**
+     * Setup save button handler
+     */
+    setupSaveButton(tile) {
+        const saveButton = document.getElementById('save-tile-btn');
+        if (saveButton) {
+            // Remove existing event listeners
+            saveButton.replaceWith(saveButton.cloneNode(true));
+            const newSaveButton = document.getElementById('save-tile-btn');
+            
+            newSaveButton.addEventListener('click', async () => {
+                try {
+                    console.log('💾 Saving tile...');
+                    
+                    // Get pixel data from editor
+                    const pixelData = window.PixelEditor.getPixelData();
+                    
+                    // Get current canvas
+                    const canvas = appState.get('currentCanvas');
+                    if (!canvas) {
+                        console.error('No current canvas');
+                        return;
+                    }
+                    
+                    const tileData = {
+                        canvas_id: canvas.id,
+                        x: tile.x,
+                        y: tile.y,
+                        pixel_data: JSON.stringify(pixelData)
+                    };
+                    
+                    console.log('💾 Tile data to save:', tileData);
+                    
+                    // Save via API
+                    let response;
+                    if (tile.isNew) {
+                        response = await API.tiles.create(tileData);
+                    } else {
+                        response = await API.tiles.update(tile.id, tileData);
+                    }
+                    
+                    console.log('💾 Tile saved successfully:', response);
+                    
+                    // Update the canvas viewer with the new/updated tile
+                    if (window.CanvasViewer && response.success && response.tile) {
+                        window.CanvasViewer.addTile(response.tile, true);
+                        console.log('🎨 Added tile to canvas viewer:', response.tile);
+                    }
+                    
+                    // Go back to viewer
+                    this.showSection('viewer');
+                    
+                    // Refresh canvas viewer as fallback
+                    this.refreshCanvasViewer();
+                    
+                } catch (error) {
+                    console.error('Failed to save tile:', error);
+                }
+            });
+            
+            // Initially disable save button
+            newSaveButton.disabled = false;
+        }
+    }
+    
+    /**
+     * Setup tool buttons for pixel editor
+     */
+    setupToolButtons() {
+        const toolButtons = {
+            'paint-tool': 'paint',
+            'eraser-tool': 'eraser',
+            'picker-tool': 'picker'
+        };
+        
+        Object.entries(toolButtons).forEach(([buttonId, toolName]) => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.addEventListener('click', () => {
+                    // Remove active class from all tool buttons
+                    Object.keys(toolButtons).forEach(id => {
+                        const btn = document.getElementById(id);
+                        if (btn) btn.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked button
+                    button.classList.add('active');
+                    
+                    // Set tool in pixel editor
+                    if (window.PixelEditor) {
+                        window.PixelEditor.setTool(toolName);
+                    }
+                });
+            }
+        });
+        
+        // Set up color picker
+        const colorPicker = document.getElementById('custom-color-picker');
+        if (colorPicker) {
+            colorPicker.addEventListener('change', (e) => {
+                if (window.PixelEditor) {
+                    window.PixelEditor.setColor(e.target.value);
+                }
+            });
         }
     }
     
@@ -792,6 +1162,41 @@ class NavigationManager {
             
         } catch (error) {
             console.error('Failed to update canvas stats:', error);
+        }
+    }
+    
+    /**
+     * Refresh canvas viewer with latest data
+     */
+    async refreshCanvasViewer() {
+        try {
+            const canvas = appState.get('currentCanvas');
+            if (!canvas) {
+                console.warn('No current canvas to refresh');
+                return;
+            }
+            
+            console.log('🔄 Refreshing canvas viewer with latest data...');
+            
+            // Reload canvas data from server
+            const canvasData = await canvasService.getCanvasData(canvas.id);
+            
+            // Update canvas viewer with fresh data
+            if (window.CanvasViewer) {
+                window.CanvasViewer.setCanvasData(canvasData);
+                
+                if (canvasData.tiles && canvasData.tiles.length > 0) {
+                    console.log('🔄 Reloading tiles into canvas viewer:', canvasData.tiles.length);
+                    window.CanvasViewer.loadTiles(canvasData.tiles);
+                } else {
+                    console.log('🔄 No tiles to reload');
+                }
+            }
+            
+            console.log('✅ Canvas viewer refreshed successfully');
+            
+        } catch (error) {
+            console.error('Failed to refresh canvas viewer:', error);
         }
     }
     

@@ -276,7 +276,7 @@ const CONFIG_UTILS = {
      * Get WebSocket URL for canvas
      */
     getWebSocketUrl(canvasId) {
-        return `${WS_CONFIG.BASE_URL}/ws/canvas/${canvasId}`;
+        return `${WS_CONFIG.BASE_URL}/api/v1/ws/canvas/${canvasId}`;
     },
 
     /**
@@ -284,7 +284,7 @@ const CONFIG_UTILS = {
      */
     getWsUrl(canvasId, token) {
         const baseUrl = WS_CONFIG.BASE_URL;
-        const wsUrl = `${baseUrl}/ws/canvas/${canvasId}`;
+        const wsUrl = `${baseUrl}/api/v1/ws/canvas/${canvasId}`;
         return token ? `${wsUrl}?token=${token}` : wsUrl;
     },
     

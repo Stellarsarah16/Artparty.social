@@ -8,8 +8,6 @@ class CanvasViewer {
         // Canvas elements
         this.canvas = null;
         this.ctx = null;
-        this.miniMap = null;
-        this.miniMapCtx = null;
         
         // Canvas data
         this.canvasData = null;
@@ -71,6 +69,25 @@ class CanvasViewer {
         // Performance throttling
         this.renderRequested = false;
         this.lastRenderTime = 0;
+        
+        // Store bound event handlers for proper cleanup
+        this.boundHandlers = {
+            mouseDown: this.handleMouseDown.bind(this),
+            mouseMove: this.handleMouseMove.bind(this),
+            mouseUp: this.handleMouseUp.bind(this),
+            mouseLeave: this.handleMouseLeave.bind(this),
+            mouseEnter: this.handleMouseEnter.bind(this),
+            wheel: this.handleWheel.bind(this),
+            touchStart: this.handleTouchStart.bind(this),
+            touchMove: this.handleTouchMove.bind(this),
+            touchEnd: this.handleTouchEnd.bind(this),
+            documentMouseUp: this.handleDocumentMouseUp.bind(this),
+            documentMouseMove: this.handleDocumentMouseMove.bind(this),
+            keyDown: this.handleKeyDown.bind(this),
+            windowBlur: this.handleWindowBlur.bind(this),
+            windowFocus: this.handleWindowFocus.bind(this),
+            contextMenu: (e) => e.preventDefault()
+        };
         this.renderThrottleDelay = 16; // ~60fps
         
         // Event callbacks
@@ -94,9 +111,8 @@ class CanvasViewer {
     /**
      * Initialize the canvas viewer
      * @param {HTMLCanvasElement} canvas - Main canvas element
-     * @param {HTMLCanvasElement} miniMap - Mini map canvas element
      */
-    init(canvas, miniMap) {
+    init(canvas) {
         if (!canvas) {
             console.error('Canvas element not provided');
             return;
@@ -105,19 +121,9 @@ class CanvasViewer {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         
-        if (miniMap) {
-            this.miniMap = miniMap;
-            this.miniMapCtx = miniMap.getContext('2d');
-        }
-        
         // Set canvas size
         this.canvas.width = 800;
         this.canvas.height = 600;
-        
-        if (this.miniMap) {
-            this.miniMap.width = 200;
-            this.miniMap.height = 150;
-        }
         
         // Setup event listeners
         this.setupEventListeners();
@@ -133,36 +139,35 @@ class CanvasViewer {
      */
     setupEventListeners() {
         // Prevent context menu on right click and middle click
-        this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        this.canvas.addEventListener('contextmenu', this.boundHandlers.contextMenu);
         
         // Mouse events for panning and zooming
-        this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
-        this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
-        this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
-        this.canvas.addEventListener('mouseleave', this.handleMouseLeave.bind(this));
-        this.canvas.addEventListener('mouseenter', this.handleMouseEnter.bind(this));
-        this.canvas.addEventListener('wheel', this.handleWheel.bind(this));
+        this.canvas.addEventListener('mousedown', this.boundHandlers.mouseDown);
+        this.canvas.addEventListener('mousemove', this.boundHandlers.mouseMove);
+        this.canvas.addEventListener('mouseup', this.boundHandlers.mouseUp);
+        this.canvas.addEventListener('mouseleave', this.boundHandlers.mouseLeave, { passive: true });
+        this.canvas.addEventListener('mouseenter', this.boundHandlers.mouseEnter, { passive: true });
+        
+        // Wheel event for zooming - cannot be passive because we need preventDefault
+        this.canvas.addEventListener('wheel', this.boundHandlers.wheel, { passive: false });
         
         // Document-level event listeners to catch events outside canvas
-        document.addEventListener('mouseup', this.handleDocumentMouseUp.bind(this));
-        document.addEventListener('mousemove', this.handleDocumentMouseMove.bind(this));
+        document.addEventListener('mouseup', this.boundHandlers.documentMouseUp);
+        document.addEventListener('mousemove', this.boundHandlers.documentMouseMove);
         
-        // Touch events for mobile
-        this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this));
-        this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this));
-        this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this));
+        // Touch events for mobile - cannot be passive because we need preventDefault for touch handling
+        this.canvas.addEventListener('touchstart', this.boundHandlers.touchStart, { passive: false });
+        this.canvas.addEventListener('touchmove', this.boundHandlers.touchMove, { passive: false });
+        this.canvas.addEventListener('touchend', this.boundHandlers.touchEnd, { passive: true });
         
-        // Mini map events
-        if (this.miniMap) {
-            this.miniMap.addEventListener('click', this.handleMiniMapClick.bind(this));
-        }
+
         
         // Keyboard events
-        document.addEventListener('keydown', this.handleKeyDown.bind(this));
+        document.addEventListener('keydown', this.boundHandlers.keyDown);
         
         // Window events for cleanup
-        window.addEventListener('blur', this.handleWindowBlur.bind(this));
-        window.addEventListener('focus', this.handleWindowFocus.bind(this));
+        window.addEventListener('blur', this.boundHandlers.windowBlur, { passive: true });
+        window.addEventListener('focus', this.boundHandlers.windowFocus, { passive: true });
     }
     
     /**
@@ -257,7 +262,7 @@ class CanvasViewer {
         }
         
         try {
-            const tile = this.getTileAtPosition(e.clientX, e.clientY);
+            const tile = this.getTileAtPosition(e.clientX, e.clientY, false);
             this.canvas.style.cursor = tile ? 'pointer' : 'default';
         } catch (error) {
             this.canvas.style.cursor = 'default';
@@ -283,7 +288,7 @@ class CanvasViewer {
             
             timeout = setTimeout(() => {
                 try {
-                    const tile = this.getTileAtPosition(e.clientX, e.clientY);
+                    const tile = this.getTileAtPosition(e.clientX, e.clientY, false);
                     
                     // Call hover callback if tile found
             if (tile && this.onTileHover) {
@@ -321,10 +326,25 @@ class CanvasViewer {
             const deltaX = Math.abs(e.clientX - this.lastMouseX);
             const deltaY = Math.abs(e.clientY - this.lastMouseY);
             
-            // Only register as click if mouse didn't move much (< 5 pixels)
-            if (deltaX < 5 && deltaY < 5) {
+            // Debug logging for click events (only in development)
+            if (window.ENVIRONMENT && window.ENVIRONMENT.isDevelopment) {
+                console.log('🖱️ Mouse up detected:', {
+                    button: e.button,
+                    deltaX,
+                    deltaY,
+                    screenX: e.clientX,
+                    screenY: e.clientY,
+                    hasOnTileClick: !!this.onTileClick,
+                    tilesCount: this.tiles.size
+                });
+            }
+            
+            // Only register as click if mouse didn't move much (< 15 pixels)
+            if (deltaX < 15 && deltaY < 15) {
                 try {
-                    const tile = this.getTileAtPosition(e.clientX, e.clientY);
+                    const tile = this.getTileAtPosition(e.clientX, e.clientY, true);
+                    console.log('🎯 Tile search result:', tile);
+                    
                     if (tile && this.onTileClick) {
                         // Track click performance
                         this.clickCount++;
@@ -336,22 +356,48 @@ class CanvasViewer {
                             this.updateDebugOverlay(e.clientX, e.clientY);
                         }
                         
-                        // Always log tile clicks for debugging (use development check instead of undefined DEBUG_CANVAS)
-                        if (window.ENVIRONMENT && window.ENVIRONMENT.isDevelopment) {
-                            console.log('🎯 Tile clicked:', tile);
-                        }
+                        console.log('🎯 Tile clicked:', tile);
+                        console.log('🎯 Calling onTileClick callback');
                         
                         this.onTileClick(tile);
                     } else if (!tile) {
-                        // Log when clicking on empty space for debugging
-                        if (window.ENVIRONMENT && window.ENVIRONMENT.isDevelopment) {
-                            console.log('🎯 Clicked on empty space');
+                        // Check if click is within canvas boundaries before creating empty tile
+                        const rect = this.canvas.getBoundingClientRect();
+                        const canvasX = e.clientX - rect.left;
+                        const canvasY = e.clientY - rect.top;
+                        const worldX = (canvasX / this.zoom) + this.viewportX;
+                        const worldY = (canvasY / this.zoom) + this.viewportY;
+                        const tileX = Math.floor(worldX / this.tileSize);
+                        const tileY = Math.floor(worldY / this.tileSize);
+                        
+                        // Check if the click is within canvas bounds
+                        if (this.canvasData && worldX >= 0 && worldY >= 0 && 
+                            worldX < this.canvasData.width && worldY < this.canvasData.height) {
+                            
+                            console.log('🎯 Clicked on empty space within canvas bounds');
+                            
+                            if (!this.onTileClick) {
+                                console.warn('⚠️ onTileClick callback not set');
+                            } else {
+                                const emptyTileInfo = {
+                                    x: tileX,
+                                    y: tileY,
+                                    isEmpty: true
+                                };
+                                
+                                console.log('🎯 Calling onTileClick with empty tile info:', emptyTileInfo);
+                                this.onTileClick(emptyTileInfo);
+                            }
+                        } else {
+                            console.log('🎯 Clicked outside canvas bounds - ignoring');
                         }
                     }
                 } catch (error) {
                     console.error('Error in tile click handler:', error);
                     this.trackPerformanceIssue('Tile click handler error');
                 }
+            } else {
+                console.log('🎯 Click ignored - mouse moved too much:', { deltaX, deltaY });
             }
             
             // Let hover system handle cursor state
@@ -557,35 +603,7 @@ class CanvasViewer {
         this.handleMouseUp(mouseEvent);
     }
     
-    /**
-     * Handle mini map click
-     * @param {MouseEvent} e - Mouse event
-     */
-    handleMiniMapClick(e) {
-        if (!this.miniMap || !this.canvasData) return;
-        
-        const rect = this.miniMap.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const clickY = e.clientY - rect.top;
-        
-        // Convert mini map coordinates to world coordinates
-        const scaleX = this.canvasData.width / this.miniMap.width;
-        const scaleY = this.canvasData.height / this.miniMap.height;
-        
-        const worldX = clickX * scaleX;
-        const worldY = clickY * scaleY;
-        
-        // Center viewport on clicked position
-        this.viewportX = worldX - (this.canvas.width / this.zoom / 2);
-        this.viewportY = worldY - (this.canvas.height / this.zoom / 2);
-        
-        this.requestRender();
-        this.updateMiniMap();
-        
-        if (this.onViewportChange) {
-            this.onViewportChange(this.viewportX, this.viewportY, this.zoom);
-        }
-    }
+
     
     /**
      * Handle keyboard shortcuts
@@ -643,7 +661,6 @@ class CanvasViewer {
         this.canvasData = canvasData;
         this.centerView();
         this.requestRender();
-        this.updateMiniMap();
     }
     
     /**
@@ -707,6 +724,9 @@ class CanvasViewer {
             return;
         }
         
+        console.log('📦 Loading tiles:', tiles.length);
+        console.log('📦 Tile data:', tiles);
+        
         tiles.forEach(tile => {
             this.tiles.set(tile.id, tile);
         });
@@ -714,18 +734,18 @@ class CanvasViewer {
         this.clearVisibleTilesCache(); // Clear cache when tiles change
         this.requestRender();
         
-        if (APP_CONFIG.DEBUG_CANVAS) {
-            console.log(`Loaded ${tiles.length} tiles`);
-        }
+        console.log(`✅ Loaded ${tiles.length} tiles. Total tiles: ${this.tiles.size}`);
+        console.log('📦 All tiles in map:', Array.from(this.tiles.values()).map(t => ({ id: t.id, x: t.x, y: t.y })));
     }
     
     /**
      * Get tile at screen position with optimized coordinate conversion
      * @param {number} screenX - Screen X coordinate
      * @param {number} screenY - Screen Y coordinate
+     * @param {boolean} isClick - Whether this is for a click event (enables debug logging)
      * @returns {Object|null} Tile at position or null
      */
-    getTileAtPosition(screenX, screenY) {
+    getTileAtPosition(screenX, screenY, isClick = false) {
         if (!this.canvas) return null;
         
         try {
@@ -741,14 +761,31 @@ class CanvasViewer {
             const tileX = Math.floor(worldX / this.tileSize);
             const tileY = Math.floor(worldY / this.tileSize);
             
-            // Only log coordinate conversion when actually debugging specific issues
-            // Removed constant debug logging that causes console spam
+            // Only log during clicks in development mode
+            if (isClick && window.ENVIRONMENT && window.ENVIRONMENT.isDevelopment) {
+                console.log('📍 Coordinate conversion:', {
+                    screen: { x: screenX, y: screenY },
+                    canvas: { x: canvasX, y: canvasY },
+                    world: { x: worldX, y: worldY },
+                    tile: { x: tileX, y: tileY },
+                    viewport: { x: this.viewportX, y: this.viewportY },
+                    zoom: this.zoom,
+                    tileSize: this.tileSize
+                });
+            }
             
             // Find tile at this position
             for (const [tileId, tile] of this.tiles) {
                 if (tile.x === tileX && tile.y === tileY) {
+                    if (isClick) {
+                        console.log('✅ Found tile at position:', tile);
+                    }
                     return tile;
                 }
+            }
+            
+            if (isClick) {
+                console.log('❌ No tile found at position. Available tiles:', Array.from(this.tiles.values()).map(t => ({ id: t.id, x: t.x, y: t.y })));
             }
             
             return null;
@@ -843,8 +880,8 @@ class CanvasViewer {
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-            // Draw background
-            this.ctx.fillStyle = '#f0f0f0';
+            // Draw background (outside canvas area)
+            this.ctx.fillStyle = '#e5e7eb';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
             // Exit early if no canvas data
@@ -862,10 +899,19 @@ class CanvasViewer {
         this.ctx.scale(this.zoom, this.zoom);
         this.ctx.translate(-this.viewportX, -this.viewportY);
         
+        // Draw canvas background (inside canvas area)
+        this.drawCanvasBackground();
+        
+        // Draw canvas boundaries
+        this.drawCanvasBoundaries();
+        
         // Draw grid if enabled
         if (this.showGrid) {
             this.drawGrid();
         }
+        
+        // Draw empty tile indicators
+        this.drawEmptyTileIndicators();
         
         // Draw tiles
         this.drawTiles();
@@ -885,9 +931,6 @@ class CanvasViewer {
         
         // Draw viewport info
         this.drawViewportInfo();
-            
-            // Update mini map
-            this.updateMiniMap();
             
         } catch (error) {
             console.error('Error in render function:', error);
@@ -955,41 +998,140 @@ class CanvasViewer {
     }
     
     /**
-     * Draw grid with performance optimization
+     * Draw canvas background (inside canvas area)
      */
-    drawGrid() {
-        // Limit grid density at high zoom levels
-        const maxGridLines = 100; // Maximum grid lines to draw
-        const gridStep = Math.max(this.tileSize, this.tileSize * Math.ceil(1 / this.zoom));
+    drawCanvasBackground() {
+        if (!this.canvasData) return;
         
-        this.ctx.strokeStyle = '#ddd';
+        // Draw light background for canvas area
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillRect(0, 0, this.canvasData.width, this.canvasData.height);
+        
+        // Add subtle texture pattern
+        this.ctx.fillStyle = '#f8fafc';
+        const patternSize = 8;
+        for (let x = 0; x < this.canvasData.width; x += patternSize * 2) {
+            for (let y = 0; y < this.canvasData.height; y += patternSize * 2) {
+                this.ctx.fillRect(x, y, patternSize, patternSize);
+                this.ctx.fillRect(x + patternSize, y + patternSize, patternSize, patternSize);
+            }
+        }
+    }
+    
+    /**
+     * Draw canvas boundaries
+     */
+    drawCanvasBoundaries() {
+        if (!this.canvasData) return;
+        
+        // Draw canvas border
+        this.ctx.strokeStyle = '#374151';
+        this.ctx.lineWidth = 3 / this.zoom;
+        this.ctx.beginPath();
+        this.ctx.rect(0, 0, this.canvasData.width, this.canvasData.height);
+        this.ctx.stroke();
+        
+        // Draw inner shadow effect
+        this.ctx.strokeStyle = '#9ca3af';
+        this.ctx.lineWidth = 1 / this.zoom;
+        this.ctx.beginPath();
+        this.ctx.rect(2 / this.zoom, 2 / this.zoom, this.canvasData.width - 4 / this.zoom, this.canvasData.height - 4 / this.zoom);
+        this.ctx.stroke();
+    }
+    
+    /**
+     * Draw empty tile indicators
+     */
+    drawEmptyTileIndicators() {
+        if (!this.canvasData || this.zoom < 0.5) return; // Only show at reasonable zoom levels
+        
+        const maxTilesX = Math.floor(this.canvasData.width / this.tileSize);
+        const maxTilesY = Math.floor(this.canvasData.height / this.tileSize);
+        
+        // Calculate visible tile bounds
+        const startTileX = Math.max(0, Math.floor(this.viewportX / this.tileSize) - 1);
+        const startTileY = Math.max(0, Math.floor(this.viewportY / this.tileSize) - 1);
+        const endTileX = Math.min(maxTilesX, Math.ceil((this.viewportX + this.canvas.width / this.zoom) / this.tileSize) + 1);
+        const endTileY = Math.min(maxTilesY, Math.ceil((this.viewportY + this.canvas.height / this.zoom) / this.tileSize) + 1);
+        
+        // Draw empty tile indicators
+        this.ctx.strokeStyle = '#d1d5db';
         this.ctx.lineWidth = 1 / this.zoom;
         this.ctx.globalAlpha = 0.3;
         
-        // Calculate grid bounds
-        const startX = Math.floor(this.viewportX / gridStep) * gridStep;
-        const startY = Math.floor(this.viewportY / gridStep) * gridStep;
-        const endX = this.viewportX + (this.canvas.width / this.zoom);
-        const endY = this.viewportY + (this.canvas.height / this.zoom);
-        
-        // Draw vertical lines with limit
-        let lineCount = 0;
-        for (let x = startX; x <= endX && lineCount < maxGridLines; x += gridStep) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(x, this.viewportY);
-            this.ctx.lineTo(x, this.viewportY + (this.canvas.height / this.zoom));
-            this.ctx.stroke();
-            lineCount++;
+        for (let tileX = startTileX; tileX < endTileX; tileX++) {
+            for (let tileY = startTileY; tileY < endTileY; tileY++) {
+                // Check if tile exists
+                const tileExists = Array.from(this.tiles.values()).some(tile => 
+                    tile.x === tileX && tile.y === tileY
+                );
+                
+                if (!tileExists) {
+                    const x = tileX * this.tileSize;
+                    const y = tileY * this.tileSize;
+                    
+                    // Draw empty tile outline
+                    this.ctx.setLineDash([5 / this.zoom, 5 / this.zoom]);
+                    this.ctx.beginPath();
+                    this.ctx.rect(x, y, this.tileSize, this.tileSize);
+                    this.ctx.stroke();
+                    
+                    // Draw plus sign in center if zoom is high enough
+                    if (this.zoom > 0.8) {
+                        this.ctx.setLineDash([]);
+                        this.ctx.strokeStyle = '#9ca3af';
+                        this.ctx.lineWidth = 2 / this.zoom;
+                        this.ctx.globalAlpha = 0.2;
+                        
+                        const centerX = x + this.tileSize / 2;
+                        const centerY = y + this.tileSize / 2;
+                        const plusSize = Math.min(this.tileSize * 0.2, 10 / this.zoom);
+                        
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(centerX - plusSize, centerY);
+                        this.ctx.lineTo(centerX + plusSize, centerY);
+                        this.ctx.moveTo(centerX, centerY - plusSize);
+                        this.ctx.lineTo(centerX, centerY + plusSize);
+                        this.ctx.stroke();
+                    }
+                }
+            }
         }
         
-        // Draw horizontal lines with limit
-        lineCount = 0;
-        for (let y = startY; y <= endY && lineCount < maxGridLines; y += gridStep) {
+        this.ctx.setLineDash([]);
+        this.ctx.globalAlpha = 1;
+    }
+    
+    /**
+     * Draw grid with performance optimization
+     */
+    drawGrid() {
+        if (!this.canvasData) return;
+        
+        // Only draw grid within canvas boundaries
+        const maxTilesX = Math.floor(this.canvasData.width / this.tileSize);
+        const maxTilesY = Math.floor(this.canvasData.height / this.tileSize);
+        
+        this.ctx.strokeStyle = '#d1d5db';
+        this.ctx.lineWidth = 0.5 / this.zoom;
+        this.ctx.globalAlpha = 0.6;
+        
+        // Draw vertical lines
+        for (let x = 0; x <= maxTilesX; x++) {
+            const lineX = x * this.tileSize;
             this.ctx.beginPath();
-            this.ctx.moveTo(this.viewportX, y);
-            this.ctx.lineTo(this.viewportX + (this.canvas.width / this.zoom), y);
+            this.ctx.moveTo(lineX, 0);
+            this.ctx.lineTo(lineX, this.canvasData.height);
             this.ctx.stroke();
-            lineCount++;
+        }
+        
+        // Draw horizontal lines
+        for (let y = 0; y <= maxTilesY; y++) {
+            const lineY = y * this.tileSize;
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, lineY);
+            this.ctx.lineTo(this.canvasData.width, lineY);
+            this.ctx.stroke();
         }
         
         this.ctx.globalAlpha = 1;
@@ -1111,63 +1253,53 @@ class CanvasViewer {
      * Draw viewport info
      */
     drawViewportInfo() {
-        // Draw zoom level
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        this.ctx.fillRect(10, 10, 80, 20);
+        const panelHeight = this.canvasData ? 120 : 60;
+        const panelWidth = 180;
+        
+        // Draw info panel background
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        this.ctx.fillRect(10, 10, panelWidth, panelHeight);
+        
+        // Draw panel border
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(10, 10, panelWidth, panelHeight);
         
         this.ctx.fillStyle = '#fff';
         this.ctx.font = '12px Arial';
         this.ctx.textAlign = 'left';
-        this.ctx.fillText(`Zoom: ${Math.round(this.zoom * 100)}%`, 15, 25);
         
-        // Draw tile count
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        this.ctx.fillRect(10, 35, 100, 20);
+        let yOffset = 25;
         
-        this.ctx.fillStyle = '#fff';
-        this.ctx.fillText(`Tiles: ${this.tiles.size}`, 15, 50);
+        // Zoom level
+        this.ctx.fillText(`Zoom: ${Math.round(this.zoom * 100)}%`, 15, yOffset);
+        yOffset += 18;
+        
+        // Tile count
+        this.ctx.fillText(`Tiles: ${this.tiles.size}`, 15, yOffset);
+        yOffset += 18;
+        
+        if (this.canvasData) {
+            // Canvas size
+            this.ctx.fillText(`Canvas: ${this.canvasData.width}×${this.canvasData.height}`, 15, yOffset);
+            yOffset += 18;
+            
+            // Max tiles
+            const maxTilesX = Math.floor(this.canvasData.width / this.tileSize);
+            const maxTilesY = Math.floor(this.canvasData.height / this.tileSize);
+            this.ctx.fillText(`Max Tiles: ${maxTilesX}×${maxTilesY}`, 15, yOffset);
+            yOffset += 18;
+            
+            // Viewport position
+            this.ctx.fillText(`Viewport: (${Math.round(this.viewportX)}, ${Math.round(this.viewportY)})`, 15, yOffset);
+            yOffset += 18;
+            
+            // Grid info
+            this.ctx.fillText(`Grid: ${this.showGrid ? 'ON' : 'OFF'}`, 15, yOffset);
+        }
     }
     
-    /**
-     * Update mini map
-     */
-    updateMiniMap() {
-        if (!this.miniMap || !this.miniMapCtx || !this.canvasData) return;
-        
-        // Clear mini map
-        this.miniMapCtx.clearRect(0, 0, this.miniMap.width, this.miniMap.height);
-        
-        // Draw mini map background
-        this.miniMapCtx.fillStyle = APP_CONFIG.CANVAS.BACKGROUND_COLOR;
-        this.miniMapCtx.fillRect(0, 0, this.miniMap.width, this.miniMap.height);
-        
-        // Calculate scale
-        const scaleX = this.miniMap.width / this.canvasData.width;
-        const scaleY = this.miniMap.height / this.canvasData.height;
-        const scale = Math.min(scaleX, scaleY);
-        
-        // Draw tiles on mini map
-        this.miniMapCtx.fillStyle = '#6366f1';
-        for (const [tileId, tile] of this.tiles) {
-            const x = tile.x * this.tileSize * scale;
-            const y = tile.y * this.tileSize * scale;
-            const size = this.tileSize * scale;
-            
-            this.miniMapCtx.fillRect(x, y, Math.max(1, size), Math.max(1, size));
-        }
-        
-        // Draw viewport indicator
-        const viewportX = this.viewportX * scale;
-        const viewportY = this.viewportY * scale;
-        const viewportWidth = (this.canvas.width / this.zoom) * scale;
-        const viewportHeight = (this.canvas.height / this.zoom) * scale;
-        
-        this.miniMapCtx.strokeStyle = '#ff4444';
-        this.miniMapCtx.lineWidth = 2;
-        this.miniMapCtx.beginPath();
-        this.miniMapCtx.rect(viewportX, viewportY, viewportWidth, viewportHeight);
-        this.miniMapCtx.stroke();
-    }
+
     
     /**
      * Zoom in
@@ -1175,7 +1307,6 @@ class CanvasViewer {
     zoomIn() {
         this.zoom = Math.min(this.maxZoom, this.zoom * 1.2);
         this.requestRender();
-        this.updateMiniMap();
         this.updateZoomIndicator();
     }
     
@@ -1185,7 +1316,6 @@ class CanvasViewer {
     zoomOut() {
         this.zoom = Math.max(this.minZoom, this.zoom / 1.2);
         this.requestRender();
-        this.updateMiniMap();
         this.updateZoomIndicator();
     }
     
@@ -1209,7 +1339,6 @@ class CanvasViewer {
         this.viewportY = (this.canvasData.height - (this.canvas.height / this.zoom)) / 2;
         
         this.requestRender();
-        this.updateMiniMap();
     }
     
     /**
@@ -1617,25 +1746,30 @@ class CanvasViewer {
      * Remove event listeners (for cleanup)
      */
     removeEventListeners() {
+        if (!this.canvas) return;
+        
         // Remove canvas event listeners
-        this.canvas.removeEventListener('contextmenu', (e) => e.preventDefault());
-        this.canvas.removeEventListener('mousedown', this.handleMouseDown.bind(this));
-        this.canvas.removeEventListener('mousemove', this.handleMouseMove.bind(this));
-        this.canvas.removeEventListener('mouseup', this.handleMouseUp.bind(this));
-        this.canvas.removeEventListener('mouseleave', this.handleMouseLeave.bind(this));
-        this.canvas.removeEventListener('mouseenter', this.handleMouseEnter.bind(this));
-        this.canvas.removeEventListener('wheel', this.handleWheel.bind(this));
+        this.canvas.removeEventListener('contextmenu', this.boundHandlers.contextMenu);
+        this.canvas.removeEventListener('mousedown', this.boundHandlers.mouseDown);
+        this.canvas.removeEventListener('mousemove', this.boundHandlers.mouseMove);
+        this.canvas.removeEventListener('mouseup', this.boundHandlers.mouseUp);
+        this.canvas.removeEventListener('mouseleave', this.boundHandlers.mouseLeave);
+        this.canvas.removeEventListener('mouseenter', this.boundHandlers.mouseEnter);
+        this.canvas.removeEventListener('wheel', this.boundHandlers.wheel);
+        this.canvas.removeEventListener('touchstart', this.boundHandlers.touchStart);
+        this.canvas.removeEventListener('touchmove', this.boundHandlers.touchMove);
+        this.canvas.removeEventListener('touchend', this.boundHandlers.touchEnd);
         
         // Remove document event listeners
-        document.removeEventListener('mouseup', this.handleDocumentMouseUp.bind(this));
-        document.removeEventListener('mousemove', this.handleDocumentMouseMove.bind(this));
+        document.removeEventListener('mouseup', this.boundHandlers.documentMouseUp);
+        document.removeEventListener('mousemove', this.boundHandlers.documentMouseMove);
+        document.removeEventListener('keydown', this.boundHandlers.keyDown);
         
         // Remove window event listeners
-        window.removeEventListener('blur', this.handleWindowBlur.bind(this));
-        window.removeEventListener('focus', this.handleWindowFocus.bind(this));
+        window.removeEventListener('blur', this.boundHandlers.windowBlur);
+        window.removeEventListener('focus', this.boundHandlers.windowFocus);
         
-        // Remove keyboard event listeners
-        document.removeEventListener('keydown', this.handleKeyDown.bind(this));
+
         
         if (window.CONFIG_UTILS) {
             window.CONFIG_UTILS.safeLog('🧹 Event listeners removed');
