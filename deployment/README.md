@@ -1,229 +1,127 @@
-# ArtPartySocial Deployment Guide
+# 🚀 Deployment System Overview
 
-This directory contains deployment configurations for ArtPartySocial with separate setups for local development and production deployment.
+## 🔐 **NEW: Deployment Rules & Environment Protection**
 
-## Directory Structure
+This deployment system now includes comprehensive protection against the common issue of production `.env` files being corrupted or overwritten during deployments.
 
-```
-deployment/
-├── local/                      # Local development configuration
-│   ├── docker-compose.local.yml
-│   ├── env.local.template
-│   ├── nginx.local.conf
-│   └── README.md
-├── production/                 # Production deployment configuration
-│   ├── docker-compose.prod.yml
-│   ├── env.prod.template
-│   ├── nginx.prod.conf
-│   ├── init-db.sql
-│   └── README.md
-├── legacy/                     # Legacy deployment files (for reference)
-│   ├── docker-compose.prod.yml (original)
-│   ├── env.*.template files
-│   └── deployment scripts
-└── README.md                   # This file
-```
+### **Key Files Added:**
 
-## Quick Start
+1. **`DEPLOYMENT-RULES.md`** - Complete deployment rules and best practices
+2. **`ENVIRONMENT-PROTECTION-GUIDE.md`** - Specific guide for protecting production environment files
+3. **`pre-deployment-check.sh`** - Automated pre-deployment security check (Linux/Mac)
+4. **`pre-deployment-check.bat`** - Automated pre-deployment security check (Windows)
+5. **Updated `.gitignore`** - Comprehensive protection for sensitive files
 
-### For Local Development
-```bash
-cd deployment/local
-cp env.local.template ../../backend/.env
-docker-compose -f docker-compose.local.yml up -d
-```
+## 🛡️ **Protection Features**
 
-**Access:**
-- Frontend: http://localhost
-- Backend: http://localhost:8000
-- API Docs: http://localhost:8000/docs
+### **Environment File Protection:**
+- ✅ Comprehensive `.gitignore` rules to prevent accidental commits
+- ✅ Automated checks for tracked `.env` files
+- ✅ Backup procedures for production environments
+- ✅ Emergency recovery procedures
 
-### For Production Deployment
-```bash
-cd deployment/production
-cp env.prod.template .env
-# Edit .env with your production values
-docker-compose -f docker-compose.prod.yml up -d
-```
+### **Deployment Safety:**
+- ✅ Pre-deployment security checks
+- ✅ Docker validation
+- ✅ Git status verification
+- ✅ Environment file integrity checks
 
-**Requirements:**
-- Ubuntu server with Docker installed
-- Domain name (recommended)
-- SSL certificate
-- Updated environment variables
+## 🚀 **Quick Start**
 
-## Configuration Overview
+### **Before Every Deployment:**
 
-### Local Development Features
-- **Hot reloading** for backend development
-- **Debug mode** enabled with detailed logs
-- **Exposed ports** for database and Redis debugging
-- **Permissive CORS** settings for frontend development
-- **API documentation** available at `/docs`
-
-### Production Features
-- **SSL/TLS termination** with nginx
-- **Security headers** and rate limiting
-- **Database and Redis** secured (no external ports)
-- **Health checks** and auto-restart policies
-- **Optimized performance** settings
-- **Logging** and monitoring configuration
-
-## Environment Variables
-
-### Local Development
-The local setup uses `env.local.template` with:
-- Development database credentials
-- Permissive CORS origins
-- Debug mode enabled
-- Extended rate limits
-
-### Production
-The production setup uses `env.prod.template` with:
-- **MUST BE CONFIGURED** with your actual values
-- Secure database passwords
-- Your production domain(s) in CORS_ORIGINS
-- Production-optimized settings
-
-## Database Configuration
-
-### Local
-- **Database**: PostgreSQL (artparty_social_dev)
-- **User/Pass**: postgres/dev_password
-- **Port**: 5432 (exposed for development)
-
-### Production
-- **Database**: PostgreSQL (stellarcollab_prod)
-- **User/Pass**: stellarcollab/[YOUR_SECURE_PASSWORD]
-- **Port**: Internal only (not exposed)
-- **Initialization**: Runs init-db.sql on first startup
-
-## Networking
-
-### Local Development
-- Frontend: Port 80
-- Backend: Port 8000
-- Database: Port 5432 (exposed)
-- Redis: Port 6379 (exposed)
-
-### Production
-- Frontend: Ports 80 (HTTP) and 443 (HTTPS)
-- Backend: Internal only (accessed through nginx)
-- Database: Internal only
-- Redis: Internal only
-
-## SSL/HTTPS
-
-### Local Development
-- HTTP only (no SSL needed)
-- CORS headers for cross-origin requests
-
-### Production
-- **HTTPS required** for production
-- Automatic HTTP to HTTPS redirect
-- SSL certificate must be provided
-- See production README for SSL setup
-
-## Migrating from Old Setup
-
-If you were using the old docker-compose.yml in the root directory:
-
-1. **For Local Development:**
+1. **Run the pre-deployment check:**
    ```bash
-   # Stop old setup
-   docker-compose down
+   # Linux/Mac
+   ./deployment/pre-deployment-check.sh
    
-   # Use new local setup
-   cd deployment/local
-   cp env.local.template ../../backend/.env
-   docker-compose -f docker-compose.local.yml up -d
+   # Windows
+   deployment\pre-deployment-check.bat
    ```
 
-2. **For Production:**
-   ```bash
-   # Stop old setup
-   docker-compose -f deployment/docker-compose.prod.yml down
-   
-   # Use new production setup
-   cd deployment/production
-   cp env.prod.template .env
-   # Edit .env with your production values
-   docker-compose -f docker-compose.prod.yml up -d
-   ```
+2. **Follow the deployment process** as outlined in `DEPLOYMENT-RULES.md`
 
-## Choosing Your Setup
+### **Emergency Recovery:**
 
-### Use Local Configuration When:
-- Developing the application
-- Testing new features
-- Debugging issues
-- Running on your local machine
-
-### Use Production Configuration When:
-- Deploying to a server
-- Serving real users
-- Need SSL/HTTPS
-- Require production security and performance
-
-## Common Commands
-
-### Local Development
+If your production `.env` file gets corrupted:
 ```bash
-# Start services
-docker-compose -f deployment/local/docker-compose.local.yml up -d
-
-# View logs
-docker-compose -f deployment/local/docker-compose.local.yml logs -f
-
-# Stop services
-docker-compose -f deployment/local/docker-compose.local.yml down
-
-# Reset everything (including data)
-docker-compose -f deployment/local/docker-compose.local.yml down -v
-```
-
-### Production
-```bash
-# Start services
-docker-compose -f deployment/production/docker-compose.prod.yml up -d
-
-# View logs
-docker-compose -f deployment/production/docker-compose.prod.yml logs -f
-
 # Stop services
 docker-compose -f deployment/production/docker-compose.prod.yml down
 
-# Update application
-git pull && docker-compose -f deployment/production/docker-compose.prod.yml up -d --build
+# Restore from backup
+cp deployment/production/.env.backup.YYYYMMDD_HHMMSS deployment/production/.env
+
+# Restart services
+docker-compose -f deployment/production/docker-compose.prod.yml up -d
 ```
 
-## Troubleshooting
+## 📁 **Directory Structure**
 
-### Common Issues
+```
+deployment/
+├── DEPLOYMENT-RULES.md              # Complete deployment rules
+├── ENVIRONMENT-PROTECTION-GUIDE.md  # Environment file protection guide
+├── pre-deployment-check.sh          # Pre-deployment check (Linux/Mac)
+├── pre-deployment-check.bat         # Pre-deployment check (Windows)
+├── README.md                        # This file
+├── production/
+│   ├── .env                         # Production secrets (NEVER commit)
+│   ├── .env.backup.*               # Backups (NEVER commit)
+│   ├── env.prod.template           # Safe template (can commit)
+│   ├── docker-compose.prod.yml     # Production Docker config
+│   └── ...                         # Other production files
+├── local/
+│   └── ...                         # Local development files
+└── legacy/
+    └── ...                         # Legacy deployment files
+```
 
-1. **Port conflicts**: Make sure no other services are using the same ports
-2. **Permission issues**: Ensure proper file permissions for SSL certificates
-3. **CORS errors**: Check that your domain is in CORS_ORIGINS
-4. **Database connection**: Verify database credentials and network connectivity
+## 🔥 **Critical Commands**
 
-### Getting Help
+### **Check for accidentally tracked .env files:**
+```bash
+git ls-files | grep -E "\.env$"
+# Should return NOTHING
+```
 
-1. Check the specific README in `local/` or `production/` directories
-2. Review the logs: `docker-compose logs -f [service-name]`
-3. Verify your environment variables are set correctly
-4. Check that all required ports are available
+### **Backup production environment:**
+```bash
+cp deployment/production/.env deployment/production/.env.backup.$(date +%Y%m%d_%H%M%S)
+```
 
-## Security Notes
+### **Remove accidentally committed .env files:**
+```bash
+git rm --cached deployment/production/.env
+git commit -m "Remove .env file from git tracking"
+```
 
-- **Never use local configuration in production**
-- **Always change default passwords** in production
-- **Use strong, unique secrets** for production
-- **Keep SSL certificates updated**
-- **Monitor logs** for security issues
+## 🚨 **Remember**
 
-## Performance Tips
+1. **NEVER commit `.env` files** - they contain production secrets
+2. **ALWAYS backup** production `.env` before deployment
+3. **RUN pre-deployment checks** before every deployment
+4. **Monitor logs** after deployment
+5. **Keep templates updated** but never commit actual `.env` files
 
-- **Local**: Use the local setup for development only
-- **Production**: Monitor resource usage and scale as needed
-- **Database**: Regular backups and performance monitoring
-- **Nginx**: Leverage caching and compression for better performance 
+## 📖 **Documentation**
+
+- **`DEPLOYMENT-RULES.md`** - Complete deployment rules and procedures
+- **`ENVIRONMENT-PROTECTION-GUIDE.md`** - Detailed environment file protection
+- **`production/ARTPARTY-SOCIAL-SETUP.md`** - Production server setup guide
+- **`production/QUICK-DEPLOY-CHECKLIST.md`** - Quick deployment checklist
+
+## 🆘 **Support**
+
+If you encounter issues:
+1. Check the relevant documentation files
+2. Run the pre-deployment check for diagnostics
+3. Review the troubleshooting section in `ENVIRONMENT-PROTECTION-GUIDE.md`
+4. Check Docker logs for service issues
+
+---
+
+## 🎯 **The Golden Rule**
+
+**Your production environment is precious. Never sacrifice security for speed.**
+
+A stable production environment is worth more than a fast deployment! 
