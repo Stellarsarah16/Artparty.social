@@ -324,8 +324,8 @@ class CanvasViewer {
             // Only register as click if mouse didn't move much (< 5 pixels)
             if (deltaX < 5 && deltaY < 5) {
                 try {
-            const tile = this.getTileAtPosition(e.clientX, e.clientY);
-            if (tile && this.onTileClick) {
+                    const tile = this.getTileAtPosition(e.clientX, e.clientY);
+                    if (tile && this.onTileClick) {
                         // Track click performance
                         this.clickCount++;
                         this.lastClickTime = clickTime;
@@ -336,12 +336,18 @@ class CanvasViewer {
                             this.updateDebugOverlay(e.clientX, e.clientY);
                         }
                         
-                        // Only log clicks in debug mode
-                        if (APP_CONFIG.DEBUG_CANVAS) {
-                            console.log('Tile clicked:', tile);
+                        // Always log tile clicks for debugging (use development check instead of undefined DEBUG_CANVAS)
+                        if (window.ENVIRONMENT && window.ENVIRONMENT.isDevelopment) {
+                            console.log('🎯 Tile clicked:', tile);
                         }
-                this.onTileClick(tile);
-            }
+                        
+                        this.onTileClick(tile);
+                    } else if (!tile) {
+                        // Log when clicking on empty space for debugging
+                        if (window.ENVIRONMENT && window.ENVIRONMENT.isDevelopment) {
+                            console.log('🎯 Clicked on empty space');
+                        }
+                    }
                 } catch (error) {
                     console.error('Error in tile click handler:', error);
                     this.trackPerformanceIssue('Tile click handler error');
@@ -723,45 +729,33 @@ class CanvasViewer {
         if (!this.canvas) return null;
         
         try {
-        const rect = this.canvas.getBoundingClientRect();
-        const canvasX = screenX - rect.left;
-        const canvasY = screenY - rect.top;
-        
-        // Convert to world coordinates
-        const worldX = (canvasX / this.zoom) + this.viewportX;
-        const worldY = (canvasY / this.zoom) + this.viewportY;
-        
-        // Convert to tile coordinates
-        const tileX = Math.floor(worldX / this.tileSize);
-        const tileY = Math.floor(worldY / this.tileSize);
-        
-                    // Use throttled logging to prevent performance issues
-        if (window.CONFIG_UTILS) {
-            window.CONFIG_UTILS.debug('Coordinate conversion:', {
-                screen: { x: screenX, y: screenY },
-                canvas: { x: canvasX, y: canvasY },
-                world: { x: worldX, y: worldY },
-                tile: { x: tileX, y: tileY }
-            });
-        }
+            const rect = this.canvas.getBoundingClientRect();
+            const canvasX = screenX - rect.left;
+            const canvasY = screenY - rect.top;
+            
+            // Convert to world coordinates
+            const worldX = (canvasX / this.zoom) + this.viewportX;
+            const worldY = (canvasY / this.zoom) + this.viewportY;
+            
+            // Convert to tile coordinates
+            const tileX = Math.floor(worldX / this.tileSize);
+            const tileY = Math.floor(worldY / this.tileSize);
+            
+            // Only log coordinate conversion when actually debugging specific issues
+            // Removed constant debug logging that causes console spam
             
             // Find tile at this position
-        for (const [tileId, tile] of this.tiles) {
-            if (tile.x === tileX && tile.y === tileY) {
-                    // Use throttled logging to prevent performance issues
-                    if (window.CONFIG_UTILS) {
-                        window.CONFIG_UTILS.debug('Found tile:', tile);
-                    }
-                return tile;
+            for (const [tileId, tile] of this.tiles) {
+                if (tile.x === tileX && tile.y === tileY) {
+                    return tile;
+                }
             }
-        }
-        
-            // Don't log "no tile found" - too spammy
+            
             return null;
             
         } catch (error) {
             console.error('Error in getTileAtPosition:', error);
-        return null;
+            return null;
         }
     }
     
@@ -1706,8 +1700,8 @@ if (!canvasViewer.onTileClick) {
 
 if (!canvasViewer.onTileHover) {
     canvasViewer.onTileHover = (tile) => {
-        // Use throttled logging to prevent performance issues
-        if (window.CONFIG_UTILS) {
+        // Only log hover in debug mode to prevent console spam
+        if (window.ENVIRONMENT && window.ENVIRONMENT.isDevelopment && window.CONFIG_UTILS) {
             window.CONFIG_UTILS.debug('Tile hover:', tile);
         }
         
@@ -1720,8 +1714,8 @@ if (!canvasViewer.onTileHover) {
 
 if (!canvasViewer.onViewportChange) {
     canvasViewer.onViewportChange = (x, y, zoom) => {
-        // Use throttled logging to prevent performance issues
-        if (window.CONFIG_UTILS) {
+        // Only log viewport changes in debug mode to prevent console spam
+        if (window.ENVIRONMENT && window.ENVIRONMENT.isDevelopment && window.CONFIG_UTILS) {
             window.CONFIG_UTILS.debug('Viewport changed:', { x, y, zoom });
         }
         

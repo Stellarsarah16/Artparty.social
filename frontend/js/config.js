@@ -239,7 +239,12 @@ const APP_CONFIG = {
         TILE_UNLIKED: 'Tile unliked!',
         PROFILE_UPDATED: 'Profile updated successfully!',
         PASSWORD_CHANGED: 'Password changed successfully!'
-    }
+    },
+    
+    // Debug settings
+    DEBUG_CANVAS: ENVIRONMENT.isDevelopment,
+    DEBUG_WEBSOCKET: ENVIRONMENT.isDevelopment,
+    DEBUG_AUTH: ENVIRONMENT.isDevelopment
 };
 
 // Utility functions
