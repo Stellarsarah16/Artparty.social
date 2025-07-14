@@ -10,7 +10,7 @@ import navigationManager from './navigation.js';
 
 class AuthManager {
     constructor() {
-        this.baseUrl = window.API_CONFIG?.BASE_URL || 'http://localhost:8000';
+        this.baseUrl = window.API_CONFIG?.BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8000' : window.location.origin);
     }
     
     /**
