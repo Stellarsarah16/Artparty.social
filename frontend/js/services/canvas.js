@@ -58,7 +58,7 @@ class CanvasService {
      */
     async getCanvasData(canvasId) {
         try {
-            const response = await fetch(CONFIG_UTILS.getApiUrl(`${API_CONFIG.ENDPOINTS.CANVAS}/${canvasId}`), {
+            const response = await fetch(CONFIG_UTILS.getApiUrl(`${API_CONFIG.ENDPOINTS.CANVAS}${canvasId}`), {
                 headers: CONFIG_UTILS.getAuthHeaders()
             });
             
