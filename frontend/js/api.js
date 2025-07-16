@@ -128,6 +128,15 @@ class APIClient {
         try {
             console.log(`📤 API Request: ${requestConfig.method || 'GET'} ${url}`);
             
+            // Additional debugging for mixed content detection
+            if (url.startsWith('http://')) {
+                console.error('❌ MIXED CONTENT DETECTED in API request:', {
+                    url: url,
+                    method: requestConfig.method,
+                    stack: new Error().stack
+                });
+            }
+            
             const response = await fetch(url, fetchOptions);
             
             // Apply response interceptors

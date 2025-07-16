@@ -6,7 +6,7 @@
 import { appState } from './state.js';
 import { authService } from '../services/auth.js';
 import { canvasService } from '../services/canvas.js';
-import { navigationManager } from '../components/navigation.js';
+import { navigationManager } from '../modules/navigation.js';
 import { eventManager } from '../utils/events.js';
 import { uiUtils } from '../utils/ui.js';
 

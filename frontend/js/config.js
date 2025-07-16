@@ -22,6 +22,39 @@ if (window.location.hostname === 'artparty.social' && window.location.protocol !
     window.location.href = window.location.href.replace('http:', 'https:');
 }
 
+// Global fetch interceptor to force HTTPS for production
+if (window.location.hostname === 'artparty.social') {
+    console.log('🔧 Setting up global HTTPS enforcement for production');
+    
+    // Override fetch to force HTTPS
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+        const url = args[0];
+        
+        // Convert HTTP to HTTPS for production
+        if (typeof url === 'string' && url.startsWith('http://artparty.social')) {
+            const httpsUrl = url.replace('http://', 'https://');
+            console.warn('⚠️ Converting HTTP to HTTPS:', url, '→', httpsUrl);
+            args[0] = httpsUrl;
+        }
+        
+        return originalFetch.apply(this, args);
+    };
+    
+    // Override XMLHttpRequest to force HTTPS
+    const originalXHROpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(method, url, ...args) {
+        // Convert HTTP to HTTPS for production
+        if (typeof url === 'string' && url.startsWith('http://artparty.social')) {
+            const httpsUrl = url.replace('http://', 'https://');
+            console.warn('⚠️ Converting HTTP to HTTPS (XHR):', url, '→', httpsUrl);
+            url = httpsUrl;
+        }
+        
+        return originalXHROpen.apply(this, [method, url, ...args]);
+    };
+}
+
 // Enhanced base URLs based on environment
 const getBaseUrls = () => {
     const hostname = window.location.hostname;
