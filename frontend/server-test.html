@@ -77,6 +77,7 @@
             <h3>3. Network Request Test</h3>
             <button onclick="testCorsDebug()">Test CORS Debug Endpoint</button>
             <button onclick="testCorsTest()">Test CORS Test Endpoint</button>
+            <button onclick="testBackendHealth()">Test Backend Health</button>
             <button onclick="testTilesEndpoint()">Test Tiles Endpoint (No Auth)</button>
             <button onclick="debugApiConfig()">Debug API Configuration</button>
             <button onclick="testNetworkRequests()">Test Network Requests</button>
@@ -382,6 +383,71 @@
                 document.getElementById('results').innerHTML += `
                     <div class="error">
                         <strong>CORS Test Endpoint:</strong> Error - ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testBackendHealth() {
+            try {
+                console.log('Testing backend health...');
+                
+                // Test root endpoint
+                const rootResponse = await fetch(`${API_CONFIG.BASE_URL}/`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                console.log('Root endpoint status:', rootResponse.status);
+                const rootText = await rootResponse.text();
+                console.log('Root endpoint response:', rootText.substring(0, 200));
+                
+                // Test health endpoint
+                const healthResponse = await fetch(`${API_CONFIG.BASE_URL}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                console.log('Health endpoint status:', healthResponse.status);
+                const healthText = await healthResponse.text();
+                console.log('Health endpoint response:', healthText.substring(0, 200));
+                
+                let resultHtml = '<div class="info"><strong>Backend Health Test:</strong><br>';
+                
+                if (rootResponse.ok) {
+                    resultHtml += `<div class="success">✅ Root endpoint (/) - Status: ${rootResponse.status}</div>`;
+                    if (rootText.includes('Welcome to StellarArtCollab API')) {
+                        resultHtml += `<div class="success">✅ Root endpoint returning correct content</div>`;
+                    } else {
+                        resultHtml += `<div class="warning">⚠️ Root endpoint content: ${rootText.substring(0, 100)}...</div>`;
+                    }
+                } else {
+                    resultHtml += `<div class="error">❌ Root endpoint (/) - Status: ${rootResponse.status}</div>`;
+                }
+                
+                if (healthResponse.ok) {
+                    resultHtml += `<div class="success">✅ Health endpoint (/health) - Status: ${healthResponse.status}</div>`;
+                    if (healthText.includes('healthy')) {
+                        resultHtml += `<div class="success">✅ Health endpoint returning correct content</div>`;
+                    } else {
+                        resultHtml += `<div class="warning">⚠️ Health endpoint content: ${healthText.substring(0, 100)}...</div>`;
+                    }
+                } else {
+                    resultHtml += `<div class="error">❌ Health endpoint (/health) - Status: ${healthResponse.status}</div>`;
+                }
+                
+                resultHtml += '</div>';
+                document.getElementById('results').innerHTML += resultHtml;
+                
+            } catch (error) {
+                console.error('Backend health test error:', error);
+                document.getElementById('results').innerHTML += `
+                    <div class="error">
+                        <strong>Backend Health Test:</strong> Error - ${error.message}
                     </div>
                 `;
             }
