@@ -611,6 +611,7 @@ const API = {
         getAtPosition: (canvasId, x, y) => tileAPI.getTileAtPosition(canvasId, x, y),
         getForUser: (userId, params) => tileAPI.getUserTiles(userId, params),
         getNeighbors: (id) => tileAPI.getTileNeighbors(id),
+        getAdjacentNeighbors: (id) => tileAPI.getAdjacentNeighbors(id),
         like: (id) => tileAPI.likeTile(id),
         unlike: (id) => tileAPI.unlikeTile(id),
         getLikes: (id) => tileAPI.getTileLikes(id),
