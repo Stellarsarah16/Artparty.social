@@ -70,6 +70,8 @@
         
         <div class="test-section">
             <h3>3. Network Request Test</h3>
+            <button onclick="testCorsDebug()">Test CORS Debug Endpoint</button>
+            <button onclick="testTilesEndpoint()">Test Tiles Endpoint (No Auth)</button>
             <button onclick="testNetworkRequests()">Test Network Requests</button>
             <div id="network-results"></div>
         </div>
@@ -181,6 +183,80 @@
             updateAllResults();
         }
         
+        async function testTilesEndpoint() {
+            try {
+                console.log('Testing tiles endpoint without authentication...');
+                const response = await fetch(`${API_CONFIG.baseURL}/tiles/canvas/1`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Tiles Response:', data);
+                    document.getElementById('results').innerHTML += `
+                        <div class="success">
+                            <strong>Tiles Endpoint Test:</strong> Success!<br>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    console.error('Tiles endpoint failed:', response.status, response.statusText);
+                    document.getElementById('results').innerHTML += `
+                        <div class="error">
+                            <strong>Tiles Endpoint Test:</strong> Failed - ${response.status} ${response.statusText}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Tiles endpoint error:', error);
+                document.getElementById('results').innerHTML += `
+                    <div class="error">
+                        <strong>Tiles Endpoint Test:</strong> Error - ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function testCorsDebug() {
+            try {
+                console.log('Testing CORS debug endpoint...');
+                const response = await fetch(`${API_CONFIG.baseURL}/cors-debug`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('CORS Debug Response:', data);
+                    document.getElementById('results').innerHTML += `
+                        <div class="success">
+                            <strong>CORS Debug Test:</strong> Success!<br>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    console.error('CORS Debug failed:', response.status, response.statusText);
+                    document.getElementById('results').innerHTML += `
+                        <div class="error">
+                            <strong>CORS Debug Test:</strong> Failed - ${response.status} ${response.statusText}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('CORS Debug error:', error);
+                document.getElementById('results').innerHTML += `
+                    <div class="error">
+                        <strong>CORS Debug Test:</strong> Error - ${error.message}
+                    </div>
+                `;
+            }
+        }
+
         async function testNetworkRequests() {
             const results = document.getElementById('network-results');
             results.innerHTML = '';

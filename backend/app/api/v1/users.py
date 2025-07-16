@@ -16,6 +16,36 @@ router = APIRouter()
 security = HTTPBearer()
 
 
+@router.options("/profile")
+async def profile_options():
+    """Handle CORS preflight requests for profile endpoints"""
+    return {"message": "OK"}
+
+
+@router.options("/stats")
+async def stats_options():
+    """Handle CORS preflight requests for stats endpoints"""
+    return {"message": "OK"}
+
+
+@router.options("/{user_id}")
+async def user_options(user_id: int):
+    """Handle CORS preflight requests for user endpoints"""
+    return {"message": "OK"}
+
+
+@router.options("/password")
+async def password_options():
+    """Handle CORS preflight requests for password endpoints"""
+    return {"message": "OK"}
+
+
+@router.options("/account")
+async def account_options():
+    """Handle CORS preflight requests for account endpoints"""
+    return {"message": "OK"}
+
+
 async def get_current_user_dependency(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)

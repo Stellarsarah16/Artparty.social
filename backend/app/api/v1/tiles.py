@@ -19,6 +19,24 @@ router = APIRouter()
 security = HTTPBearer()
 
 
+@router.options("/")
+async def tiles_options():
+    """Handle CORS preflight requests for tiles endpoints"""
+    return {"message": "OK"}
+
+
+@router.options("/{tile_id}")
+async def tile_options(tile_id: int):
+    """Handle CORS preflight requests for specific tile endpoints"""
+    return {"message": "OK"}
+
+
+@router.options("/{tile_id}/like")
+async def tile_like_options(tile_id: int):
+    """Handle CORS preflight requests for tile like endpoints"""
+    return {"message": "OK"}
+
+
 async def get_current_user_dependency(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)

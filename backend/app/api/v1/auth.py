@@ -18,6 +18,24 @@ security = HTTPBearer()
 logger = logging.getLogger(__name__)
 
 
+@router.options("/register")
+async def register_options():
+    """Handle CORS preflight requests for registration"""
+    return {"message": "OK"}
+
+
+@router.options("/login")
+async def login_options():
+    """Handle CORS preflight requests for login"""
+    return {"message": "OK"}
+
+
+@router.options("/me")
+async def me_options():
+    """Handle CORS preflight requests for user info"""
+    return {"message": "OK"}
+
+
 @router.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def register(
     user_create: UserCreate,
