@@ -96,8 +96,8 @@ const getBaseUrls = () => {
     if (hostname === 'artparty.social' || hostname.includes('artparty.social')) {
         console.log('🔧 Using production URLs with forced HTTPS');
         return {
-            API_BASE_URL: 'https://artparty.social',
-            WS_BASE_URL: 'wss://artparty.social'
+            API_BASE_URL: `${protocol}//${hostname}`,
+            WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//${hostname}`
         };
     }
     
