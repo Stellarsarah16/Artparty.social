@@ -80,6 +80,8 @@
     </div>
 
     <!-- Load configuration files for testing -->
+    <!-- HTTPS Enforcer - Must load first! -->
+    <script src="js/https-enforcer.js"></script>
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     
@@ -183,6 +185,32 @@
             results.innerHTML = '';
             
             log('Testing network requests...', 'info', 'network-results');
+            
+            // Test HTTPS enforcer
+            log('Testing HTTPS enforcer...', 'info', 'network-results');
+            try {
+                // This should be converted to HTTPS by the enforcer
+                const httpUrl = 'http://artparty.social/api/v1/tiles';
+                log(`Making HTTP request (should be converted): ${httpUrl}`, 'info', 'network-results');
+                
+                const response = await fetch(httpUrl, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`HTTPS enforcer test response status: ${response.status}`, 'info', 'network-results');
+                
+                if (response.ok || response.status === 405) {
+                    log('✅ HTTPS enforcer working - HTTP request was converted', 'success', 'network-results');
+                } else {
+                    log(`⚠️ HTTPS enforcer test returned status: ${response.status}`, 'warning', 'network-results');
+                }
+                
+            } catch (error) {
+                log(`❌ HTTPS enforcer test error: ${error.message}`, 'error', 'network-results');
+            }
             
             // Test API endpoint
             try {

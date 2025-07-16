@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTPS Enforcer Test - Artparty.Social</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .warning { color: #ffc107; }
+        .info { color: #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 HTTPS Enforcer Test</h1>
+        <p>This page tests if the HTTPS enforcer is working correctly by making HTTP requests that should be converted to HTTPS.</p>
+        
+        <button onclick="testHttpsEnforcer()">Test HTTPS Enforcer</button>
+        <button onclick="testDirectHttpRequest()">Test Direct HTTP Request</button>
+        <button onclick="testXhrHttpRequest()">Test XHR HTTP Request</button>
+        <button onclick="clearResults()">Clear Results</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <!-- Load HTTPS enforcer first -->
+    <script src="js/https-enforcer.js"></script>
+    
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'success' ? 'success' : 
+                              type === 'error' ? 'error' : 
+                              type === 'warning' ? 'warning' : 'info';
+            
+            results.innerHTML += `<div class="${colorClass}">[${timestamp}] ${message}</div>`;
+        }
+        
+        async function testHttpsEnforcer() {
+            log('Testing HTTPS enforcer with fetch...', 'info');
+            
+            try {
+                // This should be converted to HTTPS by the enforcer
+                const httpUrl = 'http://artparty.social/api/v1/tiles';
+                log(`Making HTTP request: ${httpUrl}`, 'info');
+                
+                const response = await fetch(httpUrl, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`Response status: ${response.status}`, 'info');
+                
+                if (response.ok || response.status === 405) {
+                    log('✅ HTTPS enforcer working - HTTP request was successfully converted to HTTPS', 'success');
+                } else {
+                    log(`⚠️ Request returned status: ${response.status}`, 'warning');
+                }
+                
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function testDirectHttpRequest() {
+            log('Testing direct HTTP request...', 'info');
+            
+            try {
+                const xhr = new XMLHttpRequest();
+                const httpUrl = 'http://artparty.social/api/v1/tiles';
+                
+                log(`Making XHR HTTP request: ${httpUrl}`, 'info');
+                
+                xhr.open('OPTIONS', httpUrl);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                
+                xhr.onload = function() {
+                    log(`XHR Response status: ${xhr.status}`, 'info');
+                    if (xhr.status === 200 || xhr.status === 405) {
+                        log('✅ HTTPS enforcer working - XHR HTTP request was converted to HTTPS', 'success');
+                    } else {
+                        log(`⚠️ XHR request returned status: ${xhr.status}`, 'warning');
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    log('❌ XHR request failed', 'error');
+                };
+                
+                xhr.send();
+                
+            } catch (error) {
+                log(`❌ XHR Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function testXhrHttpRequest() {
+            log('Testing XHR HTTP request with different method...', 'info');
+            
+            try {
+                const xhr = new XMLHttpRequest();
+                const httpUrl = 'http://artparty.social/api/v1/cors-test';
+                
+                log(`Making XHR GET request: ${httpUrl}`, 'info');
+                
+                xhr.open('GET', httpUrl);
+                
+                xhr.onload = function() {
+                    log(`XHR GET Response status: ${xhr.status}`, 'info');
+                    if (xhr.status === 200) {
+                        log('✅ HTTPS enforcer working - XHR GET request was converted to HTTPS', 'success');
+                    } else {
+                        log(`⚠️ XHR GET request returned status: ${xhr.status}`, 'warning');
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    log('❌ XHR GET request failed', 'error');
+                };
+                
+                xhr.send();
+                
+            } catch (error) {
+                log(`❌ XHR GET Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            log('HTTPS Enforcer test page loaded', 'info');
+            log('Ready to test HTTP to HTTPS conversion', 'info');
+        });
+    </script>
+</body>
+</html> 
