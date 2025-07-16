@@ -7,9 +7,6 @@ import { appState } from './app-state.js';
 import { eventManager } from '../utils/events.js';
 import { neighborDisplay } from './neighbor-display.js';
 import canvasService from '../services/canvas.js';
-import { API } from '../api/api.js';
-import { CONFIG_UTILS } from '../utils/config.js';
-import { API_CONFIG } from '../api/api-config.js';
 
 class NavigationManager {
     constructor() {
@@ -260,7 +257,7 @@ class NavigationManager {
             submitButton.disabled = true;
             
             // Make API call
-            const response = await fetch(CONFIG_UTILS.getApiUrl(API_CONFIG.ENDPOINTS.LOGIN), {
+            const response = await fetch(window.CONFIG_UTILS.getApiUrl(window.API_CONFIG.ENDPOINTS.LOGIN), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -274,8 +271,8 @@ class NavigationManager {
                 console.log('Login successful:', data);
                 
                 // Store authentication data
-                CONFIG_UTILS.setAuthToken(data.access_token);
-                CONFIG_UTILS.setUserData(data.user);
+                window.CONFIG_UTILS.setAuthToken(data.access_token);
+                window.CONFIG_UTILS.setUserData(data.user);
                 
                 // Update app state
                 appState.setAuthenticated(data.user);
@@ -344,7 +341,7 @@ class NavigationManager {
                 submitButton.disabled = true;
                 
                 // Make API call
-                const response = await fetch(CONFIG_UTILS.getApiUrl(API_CONFIG.ENDPOINTS.REGISTER), {
+                const response = await fetch(window.CONFIG_UTILS.getApiUrl(window.API_CONFIG.ENDPOINTS.REGISTER), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -358,8 +355,8 @@ class NavigationManager {
                     console.log('Registration successful:', data);
                     
                     // Store authentication data
-                    CONFIG_UTILS.setAuthToken(data.access_token);
-                    CONFIG_UTILS.setUserData(data.user);
+                    window.CONFIG_UTILS.setAuthToken(data.access_token);
+                    window.CONFIG_UTILS.setUserData(data.user);
                     
                     // Update app state
                     appState.setAuthenticated(data.user);
@@ -794,8 +791,8 @@ class NavigationManager {
                 try {
                     // Fetch both tile data and adjacent neighbors in parallel
                     const [completeTile, neighbors] = await Promise.all([
-                        API.tiles.get(tile.id),
-                        API.tiles.getAdjacentNeighbors(tile.id)
+                        window.API.tiles.get(tile.id),
+                        window.API.tiles.getAdjacentNeighbors(tile.id)
                     ]);
                     
                     console.log('🔍 API Response - Tile:', completeTile);
@@ -1090,9 +1087,9 @@ class NavigationManager {
                     // Save via API
                     let response;
                     if (tile.isNew) {
-                        response = await API.tiles.create(tileData);
+                        response = await window.API.tiles.create(tileData);
                     } else {
-                        response = await API.tiles.update(tile.id, tileData);
+                        response = await window.API.tiles.update(tile.id, tileData);
                     }
                     
                     console.log('💾 Tile saved successfully:', response);
@@ -1467,8 +1464,8 @@ class NavigationManager {
     async handleLogout() {
         try {
             // Clear authentication data
-            CONFIG_UTILS.removeAuthToken();
-            CONFIG_UTILS.removeUserData();
+            window.CONFIG_UTILS.removeAuthToken();
+            window.CONFIG_UTILS.removeUserData();
             
             // Update app state
             appState.setUnauthenticated();
