@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force Reload - Artparty.Social</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .warning { color: #ffc107; }
+        .info { color: #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .steps {
+            text-align: left;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .steps li {
+            margin: 10px 0;
+        }
+        #results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            text-align: left;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Force Reload All Files</h1>
+        <p>This page will force reload all JavaScript files with cache busting to ensure the HTTPS fix is applied.</p>
+        
+        <div class="steps">
+            <h3>What this does:</h3>
+            <ol>
+                <li><strong>Clear all browser storage</strong> (localStorage, sessionStorage, cache)</li>
+                <li><strong>Force reload all JavaScript files</strong> with timestamp-based cache busting</li>
+                <li><strong>Redirect to main app</strong> with fresh files</li>
+                <li><strong>Verify HTTPS configuration</strong> is working</li>
+            </ol>
+        </div>
+        
+        <button onclick="forceReload()">🔄 Force Reload Everything</button>
+        <button onclick="testCurrentState()">🧪 Test Current State</button>
+        <button onclick="goToMainApp()">🏠 Go to Main App</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'success' ? 'success' : 
+                              type === 'error' ? 'error' : 
+                              type === 'warning' ? 'warning' : 'info';
+            
+            results.innerHTML += `<div class="${colorClass}">[${timestamp}] ${message}</div>`;
+        }
+        
+        function forceReload() {
+            log('Starting force reload process...', 'info');
+            
+            // Step 1: Clear all storage
+            log('Step 1: Clearing all browser storage...', 'info');
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                log('✅ Browser storage cleared', 'success');
+            } catch (e) {
+                log('⚠️ Could not clear storage: ' + e.message, 'warning');
+            }
+            
+            // Step 2: Clear cache using cache API
+            if ('caches' in window) {
+                log('Step 2: Clearing cache storage...', 'info');
+                caches.keys().then(names => {
+                    names.forEach(name => {
+                        caches.delete(name);
+                    });
+                    log('✅ Cache storage cleared', 'success');
+                }).catch(e => {
+                    log('⚠️ Could not clear cache: ' + e.message, 'warning');
+                });
+            }
+            
+            // Step 3: Force reload with aggressive cache busting
+            setTimeout(() => {
+                log('Step 3: Redirecting with cache busting...', 'info');
+                const timestamp = Date.now();
+                const random = Math.random().toString(36).substring(7);
+                const cacheBuster = `?force-reload=${timestamp}&r=${random}`;
+                
+                log(`Cache buster: ${cacheBuster}`, 'info');
+                window.location.href = '/' + cacheBuster;
+            }, 2000);
+        }
+        
+        function testCurrentState() {
+            log('Testing current state...', 'info');
+            
+            // Test environment
+            log(`Current URL: ${window.location.href}`, 'info');
+            log(`Protocol: ${window.location.protocol}`, 'info');
+            log(`Hostname: ${window.location.hostname}`, 'info');
+            
+            // Test if we're on the right domain
+            if (window.location.hostname === 'artparty.social') {
+                log('✅ Correct domain detected', 'success');
+            } else {
+                log('⚠️ Not on artparty.social domain', 'warning');
+            }
+            
+            // Test protocol
+            if (window.location.protocol === 'https:') {
+                log('✅ HTTPS protocol detected', 'success');
+            } else {
+                log('❌ Not using HTTPS protocol', 'error');
+            }
+            
+            // Test storage
+            try {
+                const testKey = 'cache_test_' + Date.now();
+                localStorage.setItem(testKey, 'test');
+                localStorage.removeItem(testKey);
+                log('✅ LocalStorage is working', 'success');
+            } catch (e) {
+                log('❌ LocalStorage not working: ' + e.message, 'error');
+            }
+            
+            log('Current state test complete.', 'info');
+        }
+        
+        function goToMainApp() {
+            log('Redirecting to main application...', 'info');
+            window.location.href = '/';
+        }
+        
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            log('Force reload page loaded. Ready to clear cache and reload files.', 'info');
+            testCurrentState();
+        });
+    </script>
+</body>
+</html> 

@@ -10,7 +10,37 @@ import navigationManager from './navigation.js';
 
 class AuthManager {
     constructor() {
-        this.baseUrl = window.API_CONFIG?.BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8000' : window.location.origin);
+        // Use the global API configuration or fallback to secure URL
+        this.baseUrl = window.API_CONFIG?.BASE_URL || this.getSecureBaseUrl();
+        
+        // Debug logging
+        console.log('🔧 AuthManager initialized with:', {
+            baseUrl: this.baseUrl,
+            apiConfigBaseUrl: window.API_CONFIG?.BASE_URL,
+            hostname: window.location.hostname,
+            protocol: window.location.protocol
+        });
+    }
+    
+    /**
+     * Get secure base URL with HTTPS enforcement for production
+     */
+    getSecureBaseUrl() {
+        const hostname = window.location.hostname;
+        const protocol = window.location.protocol;
+        
+        // Development
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:8000';
+        }
+        
+        // Production - force HTTPS
+        if (hostname === 'artparty.social' || hostname.includes('artparty.social')) {
+            return 'https://artparty.social';
+        }
+        
+        // Other environments - use current protocol
+        return `${protocol}//${hostname}`;
     }
     
     /**
@@ -32,7 +62,10 @@ class AuthManager {
             this.setFormLoading(true, submitButton, 'Signing in...');
             window.clearFormErrors('login-form');
             
-            const response = await fetch(`${this.baseUrl}/api/v1/auth/login`, {
+            const loginUrl = `${this.baseUrl}/api/v1/auth/login`;
+            console.log('🔧 Auth login URL:', loginUrl);
+            
+            const response = await fetch(loginUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -104,7 +137,10 @@ class AuthManager {
             this.setFormLoading(true, submitButton, 'Creating account...');
             window.clearFormErrors('register-form');
             
-            const response = await fetch(`${this.baseUrl}/api/v1/auth/register`, {
+            const registerUrl = `${this.baseUrl}/api/v1/auth/register`;
+            console.log('🔧 Auth register URL:', registerUrl);
+            
+            const response = await fetch(registerUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -189,7 +225,10 @@ class AuthManager {
         }
         
         try {
-            const response = await fetch(`${this.baseUrl}/api/v1/auth/me`, {
+            const verifyUrl = `${this.baseUrl}/api/v1/auth/me`;
+            console.log('🔧 Auth verify URL:', verifyUrl);
+            
+            const response = await fetch(verifyUrl, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
