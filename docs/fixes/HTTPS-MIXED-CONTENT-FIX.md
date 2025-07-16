@@ -109,48 +109,95 @@ Click "Test API Call" to verify:
 Deploy the updated files to production:
 - `frontend/js/config.js`
 - `frontend/js/api.js`
+- `frontend/index.html` (with cache-busting)
 - `frontend/test-https-fix.html` (optional, for testing)
+- `frontend/clear-cache.html` (optional, for cache clearing)
 
 ### 2. Clear Browser Cache
-Users should clear their browser cache or do a hard refresh (Ctrl+F5) to ensure the new configuration is loaded.
+**CRITICAL**: Users must clear their browser cache to ensure the new configuration is loaded:
+
+#### Option A: Hard Refresh (Recommended)
+- **Windows**: Press `Ctrl+F5` or `Ctrl+Shift+R`
+- **Mac**: Press `Cmd+Shift+R`
+- **Linux**: Press `Ctrl+Shift+R`
+
+#### Option B: Clear Cache via Developer Tools
+1. Open Developer Tools (F12)
+2. Go to Application → Storage
+3. Click "Clear storage"
+4. Reload the page
+
+#### Option C: Use Clear Cache Page
+Visit `https://artparty.social/clear-cache.html` and click "Clear Cache & Reload"
 
 ### 3. Verify Fix
 - Test tile saving functionality
 - Check browser console for HTTPS URLs
 - Verify no mixed content errors
+- Look for the message: `🔧 HTTPS FIX VERSION 1.1.0 LOADED`
+
+## Troubleshooting
+
+### If Mixed Content Error Persists
+
+#### 1. Check Browser Console
+Look for these logs to verify the fix is loaded:
+```
+🔧 HTTPS FIX VERSION 1.1.0 LOADED - Mixed content error should be resolved
+🔧 Current configuration: {API_BASE_URL: "https://artparty.social", ...}
+```
+
+#### 2. Force Cache Clear
+If the logs show old configuration, force clear the cache:
+- Close all browser tabs for the site
+- Clear browser cache completely
+- Restart the browser
+- Visit the site again
+
+#### 3. Check Network Tab
+In Developer Tools → Network tab:
+- Look for requests to `http://artparty.social` (should be none)
+- All requests should be to `https://artparty.social`
+- Check if JavaScript files are loading with cache-busting parameters
+
+#### 4. Test Configuration
+Visit `https://artparty.social/test-https-fix.html` and run the tests to verify:
+- Environment detection is correct
+- URL construction uses HTTPS
+- API calls work properly
+
+### Common Issues
+
+#### Issue: Still seeing HTTP requests
+**Solution**: Browser cache is holding old JavaScript files. Force clear cache and reload.
+
+#### Issue: Configuration logs show old values
+**Solution**: The new configuration files aren't loaded. Check cache-busting parameters in HTML.
+
+#### Issue: Mixed content error on other pages
+**Solution**: Check if other JavaScript files have hardcoded HTTP URLs.
+
+## Cache-Busting Implementation
+
+### Version Parameters
+Added version parameters to critical JavaScript files:
+```html
+<script src="js/config.js?v=1.1.0"></script>
+<script src="js/api.js?v=1.1.0"></script>
+```
+
+### Meta Tags
+Added cache prevention meta tags:
+```html
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+```
+
+### Clear Cache Page
+Created `frontend/clear-cache.html` to help users clear their cache and test configuration.
 
 ## Monitoring
 
 ### Console Logs to Watch For
-- `🔧 Environment Detection:` - Shows environment detection results
-- `🔧 Final Secure Configuration:` - Shows final API configuration
-- `🔧 APIClient initialized with:` - Shows API client configuration
-- `🔧 URL Construction:` - Shows URL construction process
-- `🔧 Final URL:` - Shows final constructed URL
-
-### Warning Signs
-- Any URLs starting with `http://` instead of `https://`
-- Mixed content errors in browser console
-- Failed API requests due to protocol mismatch
-
-## Prevention
-
-### 1. Environment Detection
-Always test environment detection logic thoroughly before deployment.
-
-### 2. Protocol Safety
-Implement multiple layers of protocol safety checks.
-
-### 3. Monitoring
-Monitor console logs and network requests to catch similar issues early.
-
-### 4. Testing
-Use the test page to verify HTTPS configuration after any changes.
-
-## Related Files
-- `deployment/production/nginx.prod.conf` - Nginx configuration for HTTPS
-- `deployment/DEPLOYMENT-RULES.md` - Deployment procedures
-- `deployment/ENVIRONMENT-PROTECTION-GUIDE.md` - Environment safety guide
-
-## Status
-✅ **FIXED** - Mixed content error resolved with comprehensive HTTPS enforcement 
+- `

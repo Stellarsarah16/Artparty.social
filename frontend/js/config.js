@@ -594,6 +594,14 @@ window.ENVIRONMENT = ENVIRONMENT;
 
 // Simple initialization log
 console.log('✅ Artparty.Social configuration loaded');
+console.log('🔧 HTTPS FIX VERSION 1.1.0 LOADED - Mixed content error should be resolved');
+console.log('🔧 Current configuration:', {
+    API_BASE_URL: API_CONFIG.BASE_URL,
+    WS_BASE_URL: WS_CONFIG.BASE_URL,
+    hostname: window.location.hostname,
+    protocol: window.location.protocol,
+    timestamp: new Date().toISOString()
+});
 if (ENVIRONMENT.isDevelopment) {
     console.log('🔧 Development mode - API:', API_CONFIG.BASE_URL);
 } 
