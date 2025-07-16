@@ -3,9 +3,8 @@
  * Handles section navigation and modal management
  */
 
-import { appState } from './app-state.js';
+import appState from './app-state.js';
 import { eventManager } from '../utils/events.js';
-import { neighborDisplay } from './neighbor-display.js';
 import canvasService from '../services/canvas.js';
 
 class NavigationManager {
@@ -819,11 +818,17 @@ class NavigationManager {
             // Set current tile in app state
             appState.setCurrentTile(tile);
             
-            // Update neighbor display (if available)
-            if (neighborDisplay && neighborDisplay.initialized) {
-                neighborDisplay.updateDisplay(tile, tile.adjacentNeighbors || []);
-            } else {
-                console.log('⚠️ Neighbor display not available, skipping neighbor update');
+            // Update neighbor display (if available) - don't block on this
+            try {
+                const neighborDisplayInstance = window.neighborDisplay;
+                if (neighborDisplayInstance && typeof neighborDisplayInstance.updateDisplay === 'function') {
+                    neighborDisplayInstance.updateDisplay(tile, tile.adjacentNeighbors || []);
+                } else {
+                    console.log('⚠️ Neighbor display not available, skipping neighbor update');
+                }
+            } catch (error) {
+                console.warn('⚠️ Error updating neighbor display:', error);
+                // Don't let neighbor display errors block the editor
             }
             
             // Show editor section

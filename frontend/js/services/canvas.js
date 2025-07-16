@@ -4,7 +4,6 @@
  */
 
 import { eventManager } from '../utils/events.js';
-import { uiUtils } from '../utils/ui.js';
 
 class CanvasService {
     constructor() {
@@ -29,8 +28,8 @@ class CanvasService {
      */
     async getCanvases() {
         try {
-            const response = await fetch(CONFIG_UTILS.getApiUrl(API_CONFIG.ENDPOINTS.CANVAS), {
-                headers: CONFIG_UTILS.getAuthHeaders()
+            const response = await fetch(window.CONFIG_UTILS.getApiUrl(window.API_CONFIG.ENDPOINTS.CANVAS), {
+                headers: window.CONFIG_UTILS.getAuthHeaders()
             });
             
             if (response.ok) {
@@ -44,9 +43,8 @@ class CanvasService {
             console.error('Failed to get canvases:', error);
             
             // Show toast if uiUtils is available
-            if (window.uiUtils || uiUtils) {
-                const ui = window.uiUtils || uiUtils;
-                ui.showToast('Failed to load canvases', 'error');
+            if (window.UIManager) {
+                window.UIManager.showToast('Failed to load canvases', 'error');
             }
             
             throw error;
@@ -58,8 +56,8 @@ class CanvasService {
      */
     async getCanvasData(canvasId) {
         try {
-            const response = await fetch(CONFIG_UTILS.getApiUrl(`${API_CONFIG.ENDPOINTS.CANVAS}${canvasId}`), {
-                headers: CONFIG_UTILS.getAuthHeaders()
+            const response = await fetch(window.CONFIG_UTILS.getApiUrl(`${window.API_CONFIG.ENDPOINTS.CANVAS}${canvasId}`), {
+                headers: window.CONFIG_UTILS.getAuthHeaders()
             });
             
             if (response.ok) {
@@ -71,7 +69,9 @@ class CanvasService {
             
         } catch (error) {
             console.error('Failed to get canvas data:', error);
-            uiUtils.showToast('Failed to load canvas data', 'error');
+            if (window.UIManager) {
+                window.UIManager.showToast('Failed to load canvas data', 'error');
+            }
             throw error;
         }
     }
@@ -81,9 +81,9 @@ class CanvasService {
      */
     async createCanvas(canvasData) {
         try {
-            const response = await fetch(CONFIG_UTILS.getApiUrl(API_CONFIG.ENDPOINTS.CANVAS), {
+            const response = await fetch(window.CONFIG_UTILS.getApiUrl(window.API_CONFIG.ENDPOINTS.CANVAS), {
                 method: 'POST',
-                headers: CONFIG_UTILS.getAuthHeaders(),
+                headers: window.CONFIG_UTILS.getAuthHeaders(),
                 body: JSON.stringify(canvasData)
             });
             
@@ -91,16 +91,22 @@ class CanvasService {
             
             if (response.ok) {
                 eventManager.emit('canvas:created', data);
-                uiUtils.showToast('Canvas created successfully!', 'success');
+                if (window.UIManager) {
+                    window.UIManager.showToast('Canvas created successfully!', 'success');
+                }
                 return { success: true, canvas: data };
             } else {
-                uiUtils.showToast(data.detail || 'Failed to create canvas', 'error');
+                if (window.UIManager) {
+                    window.UIManager.showToast(data.detail || 'Failed to create canvas', 'error');
+                }
                 return { success: false, error: data };
             }
             
         } catch (error) {
             console.error('Failed to create canvas:', error);
-            uiUtils.showToast('Network error during canvas creation', 'error');
+            if (window.UIManager) {
+                window.UIManager.showToast('Network error during canvas creation', 'error');
+            }
             return { success: false, error: { message: error.message } };
         }
     }
@@ -110,9 +116,9 @@ class CanvasService {
      */
     async saveTile(tileData) {
         try {
-            const response = await fetch(CONFIG_UTILS.getApiUrl(API_CONFIG.ENDPOINTS.TILES), {
+            const response = await fetch(window.CONFIG_UTILS.getApiUrl(window.API_CONFIG.ENDPOINTS.TILES), {
                 method: 'POST',
-                headers: CONFIG_UTILS.getAuthHeaders(),
+                headers: window.CONFIG_UTILS.getAuthHeaders(),
                 body: JSON.stringify(tileData)
             });
             
@@ -120,16 +126,22 @@ class CanvasService {
             
             if (response.ok) {
                 eventManager.emit('tile:saved', data);
-                uiUtils.showToast('Tile saved successfully!', 'success');
+                if (window.UIManager) {
+                    window.UIManager.showToast('Tile saved successfully!', 'success');
+                }
                 return { success: true, tile: data };
             } else {
-                uiUtils.showToast(data.detail || 'Failed to save tile', 'error');
+                if (window.UIManager) {
+                    window.UIManager.showToast(data.detail || 'Failed to save tile', 'error');
+                }
                 return { success: false, error: data };
             }
             
         } catch (error) {
             console.error('Failed to save tile:', error);
-            uiUtils.showToast('Network error during tile save', 'error');
+            if (window.UIManager) {
+                window.UIManager.showToast('Network error during tile save', 'error');
+            }
             return { success: false, error: { message: error.message } };
         }
     }
