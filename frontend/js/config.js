@@ -602,6 +602,12 @@ console.log('🔧 Current configuration:', {
     protocol: window.location.protocol,
     timestamp: new Date().toISOString()
 });
+
+// Test CONFIG_UTILS functions
+console.log('🔧 Testing CONFIG_UTILS functions:');
+console.log('  - getApiUrl("/api/v1/tiles"):', CONFIG_UTILS.getApiUrl('/api/v1/tiles'));
+console.log('  - getApiUrl("/api/v1/auth/login"):', CONFIG_UTILS.getApiUrl('/api/v1/auth/login'));
+console.log('  - isAuthenticated():', CONFIG_UTILS.isAuthenticated());
 if (ENVIRONMENT.isDevelopment) {
     console.log('🔧 Development mode - API:', API_CONFIG.BASE_URL);
 } 

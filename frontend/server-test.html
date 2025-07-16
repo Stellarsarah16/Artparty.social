@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Test - Artparty.Social</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .warning { color: #ffc107; }
+        .info { color: #17a2b8; }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Server Configuration Test</h1>
+        <p>This page tests server configuration and file serving to identify issues.</p>
+        
+        <div class="test-section">
+            <h3>1. File Availability Test</h3>
+            <button onclick="testFileAvailability()">Test File Availability</button>
+            <div id="file-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>2. API Configuration Test</h3>
+            <button onclick="testApiConfiguration()">Test API Configuration</button>
+            <div id="api-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>3. Network Request Test</h3>
+            <button onclick="testNetworkRequests()">Test Network Requests</button>
+            <div id="network-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>4. All Results</h3>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        let allResults = [];
+        
+        function log(message, type = 'info', targetId = 'results') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            allResults.push(logMessage);
+            
+            const colorClass = type === 'success' ? 'success' : 
+                              type === 'error' ? 'error' : 
+                              type === 'warning' ? 'warning' : 'info';
+            
+            const target = document.getElementById(targetId);
+            if (target) {
+                target.innerHTML += `<div class="${colorClass}">${logMessage}</div>`;
+            }
+            
+            // Also log to console
+            console.log(`🔧 ${logMessage}`);
+        }
+        
+        async function testFileAvailability() {
+            const results = document.getElementById('file-results');
+            results.innerHTML = '';
+            
+            log('Testing file availability...', 'info', 'file-results');
+            
+            const filesToTest = [
+                '/js/config.js',
+                '/js/api.js',
+                '/js/modules/navigation.js',
+                '/js/modules/auth.js',
+                '/js/services/auth.js',
+                '/js/canvas-viewer.js',
+                '/js/pixel-editor.js',
+                '/js/websocket.js',
+                '/js/ui.js',
+                '/js/form-validation.js'
+            ];
+            
+            for (const file of filesToTest) {
+                try {
+                    const response = await fetch(file, { method: 'HEAD' });
+                    if (response.ok) {
+                        log(`✅ ${file} - Status: ${response.status}`, 'success', 'file-results');
+                    } else {
+                        log(`❌ ${file} - Status: ${response.status}`, 'error', 'file-results');
+                    }
+                } catch (error) {
+                    log(`❌ ${file} - Error: ${error.message}`, 'error', 'file-results');
+                }
+            }
+            
+            updateAllResults();
+        }
+        
+        async function testApiConfiguration() {
+            const results = document.getElementById('api-results');
+            results.innerHTML = '';
+            
+            log('Testing API configuration...', 'info', 'api-results');
+            
+            // Test current environment
+            log(`Current URL: ${window.location.href}`, 'info', 'api-results');
+            log(`Protocol: ${window.location.protocol}`, 'info', 'api-results');
+            log(`Hostname: ${window.location.hostname}`, 'info', 'api-results');
+            
+            // Test if configuration is loaded
+            if (typeof API_CONFIG !== 'undefined') {
+                log(`✅ API_CONFIG loaded - BASE_URL: ${API_CONFIG.BASE_URL}`, 'success', 'api-results');
+            } else {
+                log('❌ API_CONFIG not loaded', 'error', 'api-results');
+            }
+            
+            if (typeof CONFIG_UTILS !== 'undefined') {
+                log('✅ CONFIG_UTILS loaded', 'success', 'api-results');
+                try {
+                    const testUrl = CONFIG_UTILS.getApiUrl('/api/v1/tiles');
+                    log(`CONFIG_UTILS.getApiUrl("/api/v1/tiles"): ${testUrl}`, 'info', 'api-results');
+                    
+                    if (testUrl.startsWith('https://')) {
+                        log('✅ URL uses HTTPS', 'success', 'api-results');
+                    } else {
+                        log('❌ URL does not use HTTPS', 'error', 'api-results');
+                    }
+                } catch (error) {
+                    log(`❌ CONFIG_UTILS.getApiUrl error: ${error.message}`, 'error', 'api-results');
+                }
+            } else {
+                log('❌ CONFIG_UTILS not loaded', 'error', 'api-results');
+            }
+            
+            updateAllResults();
+        }
+        
+        async function testNetworkRequests() {
+            const results = document.getElementById('network-results');
+            results.innerHTML = '';
+            
+            log('Testing network requests...', 'info', 'network-results');
+            
+            // Test API endpoint
+            try {
+                const testUrl = 'https://artparty.social/api/v1/tiles';
+                log(`Testing API endpoint: ${testUrl}`, 'info', 'network-results');
+                
+                const response = await fetch(testUrl, { 
+                    method: 'OPTIONS',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`API response status: ${response.status}`, 'info', 'network-results');
+                log(`API response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`, 'info', 'network-results');
+                
+                if (response.ok || response.status === 405) {
+                    log('✅ API endpoint is accessible', 'success', 'network-results');
+                } else {
+                    log(`⚠️ API endpoint returned status: ${response.status}`, 'warning', 'network-results');
+                }
+                
+            } catch (error) {
+                log(`❌ API endpoint error: ${error.message}`, 'error', 'network-results');
+            }
+            
+            // Test CORS
+            try {
+                const corsUrl = 'https://artparty.social/api/v1/cors-test';
+                log(`Testing CORS: ${corsUrl}`, 'info', 'network-results');
+                
+                const response = await fetch(corsUrl, { 
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`CORS response status: ${response.status}`, 'info', 'network-results');
+                
+                if (response.ok) {
+                    log('✅ CORS is working', 'success', 'network-results');
+                } else {
+                    log(`⚠️ CORS returned status: ${response.status}`, 'warning', 'network-results');
+                }
+                
+            } catch (error) {
+                log(`❌ CORS error: ${error.message}`, 'error', 'network-results');
+            }
+            
+            updateAllResults();
+        }
+        
+        function updateAllResults() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = allResults.join('\n');
+        }
+        
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            log('Server test page loaded. Running initial tests...', 'info');
+            setTimeout(() => {
+                testApiConfiguration();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 
