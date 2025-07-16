@@ -191,7 +191,7 @@
         async function testTilesEndpoint() {
             try {
                 console.log('Testing tiles endpoint without authentication...');
-                const response = await fetch(`${API_CONFIG.baseURL}/tiles/canvas/1`, {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/tiles/canvas/1`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -229,16 +229,16 @@
             try {
                 console.log('Debugging API configuration...');
                 
-                // Show current configuration
-                const configInfo = {
-                    baseURL: API_CONFIG.baseURL,
-                    hostname: window.location.hostname,
-                    protocol: window.location.protocol,
-                    port: window.location.port,
-                    fullUrl: window.location.href,
-                    corsDebugUrl: `${API_CONFIG.baseURL}/cors-debug`,
-                    tilesUrl: `${API_CONFIG.baseURL}/tiles/canvas/1`
-                };
+                            // Show current configuration
+            const configInfo = {
+                baseURL: API_CONFIG.BASE_URL,
+                hostname: window.location.hostname,
+                protocol: window.location.protocol,
+                port: window.location.port,
+                fullUrl: window.location.href,
+                corsDebugUrl: `${API_CONFIG.BASE_URL}/cors-debug`,
+                tilesUrl: `${API_CONFIG.BASE_URL}/tiles/canvas/1`
+            };
                 
                 console.log('API Configuration:', configInfo);
                 document.getElementById('results').innerHTML += `
@@ -249,7 +249,7 @@
                 `;
                 
                 // Test the exact URL that's being used
-                const testUrl = `${API_CONFIG.baseURL}/cors-debug`;
+                const testUrl = `${API_CONFIG.BASE_URL}/cors-debug`;
                 console.log('Testing URL:', testUrl);
                 
                 const response = await fetch(testUrl, {
@@ -287,7 +287,7 @@
         async function testCorsDebug() {
             try {
                 console.log('Testing CORS debug endpoint...');
-                const response = await fetch(`${API_CONFIG.baseURL}/cors-debug`, {
+                const response = await fetch(`${API_CONFIG.BASE_URL}/cors-debug`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -355,7 +355,7 @@
             
             // Test API endpoint
             try {
-                const testUrl = 'https://artparty.social/api/v1/tiles';
+                const testUrl = `${API_CONFIG.BASE_URL}/api/v1/tiles`;
                 log(`Testing API endpoint: ${testUrl}`, 'info', 'network-results');
                 
                 const response = await fetch(testUrl, { 
@@ -380,7 +380,7 @@
             
             // Test CORS
             try {
-                const corsUrl = 'https://artparty.social/api/v1/cors-test';
+                const corsUrl = `${API_CONFIG.BASE_URL}/api/v1/cors-test`;
                 log(`Testing CORS: ${corsUrl}`, 'info', 'network-results');
                 
                 const response = await fetch(corsUrl, { 
