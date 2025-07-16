@@ -525,8 +525,11 @@ class TileAPI {
     }
     
     async getTileNeighbors(id) {
-        const url = API_CONFIG.ENDPOINTS.TILE_NEIGHBORS.replace('{id}', id);
-        return await this.client.get(url);
+        return this.client.get(`/tiles/${id}/neighbors`);
+    }
+    
+    async getAdjacentNeighbors(id) {
+        return this.client.get(`/tiles/${id}/adjacent-neighbors`);
     }
     
     async likeTile(id) {

@@ -3,9 +3,13 @@
  * Handles section navigation and modal management
  */
 
-import appState from './app-state.js';
-import canvasService from '../services/canvas.js';
+import { appState } from './app-state.js';
 import { eventManager } from '../utils/events.js';
+import { neighborDisplay } from './neighbor-display.js';
+import canvasService from '../services/canvas.js';
+import { API } from '../api/api.js';
+import { CONFIG_UTILS } from '../utils/config.js';
+import { API_CONFIG } from '../api/api-config.js';
 
 class NavigationManager {
     constructor() {
@@ -784,28 +788,46 @@ class NavigationManager {
                 };
             }
             
-            // For existing tiles, ensure we have complete tile data
+            // For existing tiles, ensure we have complete tile data and fetch neighbors
             if (!tile.isEmpty && !tile.isNew && tile.id) {
-                console.log('🔍 Fetching complete tile data from API...');
+                console.log('🔍 Fetching complete tile data and neighbors from API...');
                 try {
-                    const completeTile = await API.tiles.get(tile.id);
-                    console.log('🔍 API Response:', completeTile);
+                    // Fetch both tile data and adjacent neighbors in parallel
+                    const [completeTile, neighbors] = await Promise.all([
+                        API.tiles.get(tile.id),
+                        API.tiles.getAdjacentNeighbors(tile.id)
+                    ]);
+                    
+                    console.log('🔍 API Response - Tile:', completeTile);
+                    console.log('🔍 API Response - Neighbors:', neighbors);
+                    
                     if (completeTile && completeTile.pixel_data) {
                         tile = completeTile;
                         console.log('🔍 Fetched complete tile data:', tile);
                         console.log('🔍 Pixel data type:', typeof tile.pixel_data);
                         console.log('🔍 Pixel data length:', tile.pixel_data ? tile.pixel_data.length : 'null');
+                        
+                        // Store neighbors for reference in the editor
+                        tile.adjacentNeighbors = neighbors || [];
+                        console.log('🔍 Adjacent neighbors:', tile.adjacentNeighbors);
                     } else {
                         console.warn('🔍 No pixel data in API response:', completeTile);
                     }
                 } catch (error) {
-                    console.error('🔍 Failed to fetch complete tile data:', error);
+                    console.error('🔍 Failed to fetch tile data or neighbors:', error);
                     console.error('🔍 Error details:', error.message, error.status, error.data);
                 }
             }
             
             // Set current tile in app state
             appState.setCurrentTile(tile);
+            
+            // Update neighbor display (if available)
+            if (neighborDisplay && neighborDisplay.initialized) {
+                neighborDisplay.updateDisplay(tile, tile.adjacentNeighbors || []);
+            } else {
+                console.log('⚠️ Neighbor display not available, skipping neighbor update');
+            }
             
             // Show editor section
             this.showSection('editor');

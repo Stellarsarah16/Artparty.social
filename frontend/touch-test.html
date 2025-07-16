@@ -162,6 +162,41 @@
             border-color: #4f46e5;
         }
         
+        /* Notification system */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.info {
+            background: #3b82f6;
+        }
+        
+        .notification.success {
+            background: #10b981;
+        }
+        
+        .notification.warning {
+            background: #f59e0b;
+        }
+        
+        .notification.error {
+            background: #ef4444;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 margin: 10px;
@@ -202,8 +237,12 @@
                     <span>Zoom In/Out</span>
                 </div>
                 <div class="touch-info-item">
-                    <strong>Quick Tap</strong>
+                    <strong>Single Tap</strong>
                     <span>Select Tile/Color</span>
+                </div>
+                <div class="touch-info-item">
+                    <strong>Double Tap</strong>
+                    <span>Enter Edit Mode</span>
                 </div>
                 <div class="touch-info-item">
                     <strong>Pressure</strong>
@@ -231,7 +270,9 @@
                 <strong>Canvas Info:</strong><br>
                 Zoom: <span id="zoomLevel">1.0</span><br>
                 Position: <span id="position">0, 0</span><br>
-                Touch Count: <span id="touchCount">0</span>
+                Touch Count: <span id="touchCount">0</span><br>
+                Last Tap: <span id="lastTapTime">None</span><br>
+                Double Tap Ready: <span id="doubleTapReady">No</span>
             </div>
         </div>
         
@@ -289,8 +330,16 @@
         
         // Set up canvas viewer callbacks
         canvasViewer.onTileClick = (tile) => {
-            console.log('Tile clicked:', tile);
+            console.log('Tile clicked (single tap):', tile);
             updateCanvasInfo();
+            showNotification('Tile selected: ' + tile.title, 'info');
+        };
+        
+        canvasViewer.onTileDoubleClick = (tile) => {
+            console.log('Tile double-clicked (double tap):', tile);
+            updateCanvasInfo();
+            showNotification('Entering edit mode for: ' + tile.title, 'success');
+            // Here you would typically open the tile editor
         };
         
         canvasViewer.onViewportChange = (x, y, zoom) => {
@@ -379,6 +428,21 @@
             document.getElementById('position').textContent = 
                 `${Math.round(canvasViewer.viewportX)}, ${Math.round(canvasViewer.viewportY)}`;
             document.getElementById('touchCount').textContent = canvasViewer.touchState.touchCount;
+            
+            // Show tap detection info
+            const currentTime = Date.now();
+            const timeSinceLastTap = currentTime - canvasViewer.touchState.lastTapTime;
+            const isDoubleTapReady = timeSinceLastTap < canvasViewer.touchState.doubleTapDelay;
+            
+            if (canvasViewer.touchState.lastTapTime > 0) {
+                document.getElementById('lastTapTime').textContent = 
+                    `${timeSinceLastTap}ms ago`;
+            } else {
+                document.getElementById('lastTapTime').textContent = 'None';
+            }
+            
+            document.getElementById('doubleTapReady').textContent = 
+                isDoubleTapReady ? 'Yes' : 'No';
         }
         
         function updatePixelInfo() {
@@ -436,6 +500,34 @@
             link.click();
         }
         
+        // Notification system
+        function showNotification(message, type = 'info') {
+            // Remove existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => notification.remove());
+            
+            // Create new notification
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // Hide notification after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
         // Initialize
         initColorPalette();
         updateCanvasInfo();
@@ -447,6 +539,12 @@
             addTestTile();
             addTestTile();
         }, 1000);
+        
+        // Periodic updates for real-time info
+        setInterval(() => {
+            updateCanvasInfo();
+            updatePixelInfo();
+        }, 100);
         
         console.log('✅ Touch test page loaded');
     </script>

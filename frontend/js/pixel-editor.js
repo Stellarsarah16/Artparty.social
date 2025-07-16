@@ -33,7 +33,13 @@ class PixelEditor {
             lastTouchY: 0,
             touchStartTime: 0,
             hasMoved: false,
-            pressure: 1.0
+            pressure: 1.0,
+            // Double tap detection
+            lastTapTime: 0,
+            lastTapX: 0,
+            lastTapY: 0,
+            doubleTapDelay: 300, // milliseconds
+            doubleTapDistance: 50 // pixels
         };
     }
     
@@ -268,9 +274,37 @@ class PixelEditor {
             
             // Check for tap gesture (quick touch without movement)
             const touchDuration = Date.now() - this.touchState.touchStartTime;
-            if (touchDuration < 150 && !this.touchState.hasMoved) {
-                // Handle as a tap - could be used for color picker or other quick actions
-                this.handleTapGesture();
+            if (touchDuration < 200 && !this.touchState.hasMoved) {
+                // Handle as a tap
+                const touch = e.changedTouches[0];
+                if (touch) {
+                    const currentTime = Date.now();
+                    const timeSinceLastTap = currentTime - this.touchState.lastTapTime;
+                    const distanceFromLastTap = Math.sqrt(
+                        Math.pow(touch.clientX - this.touchState.lastTapX, 2) +
+                        Math.pow(touch.clientY - this.touchState.lastTapY, 2)
+                    );
+                    
+                    // Check if this is a double tap
+                    if (timeSinceLastTap < this.touchState.doubleTapDelay && 
+                        distanceFromLastTap < this.touchState.doubleTapDistance) {
+                        // Double tap detected - could be used for quick actions
+                        this.handleDoubleTapGesture();
+                        
+                        // Reset tap tracking
+                        this.touchState.lastTapTime = 0;
+                        this.touchState.lastTapX = 0;
+                        this.touchState.lastTapY = 0;
+                    } else {
+                        // Single tap - handle normal tap gesture
+                        this.handleTapGesture();
+                        
+                        // Store tap info for potential double tap
+                        this.touchState.lastTapTime = currentTime;
+                        this.touchState.lastTapX = touch.clientX;
+                        this.touchState.lastTapY = touch.clientY;
+                    }
+                }
             }
         }
     }
@@ -332,6 +366,21 @@ class PixelEditor {
         // - Quick tool switching
         // - Color palette access
         // - Undo/redo
+    }
+    
+    /**
+     * Handle double tap gesture
+     */
+    handleDoubleTapGesture() {
+        // Double tap actions - could be used for:
+        // - Quick tool switching
+        // - Zoom to fit
+        // - Reset canvas
+        // - Quick color picker
+        console.log('Double tap detected in pixel editor');
+        
+        // For now, just pick color at the last position regardless of tool
+        this.pickColor(this.lastX, this.lastY);
     }
 
     /**

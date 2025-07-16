@@ -90,6 +90,10 @@ class TileService:
         """Get neighboring tiles"""
         return self.tile_repository.get_tile_neighbors(db, tile_id=tile_id, radius=radius)
     
+    def get_adjacent_neighbors(self, db: Session, tile_id: int) -> List[Tile]:
+        """Get only adjacent neighbors (left, right, top, bottom) of a tile"""
+        return self.tile_repository.get_adjacent_neighbors(db, tile_id=tile_id)
+    
     def update_tile(self, db: Session, tile_id: int, tile_update: TileUpdate, current_user: User) -> Optional[Tile]:
         """Update tile (only owner can update)"""
         tile = self.tile_repository.get(db, tile_id)

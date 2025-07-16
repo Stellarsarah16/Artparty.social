@@ -92,6 +92,7 @@ class CanvasViewer {
         
         // Event callbacks
         this.onTileClick = null;
+        this.onTileDoubleClick = null;
         this.onTileHover = null;
         this.onViewportChange = null;
         
@@ -175,7 +176,13 @@ class CanvasViewer {
             touchStartTime: 0,
             hasMoved: false,
             zoomCenterX: 0,
-            zoomCenterY: 0
+            zoomCenterY: 0,
+            // Double tap detection
+            lastTapTime: 0,
+            lastTapX: 0,
+            lastTapY: 0,
+            doubleTapDelay: 300, // milliseconds
+            doubleTapDistance: 50 // pixels
         };
         
 
@@ -716,18 +723,37 @@ class CanvasViewer {
                 // Handle as a tap/click
                 const touch = e.changedTouches[0];
                 if (touch) {
-                    const rect = this.canvas.getBoundingClientRect();
-                    const canvasX = touch.clientX - rect.left;
-                    const canvasY = touch.clientY - rect.top;
+                    const currentTime = Date.now();
+                    const timeSinceLastTap = currentTime - this.touchState.lastTapTime;
+                    const distanceFromLastTap = Math.sqrt(
+                        Math.pow(touch.clientX - this.touchState.lastTapX, 2) +
+                        Math.pow(touch.clientY - this.touchState.lastTapY, 2)
+                    );
                     
-                    // Convert to world coordinates
-                    const worldX = canvasX / this.zoom + this.viewportX;
-                    const worldY = canvasY / this.zoom + this.viewportY;
-                    
-                    // Check for tile click
-                    const tile = this.getTileAtPosition(touch.clientX, touch.clientY, true);
-                    if (tile && this.onTileClick) {
-                        this.onTileClick(tile);
+                    // Check if this is a double tap
+                    if (timeSinceLastTap < this.touchState.doubleTapDelay && 
+                        distanceFromLastTap < this.touchState.doubleTapDistance) {
+                        // Double tap detected - enter edit mode
+                        const tile = this.getTileAtPosition(touch.clientX, touch.clientY, true);
+                        if (tile && this.onTileDoubleClick) {
+                            this.onTileDoubleClick(tile);
+                        }
+                        
+                        // Reset tap tracking
+                        this.touchState.lastTapTime = 0;
+                        this.touchState.lastTapX = 0;
+                        this.touchState.lastTapY = 0;
+                    } else {
+                        // Single tap - just select/highlight tile
+                        const tile = this.getTileAtPosition(touch.clientX, touch.clientY, true);
+                        if (tile && this.onTileClick) {
+                            this.onTileClick(tile);
+                        }
+                        
+                        // Store tap info for potential double tap
+                        this.touchState.lastTapTime = currentTime;
+                        this.touchState.lastTapX = touch.clientX;
+                        this.touchState.lastTapY = touch.clientY;
                     }
                 }
             }

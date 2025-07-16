@@ -292,6 +292,43 @@
                     </div>
                 </div>
                 
+                <!-- Neighbor Tiles Display -->
+                <div class="neighbor-panel">
+                    <div class="neighbor-header">
+                        <h3>Adjacent Tiles</h3>
+                        <span class="neighbor-subtitle">Reference for seamless connections</span>
+                    </div>
+                    
+                    <div class="neighbor-grid">
+                        <div class="neighbor-row">
+                            <div class="neighbor-cell empty" id="neighbor-top">
+                                <div class="neighbor-label">Top</div>
+                                <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-top-canvas"></canvas>
+                            </div>
+                        </div>
+                        <div class="neighbor-row">
+                            <div class="neighbor-cell empty" id="neighbor-left">
+                                <div class="neighbor-label">Left</div>
+                                <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-left-canvas"></canvas>
+                            </div>
+                            <div class="neighbor-cell current" id="neighbor-center">
+                                <div class="neighbor-label">Current</div>
+                                <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-center-canvas"></canvas>
+                            </div>
+                            <div class="neighbor-cell empty" id="neighbor-right">
+                                <div class="neighbor-label">Right</div>
+                                <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-right-canvas"></canvas>
+                            </div>
+                        </div>
+                        <div class="neighbor-row">
+                            <div class="neighbor-cell empty" id="neighbor-bottom">
+                                <div class="neighbor-label">Bottom</div>
+                                <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-bottom-canvas"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Shared Canvas View -->
                 <div class="shared-panel">
                     <div class="shared-header">
@@ -486,11 +523,7 @@
     <script type="module" src="js/modules/auth.js"></script>
     <script type="module" src="js/modules/navigation.js"></script>
     <script type="module" src="js/modules/app-state.js"></script>
-    <script type="module" src="js/modules/ui-utils.js"></script>
-    <script type="module" src="js/utils/events.js"></script>
-    <script type="module" src="js/utils/ui.js"></script>
-    <script type="module" src="js/core/state.js"></script>
-    <script type="module" src="js/core/app.js"></script>
+    <script type="module" src="js/modules/neighbor-display.js"></script>
     <script type="module" src="js/app.js"></script>
 </body>
 </html> 

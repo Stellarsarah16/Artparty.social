@@ -73,6 +73,29 @@ class TileRepository(SQLAlchemyRepository[Tile, TileCreate, TileUpdate]):
             )
         ).all()
     
+    def get_adjacent_neighbors(self, db: Session, *, tile_id: int) -> List[Tile]:
+        """Get only adjacent neighbors (left, right, top, bottom) of a tile"""
+        tile = self.get(db, tile_id)
+        if not tile:
+            return []
+        
+        return db.query(Tile).filter(
+            and_(
+                Tile.canvas_id == tile.canvas_id,
+                Tile.id != tile_id,
+                # Left neighbor: (x-1, y)
+                # Right neighbor: (x+1, y)
+                # Top neighbor: (x, y-1)
+                # Bottom neighbor: (x, y+1)
+                (
+                    (Tile.x == tile.x - 1 and Tile.y == tile.y) or  # Left
+                    (Tile.x == tile.x + 1 and Tile.y == tile.y) or  # Right
+                    (Tile.x == tile.x and Tile.y == tile.y - 1) or  # Top
+                    (Tile.x == tile.x and Tile.y == tile.y + 1)     # Bottom
+                )
+            )
+        ).all()
+    
     def get_public_tiles(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[Tile]:
         """Get public tiles"""
         return db.query(Tile).filter(

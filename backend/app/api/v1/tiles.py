@@ -205,6 +205,16 @@ async def get_tile_neighbors(
     return [tile_service.create_tile_response(tile) for tile in neighbors]
 
 
+@router.get("/{tile_id}/adjacent-neighbors", response_model=List[TileResponse])
+async def get_adjacent_neighbors(
+    tile_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get only adjacent neighbors (left, right, top, bottom) of a tile"""
+    neighbors = tile_service.get_adjacent_neighbors(db, tile_id)
+    return [tile_service.create_tile_response(tile) for tile in neighbors]
+
+
 @router.get("/canvas/{canvas_id}", response_model=List[TileResponse])
 async def get_canvas_tiles(
     canvas_id: int,

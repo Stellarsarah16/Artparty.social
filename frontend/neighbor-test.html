@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neighbor Display Test</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .test-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .neighbor-panel {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Neighbor Display Test</h1>
+        
+        <div class="test-section">
+            <h2>Test Controls</h2>
+            <div class="test-buttons">
+                <button class="btn btn-primary" onclick="testEmptyTile()">Test Empty Tile</button>
+                <button class="btn btn-primary" onclick="testWithNeighbors()">Test With Neighbors</button>
+                <button class="btn btn-primary" onclick="testPartialNeighbors()">Test Partial Neighbors</button>
+                <button class="btn btn-secondary" onclick="clearDisplay()">Clear Display</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Neighbor Display</h2>
+            <div class="neighbor-panel">
+                <div class="neighbor-header">
+                    <h3>Adjacent Tiles</h3>
+                    <span class="neighbor-subtitle">Reference for seamless connections</span>
+                </div>
+                
+                <div class="neighbor-grid">
+                    <div class="neighbor-row">
+                        <div class="neighbor-cell empty" id="neighbor-top">
+                            <div class="neighbor-label">Top</div>
+                            <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-top-canvas"></canvas>
+                        </div>
+                    </div>
+                    <div class="neighbor-row">
+                        <div class="neighbor-cell empty" id="neighbor-left">
+                            <div class="neighbor-label">Left</div>
+                            <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-left-canvas"></canvas>
+                        </div>
+                        <div class="neighbor-cell current" id="neighbor-center">
+                            <div class="neighbor-label">Current</div>
+                            <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-center-canvas"></canvas>
+                        </div>
+                        <div class="neighbor-cell empty" id="neighbor-right">
+                            <div class="neighbor-label">Right</div>
+                            <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-right-canvas"></canvas>
+                        </div>
+                    </div>
+                    <div class="neighbor-row">
+                        <div class="neighbor-cell empty" id="neighbor-bottom">
+                            <div class="neighbor-label">Bottom</div>
+                            <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-bottom-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Test Data</h2>
+            <pre id="test-data">No test data loaded</pre>
+        </div>
+    </div>
+
+    <script type="module">
+        import { neighborDisplay } from './js/modules/neighbor-display.js';
+        
+        // Make neighborDisplay available globally for testing
+        window.neighborDisplay = neighborDisplay;
+        
+        // Test functions
+        window.testEmptyTile = function() {
+            const tile = {
+                x: 5,
+                y: 5,
+                pixel_data: null,
+                isNew: true
+            };
+            
+            neighborDisplay.updateDisplay(tile, []);
+            
+            document.getElementById('test-data').textContent = JSON.stringify({
+                tile: tile,
+                neighbors: []
+            }, null, 2);
+        };
+        
+        window.testWithNeighbors = function() {
+            const tile = {
+                x: 5,
+                y: 5,
+                pixel_data: createTestPixelData('#ff0000'),
+                id: 1
+            };
+            
+            const neighbors = [
+                {
+                    x: 5,
+                    y: 4,
+                    pixel_data: createTestPixelData('#00ff00'),
+                    id: 2
+                },
+                {
+                    x: 4,
+                    y: 5,
+                    pixel_data: createTestPixelData('#0000ff'),
+                    id: 3
+                },
+                {
+                    x: 6,
+                    y: 5,
+                    pixel_data: createTestPixelData('#ffff00'),
+                    id: 4
+                },
+                {
+                    x: 5,
+                    y: 6,
+                    pixel_data: createTestPixelData('#ff00ff'),
+                    id: 5
+                }
+            ];
+            
+            neighborDisplay.updateDisplay(tile, neighbors);
+            
+            document.getElementById('test-data').textContent = JSON.stringify({
+                tile: tile,
+                neighbors: neighbors
+            }, null, 2);
+        };
+        
+        window.testPartialNeighbors = function() {
+            const tile = {
+                x: 5,
+                y: 5,
+                pixel_data: createTestPixelData('#ff0000'),
+                id: 1
+            };
+            
+            const neighbors = [
+                {
+                    x: 5,
+                    y: 4,
+                    pixel_data: createTestPixelData('#00ff00'),
+                    id: 2
+                },
+                {
+                    x: 4,
+                    y: 5,
+                    pixel_data: createTestPixelData('#0000ff'),
+                    id: 3
+                }
+            ];
+            
+            neighborDisplay.updateDisplay(tile, neighbors);
+            
+            document.getElementById('test-data').textContent = JSON.stringify({
+                tile: tile,
+                neighbors: neighbors
+            }, null, 2);
+        };
+        
+        window.clearDisplay = function() {
+            neighborDisplay.clear();
+            document.getElementById('test-data').textContent = 'Display cleared';
+        };
+        
+        function createTestPixelData(color) {
+            const data = [];
+            for (let y = 0; y < 32; y++) {
+                data[y] = [];
+                for (let x = 0; x < 32; x++) {
+                    // Create a simple pattern
+                    if ((x + y) % 4 === 0) {
+                        data[y][x] = color;
+                    } else {
+                        data[y][x] = 'transparent';
+                    }
+                }
+            }
+            return JSON.stringify(data);
+        }
+        
+        console.log('✅ Neighbor display test page loaded');
+    </script>
+</body>
+</html> 
