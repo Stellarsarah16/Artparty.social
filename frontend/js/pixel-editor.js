@@ -25,6 +25,16 @@ class PixelEditor {
         this.onPixelChanged = null;
         this.onToolChanged = null;
         this.onColorChanged = null;
+        
+        // Touch state tracking
+        this.touchState = {
+            isTouching: false,
+            lastTouchX: 0,
+            lastTouchY: 0,
+            touchStartTime: 0,
+            hasMoved: false,
+            pressure: 1.0
+        };
     }
     
     /**
@@ -162,43 +172,168 @@ class PixelEditor {
     }
     
     /**
-     * Handle touch start event
+     * Handle touch start event with enhanced support
      * @param {TouchEvent} e - Touch event
      */
     handleTouchStart(e) {
         e.preventDefault();
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent('mousedown', {
-            clientX: touch.clientX,
-            clientY: touch.clientY
-        });
-        this.handleMouseDown(mouseEvent);
+        
+        if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            
+            // Update touch state
+            this.touchState.isTouching = true;
+            this.touchState.lastTouchX = touch.clientX;
+            this.touchState.lastTouchY = touch.clientY;
+            this.touchState.touchStartTime = Date.now();
+            this.touchState.hasMoved = false;
+            this.touchState.pressure = touch.force || 1.0;
+            
+            // Convert touch to pixel coordinates
+            const rect = this.canvas.getBoundingClientRect();
+            const x = Math.floor((touch.clientX - rect.left) / this.gridSize);
+            const y = Math.floor((touch.clientY - rect.top) / this.gridSize);
+            
+            if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize) {
+                this.isDrawing = true;
+                this.lastX = x;
+                this.lastY = y;
+                
+                // Apply tool with pressure sensitivity
+                this.applyToolWithPressure(x, y, this.touchState.pressure);
+                this.updatePositionIndicator(x, y);
+            }
+        }
     }
     
     /**
-     * Handle touch move event
+     * Handle touch move event with enhanced support
      * @param {TouchEvent} e - Touch event
      */
     handleTouchMove(e) {
         e.preventDefault();
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent('mousemove', {
-            clientX: touch.clientX,
-            clientY: touch.clientY
-        });
-        this.handleMouseMove(mouseEvent);
+        
+        if (e.touches.length === 1 && this.touchState.isTouching) {
+            const touch = e.touches[0];
+            
+            // Update touch state
+            this.touchState.lastTouchX = touch.clientX;
+            this.touchState.lastTouchY = touch.clientY;
+            this.touchState.pressure = touch.force || 1.0;
+            
+            // Track movement
+            const deltaX = Math.abs(touch.clientX - this.touchState.lastTouchX);
+            const deltaY = Math.abs(touch.clientY - this.touchState.lastTouchY);
+            if (deltaX > 2 || deltaY > 2) {
+                this.touchState.hasMoved = true;
+            }
+            
+            // Convert touch to pixel coordinates
+            const rect = this.canvas.getBoundingClientRect();
+            const x = Math.floor((touch.clientX - rect.left) / this.gridSize);
+            const y = Math.floor((touch.clientY - rect.top) / this.gridSize);
+            
+            if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize) {
+                this.updatePositionIndicator(x, y);
+                
+                if (this.isDrawing) {
+                    // Apply tool with pressure sensitivity
+                    this.applyToolWithPressure(x, y, this.touchState.pressure);
+                    this.lastX = x;
+                    this.lastY = y;
+                }
+            }
+        }
     }
     
     /**
-     * Handle touch end event
+     * Handle touch end event with enhanced support
      * @param {TouchEvent} e - Touch event
      */
     handleTouchEnd(e) {
         e.preventDefault();
-        const mouseEvent = new MouseEvent('mouseup', {});
-        this.handleMouseUp(mouseEvent);
+        
+        if (this.touchState.isTouching) {
+            this.touchState.isTouching = false;
+            
+            if (this.isDrawing) {
+                this.isDrawing = false;
+                this.saveToHistory();
+                
+                // Trigger pixel changed event
+                if (this.onPixelChanged) {
+                    this.onPixelChanged(this.pixelData);
+                }
+            }
+            
+            // Check for tap gesture (quick touch without movement)
+            const touchDuration = Date.now() - this.touchState.touchStartTime;
+            if (touchDuration < 150 && !this.touchState.hasMoved) {
+                // Handle as a tap - could be used for color picker or other quick actions
+                this.handleTapGesture();
+            }
+        }
     }
     
+    /**
+     * Apply tool with pressure sensitivity
+     * @param {number} x - X coordinate
+     * @param {number} y - Y coordinate
+     * @param {number} pressure - Touch pressure (0-1)
+     */
+    applyToolWithPressure(x, y, pressure) {
+        // Adjust brush size based on pressure for paint tool
+        if (this.currentTool === 'paint' && pressure < 0.5) {
+            // Light pressure - smaller brush or lighter color
+            const adjustedColor = this.adjustColorForPressure(this.currentColor, pressure);
+            this.drawPixel(x, y, adjustedColor);
+        } else {
+            // Normal pressure - apply tool normally
+            this.applyTool(x, y, false);
+        }
+    }
+    
+    /**
+     * Adjust color based on pressure
+     * @param {string} color - Original color
+     * @param {number} pressure - Touch pressure (0-1)
+     * @returns {string} Adjusted color
+     */
+    adjustColorForPressure(color, pressure) {
+        if (pressure >= 0.5) return color;
+        
+        // For light pressure, make color lighter or more transparent
+        if (color.startsWith('#')) {
+            // Convert hex to RGB and lighten
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            
+            const factor = 0.5 + (pressure * 0.5); // 0.5 to 1.0
+            const newR = Math.min(255, Math.round(r + (255 - r) * (1 - factor)));
+            const newG = Math.min(255, Math.round(g + (255 - g) * (1 - factor)));
+            const newB = Math.min(255, Math.round(b + (255 - b) * (1 - factor)));
+            
+            return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+        }
+        
+        return color;
+    }
+    
+    /**
+     * Handle tap gesture (quick touch without movement)
+     */
+    handleTapGesture() {
+        // For now, just pick color at the last position
+        if (this.currentTool === 'picker') {
+            this.pickColor(this.lastX, this.lastY);
+        }
+        // Could be extended for other quick actions like:
+        // - Quick tool switching
+        // - Color palette access
+        // - Undo/redo
+    }
+
     /**
      * Handle keyboard shortcuts
      * @param {KeyboardEvent} e - Keyboard event

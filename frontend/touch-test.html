@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Touch Test - Artparty.Social</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .test-section h2 {
+            color: #4f46e5;
+            margin-top: 0;
+        }
+        
+        .canvas-container {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        canvas {
+            display: block;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover {
+            background: #3730a3;
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+        }
+        
+        .info-panel {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .touch-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .touch-info-item {
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .touch-info-item strong {
+            display: block;
+            color: #4f46e5;
+            margin-bottom: 5px;
+        }
+        
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+            gap: 8px;
+            margin: 20px 0;
+        }
+        
+        .color-swatch {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
+        
+        .color-swatch.active {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3);
+        }
+        
+        .tool-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .tool-btn {
+            padding: 10px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+        
+        .tool-btn:hover {
+            border-color: #4f46e5;
+        }
+        
+        .tool-btn.active {
+            background: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .btn {
+                min-height: 44px;
+                font-size: 16px;
+            }
+            
+            .tool-btn {
+                min-height: 44px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Touch Test - Canvas & Pixel Editor</h1>
+        
+        <div class="test-section">
+            <h2>📱 Touch Gestures Test</h2>
+            <p>Test the enhanced touch support on mobile and tablet devices:</p>
+            
+            <div class="touch-info">
+                <div class="touch-info-item">
+                    <strong>Single Touch</strong>
+                    <span>Pan/Scroll Canvas</span>
+                </div>
+                <div class="touch-info-item">
+                    <strong>Two Finger Pinch</strong>
+                    <span>Zoom In/Out</span>
+                </div>
+                <div class="touch-info-item">
+                    <strong>Quick Tap</strong>
+                    <span>Select Tile/Color</span>
+                </div>
+                <div class="touch-info-item">
+                    <strong>Pressure</strong>
+                    <span>Variable Brush Size</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🖼️ Canvas Viewer Test</h2>
+            <p>Test canvas navigation with touch gestures:</p>
+            
+            <div class="canvas-container">
+                <canvas id="canvasViewer" width="800" height="600"></canvas>
+            </div>
+            
+            <div class="controls">
+                <button class="btn" onclick="resetCanvas()">Reset View</button>
+                <button class="btn" onclick="toggleGrid()">Toggle Grid</button>
+                <button class="btn" onclick="centerView()">Center View</button>
+                <button class="btn" onclick="addTestTile()">Add Test Tile</button>
+            </div>
+            
+            <div class="info-panel" id="canvasInfo">
+                <strong>Canvas Info:</strong><br>
+                Zoom: <span id="zoomLevel">1.0</span><br>
+                Position: <span id="position">0, 0</span><br>
+                Touch Count: <span id="touchCount">0</span>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🎨 Pixel Editor Test</h2>
+            <p>Test pixel drawing with touch support:</p>
+            
+            <div class="tool-buttons">
+                <button class="tool-btn active" data-tool="paint">Paint</button>
+                <button class="tool-btn" data-tool="eraser">Eraser</button>
+                <button class="tool-btn" data-tool="picker">Picker</button>
+                <button class="tool-btn" data-tool="fill">Fill</button>
+            </div>
+            
+            <div class="color-palette" id="colorPalette">
+                <!-- Colors will be added dynamically -->
+            </div>
+            
+            <div class="canvas-container">
+                <canvas id="pixelEditor" width="512" height="512"></canvas>
+            </div>
+            
+            <div class="controls">
+                <button class="btn" onclick="clearCanvas()">Clear</button>
+                <button class="btn" onclick="undo()">Undo</button>
+                <button class="btn" onclick="redo()">Redo</button>
+                <button class="btn" onclick="exportImage()">Export</button>
+            </div>
+            
+            <div class="info-panel" id="pixelInfo">
+                <strong>Pixel Editor Info:</strong><br>
+                Tool: <span id="currentTool">Paint</span><br>
+                Color: <span id="currentColor">#000000</span><br>
+                Position: <span id="pixelPosition">0, 0</span><br>
+                Pressure: <span id="pressure">1.0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/canvas-viewer.js"></script>
+    <script src="js/pixel-editor.js"></script>
+    
+    <script>
+        // Initialize canvas viewer
+        const canvasViewer = new CanvasViewer();
+        const canvasViewerElement = document.getElementById('canvasViewer');
+        canvasViewer.init(canvasViewerElement);
+        
+        // Initialize pixel editor
+        const pixelEditor = new PixelEditor();
+        const pixelEditorElement = document.getElementById('pixelEditor');
+        pixelEditor.init(pixelEditorElement);
+        
+        // Set up canvas viewer callbacks
+        canvasViewer.onTileClick = (tile) => {
+            console.log('Tile clicked:', tile);
+            updateCanvasInfo();
+        };
+        
+        canvasViewer.onViewportChange = (x, y, zoom) => {
+            updateCanvasInfo();
+        };
+        
+        // Set up pixel editor callbacks
+        pixelEditor.onPixelChanged = (pixelData) => {
+            console.log('Pixel changed');
+            updatePixelInfo();
+        };
+        
+        pixelEditor.onToolChanged = (tool) => {
+            updateToolButtons(tool);
+            updatePixelInfo();
+        };
+        
+        pixelEditor.onColorChanged = (color) => {
+            updateColorPalette(color);
+            updatePixelInfo();
+        };
+        
+        // Initialize color palette
+        const colors = [
+            '#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff',
+            '#ffff00', '#ff00ff', '#00ffff', '#800000', '#008000',
+            '#000080', '#808000', '#800080', '#008080', '#c0c0c0',
+            '#808080', '#ffa500', '#a52a2a', '#dda0dd', '#98fb98'
+        ];
+        
+        function initColorPalette() {
+            const palette = document.getElementById('colorPalette');
+            palette.innerHTML = '';
+            
+            colors.forEach(color => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = color;
+                swatch.onclick = () => {
+                    pixelEditor.setColor(color);
+                    updateColorPalette(color);
+                };
+                palette.appendChild(swatch);
+            });
+        }
+        
+        function updateColorPalette(activeColor) {
+            const swatches = document.querySelectorAll('.color-swatch');
+            swatches.forEach(swatch => {
+                swatch.classList.remove('active');
+                if (swatch.style.backgroundColor === activeColor || 
+                    swatch.style.backgroundColor === `rgb(${hexToRgb(activeColor).join(', ')})`) {
+                    swatch.classList.add('active');
+                }
+            });
+        }
+        
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? [
+                parseInt(result[1], 16),
+                parseInt(result[2], 16),
+                parseInt(result[3], 16)
+            ] : null;
+        }
+        
+        function updateToolButtons(activeTool) {
+            const buttons = document.querySelectorAll('.tool-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.tool === activeTool) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+        
+        // Tool button event listeners
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                pixelEditor.setTool(btn.dataset.tool);
+            });
+        });
+        
+        function updateCanvasInfo() {
+            document.getElementById('zoomLevel').textContent = canvasViewer.zoom.toFixed(2);
+            document.getElementById('position').textContent = 
+                `${Math.round(canvasViewer.viewportX)}, ${Math.round(canvasViewer.viewportY)}`;
+            document.getElementById('touchCount').textContent = canvasViewer.touchState.touchCount;
+        }
+        
+        function updatePixelInfo() {
+            document.getElementById('currentTool').textContent = pixelEditor.currentTool;
+            document.getElementById('currentColor').textContent = pixelEditor.currentColor;
+            document.getElementById('pixelPosition').textContent = 
+                `${pixelEditor.lastX}, ${pixelEditor.lastY}`;
+            document.getElementById('pressure').textContent = 
+                pixelEditor.touchState.pressure.toFixed(2);
+        }
+        
+        // Control functions
+        function resetCanvas() {
+            canvasViewer.resetZoom();
+            canvasViewer.centerView();
+        }
+        
+        function toggleGrid() {
+            canvasViewer.toggleGrid();
+        }
+        
+        function centerView() {
+            canvasViewer.centerView();
+        }
+        
+        function addTestTile() {
+            const testTile = {
+                id: 'test-' + Date.now(),
+                x: Math.floor(Math.random() * 10),
+                y: Math.floor(Math.random() * 10),
+                pixel_data: '{"data": "test"}',
+                title: 'Test Tile',
+                creator: { username: 'TestUser' }
+            };
+            canvasViewer.addTile(testTile);
+        }
+        
+        function clearCanvas() {
+            pixelEditor.clear();
+        }
+        
+        function undo() {
+            pixelEditor.undo();
+        }
+        
+        function redo() {
+            pixelEditor.redo();
+        }
+        
+        function exportImage() {
+            const dataUrl = pixelEditor.exportAsImage('png', 2);
+            const link = document.createElement('a');
+            link.download = 'pixel-art.png';
+            link.href = dataUrl;
+            link.click();
+        }
+        
+        // Initialize
+        initColorPalette();
+        updateCanvasInfo();
+        updatePixelInfo();
+        
+        // Add some test tiles
+        setTimeout(() => {
+            addTestTile();
+            addTestTile();
+            addTestTile();
+        }, 1000);
+        
+        console.log('✅ Touch test page loaded');
+    </script>
+</body>
+</html> 

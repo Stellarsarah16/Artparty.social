@@ -160,6 +160,24 @@ class CanvasViewer {
         this.canvas.addEventListener('touchmove', this.boundHandlers.touchMove, { passive: false });
         this.canvas.addEventListener('touchend', this.boundHandlers.touchEnd, { passive: true });
         
+        // Touch gesture tracking
+        this.touchState = {
+            isTouching: false,
+            touchCount: 0,
+            startDistance: 0,
+            startZoom: 1,
+            startViewportX: 0,
+            startViewportY: 0,
+            lastTouchX: 0,
+            lastTouchY: 0,
+            isPinching: false,
+            isPanning: false,
+            touchStartTime: 0,
+            hasMoved: false,
+            zoomCenterX: 0,
+            zoomCenterY: 0
+        };
+        
 
         
         // Keyboard events
@@ -556,51 +574,173 @@ class CanvasViewer {
     }
     
     /**
-     * Handle touch start event
+     * Handle touch start event with enhanced multi-touch support
      * @param {TouchEvent} e - Touch event
      */
     handleTouchStart(e) {
         e.preventDefault();
         
+        this.touchState.isTouching = true;
+        this.touchState.touchCount = e.touches.length;
+        this.touchState.touchStartTime = Date.now();
+        this.touchState.hasMoved = false;
+        
         if (e.touches.length === 1) {
+            // Single touch - handle as pan or click
             const touch = e.touches[0];
-            const mouseEvent = new MouseEvent('mousedown', {
-                clientX: touch.clientX,
-                clientY: touch.clientY,
-                button: 0
-            });
-            this.handleMouseDown(mouseEvent);
+            this.touchState.lastTouchX = touch.clientX;
+            this.touchState.lastTouchY = touch.clientY;
+            this.touchState.isPanning = true;
+            this.touchState.isPinching = false;
+            
+            // Start panning
+            this.isDragging = true;
+            this.dragButton = 0; // Left mouse equivalent
+            this.lastMouseX = touch.clientX;
+            this.lastMouseY = touch.clientY;
+            
+        } else if (e.touches.length === 2) {
+            // Two touches - handle as pinch-to-zoom
+            this.touchState.isPinching = true;
+            this.touchState.isPanning = false;
+            this.touchState.startZoom = this.zoom;
+            this.touchState.startViewportX = this.viewportX;
+            this.touchState.startViewportY = this.viewportY;
+            
+            // Calculate initial distance between touches
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            this.touchState.startDistance = Math.sqrt(
+                Math.pow(touch2.clientX - touch1.clientX, 2) +
+                Math.pow(touch2.clientY - touch1.clientY, 2)
+            );
+            
+            // Calculate center point for zoom
+            const centerX = (touch1.clientX + touch2.clientX) / 2;
+            const centerY = (touch1.clientY + touch2.clientY) / 2;
+            
+            // Convert screen coordinates to canvas coordinates
+            const rect = this.canvas.getBoundingClientRect();
+            const canvasX = centerX - rect.left;
+            const canvasY = centerY - rect.top;
+            
+            // Store zoom center in canvas coordinates
+            this.touchState.zoomCenterX = canvasX;
+            this.touchState.zoomCenterY = canvasY;
         }
     }
     
     /**
-     * Handle touch move event
+     * Handle touch move event with enhanced multi-touch support
      * @param {TouchEvent} e - Touch event
      */
     handleTouchMove(e) {
         e.preventDefault();
         
-        if (e.touches.length === 1) {
+        if (e.touches.length === 1 && this.touchState.isPanning) {
+            // Single touch panning
             const touch = e.touches[0];
-            const mouseEvent = new MouseEvent('mousemove', {
-                clientX: touch.clientX,
-                clientY: touch.clientY
-            });
-            this.handleMouseMove(mouseEvent);
+            const deltaX = touch.clientX - this.touchState.lastTouchX;
+            const deltaY = touch.clientY - this.touchState.lastTouchY;
+            
+            // Track if touch has moved significantly
+            if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+                this.touchState.hasMoved = true;
+            }
+            
+            // Update viewport for panning
+            this.viewportX -= deltaX / this.zoom;
+            this.viewportY -= deltaY / this.zoom;
+            this.clampViewport();
+            
+            this.touchState.lastTouchX = touch.clientX;
+            this.touchState.lastTouchY = touch.clientY;
+            
+            this.requestRender();
+            
+        } else if (e.touches.length === 2 && this.touchState.isPinching) {
+            // Two touch pinch-to-zoom
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            
+            // Calculate current distance between touches
+            const currentDistance = Math.sqrt(
+                Math.pow(touch2.clientX - touch1.clientX, 2) +
+                Math.pow(touch2.clientY - touch1.clientY, 2)
+            );
+            
+            // Calculate zoom factor
+            const zoomFactor = currentDistance / this.touchState.startDistance;
+            const newZoom = this.touchState.startZoom * zoomFactor;
+            
+            // Clamp zoom to limits
+            const clampedZoom = Math.max(this.minZoom, Math.min(this.maxZoom, newZoom));
+            
+            // Calculate zoom center in world coordinates
+            const rect = this.canvas.getBoundingClientRect();
+            const worldX = (this.touchState.zoomCenterX - rect.left) / this.zoom - this.viewportX;
+            const worldY = (this.touchState.zoomCenterY - rect.top) / this.zoom - this.viewportY;
+            
+            // Apply zoom
+            this.zoom = clampedZoom;
+            
+            // Adjust viewport to keep zoom center in the same screen position
+            this.viewportX = (this.touchState.zoomCenterX - rect.left) / this.zoom - worldX;
+            this.viewportY = (this.touchState.zoomCenterY - rect.top) / this.zoom - worldY;
+            
+            this.clampViewport();
+            this.requestRender();
         }
     }
     
     /**
-     * Handle touch end event
+     * Handle touch end event with enhanced multi-touch support
      * @param {TouchEvent} e - Touch event
      */
     handleTouchEnd(e) {
         e.preventDefault();
         
-        const mouseEvent = new MouseEvent('mouseup', {
-            button: 0
-        });
-        this.handleMouseUp(mouseEvent);
+        // Update touch count
+        this.touchState.touchCount = e.touches.length;
+        
+        if (e.touches.length === 0) {
+            // All touches ended
+            this.touchState.isTouching = false;
+            this.touchState.isPanning = false;
+            this.touchState.isPinching = false;
+            this.isDragging = false;
+            
+            // Check if this was a tap (quick touch without movement)
+            const touchDuration = Date.now() - (this.touchState.touchStartTime || 0);
+            if (touchDuration < 200 && !this.touchState.hasMoved) {
+                // Handle as a tap/click
+                const touch = e.changedTouches[0];
+                if (touch) {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const canvasX = touch.clientX - rect.left;
+                    const canvasY = touch.clientY - rect.top;
+                    
+                    // Convert to world coordinates
+                    const worldX = canvasX / this.zoom + this.viewportX;
+                    const worldY = canvasY / this.zoom + this.viewportY;
+                    
+                    // Check for tile click
+                    const tile = this.getTileAtPosition(touch.clientX, touch.clientY, true);
+                    if (tile && this.onTileClick) {
+                        this.onTileClick(tile);
+                    }
+                }
+            }
+            
+        } else if (e.touches.length === 1) {
+            // Transition from pinch to pan
+            this.touchState.isPinching = false;
+            this.touchState.isPanning = true;
+            
+            const touch = e.touches[0];
+            this.touchState.lastTouchX = touch.clientX;
+            this.touchState.lastTouchY = touch.clientY;
+        }
     }
     
 
