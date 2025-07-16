@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTPS Fix Test - Artparty.Social</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .warning { color: #ffc107; }
+        .info { color: #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 HTTPS Fix Test</h1>
+    <p>This page tests the HTTPS configuration fix for the mixed content error.</p>
+    
+    <div class="test-section">
+        <h2>Environment Detection</h2>
+        <button onclick="testEnvironmentDetection()">Test Environment Detection</button>
+        <div id="env-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>URL Construction</h2>
+        <button onclick="testUrlConstruction()">Test URL Construction</button>
+        <div id="url-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>API Test</h2>
+        <button onclick="testAPICall()">Test API Call</button>
+        <div id="api-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>All Results</h2>
+        <div id="results"></div>
+    </div>
+
+    <!-- Load configuration -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    
+    <script>
+        let allResults = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toISOString();
+            const logMessage = `[${timestamp}] ${message}`;
+            allResults.push(logMessage);
+            
+            const colorClass = type === 'success' ? 'success' : 
+                              type === 'error' ? 'error' : 
+                              type === 'warning' ? 'warning' : 'info';
+            
+            return `<span class="${colorClass}">${logMessage}</span><br>`;
+        }
+        
+        function testEnvironmentDetection() {
+            const results = document.getElementById('env-results');
+            results.innerHTML = '';
+            
+            results.innerHTML += log('Testing environment detection...', 'info');
+            
+            // Test current environment
+            results.innerHTML += log(`Current URL: ${window.location.href}`, 'info');
+            results.innerHTML += log(`Protocol: ${window.location.protocol}`, 'info');
+            results.innerHTML += log(`Hostname: ${window.location.hostname}`, 'info');
+            results.innerHTML += log(`Port: ${window.location.port}`, 'info');
+            
+            // Test environment detection
+            if (typeof ENVIRONMENT !== 'undefined') {
+                results.innerHTML += log(`Is Development: ${ENVIRONMENT.isDevelopment}`, 'info');
+                results.innerHTML += log(`Is Staging: ${ENVIRONMENT.isStaging}`, 'info');
+                results.innerHTML += log(`Is Production: ${ENVIRONMENT.isProduction}`, 'info');
+            } else {
+                results.innerHTML += log('❌ ENVIRONMENT not defined', 'error');
+            }
+            
+            // Test API configuration
+            if (typeof API_CONFIG !== 'undefined') {
+                results.innerHTML += log(`API Base URL: ${API_CONFIG.BASE_URL}`, 'info');
+                results.innerHTML += log(`Is HTTPS: ${API_CONFIG.BASE_URL.startsWith('https://')}`, 
+                    API_CONFIG.BASE_URL.startsWith('https://') ? 'success' : 'error');
+            } else {
+                results.innerHTML += log('❌ API_CONFIG not defined', 'error');
+            }
+            
+            updateAllResults();
+        }
+        
+        function testUrlConstruction() {
+            const results = document.getElementById('url-results');
+            results.innerHTML = '';
+            
+            results.innerHTML += log('Testing URL construction...', 'info');
+            
+            if (typeof window.APIClient !== 'undefined') {
+                const testUrls = [
+                    '/api/v1/tiles',
+                    '/api/v1/auth/login',
+                    '/api/v1/canvas/1'
+                ];
+                
+                testUrls.forEach(url => {
+                    const constructedUrl = window.APIClient.buildURL(url);
+                    results.innerHTML += log(`Input: ${url}`, 'info');
+                    results.innerHTML += log(`Output: ${constructedUrl}`, 'info');
+                    results.innerHTML += log(`Is HTTPS: ${constructedUrl.startsWith('https://')}`, 
+                        constructedUrl.startsWith('https://') ? 'success' : 'error');
+                    results.innerHTML += log('---', 'info');
+                });
+            } else {
+                results.innerHTML += log('❌ APIClient not defined', 'error');
+            }
+            
+            updateAllResults();
+        }
+        
+        async function testAPICall() {
+            const results = document.getElementById('api-results');
+            results.innerHTML = '';
+            
+            results.innerHTML += log('Testing API call...', 'info');
+            
+            if (typeof window.API !== 'undefined') {
+                try {
+                    // Test a simple API call
+                    const response = await window.API.auth.getCurrentUser();
+                    results.innerHTML += log('✅ API call successful', 'success');
+                    results.innerHTML += log(`Response: ${JSON.stringify(response, null, 2)}`, 'info');
+                } catch (error) {
+                    results.innerHTML += log(`❌ API call failed: ${error.message}`, 'error');
+                    results.innerHTML += log(`Error details: ${JSON.stringify(error, null, 2)}`, 'error');
+                }
+            } else {
+                results.innerHTML += log('❌ API not defined', 'error');
+            }
+            
+            updateAllResults();
+        }
+        
+        function updateAllResults() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = allResults.join('');
+        }
+        
+        // Auto-run environment detection on load
+        window.addEventListener('load', () => {
+            setTimeout(testEnvironmentDetection, 1000);
+        });
+    </script>
+</body>
+</html> 

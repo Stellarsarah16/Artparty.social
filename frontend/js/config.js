@@ -16,14 +16,32 @@ const ENVIRONMENT = {
                   !window.location.hostname.includes('staging')
 };
 
+// Force reload configuration to prevent caching issues
+if (window.location.hostname === 'artparty.social' && window.location.protocol !== 'https:') {
+    console.warn('⚠️ Redirecting to HTTPS for security');
+    window.location.href = window.location.href.replace('http:', 'https:');
+}
+
 // Enhanced base URLs based on environment
 const getBaseUrls = () => {
     const hostname = window.location.hostname;
     const protocol = window.location.protocol;
     const port = window.location.port;
     
+    // Debug logging
+    console.log('🔧 Environment Detection:', {
+        hostname,
+        protocol,
+        port,
+        isDevelopment: ENVIRONMENT.isDevelopment,
+        isStaging: ENVIRONMENT.isStaging,
+        isProduction: ENVIRONMENT.isProduction,
+        fullUrl: window.location.href
+    });
+    
     // Development detection (local development)
     if (ENVIRONMENT.isDevelopment) {
+        console.log('🔧 Using development URLs');
         return {
             API_BASE_URL: 'http://localhost:8000',
             WS_BASE_URL: 'ws://localhost:8000'
@@ -32,21 +50,35 @@ const getBaseUrls = () => {
     
     // Staging environment
     if (ENVIRONMENT.isStaging) {
+        console.log('🔧 Using staging URLs');
         return {
             API_BASE_URL: `${protocol}//staging-api.artparty.social`,
             WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//staging-api.artparty.social`
         };
     }
     
+    // Production - Force HTTPS for security
+    if (hostname === 'artparty.social' || hostname.includes('artparty.social')) {
+        console.log('🔧 Using production URLs with forced HTTPS');
+        return {
+            API_BASE_URL: 'https://artparty.social',
+            WS_BASE_URL: 'wss://artparty.social'
+        };
+    }
+    
     // Production - Same domain with nginx proxy (recommended approach)
     if (port === '80' || port === '443' || port === '') {
+        console.log('🔧 Using same-domain production URLs');
+        // Force HTTPS for production
+        const secureProtocol = protocol === 'https:' ? 'https:' : 'https:';
         return {
-            API_BASE_URL: `${protocol}//${hostname}`,
-            WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//${hostname}`
+            API_BASE_URL: `${secureProtocol}//${hostname}`,
+            WS_BASE_URL: `${secureProtocol === 'https:' ? 'wss:' : 'ws:'}//${hostname}`
         };
     }
     
     // Custom port (testing/development with custom ports)
+    console.log('🔧 Using custom port URLs');
     return {
         API_BASE_URL: `${protocol}//${hostname}:${port}`,
         WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//${hostname}:${port}`
@@ -54,6 +86,36 @@ const getBaseUrls = () => {
 };
 
 const { API_BASE_URL, WS_BASE_URL } = getBaseUrls();
+
+// Safety check: Ensure HTTPS for production
+const getSecureBaseURL = (baseURL) => {
+    if (window.location.hostname === 'artparty.social' && baseURL.startsWith('http://')) {
+        console.warn('⚠️ Forcing HTTPS for production security');
+        return baseURL.replace('http://', 'https://');
+    }
+    return baseURL;
+};
+
+const getSecureWSURL = (wsURL) => {
+    if (window.location.hostname === 'artparty.social' && wsURL.startsWith('ws://')) {
+        console.warn('⚠️ Forcing WSS for production security');
+        return wsURL.replace('ws://', 'wss://');
+    }
+    return wsURL;
+};
+
+const SECURE_API_BASE_URL = getSecureBaseURL(API_BASE_URL);
+const SECURE_WS_BASE_URL = getSecureWSURL(WS_BASE_URL);
+
+// Log final configuration
+console.log('🔧 Final Secure Configuration:', {
+    originalAPI: API_BASE_URL,
+    secureAPI: SECURE_API_BASE_URL,
+    originalWS: WS_BASE_URL,
+    secureWS: SECURE_WS_BASE_URL,
+    hostname: window.location.hostname,
+    protocol: window.location.protocol
+});
 
 // Fallback API URLs in case primary fails
 const FALLBACK_URLS = {
@@ -75,7 +137,7 @@ const FALLBACK_URLS = {
 // API Configuration
 const API_CONFIG = {
     // Base URL for API calls - dynamically set based on environment
-    BASE_URL: API_BASE_URL,
+    BASE_URL: SECURE_API_BASE_URL,
     
     // Fallback URLs
     FALLBACK_URLS: FALLBACK_URLS[ENVIRONMENT.isDevelopment ? 'development' : 
@@ -126,7 +188,7 @@ const API_CONFIG = {
 // WebSocket Configuration
 const WS_CONFIG = {
     // WebSocket URL - dynamically set based on environment
-    BASE_URL: WS_BASE_URL,
+    BASE_URL: SECURE_WS_BASE_URL,
     
     // Connection settings
     RECONNECT_ATTEMPTS: 5,

@@ -16,6 +16,14 @@ class APIClient {
         this.retryAttempts = 3;
         this.retryDelay = 1000;
         
+        // Debug logging
+        console.log('🔧 APIClient initialized with:', {
+            baseURL: this.baseURL,
+            currentProtocol: window.location.protocol,
+            currentHostname: window.location.hostname,
+            fullCurrentUrl: window.location.href
+        });
+        
         // Setup online/offline detection
         this.setupNetworkDetection();
         
@@ -153,7 +161,22 @@ class APIClient {
     buildURL(url, params) {
         const fullURL = url.startsWith('http') ? url : `${this.baseURL}${url}`;
         
-        if (!params) return fullURL;
+        // Debug logging
+        console.log('🔧 URL Construction:', {
+            inputUrl: url,
+            baseURL: this.baseURL,
+            fullURL: fullURL,
+            hasParams: !!params
+        });
+        
+        // Final safety check: Force HTTPS for production
+        let secureURL = fullURL;
+        if (window.location.hostname === 'artparty.social' && fullURL.startsWith('http://')) {
+            console.warn('⚠️ Final safety check: Converting HTTP to HTTPS');
+            secureURL = fullURL.replace('http://', 'https://');
+        }
+        
+        if (!params) return secureURL;
         
         const searchParams = new URLSearchParams();
         Object.keys(params).forEach(key => {
@@ -163,7 +186,10 @@ class APIClient {
         });
         
         const queryString = searchParams.toString();
-        return queryString ? `${fullURL}?${queryString}` : fullURL;
+        const finalURL = queryString ? `${secureURL}?${queryString}` : secureURL;
+        
+        console.log('🔧 Final URL:', finalURL);
+        return finalURL;
     }
     
     /**
