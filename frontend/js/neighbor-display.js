@@ -88,12 +88,25 @@
             }
             
             try {
+                // Validate inputs
+                if (!tile) {
+                    console.warn('⚠️ No tile provided to neighbor display');
+                    return;
+                }
+                
+                // Ensure neighbors is an array
+                if (!Array.isArray(neighbors)) {
+                    console.warn('⚠️ Neighbors is not an array, converting to empty array:', neighbors);
+                    neighbors = [];
+                }
+                
                 this.currentTile = tile;
                 this.neighbors = this.organizeNeighbors(neighbors);
                 
                 console.log('🔄 Updating neighbor display:', {
                     tile: tile,
-                    neighbors: this.neighbors
+                    neighbors: this.neighbors,
+                    neighborsCount: neighbors.length
                 });
                 
                 // Clear all canvases
@@ -112,6 +125,9 @@
                 this.updateCellStyling();
             } catch (error) {
                 console.error('Error updating neighbor display:', error);
+                // Fallback: clear everything and show empty state
+                this.clearAllCanvases();
+                this.updateCellStyling();
             }
         }
         
@@ -130,7 +146,18 @@
             
             if (!this.currentTile) return organized;
             
+            // Ensure neighbors is an array
+            if (!Array.isArray(neighbors)) {
+                console.warn('⚠️ Neighbors is not an array:', neighbors);
+                return organized;
+            }
+            
             neighbors.forEach(neighbor => {
+                if (!neighbor || typeof neighbor.x !== 'number' || typeof neighbor.y !== 'number') {
+                    console.warn('⚠️ Invalid neighbor data:', neighbor);
+                    return;
+                }
+                
                 const dx = neighbor.x - this.currentTile.x;
                 const dy = neighbor.y - this.currentTile.y;
                 

@@ -822,7 +822,21 @@ class NavigationManager {
             try {
                 const neighborDisplayInstance = window.neighborDisplay;
                 if (neighborDisplayInstance && typeof neighborDisplayInstance.updateDisplay === 'function') {
-                    neighborDisplayInstance.updateDisplay(tile, tile.adjacentNeighbors || []);
+                    // Ensure we have valid neighbor data
+                    let neighborData = [];
+                    if (tile.adjacentNeighbors && Array.isArray(tile.adjacentNeighbors)) {
+                        neighborData = tile.adjacentNeighbors;
+                    } else if (tile.adjacentNeighbors) {
+                        console.warn('⚠️ Adjacent neighbors is not an array:', tile.adjacentNeighbors);
+                        neighborData = [];
+                    }
+                    
+                    console.log('🔍 Passing neighbors to display:', {
+                        neighborCount: neighborData.length,
+                        neighborData: neighborData
+                    });
+                    
+                    neighborDisplayInstance.updateDisplay(tile, neighborData);
                 } else {
                     console.log('⚠️ Neighbor display not available, skipping neighbor update');
                 }
