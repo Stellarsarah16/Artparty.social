@@ -4,6 +4,7 @@
  */
 
 // IMMEDIATE HTTPS ENFORCEMENT - Must be first!
+// ONLY run on production domain to avoid breaking local development
 if (window.location.hostname === 'artparty.social') {
     console.log('🔧 IMMEDIATE HTTPS enforcement for production');
     
@@ -36,6 +37,8 @@ if (window.location.hostname === 'artparty.social') {
     };
     
     console.log('✅ Global HTTPS interceptors installed');
+} else {
+    console.log('🔧 Skipping HTTPS enforcement for non-production domain:', window.location.hostname);
 }
 
 // Enhanced environment detection
@@ -79,7 +82,7 @@ const getBaseUrls = () => {
         console.log('🔧 Using development URLs');
         return {
             API_BASE_URL: 'http://localhost:8000',
-            WS_BASE_URL: 'ws://localhost:8000'
+            WS_BASE_URL: 'ws://localhost:8080'
         };
     }
     

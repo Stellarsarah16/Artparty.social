@@ -21,10 +21,10 @@ This directory contains configuration files for local development of ArtPartySoc
    ```
 
 4. **Access the application:**
-   - Frontend: http://localhost
+   - Frontend: http://localhost:8080
    - Backend API: http://localhost:8000
    - API Documentation: http://localhost:8000/docs
-   - Database: localhost:5432 (postgres/dev_password)
+   - Database: localhost:5433 (postgres/dev_password)
    - Redis: localhost:6379
 
 ## Configuration Files
