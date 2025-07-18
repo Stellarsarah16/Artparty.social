@@ -93,7 +93,8 @@ async def get_user_by_id(
     return UserProfile(
         id=user.id,
         username=user.username,
-        display_name=user.display_name,
+        first_name=user.first_name,
+        last_name=user.last_name,
         total_points=user.total_points,
         tiles_created=user.tiles_created,
         likes_received=user.likes_received,
@@ -123,8 +124,10 @@ async def update_user_profile(
                 )
         
         # Update user fields
-        if user_update.display_name is not None:
-            setattr(current_user, 'display_name', user_update.display_name)
+        if user_update.first_name is not None:
+            setattr(current_user, 'first_name', user_update.first_name)
+        if user_update.last_name is not None:
+            setattr(current_user, 'last_name', user_update.last_name)
         if user_update.email is not None:
             setattr(current_user, 'email', user_update.email)
         
@@ -138,7 +141,8 @@ async def update_user_profile(
                 id=current_user.id,
                 username=current_user.username,
                 email=current_user.email,
-                display_name=current_user.display_name,
+                first_name=current_user.first_name,
+                last_name=current_user.last_name,
                 is_active=current_user.is_active,
                 is_verified=current_user.is_verified,
                 total_points=current_user.total_points,

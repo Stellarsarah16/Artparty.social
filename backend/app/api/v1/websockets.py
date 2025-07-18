@@ -62,7 +62,7 @@ async def websocket_canvas_endpoint(
         # Connect user to canvas
         user_info = {
             "username": user.username,
-            "display_name": user.display_name or ""
+            "display_name": f"{user.first_name} {user.last_name}".strip()
         }
         
         await connection_manager.connect(websocket, canvas_id, user.id, user_info)
