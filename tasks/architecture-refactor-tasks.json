@@ -1,0 +1,158 @@
+[
+  {
+    "id": "phase1-planning",
+    "content": "Plan Phase 1 implementation and create backup of current working state",
+    "status": "pending",
+    "dependencies": []
+  },
+  {
+    "id": "backup-current-state",
+    "content": "Create git branch and backup of current working local development setup",
+    "status": "pending",
+    "dependencies": ["phase1-planning"]
+  },
+  {
+    "id": "implement-fastapi-static",
+    "content": "Add FastAPI static file serving for frontend files in local development",
+    "status": "pending",
+    "dependencies": ["backup-current-state"]
+  },
+  {
+    "id": "update-backend-config",
+    "content": "Update backend configuration to serve static files and handle CORS properly",
+    "status": "pending",
+    "dependencies": ["implement-fastapi-static"]
+  },
+  {
+    "id": "create-local-dev-server",
+    "content": "Create new local development server that runs everything on port 3000",
+    "status": "pending",
+    "dependencies": ["update-backend-config"]
+  },
+  {
+    "id": "test-single-port-setup",
+    "content": "Test that frontend, API, and WebSocket all work on localhost:3000",
+    "status": "pending",
+    "dependencies": ["create-local-dev-server"]
+  },
+  {
+    "id": "fix-cors-issues",
+    "content": "Remove nginx CORS handling and ensure FastAPI handles CORS correctly",
+    "status": "pending",
+    "dependencies": ["test-single-port-setup"]
+  },
+  {
+    "id": "add-health-checks",
+    "content": "Add comprehensive health check endpoints for all services",
+    "status": "pending",
+    "dependencies": ["fix-cors-issues"]
+  },
+  {
+    "id": "test-canvas-endpoints",
+    "content": "Verify all canvas endpoints work correctly in new setup",
+    "status": "pending",
+    "dependencies": ["add-health-checks"]
+  },
+  {
+    "id": "test-tile-endpoints",
+    "content": "Verify all tile endpoints work correctly in new setup",
+    "status": "pending",
+    "dependencies": ["test-canvas-endpoints"]
+  },
+  {
+    "id": "test-websocket-connections",
+    "content": "Verify WebSocket connections work correctly in new setup",
+    "status": "pending",
+    "dependencies": ["test-tile-endpoints"]
+  },
+  {
+    "id": "update-frontend-config",
+    "content": "Update frontend configuration to use single port and remove URL transformations",
+    "status": "pending",
+    "dependencies": ["test-websocket-connections"]
+  },
+  {
+    "id": "create-dev-scripts",
+    "content": "Create simple development scripts for starting and stopping the application",
+    "status": "pending",
+    "dependencies": ["update-frontend-config"]
+  },
+  {
+    "id": "document-new-setup",
+    "content": "Document the new local development setup and how to use it",
+    "status": "pending",
+    "dependencies": ["create-dev-scripts"]
+  },
+  {
+    "id": "phase1-testing",
+    "content": "Comprehensive testing of Phase 1 changes - verify all functionality works",
+    "status": "pending",
+    "dependencies": ["document-new-setup"]
+  },
+  {
+    "id": "phase2-planning",
+    "content": "Plan Phase 2 implementation - environment configuration and logging",
+    "status": "pending",
+    "dependencies": ["phase1-testing"]
+  },
+  {
+    "id": "create-env-configs",
+    "content": "Create environment-specific configuration files (local, staging, production)",
+    "status": "pending",
+    "dependencies": ["phase2-planning"]
+  },
+  {
+    "id": "implement-logging",
+    "content": "Implement standardized logging across all services",
+    "status": "pending",
+    "dependencies": ["create-env-configs"]
+  },
+  {
+    "id": "setup-database-migrations",
+    "content": "Set up Alembic for database migrations",
+    "status": "pending",
+    "dependencies": ["implement-logging"]
+  },
+  {
+    "id": "create-test-suite",
+    "content": "Create automated test suite for API endpoints",
+    "status": "pending",
+    "dependencies": ["setup-database-migrations"]
+  },
+  {
+    "id": "phase3-planning",
+    "content": "Plan Phase 3 implementation - deployment automation",
+    "status": "pending",
+    "dependencies": ["create-test-suite"]
+  },
+  {
+    "id": "create-github-actions",
+    "content": "Create GitHub Actions workflow for CI/CD",
+    "status": "pending",
+    "dependencies": ["phase3-planning"]
+  },
+  {
+    "id": "implement-deployment-pipeline",
+    "content": "Implement automated deployment pipeline with rollback capability",
+    "status": "pending",
+    "dependencies": ["create-github-actions"]
+  },
+  {
+    "id": "setup-monitoring",
+    "content": "Set up basic monitoring and alerting for production",
+    "status": "pending",
+    "dependencies": ["implement-deployment-pipeline"]
+  },
+  {
+    "id": "final-testing",
+    "content": "Final comprehensive testing of all phases",
+    "status": "pending",
+    "dependencies": ["setup-monitoring"]
+  },
+  {
+    "id": "documentation-complete",
+    "content": "Complete documentation of new architecture and deployment process",
+    "status": "pending",
+    "dependencies": ["final-testing"]
+  }
+] 
