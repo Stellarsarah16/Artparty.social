@@ -12,8 +12,7 @@
                 top: null,
                 left: null,
                 right: null,
-                bottom: null,
-                center: null
+                bottom: null
             };
             this.ctxs = {};
             this.currentTile = null;
@@ -41,13 +40,22 @@
             this.canvases.left = document.getElementById('neighbor-left-canvas');
             this.canvases.right = document.getElementById('neighbor-right-canvas');
             this.canvases.bottom = document.getElementById('neighbor-bottom-canvas');
-            this.canvases.center = document.getElementById('neighbor-center-canvas');
+            // Note: center canvas is now the main pixel-canvas, handled separately
+            
+            console.log('🔧 Found canvas elements:', {
+                top: !!this.canvases.top,
+                left: !!this.canvases.left,
+                right: !!this.canvases.right,
+                bottom: !!this.canvases.bottom
+            });
             
             // Check if all elements are available
             const missingElements = Object.keys(this.canvases).filter(key => !this.canvases[key]);
             if (missingElements.length > 0) {
                 console.warn('⚠️ Some neighbor canvas elements not found:', missingElements);
                 console.log('⚠️ This is normal if the editor section is not loaded yet');
+                // Reset initAttempted so we can try again later when elements are available
+                this.initAttempted = false;
                 return;
             }
             
@@ -106,16 +114,15 @@
                 console.log('🔄 Updating neighbor display:', {
                     tile: tile,
                     neighbors: this.neighbors,
-                    neighborsCount: neighbors.length
+                    neighborsCount: neighbors.length,
+                    organizedNeighbors: this.neighbors
                 });
                 
                 // Clear all canvases
                 this.clearAllCanvases();
                 
-                // Draw current tile in center
-                this.drawTile('center', tile);
-                
-                // Draw neighbors
+                // Note: Current tile is now drawn in the main pixel editor
+                // Draw neighbors only
                 this.drawNeighbor('top', this.neighbors.top);
                 this.drawNeighbor('left', this.neighbors.left);
                 this.drawNeighbor('right', this.neighbors.right);
@@ -123,6 +130,8 @@
                 
                 // Update cell styling
                 this.updateCellStyling();
+                
+                console.log('✅ Neighbor display updated successfully');
             } catch (error) {
                 console.error('Error updating neighbor display:', error);
                 // Fallback: clear everything and show empty state
@@ -152,6 +161,12 @@
                 return organized;
             }
             
+            console.log('🔍 Organizing neighbors:', {
+                currentTile: { x: this.currentTile.x, y: this.currentTile.y },
+                neighbors: neighbors,
+                neighborsCount: neighbors.length
+            });
+            
             neighbors.forEach(neighbor => {
                 if (!neighbor || typeof neighbor.x !== 'number' || typeof neighbor.y !== 'number') {
                     console.warn('⚠️ Invalid neighbor data:', neighbor);
@@ -161,17 +176,26 @@
                 const dx = neighbor.x - this.currentTile.x;
                 const dy = neighbor.y - this.currentTile.y;
                 
+                console.log(`🔍 Neighbor ${neighbor.id} at (${neighbor.x}, ${neighbor.y}) - dx: ${dx}, dy: ${dy}`);
+                
                 if (dx === 0 && dy === -1) {
                     organized.top = neighbor;
+                    console.log('✅ Assigned to top');
                 } else if (dx === -1 && dy === 0) {
                     organized.left = neighbor;
+                    console.log('✅ Assigned to left');
                 } else if (dx === 1 && dy === 0) {
                     organized.right = neighbor;
+                    console.log('✅ Assigned to right');
                 } else if (dx === 0 && dy === 1) {
                     organized.bottom = neighbor;
+                    console.log('✅ Assigned to bottom');
+                } else {
+                    console.log('❌ No position match for this neighbor');
                 }
             });
             
+            console.log('🔍 Final organized neighbors:', organized);
             return organized;
         }
         
@@ -181,19 +205,30 @@
          * @param {Object} tile - Tile data
          */
         drawTile(position, tile) {
+            console.log(`🎨 drawTile called for ${position}:`, { tile, hasCanvas: !!this.canvases[position], hasCtx: !!this.ctxs[position] });
+            
             const canvas = this.canvases[position];
             const ctx = this.ctxs[position];
             
-            if (!canvas || !ctx) return;
+            if (!canvas || !ctx) {
+                console.warn(`⚠️ Missing canvas or context for ${position}`);
+                return;
+            }
             
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             if (!tile || !tile.pixel_data) {
-                // Draw empty tile pattern
+                console.log(`🎨 No tile or pixel_data for ${position}, drawing empty tile`);
                 this.drawEmptyTile(ctx, canvas.width, canvas.height);
                 return;
             }
+            
+            console.log(`🎨 Processing pixel data for ${position}:`, {
+                hasPixelData: !!tile.pixel_data,
+                pixelDataType: typeof tile.pixel_data,
+                pixelDataLength: typeof tile.pixel_data === 'string' ? tile.pixel_data.length : 'not string'
+            });
             
             // Parse pixel data
             let pixelData;
@@ -201,6 +236,11 @@
                 pixelData = typeof tile.pixel_data === 'string' 
                     ? JSON.parse(tile.pixel_data) 
                     : tile.pixel_data;
+                console.log(`🎨 Parsed pixel data for ${position}:`, {
+                    isArray: Array.isArray(pixelData),
+                    length: Array.isArray(pixelData) ? pixelData.length : 'not array',
+                    firstRow: Array.isArray(pixelData) && pixelData[0] ? pixelData[0].length : 'no first row'
+                });
             } catch (error) {
                 console.error('Failed to parse pixel data for neighbor:', error);
                 this.drawEmptyTile(ctx, canvas.width, canvas.height);
@@ -214,7 +254,8 @@
             }
             
             // Draw pixels
-            const pixelSize = canvas.width / 32; // 32x32 tile scaled to 64x64 canvas
+            const pixelSize = canvas.width / 32; // 32x32 tile scaled to 512x512 canvas (16px per pixel)
+            let pixelCount = 0;
             
             for (let y = 0; y < 32; y++) {
                 for (let x = 0; x < 32; x++) {
@@ -227,9 +268,12 @@
                             pixelSize,
                             pixelSize
                         );
+                        pixelCount++;
                     }
                 }
             }
+            
+            console.log(`🎨 Drew ${pixelCount} pixels for ${position} neighbor`);
         }
         
         /**
@@ -238,6 +282,7 @@
          * @param {Object} neighbor - Neighbor tile data
          */
         drawNeighbor(position, neighbor) {
+            console.log(`🎨 Drawing neighbor at ${position}:`, neighbor);
             this.drawTile(position, neighbor);
         }
         
@@ -288,8 +333,7 @@
                 top: document.getElementById('neighbor-top'),
                 left: document.getElementById('neighbor-left'),
                 right: document.getElementById('neighbor-right'),
-                bottom: document.getElementById('neighbor-bottom'),
-                center: document.getElementById('neighbor-center')
+                bottom: document.getElementById('neighbor-bottom')
             };
             
             Object.keys(cells).forEach(position => {
@@ -299,9 +343,7 @@
                 // Remove all classes
                 cell.classList.remove('empty', 'has-tile', 'current');
                 
-                if (position === 'center') {
-                    cell.classList.add('current');
-                } else if (this.neighbors[position]) {
+                if (this.neighbors[position]) {
                     cell.classList.add('has-tile');
                 } else {
                     cell.classList.add('empty');
@@ -343,6 +385,26 @@
             this.neighbors = {};
             this.clearAllCanvases();
             this.updateCellStyling();
+        }
+        
+        /**
+         * Force re-initialization (useful when DOM elements become available later)
+         */
+        forceReinit() {
+            console.log('🔧 Force re-initializing neighbor display...');
+            this.initAttempted = false;
+            this.initialized = false;
+            
+            // Wait a bit for DOM to be ready
+            setTimeout(() => {
+                this.init();
+                
+                // If we have current tile and neighbors, update display
+                if (this.currentTile && this.neighbors) {
+                    console.log('🔧 Re-updating display after re-init...');
+                    this.updateDisplay(this.currentTile, Object.values(this.neighbors).filter(n => n !== null));
+                }
+            }, 100);
         }
     }
     

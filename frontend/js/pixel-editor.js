@@ -56,9 +56,16 @@ class PixelEditor {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         
+        console.log('🎨 Canvas element:', canvas);
+        console.log('🎨 Canvas context:', this.ctx);
+        console.log('🎨 Canvas size:', canvas.width, 'x', canvas.height);
+        
         // Set canvas size
         this.canvas.width = APP_CONFIG.PIXEL_EDITOR.CANVAS_SIZE;
         this.canvas.height = APP_CONFIG.PIXEL_EDITOR.CANVAS_SIZE;
+        
+        console.log('🎨 Set canvas size to:', this.canvas.width, 'x', this.canvas.height);
+        console.log('🎨 Grid size:', this.gridSize);
         
         // Disable image smoothing for pixel art
         this.ctx.imageSmoothingEnabled = false;
@@ -102,10 +109,10 @@ class PixelEditor {
         this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
         this.canvas.addEventListener('mouseleave', this.handleMouseLeave.bind(this));
         
-        // Touch events for mobile
-        this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this));
-        this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this));
-        this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this));
+        // Touch events for mobile - optimized for performance
+        this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
+        this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+        this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: true });
         
         // Prevent context menu on right click
         this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -182,25 +189,26 @@ class PixelEditor {
      * @param {TouchEvent} e - Touch event
      */
     handleTouchStart(e) {
-        e.preventDefault();
-        
         if (e.touches.length === 1) {
             const touch = e.touches[0];
-            
-            // Update touch state
-            this.touchState.isTouching = true;
-            this.touchState.lastTouchX = touch.clientX;
-            this.touchState.lastTouchY = touch.clientY;
-            this.touchState.touchStartTime = Date.now();
-            this.touchState.hasMoved = false;
-            this.touchState.pressure = touch.force || 1.0;
             
             // Convert touch to pixel coordinates
             const rect = this.canvas.getBoundingClientRect();
             const x = Math.floor((touch.clientX - rect.left) / this.gridSize);
             const y = Math.floor((touch.clientY - rect.top) / this.gridSize);
             
+            // Only prevent default if we're on the canvas area
             if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize) {
+                e.preventDefault();
+                
+                // Update touch state
+                this.touchState.isTouching = true;
+                this.touchState.lastTouchX = touch.clientX;
+                this.touchState.lastTouchY = touch.clientY;
+                this.touchState.touchStartTime = Date.now();
+                this.touchState.hasMoved = false;
+                this.touchState.pressure = touch.force || 1.0;
+                
                 this.isDrawing = true;
                 this.lastX = x;
                 this.lastY = y;
@@ -217,37 +225,36 @@ class PixelEditor {
      * @param {TouchEvent} e - Touch event
      */
     handleTouchMove(e) {
-        e.preventDefault();
-        
         if (e.touches.length === 1 && this.touchState.isTouching) {
             const touch = e.touches[0];
-            
-            // Update touch state
-            this.touchState.lastTouchX = touch.clientX;
-            this.touchState.lastTouchY = touch.clientY;
-            this.touchState.pressure = touch.force || 1.0;
-            
-            // Track movement
-            const deltaX = Math.abs(touch.clientX - this.touchState.lastTouchX);
-            const deltaY = Math.abs(touch.clientY - this.touchState.lastTouchY);
-            if (deltaX > 2 || deltaY > 2) {
-                this.touchState.hasMoved = true;
-            }
             
             // Convert touch to pixel coordinates
             const rect = this.canvas.getBoundingClientRect();
             const x = Math.floor((touch.clientX - rect.left) / this.gridSize);
             const y = Math.floor((touch.clientY - rect.top) / this.gridSize);
             
-            if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize) {
+            // Only prevent default if we're on the canvas area and drawing
+            if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize && this.isDrawing) {
+                e.preventDefault();
+                
+                // Update touch state
+                this.touchState.lastTouchX = touch.clientX;
+                this.touchState.lastTouchY = touch.clientY;
+                this.touchState.pressure = touch.force || 1.0;
+                
+                // Track movement
+                const deltaX = Math.abs(touch.clientX - this.touchState.lastTouchX);
+                const deltaY = Math.abs(touch.clientY - this.touchState.lastTouchY);
+                if (deltaX > 2 || deltaY > 2) {
+                    this.touchState.hasMoved = true;
+                }
+                
                 this.updatePositionIndicator(x, y);
                 
-                if (this.isDrawing) {
-                    // Apply tool with pressure sensitivity
-                    this.applyToolWithPressure(x, y, this.touchState.pressure);
-                    this.lastX = x;
-                    this.lastY = y;
-                }
+                // Apply tool with pressure sensitivity
+                this.applyToolWithPressure(x, y, this.touchState.pressure);
+                this.lastX = x;
+                this.lastY = y;
             }
         }
     }
@@ -257,9 +264,12 @@ class PixelEditor {
      * @param {TouchEvent} e - Touch event
      */
     handleTouchEnd(e) {
-        e.preventDefault();
-        
         if (this.touchState.isTouching) {
+            // Only prevent default if we were drawing
+            if (this.isDrawing) {
+                e.preventDefault();
+            }
+            
             this.touchState.isTouching = false;
             
             if (this.isDrawing) {
@@ -584,7 +594,14 @@ class PixelEditor {
      */
     clear() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+    
+    /**
+     * Clear pixel data and reset to empty
+     */
+    clearPixelData() {
         this.pixelData = this.createEmptyPixelData();
+        this.clear();
         this.drawGrid();
         this.saveToHistory();
     }
@@ -637,14 +654,27 @@ class PixelEditor {
      * @param {Array} data - 32x32 pixel data array
      */
     loadPixelData(data) {
+        console.log('🎨 loadPixelData called with:', data);
+        console.log('🎨 Data type:', typeof data);
+        console.log('🎨 Data length:', Array.isArray(data) ? data.length : 'not array');
+        
         if (!data || data.length !== this.tileSize) {
-            console.error('Invalid pixel data');
+            console.error('Invalid pixel data - expected length:', this.tileSize, 'got:', data ? data.length : 'null');
             return;
         }
         
         this.pixelData = data;
+        console.log('🎨 Pixel data loaded, redrawing...');
+        console.log('🎨 Sample of loaded data - first row:', this.pixelData[0]);
+        console.log('🎨 Sample of loaded data - position 16,0:', this.pixelData[0][16]);
+        console.log('🎨 Sample of loaded data - position 17,0:', this.pixelData[0][17]);
         this.redraw();
+        console.log('🎨 After redraw - position 16,0:', this.pixelData[0][16]);
+        console.log('🎨 After redraw - position 17,0:', this.pixelData[0][17]);
         this.saveToHistory();
+        console.log('🎨 After saveToHistory - position 16,0:', this.pixelData[0][16]);
+        console.log('🎨 After saveToHistory - position 17,0:', this.pixelData[0][17]);
+        console.log('🎨 Pixel data loading complete');
     }
     
     /**
@@ -680,20 +710,42 @@ class PixelEditor {
      * Redraw the entire canvas
      */
     redraw() {
+        console.log('🎨 Redrawing canvas...');
         this.clear();
         
+        // Debug: Check first few rows of pixel data
+        console.log('🎨 First row of pixel data:', this.pixelData[0]);
+        console.log('🎨 Second row of pixel data:', this.pixelData[1]);
+        console.log('🎨 Pixel data type check:', typeof this.pixelData[0], typeof this.pixelData[0][16]);
+        
         // Draw all pixels
+        let pixelCount = 0;
+        let totalPixels = 0;
         for (let y = 0; y < this.tileSize; y++) {
             for (let x = 0; x < this.tileSize; x++) {
-                const color = this.pixelData[y][x];
+                const color = this.pixelData[y] && this.pixelData[y][x];
+                totalPixels++;
                 if (color && color !== 'transparent') {
+                    console.log(`🎨 Drawing pixel at (${x}, ${y}) with color: ${color}`);
                     this.ctx.fillStyle = color;
                     this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
+                    pixelCount++;
                 }
             }
         }
         
+        console.log(`🎨 Total pixels checked: ${totalPixels}, non-transparent pixels: ${pixelCount}`);
+        console.log(`🎨 Sample pixel data:`, {
+            '0,0': this.pixelData[0] && this.pixelData[0][0],
+            '16,0': this.pixelData[0] && this.pixelData[0][16],
+            '17,0': this.pixelData[0] && this.pixelData[0][17],
+            '20,0': this.pixelData[0] && this.pixelData[0][20],
+            '21,0': this.pixelData[0] && this.pixelData[0][21]
+        });
+        
+        console.log('🎨 Drew', pixelCount, 'pixels');
         this.drawGrid();
+        console.log('🎨 Redraw complete');
     }
     
     /**

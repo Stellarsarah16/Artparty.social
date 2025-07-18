@@ -79,22 +79,30 @@ class TileRepository(SQLAlchemyRepository[Tile, TileCreate, TileUpdate]):
         if not tile:
             return []
         
-        return db.query(Tile).filter(
-            and_(
-                Tile.canvas_id == tile.canvas_id,
-                Tile.id != tile_id,
-                # Left neighbor: (x-1, y)
-                # Right neighbor: (x+1, y)
-                # Top neighbor: (x, y-1)
-                # Bottom neighbor: (x, y+1)
-                (
-                    (Tile.x == tile.x - 1 and Tile.y == tile.y) or  # Left
-                    (Tile.x == tile.x + 1 and Tile.y == tile.y) or  # Right
-                    (Tile.x == tile.x and Tile.y == tile.y - 1) or  # Top
-                    (Tile.x == tile.x and Tile.y == tile.y + 1)     # Bottom
-                )
-            )
-        ).all()
+        # Check what tiles exist at each adjacent position
+        left_pos = (tile.x - 1, tile.y)
+        right_pos = (tile.x + 1, tile.y)
+        top_pos = (tile.x, tile.y - 1)
+        bottom_pos = (tile.x, tile.y + 1)
+        
+        # Check each position individually
+        left_tile = self.get_by_position(db, canvas_id=tile.canvas_id, x=left_pos[0], y=left_pos[1])
+        right_tile = self.get_by_position(db, canvas_id=tile.canvas_id, x=right_pos[0], y=right_pos[1])
+        top_tile = self.get_by_position(db, canvas_id=tile.canvas_id, x=top_pos[0], y=top_pos[1])
+        bottom_tile = self.get_by_position(db, canvas_id=tile.canvas_id, x=bottom_pos[0], y=bottom_pos[1])
+        
+        # Build list of existing neighbors
+        neighbors = []
+        if left_tile:
+            neighbors.append(left_tile)
+        if right_tile:
+            neighbors.append(right_tile)
+        if top_tile:
+            neighbors.append(top_tile)
+        if bottom_tile:
+            neighbors.append(bottom_tile)
+        
+        return neighbors
     
     def get_public_tiles(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[Tile]:
         """Get public tiles"""

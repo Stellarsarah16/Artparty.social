@@ -6,7 +6,6 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <title>StellarArtCollab - Collaborative Pixel Art</title>
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -254,7 +253,7 @@
             </div>
             
             <div class="editor-layout">
-                <!-- Pixel Art Editor -->
+                <!-- Pixel Art Editor with Integrated Neighbors -->
                 <div class="editor-panel">
                     <div class="editor-tools">
                         <h3>Tools</h3>
@@ -282,79 +281,38 @@
                         </div>
                     </div>
                     
-                    <div class="canvas-container">
-                        <canvas id="pixel-canvas" width="512" height="512"></canvas>
-                        <div class="canvas-overlay">
-                            <div class="position-indicator" id="position-indicator">
-                                Position: (0, 0)
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Neighbor Tiles Display -->
-                <div class="neighbor-panel">
-                    <div class="neighbor-header">
-                        <h3>Adjacent Tiles</h3>
-                        <span class="neighbor-subtitle">Reference for seamless connections</span>
-                    </div>
-                    
-                    <div class="neighbor-grid">
+                    <!-- Integrated Canvas with Neighbors -->
+                    <div class="integrated-canvas-container">
                         <div class="neighbor-row">
                             <div class="neighbor-cell empty" id="neighbor-top">
                                 <div class="neighbor-label">Top</div>
-                                <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-top-canvas"></canvas>
+                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-top-canvas"></canvas>
                             </div>
                         </div>
                         <div class="neighbor-row">
                             <div class="neighbor-cell empty" id="neighbor-left">
                                 <div class="neighbor-label">Left</div>
-                                <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-left-canvas"></canvas>
+                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-left-canvas"></canvas>
                             </div>
-                            <div class="neighbor-cell current" id="neighbor-center">
-                                <div class="neighbor-label">Current</div>
-                                <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-center-canvas"></canvas>
+                            <div class="main-canvas-container">
+                                <div class="canvas-label">Current Tile</div>
+                                <canvas id="pixel-canvas" width="512" height="512"></canvas>
+                                <div class="canvas-overlay">
+                                    <div class="position-indicator" id="position-indicator">
+                                        Position: (0, 0)
+                                    </div>
+                                </div>
                             </div>
                             <div class="neighbor-cell empty" id="neighbor-right">
                                 <div class="neighbor-label">Right</div>
-                                <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-right-canvas"></canvas>
+                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-right-canvas"></canvas>
                             </div>
                         </div>
                         <div class="neighbor-row">
                             <div class="neighbor-cell empty" id="neighbor-bottom">
                                 <div class="neighbor-label">Bottom</div>
-                                <canvas class="neighbor-canvas" width="64" height="64" id="neighbor-bottom-canvas"></canvas>
+                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-bottom-canvas"></canvas>
                             </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Shared Canvas View -->
-                <div class="shared-panel">
-                    <div class="shared-header">
-                        <h3>Shared Canvas</h3>
-                        <div class="view-controls">
-                            <button class="btn btn-sm" id="zoom-out-btn">
-                                <i class="fas fa-search-minus"></i>
-                            </button>
-                            <span id="zoom-level">100%</span>
-                            <button class="btn btn-sm" id="zoom-in-btn">
-                                <i class="fas fa-search-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="shared-canvas-container">
-                        <canvas id="shared-canvas" width="800" height="600"></canvas>
-                        <div class="mini-map" style="visibility: hidden;">
-                            <canvas id="mini-map-canvas" width="200" height="150"></canvas>
-                        </div>
-                    </div>
-                    
-                    <div class="online-users">
-                        <h4>Online Users</h4>
-                        <div class="user-list" id="online-users-list">
-                            <!-- Online users will be shown here -->
                         </div>
                     </div>
                 </div>
@@ -508,7 +466,7 @@
         console.log('🔧 Cache buster generated:', cacheBuster);
     </script>
     <!-- Debug HTTP Requests - Must load first! -->
-    <script src="js/debug-http-requests.js"></script>
+    <!-- <script src="js/debug-http-requests.js"></script> -->
     <!-- HTTPS Enforcer - Must load first! -->
     <script src="js/https-enforcer.js"></script>
     <script src="js/config.js"></script>

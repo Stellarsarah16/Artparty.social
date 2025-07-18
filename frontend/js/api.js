@@ -5,7 +5,16 @@
 
 class APIClient {
     constructor() {
-        this.baseURL = API_CONFIG.BASE_URL;
+        // Force HTTP for localhost development
+        let baseURL = API_CONFIG.BASE_URL;
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            if (baseURL.includes('localhost') && baseURL.startsWith('https://')) {
+                console.warn('⚠️ APIClient: Forcing HTTP for localhost development');
+                baseURL = baseURL.replace('https://', 'http://');
+            }
+        }
+        
+        this.baseURL = baseURL;
         this.defaultHeaders = {
             'Content-Type': 'application/json'
         };
@@ -18,7 +27,8 @@ class APIClient {
         
         // Debug logging
         console.log('🔧 APIClient initialized with:', {
-            baseURL: this.baseURL,
+            originalBaseURL: API_CONFIG.BASE_URL,
+            finalBaseURL: this.baseURL,
             currentProtocol: window.location.protocol,
             currentHostname: window.location.hostname,
             fullCurrentUrl: window.location.href
@@ -127,9 +137,10 @@ class APIClient {
         
         try {
             console.log(`📤 API Request: ${requestConfig.method || 'GET'} ${url}`);
+            console.log('🔧 Fetch URL being used:', url);
             
-            // Additional debugging for mixed content detection
-            if (url.startsWith('http://')) {
+            // Additional debugging for mixed content detection (production only)
+            if (window.location.hostname === 'artparty.social' && url.startsWith('http://')) {
                 console.error('❌ MIXED CONTENT DETECTED in API request:', {
                     url: url,
                     method: requestConfig.method,
@@ -178,14 +189,30 @@ class APIClient {
             hasParams: !!params
         });
         
-        // Final safety check: Force HTTPS for production
+        // AGGRESSIVE localhost HTTP enforcement
         let secureURL = fullURL;
-        if (window.location.hostname === 'artparty.social' && fullURL.startsWith('http://')) {
-            console.warn('⚠️ Final safety check: Converting HTTP to HTTPS');
-            secureURL = fullURL.replace('http://', 'https://');
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            if (fullURL.includes('localhost') && fullURL.startsWith('https://')) {
+                console.warn('⚠️ AGGRESSIVE: Converting HTTPS to HTTP for localhost API');
+                secureURL = fullURL.replace('https://', 'http://');
+            }
+            // Also check if the URL is missing the port
+            if (fullURL.includes('localhost') && !fullURL.includes(':8080')) {
+                console.warn('⚠️ AGGRESSIVE: Adding port 8080 to localhost URL');
+                secureURL = fullURL.replace('localhost', 'localhost:8080');
+            }
         }
         
-        if (!params) return secureURL;
+        // Final safety check: Force HTTPS for production only
+        if (window.location.hostname === 'artparty.social' && secureURL.startsWith('http://')) {
+            console.warn('⚠️ Final safety check: Converting HTTP to HTTPS for production');
+            secureURL = secureURL.replace('http://', 'https://');
+        }
+        
+        if (!params) {
+            console.log('🔧 Final URL (no params):', secureURL);
+            return secureURL;
+        }
         
         const searchParams = new URLSearchParams();
         Object.keys(params).forEach(key => {
@@ -197,7 +224,7 @@ class APIClient {
         const queryString = searchParams.toString();
         const finalURL = queryString ? `${secureURL}?${queryString}` : secureURL;
         
-        console.log('🔧 Final URL:', finalURL);
+        console.log('🔧 Final URL (with params):', finalURL);
         return finalURL;
     }
     
@@ -525,11 +552,13 @@ class TileAPI {
     }
     
     async getTileNeighbors(id) {
-        return this.client.get(`/tiles/${id}/neighbors`);
+        const url = API_CONFIG.ENDPOINTS.TILE_NEIGHBORS.replace('{id}', id);
+        return await this.client.get(url);
     }
     
     async getAdjacentNeighbors(id) {
-        return this.client.get(`/tiles/${id}/adjacent-neighbors`);
+        const url = API_CONFIG.ENDPOINTS.TILE_ADJACENT_NEIGHBORS.replace('{id}', id);
+        return await this.client.get(url);
     }
     
     async likeTile(id) {

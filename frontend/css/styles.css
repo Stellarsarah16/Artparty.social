@@ -486,8 +486,8 @@ body {
 }
 
 .editor-layout {
-    display: grid;
-    grid-template-columns: 1fr 200px 1fr;
+    display: flex;
+    flex-direction: column;
     gap: var(--space-xl);
     min-height: 600px;
 }
@@ -591,6 +591,48 @@ body {
     cursor: crosshair;
 }
 
+/* Integrated Canvas with Neighbors */
+.integrated-canvas-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px; /* Minimal gap for seamless connection */
+    margin-top: var(--space-lg);
+}
+
+.neighbor-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2px; /* Minimal gap for seamless connection */
+}
+
+.main-canvas-container {
+    position: relative;
+    text-align: center;
+    border: 2px solid var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: var(--space-sm);
+    background: var(--bg-secondary);
+}
+
+.main-canvas-container canvas {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-primary);
+    cursor: crosshair;
+    display: block;
+}
+
+.canvas-label {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: var(--space-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .canvas-overlay {
     position: absolute;
     top: 0;
@@ -613,72 +655,7 @@ body {
     font-family: 'Courier New', monospace;
 }
 
-/* Shared Panel */
-.shared-panel {
-    background: var(--bg-primary);
-    border-radius: var(--border-radius-lg);
-    padding: var(--space-lg);
-    box-shadow: var(--shadow-md);
-}
-
-.shared-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-lg);
-}
-
-.shared-header h3 {
-    font-size: var(--font-size-lg);
-    font-weight: 600;
-}
-
-.view-controls {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-}
-
-.view-controls span {
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-    min-width: 40px;
-    text-align: center;
-}
-
-.shared-canvas-container {
-    position: relative;
-    margin-bottom: var(--space-lg);
-}
-
-.shared-canvas-container canvas {
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius);
-    background: var(--bg-secondary);
-    width: 100%;
-    height: auto;
-}
-
-.mini-map {
-    position: absolute;
-    top: var(--space-sm);
-    right: var(--space-sm);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    background: var(--bg-primary);
-    opacity: 0.9;
-}
-
-.mini-map canvas {
-    display: block;
-    border-radius: var(--border-radius-sm);
-}
-
-.online-users h4 {
-    font-size: var(--font-size-md);
-    font-weight: 600;
-    margin-bottom: var(--space-sm);
-}
+/* Shared Panel - Removed from simplified editor */
 
 /* Neighbor Panel */
 .neighbor-panel {
@@ -725,11 +702,26 @@ body {
     align-items: center;
     gap: var(--space-xs);
     padding: var(--space-sm);
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
     background: var(--bg-secondary);
     transition: all var(--transition-fast);
-    min-width: 80px;
+    opacity: 0.9;
+}
+
+.neighbor-cell:hover {
+    opacity: 1;
+    transform: scale(1.02);
+}
+
+.neighbor-canvas {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-primary);
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    display: block;
 }
 
 .neighbor-cell.empty {
@@ -993,22 +985,25 @@ form {
     }
     
     .editor-layout {
-        grid-template-columns: 1fr;
         gap: var(--space-md);
     }
     
-    .neighbor-panel {
-        order: -1;
-        margin-bottom: var(--space-md);
-    }
-    
-    .neighbor-grid {
-        flex-direction: row;
-        justify-content: center;
+    .integrated-canvas-container {
+        gap: var(--space-sm);
     }
     
     .neighbor-row {
         flex-direction: column;
+        gap: var(--space-sm);
+    }
+    
+    .main-canvas-container {
+        padding: var(--space-sm);
+    }
+    
+    .main-canvas-container canvas {
+        max-width: 100%;
+        height: auto;
     }
     
     .feature-grid {

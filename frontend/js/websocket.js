@@ -656,7 +656,11 @@ class WebSocketClient {
      */
     updateOnlineUsers(users) {
         const usersList = document.getElementById('online-users-list');
-        if (!usersList) return;
+        if (!usersList) {
+            // Element removed in simplified editor - just log the update
+            console.log('Online users updated:', users);
+            return;
+        }
         
         usersList.innerHTML = '';
         

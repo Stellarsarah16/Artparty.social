@@ -41,6 +41,13 @@ if (window.location.hostname === 'artparty.social') {
     console.log('🔧 Skipping HTTPS enforcement for non-production domain:', window.location.hostname);
 }
 
+// Force HTTP for localhost development to prevent protocol issues
+if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && 
+    window.location.protocol === 'https:') {
+    console.warn('⚠️ Redirecting from HTTPS to HTTP for localhost development');
+    window.location.href = window.location.href.replace('https:', 'http:');
+}
+
 // Enhanced environment detection
 const ENVIRONMENT = {
     isDevelopment: window.location.hostname === 'localhost' || 
@@ -80,9 +87,11 @@ const getBaseUrls = () => {
     // Development detection (local development)
     if (ENVIRONMENT.isDevelopment) {
         console.log('🔧 Using development URLs');
+        // Force HTTP for localhost regardless of current protocol
+        const devProtocol = 'http:';
         return {
-            API_BASE_URL: 'http://localhost:8000',
-            WS_BASE_URL: 'ws://localhost:8080'
+            API_BASE_URL: `${devProtocol}//localhost:8080`,
+            WS_BASE_URL: `ws://localhost:8080`
         };
     }
     
@@ -117,6 +126,16 @@ const getBaseUrls = () => {
     
     // Custom port (testing/development with custom ports)
     console.log('🔧 Using custom port URLs');
+    
+    // For localhost development, always use HTTP regardless of frontend protocol
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        console.log('🔧 Localhost detected - forcing HTTP for API');
+        return {
+            API_BASE_URL: `http://${hostname}:8080`,
+            WS_BASE_URL: `ws://${hostname}:8080`
+        };
+    }
+    
     return {
         API_BASE_URL: `${protocol}//${hostname}:${port}`,
         WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//${hostname}:${port}`
@@ -127,6 +146,7 @@ const { API_BASE_URL, WS_BASE_URL } = getBaseUrls();
 
 // Safety check: Ensure HTTPS for production
 const getSecureBaseURL = (baseURL) => {
+    // Only force HTTPS for production domain, not localhost
     if (window.location.hostname === 'artparty.social' && baseURL.startsWith('http://')) {
         console.warn('⚠️ Forcing HTTPS for production security');
         return baseURL.replace('http://', 'https://');
@@ -208,6 +228,7 @@ const API_CONFIG = {
         TILE_LIKES: '/api/v1/tiles/{id}/likes',
         TILE_STATS: '/api/v1/tiles/{id}/like-stats',
         TILE_NEIGHBORS: '/api/v1/tiles/{id}/neighbors',
+        TILE_ADJACENT_NEIGHBORS: '/api/v1/tiles/{id}/adjacent-neighbors',
         CANVAS_TILES: '/api/v1/tiles/canvas/{id}',
         CANVAS_TILE_POSITION: '/api/v1/tiles/canvas/{id}/position',
         USER_TILES: '/api/v1/tiles/user/{id}',

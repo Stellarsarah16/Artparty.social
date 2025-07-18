@@ -1542,6 +1542,7 @@ class CanvasViewer {
         if (zoomElement) {
             zoomElement.textContent = `${Math.round(this.zoom * 100)}%`;
         }
+        // Element removed in simplified editor - zoom level still tracked internally
     }
     
     /**

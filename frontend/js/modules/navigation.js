@@ -796,6 +796,18 @@ class NavigationManager {
                     
                     console.log('🔍 API Response - Tile:', completeTile);
                     console.log('🔍 API Response - Neighbors:', neighbors);
+                    console.log('🔍 Current tile position:', { x: completeTile.x, y: completeTile.y });
+                    console.log('🔍 Expected neighbor positions:');
+                    console.log('  Top: (', completeTile.x, ',', completeTile.y - 1, ')');
+                    console.log('  Left: (', completeTile.x - 1, ',', completeTile.y, ')');
+                    console.log('  Right: (', completeTile.x + 1, ',', completeTile.y, ')');
+                    console.log('  Bottom: (', completeTile.x, ',', completeTile.y + 1, ')');
+                    console.log('🔍 Actual neighbors returned:', neighbors.length);
+                    if (neighbors.length > 0) {
+                        neighbors.forEach((neighbor, index) => {
+                            console.log(`  Neighbor ${index}: (${neighbor.x}, ${neighbor.y}) - ID: ${neighbor.id}`);
+                        });
+                    }
                     
                     if (completeTile && completeTile.pixel_data) {
                         tile = completeTile;
@@ -833,8 +845,30 @@ class NavigationManager {
                     
                     console.log('🔍 Passing neighbors to display:', {
                         neighborCount: neighborData.length,
-                        neighborData: neighborData
+                        neighborData: neighborData,
+                        currentTile: { x: tile.x, y: tile.y }
                     });
+                    
+                    // Debug: Log each neighbor's coordinates
+                    if (neighborData.length > 0) {
+                        console.log('🔍 Neighbor details:');
+                        neighborData.forEach((neighbor, index) => {
+                            console.log(`  Neighbor ${index}:`, {
+                                id: neighbor.id,
+                                x: neighbor.x,
+                                y: neighbor.y,
+                                dx: neighbor.x - tile.x,
+                                dy: neighbor.y - tile.y,
+                                position: this.getNeighborPosition(tile.x, tile.y, neighbor.x, neighbor.y)
+                            });
+                        });
+                    } else {
+                        console.log('🔍 No neighbors found - checking expected positions:');
+                        console.log('  Expected top: (3, 4)');
+                        console.log('  Expected left: (2, 5)');
+                        console.log('  Expected right: (4, 5)');
+                        console.log('  Expected bottom: (3, 6)');
+                    }
                     
                     neighborDisplayInstance.updateDisplay(tile, neighborData);
                 } else {
@@ -847,6 +881,38 @@ class NavigationManager {
             
             // Show editor section
             this.showSection('editor');
+            
+            // Initialize neighbor display after editor section is shown
+            setTimeout(() => {
+                const neighborDisplayInstance = window.neighborDisplay;
+                if (neighborDisplayInstance) {
+                    // Force re-initialization to ensure DOM elements are available
+                    if (typeof neighborDisplayInstance.forceReinit === 'function') {
+                        neighborDisplayInstance.forceReinit();
+                    }
+                    
+                    // Wait a bit more for the re-initialization to complete
+                    setTimeout(() => {
+                        if (typeof neighborDisplayInstance.updateDisplay === 'function') {
+                            // Ensure we have valid neighbor data
+                            let neighborData = [];
+                            if (tile.adjacentNeighbors && Array.isArray(tile.adjacentNeighbors)) {
+                                neighborData = tile.adjacentNeighbors;
+                            } else if (tile.adjacentNeighbors) {
+                                console.warn('⚠️ Adjacent neighbors is not an array:', tile.adjacentNeighbors);
+                                neighborData = [];
+                            }
+                            
+                            console.log('🔍 Re-initializing neighbor display with:', {
+                                neighborCount: neighborData.length,
+                                neighborData: neighborData
+                            });
+                            
+                            neighborDisplayInstance.updateDisplay(tile, neighborData);
+                        }
+                    }, 200); // Additional delay for re-initialization
+                }
+            }, 100); // Small delay to ensure DOM is ready
             
             // Update editor with tile data
             const canvasTitle = document.getElementById('canvas-title');
@@ -872,6 +938,25 @@ class NavigationManager {
         }
     }
 
+    /**
+     * Get neighbor position relative to current tile
+     * @param {number} tileX - Current tile X coordinate
+     * @param {number} tileY - Current tile Y coordinate
+     * @param {number} neighborX - Neighbor X coordinate
+     * @param {number} neighborY - Neighbor Y coordinate
+     * @returns {string} Position (top, left, right, bottom, or unknown)
+     */
+    getNeighborPosition(tileX, tileY, neighborX, neighborY) {
+        const dx = neighborX - tileX;
+        const dy = neighborY - tileY;
+        
+        if (dx === 0 && dy === -1) return 'top';
+        if (dx === -1 && dy === 0) return 'left';
+        if (dx === 1 && dy === 0) return 'right';
+        if (dx === 0 && dy === 1) return 'bottom';
+        return 'unknown';
+    }
+    
     /**
      * Create empty pixel data for a new tile
      */
@@ -1013,12 +1098,15 @@ class NavigationManager {
             
             // Initialize the pixel editor
             if (window.PixelEditor) {
+                console.log('🎨 Initializing PixelEditor...');
                 window.PixelEditor.init(pixelCanvas);
+                console.log('🎨 PixelEditor initialized successfully');
                 
                 // Load the tile's pixel data
                 console.log('🎨 Tile data received:', tile);
                 console.log('🎨 Pixel data exists:', !!tile.pixel_data);
                 console.log('🎨 Pixel data type:', typeof tile.pixel_data);
+                console.log('🎨 Raw pixel data:', tile.pixel_data);
                 
                 if (tile.pixel_data) {
                     let pixelData;
@@ -1028,6 +1116,15 @@ class NavigationManager {
                             console.log('🎨 Parsed pixel data from string:', pixelData);
                             console.log('🎨 Parsed data type:', typeof pixelData);
                             console.log('🎨 Parsed data length:', Array.isArray(pixelData) ? pixelData.length : 'not array');
+                            console.log('🎨 First row sample:', pixelData[0]);
+                            console.log('🎨 First row length:', pixelData[0] ? pixelData[0].length : 'no first row');
+                            console.log('🎨 Sample pixels from first row:', {
+                                '0,0': pixelData[0] && pixelData[0][0],
+                                '16,0': pixelData[0] && pixelData[0][16],
+                                '17,0': pixelData[0] && pixelData[0][17],
+                                '20,0': pixelData[0] && pixelData[0][20],
+                                '21,0': pixelData[0] && pixelData[0][21]
+                            });
                         } catch (e) {
                             console.error('Failed to parse pixel data:', e);
                             console.error('Raw pixel data:', tile.pixel_data);
@@ -1130,8 +1227,16 @@ class NavigationManager {
                 }
             });
             
-            // Initially disable save button
+            // Initially enable save button (user can save even empty tiles)
             newSaveButton.disabled = false;
+            
+            // Set up pixel change listener to enable/disable save button
+            if (window.PixelEditor) {
+                window.PixelEditor.onPixelChanged = (pixelData) => {
+                    // Enable save button when pixels are drawn
+                    newSaveButton.disabled = !window.PixelEditor.hasPixels();
+                };
+            }
         }
     }
     
