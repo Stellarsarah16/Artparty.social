@@ -3,6 +3,7 @@
  * Production-ready configuration without debug code
  */
 
+/*
 // IMMEDIATE HTTPS ENFORCEMENT - Must be first!
 // ONLY run on production domain to avoid breaking local development
 if (window.location.hostname === 'artparty.social') {
@@ -40,6 +41,7 @@ if (window.location.hostname === 'artparty.social') {
 } else {
     console.log('🔧 Skipping HTTPS enforcement for non-production domain:', window.location.hostname);
 }
+    */
 
 // Force HTTP for localhost development to prevent protocol issues
 if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && 
