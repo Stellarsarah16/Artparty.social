@@ -3,9 +3,11 @@ Main FastAPI application
 """
 import uvicorn
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 import logging
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.config import settings
 from app.core.database import test_db_connection, test_redis_connection, engine, Base
@@ -14,6 +16,32 @@ from app.api.v1 import api_router, auth, users, canvas, tiles, websockets
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
+    """Middleware to ensure HTTPS redirects in production"""
+    
+    async def dispatch(self, request: Request, call_next):
+        # Check if this is a redirect response and we're behind a proxy
+        response = await call_next(request)
+        
+        # Only modify redirects (status codes 301, 302, 307, 308)
+        if response.status_code in [301, 302, 307, 308] and hasattr(response, 'headers'):
+            # Check if the original request was HTTPS
+            forwarded_proto = request.headers.get('x-forwarded-proto')
+            forwarded_ssl = request.headers.get('x-forwarded-ssl')
+            
+            # If we're behind a proxy and the original request was HTTPS
+            if forwarded_proto == 'https' or forwarded_ssl == 'on':
+                # Get the Location header (the redirect URL)
+                location = response.headers.get('location')
+                if location and location.startswith('http://'):
+                    # Convert HTTP to HTTPS
+                    https_location = location.replace('http://', 'https://')
+                    response.headers['location'] = https_location
+                    logger.info(f"HTTPS Redirect: {location} -> {https_location}")
+        
+        return response
 
 
 @asynccontextmanager
@@ -44,6 +72,9 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# Add HTTPS redirect middleware first
+app.add_middleware(HTTPSRedirectMiddleware)
 
 # CORS middleware - Use settings-based configuration
 app.add_middleware(
