@@ -8,7 +8,7 @@ class TileCreate(BaseModel):
     canvas_id: int
     x: int
     y: int
-    pixel_data: str  # JSON string of 32x32 pixel array
+    pixel_data: str  # JSON string of pixel array
     title: Optional[str] = None
     description: Optional[str] = None
     is_public: bool = True
@@ -26,11 +26,22 @@ class TileCreate(BaseModel):
         try:
             import json
             data = json.loads(v)
-            if not isinstance(data, list) or len(data) != 32:
-                raise ValueError('Pixel data must be a 32x32 array')
-            for row in data:
-                if not isinstance(row, list) or len(row) != 32:
-                    raise ValueError('Each row must contain exactly 32 pixels')
+            if not isinstance(data, list):
+                raise ValueError('Pixel data must be an array')
+            
+            # Get the expected tile size from the canvas
+            # For now, we'll accept any reasonable size (16, 24, 32, 64, 128)
+            # The actual validation should happen in the service layer with canvas context
+            expected_sizes = [16, 24, 32, 64, 128]
+            rows = len(data)
+            
+            if rows not in expected_sizes:
+                raise ValueError(f'Pixel data must be a square array with size: {", ".join(map(str, expected_sizes))}')
+            
+            for i, row in enumerate(data):
+                if not isinstance(row, list) or len(row) != rows:
+                    raise ValueError(f'Each row must contain exactly {rows} pixels (row {i} has {len(row) if isinstance(row, list) else "invalid"} pixels)')
+                    
         except json.JSONDecodeError:
             raise ValueError('Pixel data must be valid JSON')
         return v
@@ -55,11 +66,22 @@ class TileUpdate(BaseModel):
             try:
                 import json
                 data = json.loads(v)
-                if not isinstance(data, list) or len(data) != 32:
-                    raise ValueError('Pixel data must be a 32x32 array')
-                for row in data:
-                    if not isinstance(row, list) or len(row) != 32:
-                        raise ValueError('Each row must contain exactly 32 pixels')
+                if not isinstance(data, list):
+                    raise ValueError('Pixel data must be an array')
+                
+                # Get the expected tile size from the canvas
+                # For now, we'll accept any reasonable size (16, 24, 32, 64, 128)
+                # The actual validation should happen in the service layer with canvas context
+                expected_sizes = [16, 24, 32, 64, 128]
+                rows = len(data)
+                
+                if rows not in expected_sizes:
+                    raise ValueError(f'Pixel data must be a square array with size: {", ".join(map(str, expected_sizes))}')
+                
+                for i, row in enumerate(data):
+                    if not isinstance(row, list) or len(row) != rows:
+                        raise ValueError(f'Each row must contain exactly {rows} pixels (row {i} has {len(row) if isinstance(row, list) else "invalid"} pixels)')
+                        
             except json.JSONDecodeError:
                 raise ValueError('Pixel data must be valid JSON')
         return v
