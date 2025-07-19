@@ -1196,7 +1196,13 @@ class NavigationManager {
                     console.log('💾 Saving tile...');
                     
                     // Get pixel data from editor
-                    const pixelData = window.PixelEditor.getPixelData();
+                    let pixelData = window.PixelEditor.getPixelData();
+                    
+                    // Ensure we have valid pixel data (32x32 array)
+                    if (!pixelData || !Array.isArray(pixelData) || pixelData.length !== 32) {
+                        console.warn('Invalid pixel data, creating default 32x32 array');
+                        pixelData = window.PixelEditor.createEmptyPixelData();
+                    }
                     
                     // Get current canvas
                     const canvas = appState.get('currentCanvas');
