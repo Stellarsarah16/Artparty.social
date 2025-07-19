@@ -5,13 +5,20 @@
 
 class APIClient {
     constructor() {
-        // Force HTTP for localhost development
+        // Use the secure base URL from config
         let baseURL = API_CONFIG.BASE_URL;
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            if (baseURL.includes('localhost') && baseURL.startsWith('https://')) {
-                console.warn('⚠️ APIClient: Forcing HTTP for localhost development');
-                baseURL = baseURL.replace('https://', 'http://');
-            }
+        
+        // Only force HTTP for localhost development, never for production
+        if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && 
+            baseURL.includes('localhost') && baseURL.startsWith('https://')) {
+            console.warn('⚠️ APIClient: Forcing HTTP for localhost development');
+            baseURL = baseURL.replace('https://', 'http://');
+        }
+        
+        // Force HTTPS for production domain
+        if (window.location.hostname === 'artparty.social' && baseURL.startsWith('http://')) {
+            console.warn('⚠️ APIClient: Forcing HTTPS for production');
+            baseURL = baseURL.replace('http://', 'https://');
         }
         
         this.baseURL = baseURL;
