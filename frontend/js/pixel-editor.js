@@ -86,14 +86,14 @@ class PixelEditor {
     
     /**
      * Create empty pixel data array
-     * @returns {Array} 32x32 array of transparent pixels
+     * @returns {Array} 32x32 array of white pixels
      */
     createEmptyPixelData() {
         const data = [];
         for (let y = 0; y < this.tileSize; y++) {
             data[y] = [];
             for (let x = 0; x < this.tileSize; x++) {
-                data[y][x] = 'transparent';
+                data[y][x] = 'white';
             }
         }
         return data;
@@ -725,16 +725,20 @@ class PixelEditor {
             for (let x = 0; x < this.tileSize; x++) {
                 const color = this.pixelData[y] && this.pixelData[y][x];
                 totalPixels++;
-                if (color && color !== 'transparent') {
+                if (color && color !== 'white') {
                     console.log(`🎨 Drawing pixel at (${x}, ${y}) with color: ${color}`);
                     this.ctx.fillStyle = color;
                     this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
                     pixelCount++;
+                } else if (color === 'white') {
+                    // Draw white pixels
+                    this.ctx.fillStyle = 'white';
+                    this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
                 }
             }
         }
         
-        console.log(`🎨 Total pixels checked: ${totalPixels}, non-transparent pixels: ${pixelCount}`);
+        console.log(`🎨 Total pixels checked: ${totalPixels}, non-white pixels: ${pixelCount}`);
         console.log(`🎨 Sample pixel data:`, {
             '0,0': this.pixelData[0] && this.pixelData[0][0],
             '16,0': this.pixelData[0] && this.pixelData[0][16],
@@ -835,7 +839,7 @@ class PixelEditor {
         for (let y = 0; y < this.tileSize; y++) {
             for (let x = 0; x < this.tileSize; x++) {
                 const color = this.pixelData[y][x];
-                if (color && color !== 'transparent') {
+                if (color) {
                     exportCtx.fillStyle = color;
                     exportCtx.fillRect(x * scale, y * scale, scale, scale);
                 }
@@ -873,7 +877,7 @@ class PixelEditor {
     hasPixels() {
         for (let y = 0; y < this.tileSize; y++) {
             for (let x = 0; x < this.tileSize; x++) {
-                if (this.pixelData[y][x] !== 'transparent') {
+                if (this.pixelData[y][x] !== 'white') {
                     return true;
                 }
             }
@@ -893,7 +897,7 @@ class PixelEditor {
         for (let y = 0; y < this.tileSize; y++) {
             for (let x = 0; x < this.tileSize; x++) {
                 const color = this.pixelData[y][x];
-                if (color && color !== 'transparent') {
+                if (color && color !== 'white') {
                     pixelCount++;
                     colors.add(color);
                 }
