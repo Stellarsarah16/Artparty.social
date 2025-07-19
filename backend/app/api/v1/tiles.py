@@ -92,6 +92,16 @@ async def create_tile(
         )
 
 
+@router.post("", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED)
+async def create_tile_no_slash(
+    tile_create: TileCreate,
+    current_user: User = Depends(get_current_user_dependency),
+    db: Session = Depends(get_db)
+):
+    """Create a new tile (paint on canvas) - no trailing slash version"""
+    return await create_tile(tile_create, current_user, db)
+
+
 @router.get("/{tile_id}", response_model=TileWithCreator)
 async def get_tile_details(
     tile_id: int,
