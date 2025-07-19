@@ -99,7 +99,44 @@ async def create_tile_no_slash(
     db: Session = Depends(get_db)
 ):
     """Create a new tile (paint on canvas) - no trailing slash version"""
-    return await create_tile(tile_create, current_user, db)
+    try:
+        # Create tile using service
+        tile = tile_service.create_tile(db, tile_create, current_user)
+        
+        # Update user stats
+        user_service.increment_tiles_created(db, current_user.id)
+        
+        # Broadcast tile creation to WebSocket clients
+        tile_data = {
+            "id": tile.id,
+            "canvas_id": tile.canvas_id,
+            "creator_id": tile.creator_id,
+            "x": tile.x,
+            "y": tile.y,
+            "pixel_data": tile.pixel_data,
+            "title": tile.title,
+            "description": tile.description,
+            "is_public": tile.is_public,
+            "like_count": tile.like_count,
+            "created_at": tile.created_at.isoformat(),
+            "updated_at": tile.updated_at.isoformat() if tile.updated_at else None
+        }
+        await connection_manager.broadcast_tile_created(tile.canvas_id, tile_data, current_user.id)
+        
+        return {
+            "message": "Tile created successfully",
+            "tile": tile_service.create_tile_response(tile)
+        }
+        
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error creating tile"
+        )
+
 
 
 @router.get("/{tile_id}", response_model=TileWithCreator)
