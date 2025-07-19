@@ -3,45 +3,6 @@
  * Production-ready configuration without debug code
  */
 
-/*
-// IMMEDIATE HTTPS ENFORCEMENT - Must be first!
-// ONLY run on production domain to avoid breaking local development
-if (window.location.hostname === 'artparty.social') {
-    console.log('🔧 IMMEDIATE HTTPS enforcement for production');
-    
-    // Override fetch immediately
-    const originalFetch = window.fetch;
-    window.fetch = function(...args) {
-        const url = args[0];
-        
-        // Convert HTTP to HTTPS for production
-        if (typeof url === 'string' && url.startsWith('http://artparty.social')) {
-            const httpsUrl = url.replace('http://', 'https://');
-            console.warn('⚠️ GLOBAL INTERCEPTOR: Converting HTTP to HTTPS:', url, '→', httpsUrl);
-            args[0] = httpsUrl;
-        }
-        
-        return originalFetch.apply(this, args);
-    };
-    
-    // Override XMLHttpRequest immediately
-    const originalXHROpen = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function(method, url, ...args) {
-        // Convert HTTP to HTTPS for production
-        if (typeof url === 'string' && url.startsWith('http://artparty.social')) {
-            const httpsUrl = url.replace('http://', 'https://');
-            console.warn('⚠️ GLOBAL INTERCEPTOR (XHR): Converting HTTP to HTTPS:', url, '→', httpsUrl);
-            url = httpsUrl;
-        }
-        
-        return originalXHROpen.apply(this, [method, url, ...args]);
-    };
-    
-    console.log('✅ Global HTTPS interceptors installed');
-} else {
-    console.log('🔧 Skipping HTTPS enforcement for non-production domain:', window.location.hostname);
-}
-    */
 
 // Force HTTP for localhost development to prevent protocol issues
 if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && 
