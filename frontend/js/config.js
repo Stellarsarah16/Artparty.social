@@ -108,8 +108,8 @@ const getBaseUrls = () => {
     if (hostname === 'artparty.social' || hostname.includes('artparty.social')) {
         console.log('🔧 Using production URLs with forced HTTPS');
         return {
-            API_BASE_URL: `${protocol}//${hostname}`,
-            WS_BASE_URL: `${protocol === 'https:' ? 'wss:' : 'ws:'}//${hostname}`
+            API_BASE_URL: `https://${hostname}`,
+            WS_BASE_URL: `wss://${hostname}`
         };
     }
     
@@ -187,8 +187,8 @@ const FALLBACK_URLS = {
         `${window.location.protocol}//staging.artparty.social/api`
     ],
     production: [
-        `${window.location.protocol}//${window.location.hostname}`,
-        `${window.location.protocol}//artparty.social`
+        `https://${window.location.hostname}`,
+        `https://artparty.social`
     ]
 };
 
