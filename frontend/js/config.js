@@ -90,8 +90,8 @@ const getBaseUrls = () => {
         // Force HTTP for localhost regardless of current protocol
         const devProtocol = 'http:';
         return {
-            API_BASE_URL: `${devProtocol}//localhost:8080`,
-            WS_BASE_URL: `ws://localhost:8080`
+            API_BASE_URL: `${devProtocol}//localhost:8000`,
+            WS_BASE_URL: `ws://localhost:8000`
         };
     }
     
@@ -131,8 +131,8 @@ const getBaseUrls = () => {
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
         console.log('🔧 Localhost detected - forcing HTTP for API');
         return {
-            API_BASE_URL: `http://${hostname}:8080`,
-            WS_BASE_URL: `ws://${hostname}:8080`
+            API_BASE_URL: `http://${hostname}:8000`,
+            WS_BASE_URL: `ws://${hostname}:8000`
         };
     }
     
@@ -229,6 +229,7 @@ const API_CONFIG = {
         TILE_STATS: '/api/v1/tiles/{id}/like-stats',
         TILE_NEIGHBORS: '/api/v1/tiles/{id}/neighbors',
         TILE_ADJACENT_NEIGHBORS: '/api/v1/tiles/{id}/adjacent-neighbors',
+        TILE_POSITION_NEIGHBORS: '/api/v1/tiles/canvas/{id}/position/neighbors',
         CANVAS_TILES: '/api/v1/tiles/canvas/{id}',
         CANVAS_TILE_POSITION: '/api/v1/tiles/canvas/{id}/position',
         USER_TILES: '/api/v1/tiles/user/{id}',

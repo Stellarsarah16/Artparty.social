@@ -197,9 +197,9 @@ class APIClient {
                 secureURL = fullURL.replace('https://', 'http://');
             }
             // Also check if the URL is missing the port
-            if (fullURL.includes('localhost') && !fullURL.includes(':8080')) {
-                console.warn('⚠️ AGGRESSIVE: Adding port 8080 to localhost URL');
-                secureURL = fullURL.replace('localhost', 'localhost:8080');
+            if (fullURL.includes('localhost') && !fullURL.includes(':8000')) {
+                console.warn('⚠️ AGGRESSIVE: Adding port 8000 to localhost URL');
+                secureURL = fullURL.replace('localhost', 'localhost:8000');
             }
         }
         
@@ -561,6 +561,11 @@ class TileAPI {
         return await this.client.get(url);
     }
     
+    async getAdjacentNeighborsByPosition(canvasId, x, y) {
+        const url = API_CONFIG.ENDPOINTS.TILE_POSITION_NEIGHBORS.replace('{id}', canvasId);
+        return await this.client.get(url, { params: { x, y } });
+    }
+    
     async likeTile(id) {
         const url = API_CONFIG.ENDPOINTS.TILE_LIKE.replace('{id}', id);
         return await this.client.post(url);
@@ -641,6 +646,7 @@ const API = {
         getForUser: (userId, params) => tileAPI.getUserTiles(userId, params),
         getNeighbors: (id) => tileAPI.getTileNeighbors(id),
         getAdjacentNeighbors: (id) => tileAPI.getAdjacentNeighbors(id),
+        getAdjacentNeighborsByPosition: (canvasId, x, y) => tileAPI.getAdjacentNeighborsByPosition(canvasId, x, y),
         like: (id) => tileAPI.likeTile(id),
         unlike: (id) => tileAPI.unlikeTile(id),
         getLikes: (id) => tileAPI.getTileLikes(id),

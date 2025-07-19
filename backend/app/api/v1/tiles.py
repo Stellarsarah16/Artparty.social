@@ -245,6 +245,18 @@ async def get_tile_at_position(
     return tile_service.create_tile_response(tile)
 
 
+@router.get("/canvas/{canvas_id}/position/neighbors", response_model=List[TileResponse])
+async def get_neighbors_at_position(
+    canvas_id: int,
+    x: int,
+    y: int,
+    db: Session = Depends(get_db)
+):
+    """Get adjacent neighbors for a position (even if tile doesn't exist)"""
+    neighbors = tile_service.get_adjacent_neighbors_by_position(db, canvas_id, x, y)
+    return [tile_service.create_tile_response(tile) for tile in neighbors]
+
+
 @router.get("/user/{user_id}", response_model=List[TileResponse])
 async def get_user_tiles(
     user_id: int,

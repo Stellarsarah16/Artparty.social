@@ -782,6 +782,20 @@ class NavigationManager {
                     pixel_data: this.createEmptyPixelData(),
                     isNew: true
                 };
+                
+                // For empty tiles, fetch neighbors by position
+                try {
+                    const canvas = appState.get('currentCanvas');
+                    if (canvas) {
+                        console.log('🔍 Fetching neighbors for empty tile position:', tile.x, tile.y);
+                        const neighbors = await window.API.tiles.getAdjacentNeighborsByPosition(canvas.id, tile.x, tile.y);
+                        console.log('🔍 Neighbors for empty tile:', neighbors);
+                        tile.adjacentNeighbors = neighbors || [];
+                    }
+                } catch (error) {
+                    console.warn('⚠️ Failed to fetch neighbors for empty tile:', error);
+                    tile.adjacentNeighbors = [];
+                }
             }
             
             // For existing tiles, ensure we have complete tile data and fetch neighbors
