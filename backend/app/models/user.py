@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from ..core.database import Base
@@ -17,6 +17,9 @@ class User(Base):
     last_name = Column(String(50), nullable=False)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
+    is_admin = Column(Boolean, default=False)  # Admin user
+    is_superuser = Column(Boolean, default=False)  # Super admin with full access
+    admin_permissions = Column(JSON, default=dict)  # Granular permissions
     total_points = Column(Integer, default=0)
     tiles_created = Column(Integer, default=0)
     likes_received = Column(Integer, default=0)
