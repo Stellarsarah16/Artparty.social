@@ -1910,6 +1910,100 @@ class CanvasViewer {
     }
     
     /**
+     * Clear all tiles from the canvas
+     */
+    clearAllTiles() {
+        this.tiles.clear();
+        this.visibleTilesCache = null;
+        this.visibleTilesCacheKey = null;
+        this.requestRender();
+        console.log('✅ All tiles cleared from canvas viewer');
+    }
+
+    /**
+     * Reset view to default state
+     */
+    resetView() {
+        this.viewportX = 0;
+        this.viewportY = 0;
+        this.zoom = 1;
+        this.isDragging = false;
+        this.dragButton = null;
+        this.lastMouseX = 0;
+        this.lastMouseY = 0;
+        
+        // Reset touch state
+        this.touchState = {
+            isTouching: false,
+            touchCount: 0,
+            startDistance: 0,
+            startZoom: 1,
+            startViewportX: 0,
+            startViewportY: 0,
+            lastTouchX: 0,
+            lastTouchY: 0,
+            isPinching: false,
+            isPanning: false,
+            touchStartTime: 0,
+            hasMoved: false,
+            zoomCenterX: 0,
+            zoomCenterY: 0,
+            lastTapTime: 0,
+            lastTapX: 0,
+            lastTapY: 0,
+            doubleTapDelay: 300,
+            doubleTapDistance: 50
+        };
+        
+        this.requestRender();
+        console.log('✅ Canvas view reset');
+    }
+
+    /**
+     * Reset all canvas viewer state
+     */
+    resetAllState() {
+        console.log('🧹 Resetting all canvas viewer state...');
+        
+        this.clearAllTiles();
+        this.resetView();
+        
+        // Reset canvas data
+        this.canvasData = null;
+        
+        // Reset performance data
+        this.clickCount = 0;
+        this.lastClickTime = 0;
+        this.lastMiddleClickTime = 0;
+        this.lastCacheUpdate = Date.now();
+        this.performanceIssues = [];
+        
+        // Reset animation state
+        this.animationQueue = [];
+        this.isAnimating = false;
+        this.renderRequested = false;
+        this.lastRenderTime = 0;
+        
+        // Reset display options
+        this.showGrid = true;
+        this.showTileOutlines = false;
+        this.showUserIndicators = true;
+        
+        // Reset debug overlay
+        this.debugOverlay.hoverTile = null;
+        this.debugOverlay.clickedTile = null;
+        this.debugOverlay.mousePos = { x: 0, y: 0 };
+        
+        // Clear callbacks
+        this.onTileClick = null;
+        this.onTileDoubleClick = null;
+        this.onTileHover = null;
+        this.onViewportChange = null;
+        
+        console.log('✅ All canvas viewer state reset');
+    }
+    
+    /**
      * Remove event listeners (for cleanup)
      */
     removeEventListeners() {

@@ -597,7 +597,7 @@ class PixelEditor {
     }
     
     /**
-     * Clear pixel data and reset to empty
+     * Clear pixel data and reset to empty state
      */
     clearPixelData() {
         // Add safety check - only clear if canvas is ready
@@ -617,6 +617,131 @@ class PixelEditor {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
         console.log('✅ Pixel data cleared');
+    }
+
+    /**
+     * Clear undo/redo history
+     */
+    clearHistory() {
+        this.history = [];
+        this.historyIndex = -1;
+        console.log('✅ History cleared');
+    }
+
+    /**
+     * Reset tool state to defaults
+     */
+    resetToolState() {
+        this.currentTool = 'paint';
+        this.currentColor = '#000000';
+        this.brushSize = 1;
+        this.updateCursor();
+        console.log('✅ Tool state reset');
+    }
+
+    /**
+     * Reset drawing state
+     */
+    resetDrawingState() {
+        this.isDrawing = false;
+        this.lastX = 0;
+        this.lastY = 0;
+        
+        // Reset touch state
+        this.touchState = {
+            isTouching: false,
+            lastTouchX: 0,
+            lastTouchY: 0,
+            touchStartTime: 0,
+            hasMoved: false,
+            pressure: 1.0,
+            lastTapTime: 0,
+            lastTapX: 0,
+            lastTapY: 0,
+            doubleTapDelay: 300,
+            doubleTapDistance: 50
+        };
+        
+        console.log('✅ Drawing state reset');
+    }
+
+    /**
+     * Remove all event listeners
+     */
+    removeEventListeners() {
+        if (!this.canvas) return;
+        
+        // Remove mouse events
+        this.canvas.removeEventListener('mousedown', this.handleMouseDown.bind(this));
+        this.canvas.removeEventListener('mousemove', this.handleMouseMove.bind(this));
+        this.canvas.removeEventListener('mouseup', this.handleMouseUp.bind(this));
+        this.canvas.removeEventListener('mouseleave', this.handleMouseLeave.bind(this));
+        
+        // Remove touch events
+        this.canvas.removeEventListener('touchstart', this.handleTouchStart.bind(this));
+        this.canvas.removeEventListener('touchmove', this.handleTouchMove.bind(this));
+        this.canvas.removeEventListener('touchend', this.handleTouchEnd.bind(this));
+        
+        // Remove context menu prevention
+        this.canvas.removeEventListener('contextmenu', (e) => e.preventDefault());
+        
+        console.log('✅ Event listeners removed');
+    }
+
+    /**
+     * Refresh touch handlers (for mobile Safari)
+     */
+    refreshTouchHandlers() {
+        this.removeEventListeners();
+        this.setupEventListeners();
+        console.log('✅ Touch handlers refreshed');
+    }
+
+    /**
+     * Handle WebGL context loss
+     */
+    handleContextLoss() {
+        if (!this.canvas || !this.ctx) {
+            console.warn('Canvas context lost, attempting to restore...');
+            // Try to reinitialize
+            this.init(this.canvas);
+        }
+    }
+
+    /**
+     * Revert to last saved state
+     */
+    revertToLastSaved() {
+        if (this.history.length > 0) {
+            this.pixelData = JSON.parse(JSON.stringify(this.history[this.historyIndex]));
+            this.redraw();
+            console.log('✅ Reverted to last saved state');
+        } else {
+            this.clearPixelData();
+            console.log('✅ No saved state, cleared pixel data');
+        }
+    }
+
+    /**
+     * Comprehensive state reset - clears everything
+     */
+    resetAllState() {
+        console.log('🧹 Resetting all pixel editor state...');
+        
+        this.clearPixelData();
+        this.clearHistory();
+        this.resetToolState();
+        this.resetDrawingState();
+        
+        // Reset zoom
+        this.zoom = 1;
+        
+        // Clear callbacks
+        this.onPixelChanged = null;
+        this.onToolChanged = null;
+        this.onColorChanged = null;
+        
+        console.log('✅ All pixel editor state reset');
     }
     
     /** Draw the grid */

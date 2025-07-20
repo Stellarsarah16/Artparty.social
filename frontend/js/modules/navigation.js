@@ -13,6 +13,12 @@ class NavigationManager {
         this.elements = this.initializeElements();
         this.setupEventListeners();
         this.setupFormHandlers();
+        
+        // Setup comprehensive state protection
+        this.setupBrowserNavigationHandlers();
+        this.setupWebSocketStateProtection();
+        this.setupAsyncRaceProtection();
+        
         console.log('✅ NavigationManager initialized');
     }
     
@@ -651,16 +657,12 @@ class NavigationManager {
         try {
             console.log('🎨 Opening canvas:', canvas.name || canvas.title || 'Untitled');
             
-            // Set current canvas in app state
-            if (window.appState) {
-                window.appState.setCurrentCanvas(canvas);
-                console.log('✅ Current canvas set:', canvas.id);
-            }
+            // Clear all canvas state comprehensively
+            this.clearAllCanvasState();
             
-            // Clear pixel data BEFORE loading new canvas
-            if (window.PixelEditor) {
-                window.PixelEditor.clearPixelData();
-            }
+            // Set current canvas in app state
+            appState.setCurrentCanvas(canvas);
+            console.log('✅ Current canvas set:', canvas.id);
             
             // Load canvas data
             console.log('Loading canvas data for ID:', canvas.id);
@@ -756,6 +758,12 @@ class NavigationManager {
                 pixelDataType: typeof tile.pixel_data,
                 pixelDataLength: tile.pixel_data ? (typeof tile.pixel_data === 'string' ? tile.pixel_data.length : Array.isArray(tile.pixel_data) ? tile.pixel_data.length : 'unknown') : 'none'
             });
+            
+            // Clear pixel editor state before loading new tile
+            if (window.PixelEditor) {
+                window.PixelEditor.resetAllState();
+                console.log('🧹 Pixel editor state cleared for new tile');
+            }
             
             // Handle empty tile (create new tile)
             if (tile.isEmpty) {
@@ -1194,7 +1202,14 @@ class NavigationManager {
                 try {
                     console.log('💾 Saving tile...');
                     
-                    // Get current canvas from app state - FIXED: use imported appState instead of window.appState
+                    // Validate canvas state before saving
+                    if (!this.validateCanvasState()) {
+                        console.warn('⚠️ Canvas state validation failed, attempting recovery...');
+                        this.emergencyStateRecovery();
+                        return;
+                    }
+                    
+                    // Get current canvas from app state
                     const currentCanvas = appState.getCurrentCanvas();
                     
                     if (!currentCanvas) {
@@ -1214,15 +1229,8 @@ class NavigationManager {
                         pixelData = window.PixelEditor.createEmptyPixelData();
                     }
                     
-                    // Get current canvas
-                    const canvas = appState.get('currentCanvas');
-                    if (!canvas) {
-                        console.error('No current canvas');
-                        return;
-                    }
-                    
                     const tileData = {
-                        canvas_id: canvas.id,
+                        canvas_id: currentCanvas.id,
                         x: tile.x,
                         y: tile.y,
                         pixel_data: JSON.stringify(pixelData)
@@ -1230,7 +1238,7 @@ class NavigationManager {
                     
                     console.log('💾 Tile data to save:', tileData);
                     
-                    // Save via API
+                    // Save via API with error recovery
                     let response;
                     if (tile.isNew) {
                         response = await window.API.tiles.create(tileData);
@@ -1253,25 +1261,8 @@ class NavigationManager {
                     this.refreshCanvasViewer();
                     
                 } catch (error) {
-                    console.error('Failed to save tile:', error);
-                    
-                    // Show error message to user
-                    if (window.UIManager) {
-                        let errorMessage = 'Failed to save tile';
-                        
-                        // Extract error message from API response
-                        if (error.data && error.data.detail) {
-                            if (Array.isArray(error.data.detail)) {
-                                errorMessage = error.data.detail[0]?.msg || error.data.detail[0]?.detail || errorMessage;
-                            } else {
-                                errorMessage = error.data.detail;
-                            }
-                        } else if (error.message) {
-                            errorMessage = error.message;
-                        }
-                        
-                        window.UIManager.showToast(errorMessage, 'error');
-                    }
+                    // Use comprehensive error recovery
+                    this.handleErrorRecovery(error, 'save tile');
                 }
             });
             
@@ -1662,47 +1653,276 @@ class NavigationManager {
     }
     
     /**
-     * Handle browser back/forward navigation
+     * Clear all canvas state comprehensively
      */
-    handlePopState(event) {
-        const section = event.state?.section || 'welcome';
-        this.showSection(section);
-    }
-    
-    /**
-     * Navigate to section with browser history
-     */
-    navigateTo(sectionName) {
-        this.showSection(sectionName);
-    }
-    
-    /**
-     * Get current section
-     */
-    getCurrentSection() {
-        return appState.get('currentSection');
-    }
-    
-    /**
-     * Show loading screen
-     */
-    showLoading() {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-            loadingScreen.style.display = 'flex';
+    clearAllCanvasState() {
+        console.log('🧹 Clearing all canvas state...');
+        
+        // Clear pixel editor state
+        if (window.PixelEditor) {
+            window.PixelEditor.resetAllState();
         }
-    }
-    
-    /**
-     * Hide loading screen
-     */
-    hideLoading() {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-            loadingScreen.style.display = 'none';
+        
+        // Clear canvas viewer state
+        if (window.CanvasViewer) {
+            window.CanvasViewer.resetAllState();
         }
+        
+        // Clear app state
+        appState.setCurrentTile(null);
+        
+        // Clear session storage
+        sessionStorage.removeItem('pixelEditorState');
+        sessionStorage.removeItem('canvasViewerState');
+        
+        // Clear any pending animations or timeouts
+        if (window.animationFrameId) {
+            cancelAnimationFrame(window.animationFrameId);
+            window.animationFrameId = null;
+        }
+        
+        console.log('✅ All canvas state cleared');
     }
 
+    /**
+     * Handle error recovery for failed operations
+     */
+    handleErrorRecovery(error, operation) {
+        console.error(`❌ Error in ${operation}:`, error);
+        
+        // Clear potentially corrupted state
+        this.clearAllCanvasState();
+        
+        // Show user-friendly error message
+        let errorMessage = `Failed to ${operation}`;
+        if (error.message) {
+            errorMessage += `: ${error.message}`;
+        }
+        
+        this.showCanvasError(errorMessage);
+        
+        // Log error for debugging
+        console.error('Error details:', {
+            operation,
+            error: error.message,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+        });
+    }
+
+    /**
+     * Validate canvas state integrity
+     */
+    validateCanvasState() {
+        const issues = [];
+        
+        // Check pixel editor state
+        if (window.PixelEditor) {
+            if (!window.PixelEditor.canvas || !window.PixelEditor.ctx) {
+                issues.push('Pixel editor canvas not initialized');
+            }
+            if (!Array.isArray(window.PixelEditor.pixelData)) {
+                issues.push('Pixel editor data corrupted');
+            }
+        }
+        
+        // Check canvas viewer state
+        if (window.CanvasViewer) {
+            if (!window.CanvasViewer.canvas || !window.CanvasViewer.ctx) {
+                issues.push('Canvas viewer not initialized');
+            }
+        }
+        
+        // Check app state
+        const currentCanvas = appState.getCurrentCanvas();
+        if (!currentCanvas) {
+            issues.push('No current canvas in app state');
+        }
+        
+        if (issues.length > 0) {
+            console.warn('⚠️ Canvas state validation issues:', issues);
+            return false;
+        }
+        
+        console.log('✅ Canvas state validation passed');
+        return true;
+    }
+
+    /**
+     * Emergency state recovery
+     */
+    emergencyStateRecovery() {
+        console.log('🚨 Emergency state recovery initiated...');
+        
+        // Force clear all state
+        this.clearAllCanvasState();
+        
+        // Reinitialize components
+        if (window.PixelEditor) {
+            const canvas = document.getElementById('pixel-canvas');
+            if (canvas) {
+                window.PixelEditor.init(canvas);
+            }
+        }
+        
+        if (window.CanvasViewer) {
+            const canvas = document.getElementById('canvas-viewer');
+            if (canvas) {
+                window.CanvasViewer.init(canvas);
+            }
+        }
+        
+        // Reset app state
+        appState.setCurrentCanvas(null);
+        appState.setCurrentTile(null);
+        
+        // Show recovery message
+        this.showCanvasError('State recovered - please refresh the page if issues persist');
+        
+        console.log('✅ Emergency state recovery completed');
+    }
+
+    /**
+     * Handle browser navigation events
+     */
+    setupBrowserNavigationHandlers() {
+        // Handle back/forward navigation
+        window.addEventListener('popstate', (event) => {
+            console.log('🔄 Browser navigation detected, clearing state...');
+            this.clearAllCanvasState();
+            
+            // Restore appropriate section based on URL
+            const currentSection = this.getCurrentSection();
+            if (currentSection) {
+                this.showSection(currentSection);
+            }
+        });
+        
+        // Handle page refresh
+        window.addEventListener('beforeunload', () => {
+            // Save current state to sessionStorage
+            if (window.PixelEditor) {
+                const currentTile = appState.getCurrentTile();
+                if (currentTile) {
+                    sessionStorage.setItem('pixelEditorState', JSON.stringify({
+                        tileId: currentTile.id,
+                        pixelData: window.PixelEditor.getPixelData(),
+                        currentTool: window.PixelEditor.currentTool,
+                        currentColor: window.PixelEditor.currentColor,
+                        timestamp: Date.now()
+                    }));
+                }
+            }
+        });
+        
+        // Handle storage events (for multi-tab support)
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'canvasData' || event.key === 'tileData') {
+                console.log('🔄 Storage change detected, refreshing canvas...');
+                this.refreshCanvasViewer();
+            }
+        });
+        
+        // Handle window focus/blur for state management
+        window.addEventListener('focus', () => {
+            console.log('🔄 Window focused, checking for state updates...');
+            // Check if we need to refresh data
+            const currentCanvas = appState.getCurrentCanvas();
+            if (currentCanvas) {
+                this.refreshCanvasViewer();
+            }
+        });
+        
+        console.log('✅ Browser navigation handlers set up');
+    }
+
+    /**
+     * Handle WebSocket real-time updates with state protection
+     */
+    setupWebSocketStateProtection() {
+        // Store current editing state
+        let isCurrentlyEditing = false;
+        let currentEditingTileId = null;
+        
+        // Monitor editing state
+        if (window.PixelEditor) {
+            const originalOnPixelChanged = window.PixelEditor.onPixelChanged;
+            window.PixelEditor.onPixelChanged = (pixelData) => {
+                isCurrentlyEditing = true;
+                if (originalOnPixelChanged) {
+                    originalOnPixelChanged(pixelData);
+                }
+            };
+            
+            // Reset editing state when not drawing
+            const originalHandleMouseUp = window.PixelEditor.handleMouseUp;
+            window.PixelEditor.handleMouseUp = (e) => {
+                isCurrentlyEditing = false;
+                if (originalHandleMouseUp) {
+                    originalHandleMouseUp(e);
+                }
+            };
+        }
+        
+        // WebSocket tile update handler with protection
+        if (window.websocket) {
+            const originalOnMessage = window.websocket.onmessage;
+            window.websocket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    // Handle tile updates with state protection
+                    if (data.type === 'tile_updated' && data.tile) {
+                        const currentTile = appState.getCurrentTile();
+                        
+                        // Don't auto-update if user is actively editing the same tile
+                        if (isCurrentlyEditing && currentTile && data.tile.id === currentTile.id) {
+                            console.log('🛡️ Blocking auto-update - user is actively editing');
+                            return;
+                        }
+                        
+                        // Update canvas viewer with new tile data
+                        if (window.CanvasViewer) {
+                            window.CanvasViewer.addTile(data.tile, true);
+                        }
+                    }
+                    
+                    // Call original handler
+                    if (originalOnMessage) {
+                        originalOnMessage(event);
+                    }
+                } catch (error) {
+                    console.error('Error handling WebSocket message:', error);
+                }
+            };
+        }
+        
+        console.log('✅ WebSocket state protection set up');
+    }
+
+    /**
+     * Handle async race conditions
+     */
+    setupAsyncRaceProtection() {
+        let currentOperationId = 0;
+        
+        // Wrap async operations with operation ID
+        this.executeAsyncOperation = async (operation) => {
+            const operationId = ++currentOperationId;
+            const result = await operation();
+            
+            // Check if this operation is still current
+            if (operationId !== currentOperationId) {
+                console.log('🛡️ Aborting stale operation:', operationId);
+                return null;
+            }
+            
+            return result;
+        };
+        
+        console.log('✅ Async race protection set up');
+    }
+    
     /**
      * Update tile info fields in editor header
      */
@@ -1750,12 +1970,118 @@ class NavigationManager {
     }
 
     /**
-     * Update tile info in canvas viewer
+     * Handle browser back/forward navigation
      */
+    handlePopState(event) {
+        const section = event.state?.section || 'welcome';
+        this.showSection(section);
+    }
+
+    /**
+     * Navigate to section with browser history
+     */
+    navigateTo(sectionName) {
+        this.showSection(sectionName);
+    }
+
+    /**
+     * Get current section
+     */
+    getCurrentSection() {
+        return appState.get('currentSection');
+    }
+
+    /**
+     * Show loading screen
+     */
+    showLoading() {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'flex';
+        }
+    }
+
+    /**
+     * Hide loading screen
+     */
+    hideLoading() {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+            loadingScreen.style.display = 'none';
+        }
+    }
+
+    /**
+     * Test comprehensive state clearing (for debugging)
+     */
+    testStateClearing() {
+        console.log('🧪 Testing comprehensive state clearing...');
+        
+        // Test pixel editor state clearing
+        if (window.PixelEditor) {
+            // Set some test data
+            window.PixelEditor.currentTool = 'eraser';
+            window.PixelEditor.currentColor = '#ff0000';
+            window.PixelEditor.pixelData[0][0] = 'red';
+            
+            console.log('Before clearing - Tool:', window.PixelEditor.currentTool, 'Color:', window.PixelEditor.currentColor);
+            
+            // Clear state
+            window.PixelEditor.resetAllState();
+            
+            console.log('After clearing - Tool:', window.PixelEditor.currentTool, 'Color:', window.PixelEditor.currentColor);
+            console.log('Pixel data cleared:', window.PixelEditor.pixelData[0][0] === 'white');
+        }
+        
+        // Test canvas viewer state clearing
+        if (window.CanvasViewer) {
+            // Set some test data
+            window.CanvasViewer.zoom = 2.5;
+            window.CanvasViewer.viewportX = 100;
+            window.CanvasViewer.viewportY = 200;
+            
+            console.log('Before clearing - Zoom:', window.CanvasViewer.zoom, 'Viewport:', window.CanvasViewer.viewportX, window.CanvasViewer.viewportY);
+            
+            // Clear state
+            window.CanvasViewer.resetAllState();
+            
+            console.log('After clearing - Zoom:', window.CanvasViewer.zoom, 'Viewport:', window.CanvasViewer.viewportX, window.CanvasViewer.viewportY);
+        }
+        
+        // Test app state clearing
+        appState.setCurrentTile({ id: 'test-tile' });
+        console.log('Before clearing - Current tile:', appState.getCurrentTile());
+        
+        appState.setCurrentTile(null);
+        console.log('After clearing - Current tile:', appState.getCurrentTile());
+        
+        console.log('✅ State clearing test completed');
+    }
 }
 
-// Create singleton instance
+// Create and export singleton instance
 const navigationManager = new NavigationManager();
+
+// Make navigation manager available globally for debugging
+window.navigationManager = navigationManager;
+
+// Add global test function for debugging
+window.testStateClearing = () => {
+    if (window.navigationManager) {
+        window.navigationManager.testStateClearing();
+    } else {
+        console.error('Navigation manager not available');
+    }
+};
+
+// Add global emergency recovery function
+window.emergencyRecovery = () => {
+    if (window.navigationManager) {
+        window.navigationManager.emergencyStateRecovery();
+    } else {
+        console.error('Navigation manager not available');
+    }
+};
 
 // Export methods for external use
 export const showSection = (sectionName) => navigationManager.showSection(sectionName);
