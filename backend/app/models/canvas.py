@@ -23,3 +23,7 @@ class Canvas(Base):
     
     # Relationships
     tiles = relationship("Tile", back_populates="canvas") 
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    tiles = relationship("Tile", back_populates="canvas") 
