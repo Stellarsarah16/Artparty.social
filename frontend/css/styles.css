@@ -1740,7 +1740,8 @@ form {
     background: var(--bg-primary);
     border-bottom: 1px solid var(--border-color);
     box-shadow: var(--shadow-md);
-    padding: var(--space-sm) var(--space-lg);
+    padding: 8px var(--space-lg);
+    margin: 0;
     transition: transform var(--transition-normal);
 }
 
@@ -1751,25 +1752,33 @@ form {
     justify-content: center;
     max-width: 600px;
     margin: 0 auto;
+    padding: 0;
 }
 
 .floating-tools-panel .tools-section {
     flex: 0 0 auto;
+    margin: 0;
+    padding: 0;
 }
 
 .floating-tools-panel .tools-section h3 {
     font-size: var(--font-size-xs);
     font-weight: 600;
     color: var(--text-secondary);
-    margin-bottom: var(--space-xs);
+    margin: 0 0 4px 0;
+    padding: 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    line-height: 1;
 }
 
 .floating-tools-panel .tool-group {
     display: flex;
     gap: var(--space-xs);
     flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    align-items: center;
 }
 
 .floating-tools-panel .tool-btn {
@@ -1785,6 +1794,8 @@ form {
     align-items: center;
     justify-content: center;
     font-size: var(--font-size-xs);
+    margin: 0;
+    padding: 0;
 }
 
 .floating-tools-panel .tool-btn:hover {
@@ -1803,15 +1814,22 @@ form {
 
 .floating-tools-panel .color-palette {
     flex: 0 0 auto;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .floating-tools-panel .color-palette h4 {
     font-size: var(--font-size-xs);
     font-weight: 600;
     color: var(--text-secondary);
-    margin-bottom: var(--space-xs);
+    margin: 0 0 4px 0;
+    padding: 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    line-height: 1;
 }
 
 .floating-tools-panel .color-grid {
@@ -1819,6 +1837,8 @@ form {
     grid-template-columns: repeat(8, 1fr);
     gap: 2px;
     max-width: 160px;
+    margin: 0;
+    padding: 0;
 }
 
 .floating-tools-panel .color-square {
@@ -1829,6 +1849,8 @@ form {
     cursor: pointer;
     transition: all var(--transition-fast);
     position: relative;
+    margin: 0;
+    padding: 0;
 }
 
 .floating-tools-panel .color-square:hover {
@@ -1855,14 +1877,16 @@ form {
 
 /* Adjust editor layout to account for floating panel */
 .editor-section {
-    padding-top: 120px; /* Reduced padding since panel is more compact */
+    padding-top: 100px; /* Reduced padding since panel is more compact */
+    margin: 0;
 }
 
 /* Mobile responsive for floating panel */
 @media (max-width: 768px) {
     .floating-tools-panel {
         top: 70px; /* Adjust for smaller mobile header */
-        padding: var(--space-xs) var(--space-md);
+        padding: 6px var(--space-md);
+        margin: 0;
     }
     
     .floating-tools-panel .tools-row {
@@ -1870,51 +1894,76 @@ form {
         gap: var(--space-sm);
         align-items: center;
         max-width: 500px;
+        margin: 0 auto;
+        padding: 0;
     }
     
     .floating-tools-panel .tools-section {
         flex: 0 0 auto;
+        margin: 0;
+        padding: 0;
     }
     
     .floating-tools-panel .color-palette {
         flex: 0 0 auto;
+        margin: 0;
+        padding: 0;
     }
     
     .floating-tools-panel .color-grid {
         max-width: 140px;
+        margin: 0;
+        padding: 0;
     }
     
     .floating-tools-panel .tool-group {
         justify-content: center;
+        margin: 0;
+        padding: 0;
     }
     
     .editor-section {
-        padding-top: 140px; /* Reduced padding for mobile */
+        padding-top: 120px; /* Reduced padding for mobile */
+        margin: 0;
     }
 }
 
 @media (max-width: 480px) {
+    .floating-tools-panel {
+        padding: 4px var(--space-md);
+        margin: 0;
+    }
+    
     .floating-tools-panel .tools-row {
         gap: var(--space-xs);
         max-width: 400px;
+        margin: 0 auto;
+        padding: 0;
     }
     
     .floating-tools-panel .color-grid {
         max-width: 120px;
+        margin: 0;
+        padding: 0;
     }
     
     .floating-tools-panel .tool-btn {
         width: 28px;
         height: 28px;
         font-size: var(--font-size-xs);
+        margin: 0;
+        padding: 0;
     }
     
     .floating-tools-panel .color-square {
         width: 16px;
         height: 16px;
+        margin: 0;
+        padding: 0;
     }
     
     .editor-section {
-        padding-top: 120px; /* Reduced padding for very small screens */
+        padding-top: 100px; /* Reduced padding for very small screens */
+        margin: 0;
     }
 } 
