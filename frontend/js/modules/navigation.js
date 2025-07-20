@@ -1311,9 +1311,59 @@ class NavigationManager {
             }
         });
         
+        // Setup undo/redo buttons
+        this.setupUndoRedoButtons();
+        
         // Initialize color palette with canvas palette
         if (window.UIManager) {
             window.UIManager.initColorPalette();
+        }
+    }
+
+    /**
+     * Setup undo and redo buttons
+     */
+    setupUndoRedoButtons() {
+        const undoBtn = document.getElementById('undo-btn');
+        const redoBtn = document.getElementById('redo-btn');
+        
+        if (undoBtn) {
+            undoBtn.addEventListener('click', () => {
+                if (window.PixelEditor) {
+                    window.PixelEditor.undo();
+                    this.updateUndoRedoButtons();
+                }
+            });
+        }
+        
+        if (redoBtn) {
+            redoBtn.addEventListener('click', () => {
+                if (window.PixelEditor) {
+                    window.PixelEditor.redo();
+                    this.updateUndoRedoButtons();
+                }
+            });
+        }
+        
+        // Initial button state
+        this.updateUndoRedoButtons();
+    }
+
+    /**
+     * Update undo/redo button states
+     */
+    updateUndoRedoButtons() {
+        if (!window.PixelEditor) return;
+        
+        const undoBtn = document.getElementById('undo-btn');
+        const redoBtn = document.getElementById('redo-btn');
+        
+        if (undoBtn) {
+            undoBtn.disabled = window.PixelEditor.historyIndex <= 0;
+        }
+        
+        if (redoBtn) {
+            redoBtn.disabled = window.PixelEditor.historyIndex >= window.PixelEditor.history.length - 1;
         }
     }
     

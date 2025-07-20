@@ -7,9 +7,6 @@ class PixelEditor {
     constructor() {
         this.canvas = null;
         this.ctx = null;
-        this.isDrawing = false;
-        this.lastX = 0;
-        this.lastY = 0;
         this.currentTool = 'paint';
         this.currentColor = '#000000';
         this.brushSize = 1;
@@ -26,8 +23,8 @@ class PixelEditor {
         this.onToolChanged = null;
         this.onColorChanged = null;
         
-        // Mouse state tracking
-        this.mouseState = {
+        // Unified drawing state tracking
+        this.drawingState = {
             isDrawing: false,
             button: null, // Track which button is pressed
             lastX: 0,
@@ -141,12 +138,11 @@ class PixelEditor {
         if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize) {
             // Only allow left mouse button (button 0) for painting
             if (e.button === 0) {
-                this.mouseState.isDrawing = true;
-                this.mouseState.button = e.button;
-                this.mouseState.lastX = x;
-                this.mouseState.lastY = y;
+                this.drawingState.isDrawing = true;
+                this.drawingState.button = e.button;
+                this.drawingState.lastX = x;
+                this.drawingState.lastY = y;
                 
-                this.isDrawing = true;
                 this.lastX = x;
                 this.lastY = y;
                 
@@ -169,7 +165,7 @@ class PixelEditor {
             this.updatePositionIndicator(x, y);
             
             // Only paint if we're drawing with left mouse button
-            if (this.mouseState.isDrawing && this.mouseState.button === 0) {
+            if (this.drawingState.isDrawing && this.drawingState.button === 0) {
                 this.applyTool(x, y, false); // Always false for left mouse button
                 this.lastX = x;
                 this.lastY = y;
@@ -183,10 +179,9 @@ class PixelEditor {
      */
     handleMouseUp(e) {
         // Only handle mouse up for the button that was pressed
-        if (this.mouseState.isDrawing && this.mouseState.button === e.button) {
-            this.mouseState.isDrawing = false;
-            this.mouseState.button = null;
-            this.isDrawing = false;
+        if (this.drawingState.isDrawing && this.drawingState.button === e.button) {
+            this.drawingState.isDrawing = false;
+            this.drawingState.button = null;
             this.saveToHistory();
             
             // Trigger pixel changed event
@@ -201,9 +196,8 @@ class PixelEditor {
      * @param {MouseEvent} e - Mouse event
      */
     handleMouseLeave(e) {
-        this.mouseState.isDrawing = false;
-        this.mouseState.button = null;
-        this.isDrawing = false;
+        this.drawingState.isDrawing = false;
+        this.drawingState.button = null;
     }
     
     /**
@@ -231,7 +225,12 @@ class PixelEditor {
                 this.touchState.hasMoved = false;
                 this.touchState.pressure = touch.force || 1.0;
                 
-                this.isDrawing = true;
+                // Use unified drawing state
+                this.drawingState.isDrawing = true;
+                this.drawingState.button = 0; // Treat touch as left mouse button
+                this.drawingState.lastX = x;
+                this.drawingState.lastY = y;
+                
                 this.lastX = x;
                 this.lastY = y;
                 
@@ -256,7 +255,7 @@ class PixelEditor {
             const y = Math.floor((touch.clientY - rect.top) / this.gridSize);
             
             // Only prevent default if we're on the canvas area and drawing
-            if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize && this.isDrawing) {
+            if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize && this.drawingState.isDrawing) {
                 e.preventDefault();
                 
                 // Update touch state
@@ -288,14 +287,15 @@ class PixelEditor {
     handleTouchEnd(e) {
         if (this.touchState.isTouching) {
             // Only prevent default if we were drawing
-            if (this.isDrawing) {
+            if (this.drawingState.isDrawing) {
                 e.preventDefault();
             }
             
             this.touchState.isTouching = false;
             
-            if (this.isDrawing) {
-                this.isDrawing = false;
+            if (this.drawingState.isDrawing) {
+                this.drawingState.isDrawing = false;
+                this.drawingState.button = null;
                 this.saveToHistory();
                 
                 // Trigger pixel changed event
@@ -690,7 +690,8 @@ class PixelEditor {
      * Reset drawing state
      */
     resetDrawingState() {
-        this.isDrawing = false;
+        this.drawingState.isDrawing = false;
+        this.drawingState.button = null;
         this.lastX = 0;
         this.lastY = 0;
         
@@ -957,17 +958,24 @@ class PixelEditor {
      * Save current state to history
      */
     saveToHistory() {
-        // Remove any states after current index
-        this.history = this.history.slice(0, this.historyIndex + 1);
+        // Remove any future history if we're not at the end
+        if (this.historyIndex < this.history.length - 1) {
+            this.history = this.history.slice(0, this.historyIndex + 1);
+        }
         
-        // Add current state
+        // Add current state to history
         this.history.push(JSON.parse(JSON.stringify(this.pixelData)));
+        this.historyIndex = this.history.length - 1;
         
         // Limit history size
         if (this.history.length > this.maxHistorySize) {
             this.history.shift();
-        } else {
-            this.historyIndex++;
+            this.historyIndex--;
+        }
+        
+        // Update undo/redo buttons if navigation manager exists
+        if (window.NavigationManager && window.NavigationManager.updateUndoRedoButtons) {
+            window.NavigationManager.updateUndoRedoButtons();
         }
     }
     
@@ -981,6 +989,11 @@ class PixelEditor {
             this.redraw();
             
             console.log('⏪ Undo action');
+            
+            // Update undo/redo buttons
+            if (window.NavigationManager && window.NavigationManager.updateUndoRedoButtons) {
+                window.NavigationManager.updateUndoRedoButtons();
+            }
         }
     }
     
@@ -994,6 +1007,11 @@ class PixelEditor {
             this.redraw();
             
             console.log('⏩ Redo action');
+            
+            // Update undo/redo buttons
+            if (window.NavigationManager && window.NavigationManager.updateUndoRedoButtons) {
+                window.NavigationManager.updateUndoRedoButtons();
+            }
         }
     }
     
