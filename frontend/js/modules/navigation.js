@@ -1936,7 +1936,7 @@ class NavigationManager {
             window.PixelEditor.handleMouseUp = (e) => {
                 isCurrentlyEditing = false;
                 if (originalHandleMouseUp) {
-                    originalHandleMouseUp(e);
+                    originalHandleMouseUp.call(window.PixelEditor, e);
                 }
             };
         }
