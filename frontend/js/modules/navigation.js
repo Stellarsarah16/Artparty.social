@@ -649,10 +649,13 @@ class NavigationManager {
      */
     async openCanvas(canvas) {
         try {
-            console.log('🎨 Opening canvas:', canvas);
-            console.log('Canvas ID:', canvas.id);
-            console.log('Canvas Name:', canvas.name);
-            console.log('Canvas Title:', canvas.title);
+            console.log('🎨 Opening canvas:', canvas.name || canvas.title || 'Untitled');
+            
+            // Set current canvas in app state
+            if (window.appState) {
+                window.appState.setCurrentCanvas(canvas);
+                console.log('✅ Current canvas set:', canvas.id);
+            }
             
             // Clear pixel data BEFORE loading new canvas
             if (window.PixelEditor) {
@@ -1190,6 +1193,17 @@ class NavigationManager {
             newSaveButton.addEventListener('click', async () => {
                 try {
                     console.log('💾 Saving tile...');
+                    
+                    // Get current canvas from app state - FIXED: use imported appState instead of window.appState
+                    const currentCanvas = appState.getCurrentCanvas();
+                    
+                    if (!currentCanvas) {
+                        console.error('❌ No current canvas found');
+                        this.showCanvasError('No current canvas - please refresh and try again');
+                        return;
+                    }
+                    
+                    console.log('✅ Current canvas found:', currentCanvas.id);
                     
                     // Get pixel data from editor
                     let pixelData = window.PixelEditor.getPixelData();
