@@ -58,6 +58,17 @@ class PixelEditor {
             return;
         }
         
+        // Ensure drawingState is initialized
+        if (!this.drawingState) {
+            console.warn('⚠️ drawingState not initialized, creating it');
+            this.drawingState = {
+                isDrawing: false,
+                button: null,
+                lastX: 0,
+                lastY: 0
+            };
+        }
+        
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         
@@ -105,9 +116,27 @@ class PixelEditor {
     }
     
     /**
+     * Ensure drawingState is initialized
+     */
+    ensureDrawingState() {
+        if (!this.drawingState) {
+            console.warn('⚠️ drawingState not initialized, creating it');
+            this.drawingState = {
+                isDrawing: false,
+                button: null,
+                lastX: 0,
+                lastY: 0
+            };
+        }
+    }
+    
+    /**
      * Setup event listeners for canvas interactions
      */
     setupEventListeners() {
+        // Ensure drawingState is initialized before setting up events
+        this.ensureDrawingState();
+        
         // Mouse events
         this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this));
         this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
@@ -132,15 +161,7 @@ class PixelEditor {
      */
     handleMouseDown(e) {
         // Safety check - ensure drawingState exists
-        if (!this.drawingState) {
-            console.warn('⚠️ drawingState not initialized, creating it');
-            this.drawingState = {
-                isDrawing: false,
-                button: null,
-                lastX: 0,
-                lastY: 0
-            };
-        }
+        this.ensureDrawingState();
         
         const rect = this.canvas.getBoundingClientRect();
         const x = Math.floor((e.clientX - rect.left) / this.gridSize);
@@ -172,15 +193,7 @@ class PixelEditor {
      */
     handleMouseMove(e) {
         // Safety check - ensure drawingState exists
-        if (!this.drawingState) {
-            console.warn('⚠️ drawingState not initialized, creating it');
-            this.drawingState = {
-                isDrawing: false,
-                button: null,
-                lastX: 0,
-                lastY: 0
-            };
-        }
+        this.ensureDrawingState();
         
         const rect = this.canvas.getBoundingClientRect();
         const x = Math.floor((e.clientX - rect.left) / this.gridSize);
@@ -204,15 +217,7 @@ class PixelEditor {
      */
     handleMouseUp(e) {
         // Safety check - ensure drawingState exists
-        if (!this.drawingState) {
-            console.warn('⚠️ drawingState not initialized, creating it');
-            this.drawingState = {
-                isDrawing: false,
-                button: null,
-                lastX: 0,
-                lastY: 0
-            };
-        }
+        this.ensureDrawingState();
         
         // Only handle mouse up for the button that was pressed
         if (this.drawingState.isDrawing && this.drawingState.button === e.button) {
@@ -240,15 +245,7 @@ class PixelEditor {
      */
     handleMouseLeave(e) {
         // Safety check - ensure drawingState exists
-        if (!this.drawingState) {
-            console.warn('⚠️ drawingState not initialized, creating it');
-            this.drawingState = {
-                isDrawing: false,
-                button: null,
-                lastX: 0,
-                lastY: 0
-            };
-        }
+        this.ensureDrawingState();
         
         this.drawingState.isDrawing = false;
         this.drawingState.button = null;
@@ -259,6 +256,9 @@ class PixelEditor {
      * @param {TouchEvent} e - Touch event
      */
     handleTouchStart(e) {
+        // Safety check - ensure drawingState exists
+        this.ensureDrawingState();
+        
         if (e.touches.length === 1) {
             const touch = e.touches[0];
             
@@ -300,6 +300,9 @@ class PixelEditor {
      * @param {TouchEvent} e - Touch event
      */
     handleTouchMove(e) {
+        // Safety check - ensure drawingState exists
+        this.ensureDrawingState();
+        
         if (e.touches.length === 1 && this.touchState.isTouching) {
             const touch = e.touches[0];
             
@@ -339,6 +342,9 @@ class PixelEditor {
      * @param {TouchEvent} e - Touch event
      */
     handleTouchEnd(e) {
+        // Safety check - ensure drawingState exists
+        this.ensureDrawingState();
+        
         if (this.touchState.isTouching) {
             // Only prevent default if we were drawing
             if (this.drawingState.isDrawing) {
