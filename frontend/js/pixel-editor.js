@@ -475,6 +475,12 @@ class PixelEditor {
      * @param {string} color - Color to draw
      */
     drawPixel(x, y, color) {
+        // Safety check - only draw if canvas is ready
+        if (!this.canvas || !this.ctx) {
+            console.log('Canvas not ready, skipping pixel draw');
+            return;
+        }
+        
         if (x < 0 || x >= this.tileSize || y < 0 || y >= this.tileSize) return;
         
         this.pixelData[y][x] = color;
@@ -549,8 +555,10 @@ class PixelEditor {
     setTool(tool) {
         this.currentTool = tool;
         
-        // Update cursor
-        this.updateCursor();
+        // Update cursor only if canvas is ready
+        if (this.canvas) {
+            this.updateCursor();
+        }
         
         // Trigger tool changed event
         if (this.onToolChanged) {
@@ -576,9 +584,15 @@ class PixelEditor {
     }
     
     /**
-     * Update canvas cursor based on current tool
+     * Update cursor based on current tool
      */
     updateCursor() {
+        // Safety check - only update cursor if canvas is ready
+        if (!this.canvas) {
+            console.log('Canvas not ready, skipping cursor update');
+            return;
+        }
+        
         const cursors = {
             paint: 'crosshair',
             eraser: 'crosshair',
@@ -593,6 +607,12 @@ class PixelEditor {
      * Clear the canvas
      */
     clear() {
+        // Safety check - only clear if canvas is ready
+        if (!this.canvas || !this.ctx) {
+            console.log('Canvas not ready, skipping clear');
+            return;
+        }
+        
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
     
@@ -635,7 +655,12 @@ class PixelEditor {
         this.currentTool = 'paint';
         this.currentColor = '#000000';
         this.brushSize = 1;
-        this.updateCursor();
+        
+        // Only update cursor if canvas is ready
+        if (this.canvas) {
+            this.updateCursor();
+        }
+        
         console.log('✅ Tool state reset');
     }
 
@@ -746,6 +771,12 @@ class PixelEditor {
     
     /** Draw the grid */
     drawGrid() {
+        // Safety check - only draw if canvas is ready
+        if (!this.canvas || !this.ctx) {
+            console.log('Canvas not ready, skipping grid draw');
+            return;
+        }
+        
         this.ctx.strokeStyle = APP_CONFIG.CANVAS.GRID_COLOR;
         this.ctx.lineWidth = 1;
         
@@ -772,6 +803,12 @@ class PixelEditor {
      * @param {number} y - Y coordinate
      */
     drawGridLines(x, y) {
+        // Safety check - only draw if canvas is ready
+        if (!this.canvas || !this.ctx) {
+            console.log('Canvas not ready, skipping grid lines draw');
+            return;
+        }
+        
         this.ctx.strokeStyle = APP_CONFIG.CANVAS.GRID_COLOR;
         this.ctx.lineWidth = 1;
         
@@ -846,6 +883,12 @@ class PixelEditor {
      * Redraw the entire canvas
      */
     redraw() {
+        // Safety check - only redraw if canvas is ready
+        if (!this.canvas || !this.ctx) {
+            console.log('Canvas not ready, skipping redraw');
+            return;
+        }
+        
         console.log('🎨 Redrawing canvas...');
         this.clear();
         
