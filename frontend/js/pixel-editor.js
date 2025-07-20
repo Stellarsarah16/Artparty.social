@@ -600,15 +600,18 @@ class PixelEditor {
      * Clear pixel data and reset to empty
      */
     clearPixelData() {
-        this.pixelData = this.createEmptyPixelData();
+        // Add safety check - only clear if canvas is ready
+        if (!this.canvas || !this.ctx) {
+            console.log('Canvas not ready yet, skipping clear');
+            return;
+        }
         this.clear();
-        this.drawGrid();
-        this.saveToHistory();
+        this.pixelData = this.createEmptyPixelData();
+        this.render();
+        console.log('✅ Pixel data cleared');
     }
     
-    /**
-     * Draw the grid
-     */
+    /** Draw the grid */
     drawGrid() {
         this.ctx.strokeStyle = APP_CONFIG.CANVAS.GRID_COLOR;
         this.ctx.lineWidth = 1;
