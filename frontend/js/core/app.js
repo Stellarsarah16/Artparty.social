@@ -127,11 +127,9 @@ class StellarArtCollabApp {
     }
     
     /**
-     * Initialize UI components and event listeners
+     * Initialize UI components
      */
     initializeUI() {
-        console.log('🔧 Initializing UI...');
-        
         // Initialize color palette
         this.initializeColorPalette();
         
@@ -141,7 +139,87 @@ class StellarArtCollabApp {
         // Setup event listeners
         this.setupEventListeners();
         
+        // Setup mobile touch interactions
+        this.setupMobileTouchInteractions();
+        
         console.log('✅ UI initialized');
+    }
+    
+    /**
+     * Setup mobile touch interactions for tools panel
+     */
+    setupMobileTouchInteractions() {
+        // Handle tool button touch interactions
+        document.querySelectorAll('.floating-tools-panel .tool-btn').forEach(btn => {
+            // Touch start
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                btn.classList.add('touch-active');
+            }, { passive: false });
+            
+            // Touch end
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                btn.classList.remove('touch-active');
+                
+                // Trigger the click event
+                const tool = btn.id.replace('-tool', '');
+                this.selectTool(tool);
+            }, { passive: false });
+            
+            // Touch cancel
+            btn.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                btn.classList.remove('touch-active');
+            }, { passive: false });
+        });
+        
+        // Handle color square touch interactions
+        document.querySelectorAll('.floating-tools-panel .color-square').forEach(square => {
+            // Touch start
+            square.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                square.classList.add('touch-active');
+            }, { passive: false });
+            
+            // Touch end
+            square.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                square.classList.remove('touch-active');
+                
+                // Get the color from the square's background
+                const color = square.style.backgroundColor || square.style.background;
+                if (color) {
+                    this.selectColor(color);
+                }
+            }, { passive: false });
+            
+            // Touch cancel
+            square.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                square.classList.remove('touch-active');
+            }, { passive: false });
+        });
+        
+        // Prevent default touch behaviors on the tools panel
+        const toolsPanel = document.getElementById('floating-tools-panel');
+        if (toolsPanel) {
+            toolsPanel.addEventListener('touchstart', (e) => {
+                // Only prevent default if touching interactive elements
+                if (e.target.closest('.tool-btn') || e.target.closest('.color-square')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            toolsPanel.addEventListener('touchmove', (e) => {
+                // Prevent scrolling when interacting with tools
+                if (e.target.closest('.tool-btn') || e.target.closest('.color-square')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        }
+        
+        console.log('✅ Mobile touch interactions initialized');
     }
     
     /**

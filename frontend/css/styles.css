@@ -1747,6 +1747,14 @@ form {
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
     will-change: transform;
+    /* Touch interaction support */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
 }
 
 .floating-tools-panel .tools-row {
@@ -1800,6 +1808,16 @@ form {
     font-size: var(--font-size-xs);
     margin: 0;
     padding: 0;
+    /* Touch interaction support */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+    /* Prevent text selection on mobile */
+    -webkit-tap-highlight-color: transparent;
 }
 
 .floating-tools-panel .tool-btn:hover {
@@ -1814,6 +1832,35 @@ form {
     border-color: var(--primary-color);
     color: var(--text-white);
     box-shadow: var(--shadow-sm);
+}
+
+/* Mobile touch states */
+.floating-tools-panel .tool-btn:active,
+.floating-tools-panel .tool-btn.touch-active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--text-white);
+    transform: scale(0.95);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Mobile-specific touch feedback */
+@media (hover: none) and (pointer: coarse) {
+    .floating-tools-panel .tool-btn:hover {
+        background: var(--bg-primary);
+        border-color: var(--border-color);
+        color: var(--text-secondary);
+        transform: none;
+    }
+    
+    .floating-tools-panel .tool-btn:active,
+    .floating-tools-panel .tool-btn.touch-active {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: var(--text-white);
+        transform: scale(0.95);
+        box-shadow: var(--shadow-sm);
+    }
 }
 
 .floating-tools-panel .color-palette {
@@ -1855,6 +1902,16 @@ form {
     position: relative;
     margin: 0;
     padding: 0;
+    /* Touch interaction support */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+    /* Prevent text selection on mobile */
+    -webkit-tap-highlight-color: transparent;
 }
 
 .floating-tools-panel .color-square:hover {
@@ -1877,6 +1934,27 @@ form {
     font-size: 8px;
     font-weight: bold;
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+/* Mobile touch states for color squares */
+.floating-tools-panel .color-square:active,
+.floating-tools-panel .color-square.touch-active {
+    transform: scale(1.2);
+    box-shadow: var(--shadow-md);
+}
+
+/* Mobile-specific touch feedback for color squares */
+@media (hover: none) and (pointer: coarse) {
+    .floating-tools-panel .color-square:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .floating-tools-panel .color-square:active,
+    .floating-tools-panel .color-square.touch-active {
+        transform: scale(1.2);
+        box-shadow: var(--shadow-md);
+    }
 }
 
 /* Adjust editor layout to account for floating panel */
