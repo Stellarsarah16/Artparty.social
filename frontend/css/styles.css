@@ -1729,3 +1729,188 @@ form {
         font-size: var(--font-size-xs);
     }
 } 
+
+/* Floating Tools Panel */
+.floating-tools-panel {
+    position: fixed;
+    top: 80px; /* Position below the navigation banner */
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    padding: var(--space-md) var(--space-lg);
+    transition: transform var(--transition-normal);
+}
+
+.floating-tools-panel .tools-row {
+    display: flex;
+    gap: var(--space-xl);
+    align-items: center;
+    justify-content: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.floating-tools-panel .tools-section {
+    flex: 0 0 auto;
+}
+
+.floating-tools-panel .tools-section h3 {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.floating-tools-panel .tool-group {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+}
+
+.floating-tools-panel .tool-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+}
+
+.floating-tools-panel .tool-btn:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.floating-tools-panel .tool-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--text-white);
+    box-shadow: var(--shadow-sm);
+}
+
+.floating-tools-panel .color-palette {
+    flex: 0 0 auto;
+}
+
+.floating-tools-panel .color-palette h4 {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.floating-tools-panel .color-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 3px;
+    max-width: 180px;
+}
+
+.floating-tools-panel .color-square {
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.floating-tools-panel .color-square:hover {
+    transform: scale(1.15);
+    box-shadow: var(--shadow-md);
+}
+
+.floating-tools-panel .color-square.active {
+    border: 2px solid var(--primary-color);
+    transform: scale(1.15);
+}
+
+.floating-tools-panel .color-square.active::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+/* Adjust editor layout to account for floating panel */
+.editor-section {
+    padding-top: 140px; /* Add top padding to account for floating panel */
+}
+
+/* Mobile responsive for floating panel */
+@media (max-width: 768px) {
+    .floating-tools-panel {
+        top: 70px; /* Adjust for smaller mobile header */
+        padding: var(--space-sm) var(--space-md);
+    }
+    
+    .floating-tools-panel .tools-row {
+        flex-direction: column;
+        gap: var(--space-md);
+        align-items: center;
+    }
+    
+    .floating-tools-panel .tools-section {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .floating-tools-panel .color-palette {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .floating-tools-panel .color-grid {
+        max-width: 240px;
+        margin: 0 auto;
+    }
+    
+    .floating-tools-panel .tool-group {
+        justify-content: center;
+    }
+    
+    .editor-section {
+        padding-top: 180px; /* More padding for mobile due to stacked layout */
+    }
+}
+
+@media (max-width: 480px) {
+    .floating-tools-panel .tools-row {
+        gap: var(--space-sm);
+    }
+    
+    .floating-tools-panel .color-grid {
+        max-width: 200px;
+    }
+    
+    .floating-tools-panel .tool-btn {
+        width: 32px;
+        height: 32px;
+        font-size: var(--font-size-xs);
+    }
+    
+    .editor-section {
+        padding-top: 200px; /* Even more padding for very small screens */
+    }
+} 
