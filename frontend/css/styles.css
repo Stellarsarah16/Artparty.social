@@ -1733,7 +1733,7 @@ form {
 /* Floating Tools Panel */
 .floating-tools-panel {
     position: fixed;
-    top: 80px; /* Position below the navigation banner */
+    top: 64px; /* Position right against the navigation banner - adjusted from 80px */
     left: 0;
     right: 0;
     z-index: 1000;
@@ -1884,16 +1884,16 @@ form {
 /* Mobile responsive for floating panel */
 @media (max-width: 768px) {
     .floating-tools-panel {
-        top: 70px; /* Adjust for smaller mobile header */
+        top: 56px; /* Adjust for smaller mobile header - positioned right against it */
         padding: 6px var(--space-md);
         margin: 0;
     }
     
     .floating-tools-panel .tools-row {
-        flex-direction: row;
+        flex-direction: column; /* Stack vertically on mobile */
         gap: var(--space-sm);
         align-items: center;
-        max-width: 500px;
+        max-width: 100%; /* Use full width */
         margin: 0 auto;
         padding: 0;
     }
@@ -1902,16 +1902,22 @@ form {
         flex: 0 0 auto;
         margin: 0;
         padding: 0;
+        width: 100%; /* Use full width */
+        display: flex;
+        justify-content: center;
     }
     
     .floating-tools-panel .color-palette {
         flex: 0 0 auto;
         margin: 0;
         padding: 0;
+        width: 100%; /* Use full width */
+        display: flex;
+        justify-content: center;
     }
     
     .floating-tools-panel .color-grid {
-        max-width: 140px;
+        max-width: 200px; /* Allow more width since it's stacked */
         margin: 0;
         padding: 0;
     }
@@ -1923,26 +1929,42 @@ form {
     }
     
     .editor-section {
-        padding-top: 120px; /* Reduced padding for mobile */
+        padding-top: 140px; /* Increased padding for stacked layout */
         margin: 0;
     }
 }
 
 @media (max-width: 480px) {
     .floating-tools-panel {
+        top: 52px; /* Even tighter positioning for very small screens */
         padding: 4px var(--space-md);
         margin: 0;
     }
     
     .floating-tools-panel .tools-row {
+        flex-direction: column; /* Keep stacked on very small screens */
         gap: var(--space-xs);
-        max-width: 400px;
+        max-width: 100%;
         margin: 0 auto;
         padding: 0;
     }
     
+    .floating-tools-panel .tools-section {
+        width: 100%;
+        justify-content: center;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .floating-tools-panel .color-palette {
+        width: 100%;
+        justify-content: center;
+        margin: 0;
+        padding: 0;
+    }
+    
     .floating-tools-panel .color-grid {
-        max-width: 120px;
+        max-width: 180px; /* Slightly smaller but still visible */
         margin: 0;
         padding: 0;
     }
@@ -1963,7 +1985,7 @@ form {
     }
     
     .editor-section {
-        padding-top: 100px; /* Reduced padding for very small screens */
+        padding-top: 120px; /* Adjusted padding for very small screens */
         margin: 0;
     }
 } 
