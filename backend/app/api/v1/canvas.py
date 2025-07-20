@@ -76,6 +76,10 @@ async def get_canvas_details(
         palette_type=canvas.palette_type,
         is_active=canvas.is_active,
         max_tiles_per_user=canvas.max_tiles_per_user,
+        collaboration_mode=canvas.collaboration_mode,
+        auto_save_interval=canvas.auto_save_interval,
+        is_public=canvas.is_public,
+        is_moderated=canvas.is_moderated,
         created_at=canvas.created_at,
         tiles=tiles_data
     )
@@ -97,7 +101,11 @@ async def create_canvas(
             height=canvas_create.height,
             tile_size=canvas_create.tile_size,
             palette_type=canvas_create.palette_type,
-            max_tiles_per_user=canvas_create.max_tiles_per_user
+            max_tiles_per_user=canvas_create.max_tiles_per_user,
+            collaboration_mode=canvas_create.collaboration_mode,
+            auto_save_interval=canvas_create.auto_save_interval,
+            is_public=canvas_create.is_public,
+            is_moderated=canvas_create.is_moderated
         )
         
         db.add(canvas)
@@ -116,6 +124,10 @@ async def create_canvas(
                 palette_type=canvas.palette_type,
                 is_active=canvas.is_active,
                 max_tiles_per_user=canvas.max_tiles_per_user,
+                collaboration_mode=canvas.collaboration_mode,
+                auto_save_interval=canvas.auto_save_interval,
+                is_public=canvas.is_public,
+                is_moderated=canvas.is_moderated,
                 created_at=canvas.created_at,
                 updated_at=canvas.updated_at
             )
@@ -154,6 +166,14 @@ async def update_canvas(
             setattr(canvas, 'is_active', canvas_update.is_active)
         if canvas_update.max_tiles_per_user is not None:
             setattr(canvas, 'max_tiles_per_user', canvas_update.max_tiles_per_user)
+        if canvas_update.collaboration_mode is not None:
+            setattr(canvas, 'collaboration_mode', canvas_update.collaboration_mode)
+        if canvas_update.auto_save_interval is not None:
+            setattr(canvas, 'auto_save_interval', canvas_update.auto_save_interval)
+        if canvas_update.is_public is not None:
+            setattr(canvas, 'is_public', canvas_update.is_public)
+        if canvas_update.is_moderated is not None:
+            setattr(canvas, 'is_moderated', canvas_update.is_moderated)
         
         db.commit()
         db.refresh(canvas)
@@ -170,6 +190,10 @@ async def update_canvas(
                 palette_type=canvas.palette_type,
                 is_active=canvas.is_active,
                 max_tiles_per_user=canvas.max_tiles_per_user,
+                collaboration_mode=canvas.collaboration_mode,
+                auto_save_interval=canvas.auto_save_interval,
+                is_public=canvas.is_public,
+                is_moderated=canvas.is_moderated,
                 created_at=canvas.created_at,
                 updated_at=canvas.updated_at
             )
@@ -190,9 +214,8 @@ async def delete_canvas(
     current_user: User = Depends(get_current_user_dependency),
     db: Session = Depends(get_db)
 ):
-    """Delete canvas (soft delete)"""
+    """Delete a canvas (soft delete by setting is_active to False)"""
     try:
-        # Get canvas
         canvas = db.query(Canvas).filter(Canvas.id == canvas_id).first()
         if not canvas:
             raise HTTPException(
@@ -200,8 +223,8 @@ async def delete_canvas(
                 detail="Canvas not found"
             )
         
-        # Soft delete - mark as inactive
-        setattr(canvas, 'is_active', False)
+        # Soft delete
+        canvas.is_active = False
         db.commit()
         
         return {"message": "Canvas deleted successfully"}
@@ -224,47 +247,63 @@ async def get_canvas_region(
     height: int = 512,
     db: Session = Depends(get_db)
 ):
-    """Get canvas region tiles within specified bounds"""
-    canvas = db.query(Canvas).filter(Canvas.id == canvas_id, Canvas.is_active == True).first()
-    if not canvas:
+    """Get a specific region of the canvas with tiles"""
+    try:
+        # Get canvas
+        canvas = db.query(Canvas).filter(Canvas.id == canvas_id, Canvas.is_active == True).first()
+        if not canvas:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Canvas not found"
+            )
+        
+        # Calculate tile coordinates for the region
+        tile_size = canvas.tile_size
+        start_tile_x = x // tile_size
+        start_tile_y = y // tile_size
+        end_tile_x = (x + width - 1) // tile_size
+        end_tile_y = (y + height - 1) // tile_size
+        
+        # Get tiles in the region
+        tiles = db.query(Tile).filter(
+            Tile.canvas_id == canvas_id,
+            Tile.x >= start_tile_x,
+            Tile.x <= end_tile_x,
+            Tile.y >= start_tile_y,
+            Tile.y <= end_tile_y
+        ).all()
+        
+        # Convert tiles to dict format
+        tiles_data = []
+        for tile in tiles:
+            tiles_data.append({
+                "id": tile.id,
+                "x": tile.x,
+                "y": tile.y,
+                "pixel_data": tile.pixel_data,
+                "creator_id": tile.creator_id,
+                "created_at": tile.created_at,
+                "updated_at": tile.updated_at
+            })
+        
+        return {
+            "canvas_id": canvas_id,
+            "region": {
+                "x": x,
+                "y": y,
+                "width": width,
+                "height": height
+            },
+            "tile_size": tile_size,
+            "tiles": tiles_data
+        }
+    except HTTPException as e:
+        raise e
+    except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Canvas not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error getting canvas region"
         )
-    
-    # Get tiles within the specified region
-    tiles = db.query(Tile).filter(
-        Tile.canvas_id == canvas_id,
-        Tile.x >= x,
-        Tile.x < x + width,
-        Tile.y >= y,
-        Tile.y < y + height
-    ).all()
-    
-    # Convert tiles to dict format
-    tiles_data = []
-    for tile in tiles:
-        tiles_data.append({
-            "id": tile.id,
-            "x": tile.x,
-            "y": tile.y,
-            "pixel_data": tile.pixel_data,
-            "creator_id": tile.creator_id,
-            "created_at": tile.created_at,
-            "updated_at": tile.updated_at
-        })
-    
-    return {
-        "canvas_id": canvas_id,
-        "region": {
-            "x": x,
-            "y": y,
-            "width": width,
-            "height": height
-        },
-        "tiles": tiles_data,
-        "tile_count": len(tiles_data)
-    }
 
 
 @router.get("/{canvas_id}/stats", response_model=Dict[str, Any])
@@ -273,29 +312,37 @@ async def get_canvas_stats(
     db: Session = Depends(get_db)
 ):
     """Get canvas statistics"""
-    canvas = db.query(Canvas).filter(Canvas.id == canvas_id, Canvas.is_active == True).first()
-    if not canvas:
+    try:
+        # Get canvas
+        canvas = db.query(Canvas).filter(Canvas.id == canvas_id, Canvas.is_active == True).first()
+        if not canvas:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Canvas not found"
+            )
+        
+        # Get tile count
+        tile_count = db.query(Tile).filter(Tile.canvas_id == canvas_id).count()
+        
+        # Calculate total tiles possible
+        total_tiles_possible = (canvas.width // canvas.tile_size) * (canvas.height // canvas.tile_size)
+        
+        # Calculate completion percentage
+        completion_percentage = (tile_count / total_tiles_possible * 100) if total_tiles_possible > 0 else 0
+        
+        return {
+            "canvas_id": canvas_id,
+            "total_tiles": tile_count,
+            "total_tiles_possible": total_tiles_possible,
+            "completion_percentage": round(completion_percentage, 2),
+            "canvas_width": canvas.width,
+            "canvas_height": canvas.height,
+            "tile_size": canvas.tile_size
+        }
+    except HTTPException as e:
+        raise e
+    except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Canvas not found"
-        )
-    
-    # Get canvas statistics
-    total_tiles = int(db.query(Tile).filter(Tile.canvas_id == canvas_id).count())
-    unique_users = int(db.query(Tile.creator_id).filter(Tile.canvas_id == canvas_id).distinct().count())
-    
-    # Calculate coverage percentage
-    max_tiles = (canvas.width // canvas.tile_size) * (canvas.height // canvas.tile_size)
-    coverage_percentage = (total_tiles / max_tiles) * 100 if max_tiles > 0 else 0
-    
-    return {
-        "canvas_id": canvas_id,
-        "canvas_name": canvas.name,
-        "total_tiles": total_tiles,
-        "unique_contributors": unique_users,
-        "max_possible_tiles": max_tiles,
-        "coverage_percentage": round(float(coverage_percentage), 2),
-        "canvas_size": f"{canvas.width}x{canvas.height}",
-        "tile_size": canvas.tile_size,
-        "created_at": canvas.created_at
-    } 
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error getting canvas stats"
+        ) 
