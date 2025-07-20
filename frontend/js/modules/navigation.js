@@ -651,6 +651,11 @@ class NavigationManager {
         try {
             console.log('Opening canvas:', canvas);
             
+            // Clear pixel data BEFORE loading new canvas
+            if (window.PixelEditor) {
+                window.PixelEditor.clearPixelData();
+            }
+            
             // Set current canvas in app state
             appState.setCurrentCanvas(canvas);
             
