@@ -605,9 +605,17 @@ class PixelEditor {
             console.log('Canvas not ready yet, skipping clear');
             return;
         }
+        
+        // Clear the canvas
         this.clear();
+        
+        // Reset pixel data to empty
         this.pixelData = this.createEmptyPixelData();
-        this.render();
+        
+        // Don't call this.render() - it doesn't exist
+        // Instead, just clear the canvas visually
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
         console.log('✅ Pixel data cleared');
     }
     
