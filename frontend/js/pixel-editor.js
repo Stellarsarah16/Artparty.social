@@ -101,21 +101,6 @@ class PixelEditor {
     }
     
     /**
-     * Create empty pixel data array
-     * @returns {Array} 32x32 array of white pixels
-     */
-    createEmptyPixelData() {
-        const data = [];
-        for (let y = 0; y < this.tileSize; y++) {
-            data[y] = [];
-            for (let x = 0; x < this.tileSize; x++) {
-                data[y][x] = 'white';
-            }
-        }
-        return data;
-    }
-    
-    /**
      * Ensure drawingState is initialized
      */
     ensureDrawingState() {
@@ -128,6 +113,21 @@ class PixelEditor {
                 lastY: 0
             };
         }
+    }
+    
+    /**
+     * Create empty pixel data array
+     * @returns {Array} 32x32 array of white pixels
+     */
+    createEmptyPixelData() {
+        const data = [];
+        for (let y = 0; y < this.tileSize; y++) {
+            data[y] = [];
+            for (let x = 0; x < this.tileSize; x++) {
+                data[y][x] = 'white';
+            }
+        }
+        return data;
     }
     
     /**
