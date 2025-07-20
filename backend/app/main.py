@@ -85,12 +85,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
-app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
-app.include_router(canvas.router, prefix="/api/v1/canvas", tags=["canvas"])
-app.include_router(tiles.router, prefix="/api/v1/tiles", tags=["tiles"])
-app.include_router(websockets.router, prefix="/api/v1/ws", tags=["websockets"])
+# Include the main API router (includes all v1 endpoints including admin)
+app.include_router(api_router, prefix="/api/v1")
 
 
 @app.get("/")
