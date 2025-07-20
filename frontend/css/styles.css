@@ -1743,6 +1743,10 @@ form {
     padding: 8px var(--space-lg);
     margin: 0;
     transition: transform var(--transition-normal);
+    /* Ensure it stays fixed on mobile */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
 }
 
 .floating-tools-panel .tools-row {
@@ -1884,9 +1888,20 @@ form {
 /* Mobile responsive for floating panel */
 @media (max-width: 768px) {
     .floating-tools-panel {
+        position: fixed;
         top: 56px; /* Adjust for smaller mobile header - positioned right against it */
+        left: 0;
+        right: 0;
+        z-index: 1000;
         padding: 6px var(--space-md);
         margin: 0;
+        /* Ensure fixed positioning on mobile */
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        will-change: transform;
+        /* Prevent mobile browser quirks */
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
     }
     
     .floating-tools-panel .tools-row {
@@ -1936,9 +1951,20 @@ form {
 
 @media (max-width: 480px) {
     .floating-tools-panel {
+        position: fixed;
         top: 52px; /* Even tighter positioning for very small screens */
+        left: 0;
+        right: 0;
+        z-index: 1000;
         padding: 4px var(--space-md);
         margin: 0;
+        /* Ensure fixed positioning on mobile */
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        will-change: transform;
+        /* Prevent mobile browser quirks */
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
     }
     
     .floating-tools-panel .tools-row {
