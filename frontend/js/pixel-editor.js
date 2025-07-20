@@ -26,6 +26,14 @@ class PixelEditor {
         this.onToolChanged = null;
         this.onColorChanged = null;
         
+        // Mouse state tracking
+        this.mouseState = {
+            isDrawing: false,
+            button: null, // Track which button is pressed
+            lastX: 0,
+            lastY: 0
+        };
+        
         // Touch state tracking
         this.touchState = {
             isTouching: false,
@@ -131,12 +139,20 @@ class PixelEditor {
         const y = Math.floor((e.clientY - rect.top) / this.gridSize);
         
         if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize) {
-            this.isDrawing = true;
-            this.lastX = x;
-            this.lastY = y;
-            
-            this.applyTool(x, y, e.button === 2); // Right click for erase
-            this.updatePositionIndicator(x, y);
+            // Only allow left mouse button (button 0) for painting
+            if (e.button === 0) {
+                this.mouseState.isDrawing = true;
+                this.mouseState.button = e.button;
+                this.mouseState.lastX = x;
+                this.mouseState.lastY = y;
+                
+                this.isDrawing = true;
+                this.lastX = x;
+                this.lastY = y;
+                
+                this.applyTool(x, y, false); // Always false for left mouse button
+                this.updatePositionIndicator(x, y);
+            }
         }
     }
     
@@ -152,8 +168,9 @@ class PixelEditor {
         if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize) {
             this.updatePositionIndicator(x, y);
             
-            if (this.isDrawing) {
-                this.applyTool(x, y, e.button === 2);
+            // Only paint if we're drawing with left mouse button
+            if (this.mouseState.isDrawing && this.mouseState.button === 0) {
+                this.applyTool(x, y, false); // Always false for left mouse button
                 this.lastX = x;
                 this.lastY = y;
             }
@@ -165,7 +182,10 @@ class PixelEditor {
      * @param {MouseEvent} e - Mouse event
      */
     handleMouseUp(e) {
-        if (this.isDrawing) {
+        // Only handle mouse up for the button that was pressed
+        if (this.mouseState.isDrawing && this.mouseState.button === e.button) {
+            this.mouseState.isDrawing = false;
+            this.mouseState.button = null;
             this.isDrawing = false;
             this.saveToHistory();
             
@@ -181,6 +201,8 @@ class PixelEditor {
      * @param {MouseEvent} e - Mouse event
      */
     handleMouseLeave(e) {
+        this.mouseState.isDrawing = false;
+        this.mouseState.button = null;
         this.isDrawing = false;
     }
     
