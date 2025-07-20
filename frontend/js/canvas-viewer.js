@@ -385,37 +385,8 @@ class CanvasViewer {
                         console.log('🎯 Calling onTileClick callback');
                         
                         this.onTileClick(tile);
-                    } else if (!tile) {
-                        // Check if click is within canvas boundaries before creating empty tile
-                        const rect = this.canvas.getBoundingClientRect();
-                        const canvasX = e.clientX - rect.left;
-                        const canvasY = e.clientY - rect.top;
-                        const worldX = (canvasX / this.zoom) + this.viewportX;
-                        const worldY = (canvasY / this.zoom) + this.viewportY;
-                        const tileX = Math.floor(worldX / this.tileSize);
-                        const tileY = Math.floor(worldY / this.tileSize);
-                        
-                        // Check if the click is within canvas bounds
-                        if (this.canvasData && worldX >= 0 && worldY >= 0 && 
-                            worldX < this.canvasData.width && worldY < this.canvasData.height) {
-                            
-                            console.log('🎯 Clicked on empty space within canvas bounds');
-                            
-                            if (!this.onTileClick) {
-                                console.warn('⚠️ onTileClick callback not set');
-                            } else {
-                                const emptyTileInfo = {
-                                    x: tileX,
-                                    y: tileY,
-                                    isEmpty: true
-                                };
-                                
-                                console.log('🎯 Calling onTileClick with empty tile info:', emptyTileInfo);
-                                this.onTileClick(emptyTileInfo);
-                            }
-                        } else {
-                            console.log('🎯 Clicked outside canvas bounds - ignoring');
-                        }
+                    } else if (!this.onTileClick) {
+                        console.warn('⚠️ onTileClick callback not set');
                     }
                 } catch (error) {
                     console.error('Error in tile click handler:', error);
@@ -723,6 +694,13 @@ class CanvasViewer {
                 // Handle as a tap/click
                 const touch = e.changedTouches[0];
                 if (touch) {
+                    console.log('📱 Touch tap detected:', {
+                        x: touch.clientX,
+                        y: touch.clientY,
+                        duration: touchDuration,
+                        hasMoved: this.touchState.hasMoved
+                    });
+                    
                     const currentTime = Date.now();
                     const timeSinceLastTap = currentTime - this.touchState.lastTapTime;
                     const distanceFromLastTap = Math.sqrt(
@@ -735,6 +713,7 @@ class CanvasViewer {
                         distanceFromLastTap < this.touchState.doubleTapDistance) {
                         // Double tap detected - enter edit mode
                         const tile = this.getTileAtPosition(touch.clientX, touch.clientY, true);
+                        console.log('📱 Double tap - tile result:', tile);
                         if (tile && this.onTileDoubleClick) {
                             this.onTileDoubleClick(tile);
                         }
@@ -746,8 +725,12 @@ class CanvasViewer {
                     } else {
                         // Single tap - just select/highlight tile
                         const tile = this.getTileAtPosition(touch.clientX, touch.clientY, true);
+                        console.log('📱 Single tap - tile result:', tile);
                         if (tile && this.onTileClick) {
+                            console.log('📱 Calling onTileClick for touch tap');
                             this.onTileClick(tile);
+                        } else if (!this.onTileClick) {
+                            console.warn('📱 onTileClick callback not set for touch tap');
                         }
                         
                         // Store tap info for potential double tap
@@ -756,6 +739,11 @@ class CanvasViewer {
                         this.touchState.lastTapY = touch.clientY;
                     }
                 }
+            } else {
+                console.log('📱 Touch ignored - too long or moved:', {
+                    duration: touchDuration,
+                    hasMoved: this.touchState.hasMoved
+                });
             }
             
         } else if (e.touches.length === 1) {
@@ -927,6 +915,15 @@ class CanvasViewer {
             const tileX = Math.floor(worldX / this.tileSize);
             const tileY = Math.floor(worldY / this.tileSize);
             
+            // Check if the position is within canvas bounds
+            if (this.canvasData && (worldX < 0 || worldY < 0 || 
+                worldX >= this.canvasData.width || worldY >= this.canvasData.height)) {
+                if (isClick) {
+                    console.log('🎯 Click outside canvas bounds - ignoring');
+                }
+                return null;
+            }
+            
             // Only log during clicks in development mode
             if (isClick && window.ENVIRONMENT && window.ENVIRONMENT.isDevelopment) {
                 console.log('📍 Coordinate conversion:', {
@@ -944,17 +941,25 @@ class CanvasViewer {
             for (const [tileId, tile] of this.tiles) {
                 if (tile.x === tileX && tile.y === tileY) {
                     if (isClick) {
-                        console.log('✅ Found tile at position:', tile);
+                        console.log('✅ Found existing tile at position:', tile);
                     }
                     return tile;
                 }
             }
             
+            // No existing tile found - return empty tile object for this position
+            const emptyTile = {
+                x: tileX,
+                y: tileY,
+                isEmpty: true,
+                isNew: true
+            };
+            
             if (isClick) {
-                console.log('❌ No tile found at position. Available tiles:', Array.from(this.tiles.values()).map(t => ({ id: t.id, x: t.x, y: t.y })));
+                console.log('✅ Created empty tile object for position:', emptyTile);
             }
             
-            return null;
+            return emptyTile;
             
         } catch (error) {
             console.error('Error in getTileAtPosition:', error);
