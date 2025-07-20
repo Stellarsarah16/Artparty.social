@@ -1582,3 +1582,30 @@ form {
         max-width: none;
     }
 } 
+
+.viewer-section {
+    position: relative;
+}
+
+.viewer-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding: var(--space-md) 0;
+    margin-bottom: var(--space-lg);
+}
+
+.viewer-actions {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.viewer-actions .btn {
+    white-space: nowrap;
+    font-size: var(--font-size-sm);
+    padding: var(--space-sm) var(--space-md);
+} 

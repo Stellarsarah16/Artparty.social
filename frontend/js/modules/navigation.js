@@ -649,11 +649,19 @@ class NavigationManager {
      */
     async openCanvas(canvas) {
         try {
-            console.log('Opening canvas:', canvas);
+            console.log('🎨 Opening canvas:', canvas.title);
             
             // Clear pixel data BEFORE loading new canvas
             if (window.PixelEditor) {
                 window.PixelEditor.clearPixelData();
+            }
+            
+            // Load canvas data and ensure it's isolated
+            const canvasData = await canvasService.getCanvasData(canvas.id);
+            
+            // Set canvas data with proper isolation
+            if (window.PixelEditor) {
+                window.PixelEditor.setCanvasData(canvasData, canvas.id); // Pass canvas ID for isolation
             }
             
             // Set current canvas in app state
@@ -666,9 +674,6 @@ class NavigationManager {
             if (!canvasService.initialized) {
                 canvasService.init();
             }
-            
-            // Load canvas data
-            const canvasData = await canvasService.getCanvasData(canvas.id);
             
             // Update canvas title and info in viewer
             const canvasTitle = document.getElementById('viewer-canvas-title');
@@ -701,8 +706,8 @@ class NavigationManager {
             console.log('✅ Canvas opened successfully');
             
         } catch (error) {
-            console.error('Failed to open canvas:', error);
-            this.showCanvasError(`Failed to open canvas: ${error.message}`);
+            console.error('❌ Failed to open canvas:', error);
+            this.showCanvasError('Failed to open canvas');
         }
     }
     
