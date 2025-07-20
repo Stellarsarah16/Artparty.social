@@ -712,9 +712,9 @@ body {
     align-items: center;
     gap: var(--space-xs);
     padding: var(--space-sm);
-    border: 1px solid var(--border-color);
+    border: none;
     border-radius: var(--border-radius-sm);
-    background: var(--bg-secondary);
+    background: transparent;
     transition: all var(--transition-fast);
     opacity: 0.9;
 }
@@ -725,7 +725,7 @@ body {
 }
 
 .neighbor-canvas {
-    border: 1px solid var(--border-color);
+    border: none;
     border-radius: var(--border-radius-sm);
     background: var(--bg-primary);
     image-rendering: pixelated;
@@ -735,20 +735,21 @@ body {
 }
 
 .neighbor-cell.empty {
-    border-color: var(--border-color);
-    background: var(--bg-secondary);
+    border: none;
+    background: transparent;
     opacity: 0.6;
 }
 
 .neighbor-cell.current {
-    border-color: var(--primary-color);
-    background: var(--primary-color);
-    color: var(--text-white);
+    border: none;
+    background: rgba(99, 102, 241, 0.05);
+    color: var(--text-primary);
+    border-radius: var(--border-radius);
 }
 
 .neighbor-cell.has-tile {
-    border-color: var(--success-color);
-    background: var(--bg-primary);
+    border: none;
+    background: transparent;
     opacity: 1;
 }
 
@@ -768,7 +769,7 @@ body {
 }
 
 .neighbor-cell.current .neighbor-canvas {
-    border-color: var(--text-white);
+    border: none;
 }
 
 .neighbor-cell.has-tile .neighbor-canvas {
@@ -1612,7 +1613,7 @@ form {
     display: flex;
     gap: var(--space-xl);
     align-items: flex-start;
-    justify-content: space-between;
+    justify-content: flex-start;
 }
 
 .tools-section {
@@ -1710,5 +1711,21 @@ form {
     
     .tool-group {
         justify-content: center;
+    }
+} 
+
+@media (max-width: 480px) {
+    .tools-row {
+        gap: var(--space-md);
+    }
+    
+    .color-grid {
+        max-width: 200px;
+    }
+    
+    .tool-btn {
+        width: 32px;
+        height: 32px;
+        font-size: var(--font-size-xs);
     }
 } 
