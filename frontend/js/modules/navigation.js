@@ -649,65 +649,31 @@ class NavigationManager {
      */
     async openCanvas(canvas) {
         try {
-            console.log('🎨 Opening canvas:', canvas.title);
+            console.log('🎨 Opening canvas:', canvas);
+            console.log('Canvas ID:', canvas.id);
+            console.log('Canvas Name:', canvas.name);
+            console.log('Canvas Title:', canvas.title);
             
             // Clear pixel data BEFORE loading new canvas
             if (window.PixelEditor) {
                 window.PixelEditor.clearPixelData();
             }
             
-            // Load canvas data and ensure it's isolated
+            // Load canvas data
+            console.log('Loading canvas data for ID:', canvas.id);
             const canvasData = await canvasService.getCanvasData(canvas.id);
+            console.log('Canvas data received:', canvasData);
             
-            // Set canvas data with proper isolation
-            if (window.PixelEditor) {
-                window.PixelEditor.setCanvasData(canvasData, canvas.id); // Pass canvas ID for isolation
-            }
-            
-            // Set current canvas in app state
-            appState.setCurrentCanvas(canvas);
-            
-            // Show viewer section instead of editor
-            this.showSection('viewer');
-            
-            // Initialize canvas service if needed
-            if (!canvasService.initialized) {
-                canvasService.init();
-            }
-            
-            // Update canvas title and info in viewer
-            const canvasTitle = document.getElementById('viewer-canvas-title');
-            if (canvasTitle) {
-                canvasTitle.textContent = canvas.name;
-            }
-            
-            const canvasDimensions = document.getElementById('viewer-canvas-dimensions');
-            if (canvasDimensions) {
-                canvasDimensions.textContent = `${canvas.width}×${canvas.height}`;
-            }
-            
-            // Update canvas stats
-            this.updateCanvasStats(canvas);
-            
-            // Set initial user count (fallback if WebSocket fails)
-            this.setInitialUserCount();
-            
-            // Initialize canvas viewer
+            // Initialize canvas viewer with data
             await this.initializeCanvasViewer(canvas, canvasData);
             
-            // Connect to WebSocket for real-time updates (optional)
-            this.connectWebSocket(canvas.id).catch(error => {
-                console.warn('WebSocket connection failed, continuing without real-time updates:', error);
-            });
-            
-            // Emit canvas opened event for other listeners
-            eventManager.emit('canvas:opened', canvasData);
-            
-            console.log('✅ Canvas opened successfully');
+            // Show viewer section
+            this.showSection('viewer');
             
         } catch (error) {
             console.error('❌ Failed to open canvas:', error);
-            this.showCanvasError('Failed to open canvas');
+            console.error('Error details:', error.message, error.stack);
+            this.showCanvasError('Failed to open canvas: ' + error.message);
         }
     }
     
