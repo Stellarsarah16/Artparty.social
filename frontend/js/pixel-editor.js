@@ -61,16 +61,16 @@ class PixelEditor {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         
-        console.log('🎨 Canvas element:', canvas);
-        console.log('🎨 Canvas context:', this.ctx);
-        console.log('🎨 Canvas size:', canvas.width, 'x', canvas.height);
+        // console.log('🎨 Canvas element:', canvas);
+        // console.log('🎨 Canvas context:', this.ctx);
+        // console.log('🎨 Canvas size:', canvas.width, 'x', canvas.height);same
         
         // Set canvas size
         this.canvas.width = APP_CONFIG.PIXEL_EDITOR.CANVAS_SIZE;
         this.canvas.height = APP_CONFIG.PIXEL_EDITOR.CANVAS_SIZE;
         
-        console.log('🎨 Set canvas size to:', this.canvas.width, 'x', this.canvas.height);
-        console.log('🎨 Grid size:', this.gridSize);
+        // console.log('🎨 Set canvas size to:', this.canvas.width, 'x', this.canvas.height);
+        // console.log('🎨 Grid size:', this.gridSize);
         
         // Disable image smoothing for pixel art
         this.ctx.imageSmoothingEnabled = false;
@@ -86,7 +86,7 @@ class PixelEditor {
         this.drawGrid();
         this.saveToHistory();
         
-        console.log('✅ Pixel editor initialized');
+        // console.log('✅ Pixel editor initialized');
     }
     
     /**
@@ -131,6 +131,17 @@ class PixelEditor {
      * @param {MouseEvent} e - Mouse event
      */
     handleMouseDown(e) {
+        // Safety check - ensure drawingState exists
+        if (!this.drawingState) {
+            console.warn('⚠️ drawingState not initialized, creating it');
+            this.drawingState = {
+                isDrawing: false,
+                button: null,
+                lastX: 0,
+                lastY: 0
+            };
+        }
+        
         const rect = this.canvas.getBoundingClientRect();
         const x = Math.floor((e.clientX - rect.left) / this.gridSize);
         const y = Math.floor((e.clientY - rect.top) / this.gridSize);
@@ -138,7 +149,7 @@ class PixelEditor {
         if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize) {
             // Only allow left mouse button (button 0) for painting
             if (e.button === 0) {
-                console.log('🖱️ Mouse down - Left button, starting to draw');
+                // console.log('🖱️ Mouse down - Left button, starting to draw');
                 this.drawingState.isDrawing = true;
                 this.drawingState.button = e.button;
                 this.drawingState.lastX = x;
@@ -150,7 +161,7 @@ class PixelEditor {
                 this.applyTool(x, y, false); // Always false for left mouse button
                 this.updatePositionIndicator(x, y);
             } else {
-                console.log('🖱️ Mouse down - Ignoring non-left button:', e.button);
+                // console.log('🖱️ Mouse down - Ignoring non-left button:', e.button);
             }
         }
     }
@@ -160,6 +171,17 @@ class PixelEditor {
      * @param {MouseEvent} e - Mouse event
      */
     handleMouseMove(e) {
+        // Safety check - ensure drawingState exists
+        if (!this.drawingState) {
+            console.warn('⚠️ drawingState not initialized, creating it');
+            this.drawingState = {
+                isDrawing: false,
+                button: null,
+                lastX: 0,
+                lastY: 0
+            };
+        }
+        
         const rect = this.canvas.getBoundingClientRect();
         const x = Math.floor((e.clientX - rect.left) / this.gridSize);
         const y = Math.floor((e.clientY - rect.top) / this.gridSize);
@@ -181,9 +203,20 @@ class PixelEditor {
      * @param {MouseEvent} e - Mouse event
      */
     handleMouseUp(e) {
+        // Safety check - ensure drawingState exists
+        if (!this.drawingState) {
+            console.warn('⚠️ drawingState not initialized, creating it');
+            this.drawingState = {
+                isDrawing: false,
+                button: null,
+                lastX: 0,
+                lastY: 0
+            };
+        }
+        
         // Only handle mouse up for the button that was pressed
         if (this.drawingState.isDrawing && this.drawingState.button === e.button) {
-            console.log('🖱️ Mouse up - Stopping drawing');
+            // console.log('🖱️ Mouse up - Stopping drawing');
             this.drawingState.isDrawing = false;
             this.drawingState.button = null;
             this.saveToHistory();
@@ -193,11 +226,11 @@ class PixelEditor {
                 this.onPixelChanged(this.pixelData);
             }
         } else {
-            console.log('🖱️ Mouse up - Not drawing or wrong button:', {
-                isDrawing: this.drawingState.isDrawing,
-                button: this.drawingState.button,
-                eventButton: e.button
-            });
+            // console.log('🖱️ Mouse up - Not drawing or wrong button:', {
+            //     isDrawing: this.drawingState.isDrawing,
+            //     button: this.drawingState.button,
+            //     eventButton: e.button
+            // });
         }
     }
     
@@ -206,6 +239,17 @@ class PixelEditor {
      * @param {MouseEvent} e - Mouse event
      */
     handleMouseLeave(e) {
+        // Safety check - ensure drawingState exists
+        if (!this.drawingState) {
+            console.warn('⚠️ drawingState not initialized, creating it');
+            this.drawingState = {
+                isDrawing: false,
+                button: null,
+                lastX: 0,
+                lastY: 0
+            };
+        }
+        
         this.drawingState.isDrawing = false;
         this.drawingState.button = null;
     }
@@ -419,7 +463,7 @@ class PixelEditor {
         // - Zoom to fit
         // - Reset canvas
         // - Quick color picker
-        console.log('Double tap detected in pixel editor');
+        // console.log('Double tap detected in pixel editor');
         
         // For now, just pick color at the last position regardless of tool
         this.pickColor(this.lastX, this.lastY);
@@ -597,7 +641,7 @@ class PixelEditor {
             this.onToolChanged(tool);
         }
         
-        console.log(`🛠️ Tool changed to: ${tool}`);
+        // console.log(`🛠️ Tool changed to: ${tool}`);
     }
     
     /**
@@ -612,7 +656,7 @@ class PixelEditor {
             this.onColorChanged(color);
         }
         
-        console.log(`🎨 Color changed to: ${color}`);
+        // console.log(`🎨 Color changed to: ${color}`);
     }
     
     /**
@@ -621,7 +665,7 @@ class PixelEditor {
     updateCursor() {
         // Safety check - only update cursor if canvas is ready
         if (!this.canvas) {
-            console.log('Canvas not ready, skipping cursor update');
+            // console.log('Canvas not ready, skipping cursor update');
             return;
         }
         
@@ -641,7 +685,7 @@ class PixelEditor {
     clear() {
         // Safety check - only clear if canvas is ready
         if (!this.canvas || !this.ctx) {
-            console.log('Canvas not ready, skipping clear');
+            // console.log('Canvas not ready, skipping clear');
             return;
         }
         
@@ -654,7 +698,7 @@ class PixelEditor {
     clearPixelData() {
         // Add safety check - only clear if canvas is ready
         if (!this.canvas || !this.ctx) {
-            console.log('Canvas not ready yet, skipping clear');
+            // console.log('Canvas not ready yet, skipping clear');
             return;
         }
         
@@ -668,7 +712,7 @@ class PixelEditor {
         // Instead, just clear the canvas visually
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        console.log('✅ Pixel data cleared');
+        // console.log('✅ Pixel data cleared');
     }
 
     /**
@@ -677,7 +721,7 @@ class PixelEditor {
     clearHistory() {
         this.history = [];
         this.historyIndex = -1;
-        console.log('✅ History cleared');
+        // console.log('✅ History cleared');
     }
 
     /**
@@ -693,7 +737,7 @@ class PixelEditor {
             this.updateCursor();
         }
         
-        console.log('✅ Tool state reset');
+        // console.log('✅ Tool state reset');
     }
 
     /**
@@ -720,7 +764,7 @@ class PixelEditor {
             doubleTapDistance: 50
         };
         
-        console.log('✅ Drawing state reset');
+        // console.log('✅ Drawing state reset');
     }
 
     /**
@@ -743,7 +787,7 @@ class PixelEditor {
         // Remove context menu prevention
         this.canvas.removeEventListener('contextmenu', (e) => e.preventDefault());
         
-        console.log('✅ Event listeners removed');
+        // console.log('✅ Event listeners removed');
     }
 
     /**
@@ -752,7 +796,7 @@ class PixelEditor {
     refreshTouchHandlers() {
         this.removeEventListeners();
         this.setupEventListeners();
-        console.log('✅ Touch handlers refreshed');
+        // console.log('✅ Touch handlers refreshed');
     }
 
     /**
@@ -773,10 +817,10 @@ class PixelEditor {
         if (this.history.length > 0) {
             this.pixelData = JSON.parse(JSON.stringify(this.history[this.historyIndex]));
             this.redraw();
-            console.log('✅ Reverted to last saved state');
+            // console.log('✅ Reverted to last saved state');
         } else {
             this.clearPixelData();
-            console.log('✅ No saved state, cleared pixel data');
+            // console.log('✅ No saved state, cleared pixel data');
         }
     }
 
@@ -784,7 +828,7 @@ class PixelEditor {
      * Comprehensive state reset - clears everything
      */
     resetAllState() {
-        console.log('🧹 Resetting all pixel editor state...');
+        // console.log('🧹 Resetting all pixel editor state...');
         
         this.clearPixelData();
         this.clearHistory();
@@ -799,14 +843,14 @@ class PixelEditor {
         this.onToolChanged = null;
         this.onColorChanged = null;
         
-        console.log('✅ All pixel editor state reset');
+        // console.log('✅ All pixel editor state reset');
     }
     
     /** Draw the grid */
     drawGrid() {
         // Safety check - only draw if canvas is ready
         if (!this.canvas || !this.ctx) {
-            console.log('Canvas not ready, skipping grid draw');
+            // console.log('Canvas not ready, skipping grid draw');
             return;
         }
         
@@ -838,7 +882,7 @@ class PixelEditor {
     drawGridLines(x, y) {
         // Safety check - only draw if canvas is ready
         if (!this.canvas || !this.ctx) {
-            console.log('Canvas not ready, skipping grid lines draw');
+            // console.log('Canvas not ready, skipping grid lines draw');
             return;
         }
         
@@ -860,9 +904,9 @@ class PixelEditor {
      * @param {Array} data - 32x32 pixel data array
      */
     loadPixelData(data) {
-        console.log('🎨 loadPixelData called with:', data);
-        console.log('🎨 Data type:', typeof data);
-        console.log('🎨 Data length:', Array.isArray(data) ? data.length : 'not array');
+        // console.log('🎨 loadPixelData called with:', data);
+        // console.log('🎨 Data type:', typeof data);
+        // console.log('🎨 Data length:', Array.isArray(data) ? data.length : 'not array');
         
         if (!data || data.length !== this.tileSize) {
             console.error('Invalid pixel data - expected length:', this.tileSize, 'got:', data ? data.length : 'null');
@@ -870,17 +914,17 @@ class PixelEditor {
         }
         
         this.pixelData = data;
-        console.log('🎨 Pixel data loaded, redrawing...');
-        console.log('🎨 Sample of loaded data - first row:', this.pixelData[0]);
-        console.log('🎨 Sample of loaded data - position 16,0:', this.pixelData[0][16]);
-        console.log('🎨 Sample of loaded data - position 17,0:', this.pixelData[0][17]);
+        // console.log('🎨 Pixel data loaded, redrawing...');
+        // console.log('🎨 Sample of loaded data - first row:', this.pixelData[0]);
+        // console.log('🎨 Sample of loaded data - position 16,0:', this.pixelData[0][16]);
+        // console.log('🎨 Sample of loaded data - position 17,0:', this.pixelData[0][17]);
         this.redraw();
-        console.log('🎨 After redraw - position 16,0:', this.pixelData[0][16]);
-        console.log('🎨 After redraw - position 17,0:', this.pixelData[0][17]);
+        // console.log('🎨 After redraw - position 16,0:', this.pixelData[0][16]);
+        // console.log('🎨 After redraw - position 17,0:', this.pixelData[0][17]);
         this.saveToHistory();
-        console.log('🎨 After saveToHistory - position 16,0:', this.pixelData[0][16]);
-        console.log('🎨 After saveToHistory - position 17,0:', this.pixelData[0][17]);
-        console.log('🎨 Pixel data loading complete');
+        // console.log('🎨 After saveToHistory - position 16,0:', this.pixelData[0][16]);
+        // console.log('🎨 After saveToHistory - position 17,0:', this.pixelData[0][17]);
+        // console.log('🎨 Pixel data loading complete');
     }
     
     /**
@@ -918,17 +962,17 @@ class PixelEditor {
     redraw() {
         // Safety check - only redraw if canvas is ready
         if (!this.canvas || !this.ctx) {
-            console.log('Canvas not ready, skipping redraw');
+            // console.log('Canvas not ready, skipping redraw');
             return;
         }
         
-        console.log('🎨 Redrawing canvas...');
+        // console.log('🎨 Redrawing canvas...');
         this.clear();
         
         // Debug: Check first few rows of pixel data
-        console.log('🎨 First row of pixel data:', this.pixelData[0]);
-        console.log('🎨 Second row of pixel data:', this.pixelData[1]);
-        console.log('🎨 Pixel data type check:', typeof this.pixelData[0], typeof this.pixelData[0][16]);
+        // console.log('🎨 First row of pixel data:', this.pixelData[0]);
+        // console.log('🎨 Second row of pixel data:', this.pixelData[1]);
+        // console.log('🎨 Pixel data type check:', typeof this.pixelData[0], typeof this.pixelData[0][16]);
         
         // Draw all pixels
         let pixelCount = 0;
@@ -938,7 +982,7 @@ class PixelEditor {
                 const color = this.pixelData[y] && this.pixelData[y][x];
                 totalPixels++;
                 if (color && color !== 'white') {
-                    console.log(`🎨 Drawing pixel at (${x}, ${y}) with color: ${color}`);
+                    // console.log(`🎨 Drawing pixel at (${x}, ${y}) with color: ${color}`);
                     this.ctx.fillStyle = color;
                     this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
                     pixelCount++;
@@ -950,18 +994,18 @@ class PixelEditor {
             }
         }
         
-        console.log(`🎨 Total pixels checked: ${totalPixels}, non-white pixels: ${pixelCount}`);
-        console.log(`🎨 Sample pixel data:`, {
-            '0,0': this.pixelData[0] && this.pixelData[0][0],
-            '16,0': this.pixelData[0] && this.pixelData[0][16],
-            '17,0': this.pixelData[0] && this.pixelData[0][17],
-            '20,0': this.pixelData[0] && this.pixelData[0][20],
-            '21,0': this.pixelData[0] && this.pixelData[0][21]
-        });
+        // console.log(`🎨 Total pixels checked: ${totalPixels}, non-white pixels: ${pixelCount}`);
+        // console.log(`🎨 Sample pixel data:`, {
+        //     '0,0': this.pixelData[0] && this.pixelData[0][0],
+        //     '16,0': this.pixelData[0] && this.pixelData[0][16],
+        //     '17,0': this.pixelData[0] && this.pixelData[0][17],
+        //     '20,0': this.pixelData[0] && this.pixelData[0][20],
+        //     '21,0': this.pixelData[0] && this.pixelData[0][21]
+        // });
         
-        console.log('🎨 Drew', pixelCount, 'pixels');
+        // console.log('🎨 Drew', pixelCount, 'pixels');
         this.drawGrid();
-        console.log('🎨 Redraw complete');
+        // console.log('🎨 Redraw complete');
     }
     
     /**
@@ -993,23 +1037,23 @@ class PixelEditor {
      * Undo last action
      */
     undo() {
-        console.log('⏪ Undo called - History index:', this.historyIndex, 'History length:', this.history.length);
+        // console.log('⏪ Undo called - History index:', this.historyIndex, 'History length:', this.history.length);
         if (this.historyIndex > 0) {
             this.historyIndex--;
             this.pixelData = JSON.parse(JSON.stringify(this.history[this.historyIndex]));
             this.redraw();
             
-            console.log('⏪ Undo action completed');
+            // console.log('⏪ Undo action completed');
             
             // Update undo/redo buttons
             if (window.navigationManager && window.navigationManager.updateUndoRedoButtons) {
-                console.log('🔄 Updating undo/redo buttons');
+                // console.log('🔄 Updating undo/redo buttons');
                 window.navigationManager.updateUndoRedoButtons();
             } else {
-                console.log('⚠️ Navigation manager not available for button update');
+                // console.log('⚠️ Navigation manager not available for button update');
             }
         } else {
-            console.log('⚠️ Cannot undo - no history available');
+            // console.log('⚠️ Cannot undo - no history available');
         }
     }
     
@@ -1022,7 +1066,7 @@ class PixelEditor {
             this.pixelData = JSON.parse(JSON.stringify(this.history[this.historyIndex]));
             this.redraw();
             
-            console.log('⏩ Redo action');
+            // console.log('⏩ Redo action');
             
             // Update undo/redo buttons
             if (window.navigationManager && window.navigationManager.updateUndoRedoButtons) {
@@ -1039,7 +1083,7 @@ class PixelEditor {
             const dataUrl = this.canvas.toDataURL();
             // Note: Actually copying to clipboard requires additional API calls
             // For now, we'll just log it
-            console.log('📋 Canvas copied to clipboard (data URL)');
+            // console.log('📋 Canvas copied to clipboard (data URL)');
         } catch (error) {
             console.error('Failed to copy canvas:', error);
         }
@@ -1050,7 +1094,7 @@ class PixelEditor {
      */
     pasteCanvas() {
         // This would require additional implementation to handle clipboard data
-        console.log('📄 Paste canvas (not yet implemented)');
+        // console.log('📄 Paste canvas (not yet implemented)');
     }
     
     /**
@@ -1175,4 +1219,4 @@ if (window.ArtPartySocial) {
     };
 }
 
-console.log('✅ Pixel editor loaded'); 
+// console.log('✅ Pixel editor loaded'); 
