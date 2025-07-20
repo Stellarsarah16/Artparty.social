@@ -587,19 +587,7 @@ body {
     transform: scale(1.1);
 }
 
-.custom-color {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-}
 
-.custom-color input[type="color"] {
-    width: 40px;
-    height: 40px;
-    border: none;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-}
 
 .canvas-container {
     position: relative;
@@ -1372,14 +1360,14 @@ form {
 /* Enhanced tool buttons */
 .tool-group {
     display: flex;
-    gap: 4px;
-    margin-bottom: var(--space-sm);
+    gap: var(--space-sm);
+    flex-wrap: wrap;
 }
 
 .tool-btn {
-    width: 40px;
-    height: 40px;
-    border: 2px solid var(--border-color);
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
     background: var(--bg-primary);
     color: var(--text-secondary);
@@ -1388,21 +1376,21 @@ form {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: var(--font-size-sm);
 }
 
 .tool-btn:hover {
+    background: var(--bg-secondary);
     border-color: var(--primary-color);
     color: var(--primary-color);
     transform: translateY(-1px);
 }
 
 .tool-btn.active {
-    border-color: var(--primary-color);
     background: var(--primary-color);
-    color: white;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
+    border-color: var(--primary-color);
+    color: var(--text-white);
+    box-shadow: var(--shadow-sm);
 }
 
 .tool-btn:active {
@@ -1508,9 +1496,9 @@ form {
     left: 50%;
     transform: translate(-50%, -50%);
     color: white;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
     font-size: 12px;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
 } 
 
 /* Compact editor tools */
@@ -1608,4 +1596,119 @@ form {
     white-space: nowrap;
     font-size: var(--font-size-sm);
     padding: var(--space-sm) var(--space-md);
+} 
+
+/* Editor Tools */
+.editor-tools {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.tools-row {
+    display: flex;
+    gap: var(--space-xl);
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.tools-section {
+    flex: 0 0 auto;
+}
+
+.tools-section h3 {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-md);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Color Palette */
+.color-palette {
+    flex: 0 0 auto;
+}
+
+.color-palette h4 {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-md);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 3px;
+    max-width: 180px;
+}
+
+.color-square {
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.color-square:hover {
+    transform: scale(1.15);
+    box-shadow: var(--shadow-md);
+}
+
+.color-square.active {
+    border: 2px solid var(--primary-color);
+    transform: scale(1.15);
+}
+
+.color-square.active::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+} 
+
+@media (max-width: 768px) {
+    .editor-tools {
+        padding: var(--space-md);
+        margin-bottom: var(--space-md);
+    }
+    
+    .tools-row {
+        flex-direction: column;
+        gap: var(--space-lg);
+        align-items: center;
+    }
+    
+    .tools-section {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .color-palette {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .color-grid {
+        max-width: 240px;
+        margin: 0 auto;
+    }
+    
+    .tool-group {
+        justify-content: center;
+    }
 } 

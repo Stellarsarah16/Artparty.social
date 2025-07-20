@@ -1311,16 +1311,6 @@ class NavigationManager {
             }
         });
         
-        // Set up color picker
-        const colorPicker = document.getElementById('custom-color-picker');
-        if (colorPicker) {
-            colorPicker.addEventListener('change', (e) => {
-                if (window.PixelEditor) {
-                    window.PixelEditor.setColor(e.target.value);
-                }
-            });
-        }
-        
         // Initialize color palette with canvas palette
         if (window.UIManager) {
             window.UIManager.initColorPalette();

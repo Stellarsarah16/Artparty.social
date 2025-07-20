@@ -1006,12 +1006,6 @@ class UIManager {
             window.PixelEditor.setColor(color);
         }
 
-        // Update custom color picker
-        const customColorPicker = document.getElementById('custom-color-picker');
-        if (customColorPicker) {
-            customColorPicker.value = color;
-        }
-
         console.log('🎨 Color selected:', color);
     }
 
