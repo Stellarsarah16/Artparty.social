@@ -163,6 +163,13 @@ class NavigationManager {
             }
         });
         
+        // Admin button click event
+        const adminBtn = document.getElementById('admin-btn');
+        adminBtn?.addEventListener('click', () => {
+            console.log('Admin button clicked');
+            window.open('admin.html', '_blank');
+        });
+        
         // Logout button click event
         this.elements.logoutBtn?.addEventListener('click', async () => {
             console.log('Logout button clicked');
@@ -1705,6 +1712,16 @@ class NavigationManager {
         if (user && this.elements.username) {
             this.elements.username.textContent = user.username;
             console.log(`User info updated: ${user.username}`);
+            
+            // Show/hide admin button based on user role
+            const adminBtn = document.getElementById('admin-btn');
+            if (adminBtn) {
+                if (user.is_admin || user.is_superuser) {
+                    adminBtn.style.display = 'block';
+                } else {
+                    adminBtn.style.display = 'none';
+                }
+            }
         }
     }
 
