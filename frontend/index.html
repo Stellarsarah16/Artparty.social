@@ -453,6 +453,16 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <label for="tile-size">Tile Size</label>
+                    <select id="tile-size" name="tile_size">
+                        <option value="32">32x32px (Small - 32 tiles)</option>
+                        <option value="64" selected>64x64px (Medium - 16 tiles)</option>
+                        <option value="128">128x128px (Large - 8 tiles)</option>
+                        <option value="256">256x256px (Extra Large - 4 tiles)</option>
+                        <option value="512">512x512px (Huge - 2 tiles)</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="max-tiles">Max Tiles per User</label>
                     <input type="number" id="max-tiles" name="max_tiles_per_user" min="1" max="100" value="10">
                 </div>
@@ -465,12 +475,41 @@
                         <option value="monochrome">Monochrome - Grayscale variations</option>
                         <option value="neon">Neon - Bright, vibrant colors</option>
                         <option value="retro">Retro Gaming - Classic game boy style</option>
+                        <option value="artistic">Artistic - Burnt umber, paynes grey, ochres</option>
+                        <option value="sunset">Sunset - Warm oranges, pinks, and purples</option>
+                        <option value="ocean">Ocean - Blues, teals, and sea greens</option>
+                        <option value="forest">Forest - Greens, browns, and natural tones</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="collaboration-mode">Collaboration Mode</label>
+                    <select id="collaboration-mode" name="collaboration_mode">
+                        <option value="free">Free - Anyone can edit anywhere</option>
+                        <option value="tile-lock">Tile Lock - One user per tile at a time</option>
+                        <option value="area-lock">Area Lock - Locked areas for focused work</option>
+                        <option value="review">Review - Changes require approval</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="auto-save-interval">Auto-Save Interval</label>
+                    <select id="auto-save-interval" name="auto_save_interval">
+                        <option value="30">30 seconds</option>
+                        <option value="60" selected>1 minute</option>
+                        <option value="300">5 minutes</option>
+                        <option value="600">10 minutes</option>
+                        <option value="0">Manual only</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>
                         <input type="checkbox" id="canvas-public" name="is_public" checked>
                         Make this canvas public
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="canvas-moderated" name="is_moderated">
+                        Enable moderation (review changes before they go live)
                     </label>
                 </div>
                 <button type="submit" class="btn btn-primary btn-full">Create Canvas</button>

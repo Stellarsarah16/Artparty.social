@@ -14,15 +14,15 @@ class Canvas(Base):
     description = Column(Text, nullable=True)
     width = Column(Integer, default=1024)  # Canvas width in pixels
     height = Column(Integer, default=1024)  # Canvas height in pixels
-    tile_size = Column(Integer, default=32)  # Size of each tile (32x32)
+    tile_size = Column(Integer, default=64)  # Size of each tile (64x64)
     palette_type = Column(String(20), default='classic')  # Color palette type
     is_active = Column(Boolean, default=True)
-    max_tiles_per_user = Column(Integer, default=5)  # Limit tiles per user
+    max_tiles_per_user = Column(Integer, default=10)  # Limit tiles per user
+    collaboration_mode = Column(String(20), default='free')  # Collaboration mode
+    auto_save_interval = Column(Integer, default=60)  # Auto-save interval in seconds
+    is_public = Column(Boolean, default=True)  # Whether canvas is public
+    is_moderated = Column(Boolean, default=False)  # Whether changes require moderation
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
-    # Relationships
-    tiles = relationship("Tile", back_populates="canvas") 
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships

@@ -412,9 +412,13 @@ class NavigationManager {
             description: formData.get('description') || '',
             width: parseInt(formData.get('width')),
             height: parseInt(formData.get('height')),
+            tile_size: parseInt(formData.get('tile_size')),
             palette_type: formData.get('palette_type'),
             max_tiles_per_user: parseInt(formData.get('max_tiles_per_user')),
-            is_public: formData.get('is_public') === 'on'
+            collaboration_mode: formData.get('collaboration_mode'),
+            auto_save_interval: parseInt(formData.get('auto_save_interval')),
+            is_public: formData.get('is_public') === 'on',
+            is_moderated: formData.get('is_moderated') === 'on'
         };
         
         console.log('Canvas data:', canvasData);

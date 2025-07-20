@@ -934,6 +934,30 @@ class UIManager {
         retro: [
             '#0F380F', '#306230', '#8BAC0F', '#9BBC0F',
             '#306230', '#8BAC0F', '#9BBC0F', '#306230'
+        ],
+
+        // Artistic palette - Burnt umber, paynes grey, ochres, etc.
+        artistic: [
+            '#8B4513', '#2F4F4F', '#556B2F', '#DAA520',
+            '#8A2BE2', '#20B2AA', '#FF6347', '#F5DEB3'
+        ],
+
+        // Sunset palette - Warm oranges, pinks, and purples
+        sunset: [
+            '#FF4500', '#FF6347', '#FF7F50', '#FF8C00',
+            '#FF69B4', '#DDA0DD', '#9370DB', '#8A2BE2'
+        ],
+
+        // Ocean palette - Blues, teals, and sea greens
+        ocean: [
+            '#000080', '#4169E1', '#1E90FF', '#00CED1',
+            '#20B2AA', '#48D1CC', '#40E0D0', '#7FFFD4'
+        ],
+
+        // Forest palette - Greens, browns, and natural tones
+        forest: [
+            '#228B22', '#32CD32', '#90EE90', '#98FB98',
+            '#8B4513', '#A0522D', '#CD853F', '#DEB887'
         ]
     };
 
