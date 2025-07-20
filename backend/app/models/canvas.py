@@ -15,6 +15,7 @@ class Canvas(Base):
     width = Column(Integer, default=1024)  # Canvas width in pixels
     height = Column(Integer, default=1024)  # Canvas height in pixels
     tile_size = Column(Integer, default=32)  # Size of each tile (32x32)
+    palette_type = Column(String(20), default='classic')  # Color palette type
     is_active = Column(Boolean, default=True)
     max_tiles_per_user = Column(Integer, default=5)  # Limit tiles per user
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -895,6 +895,204 @@ class UIManager {
             isShowingToast: this.isShowingToast
         };
     }
+
+    /**
+     * Color Palette Management
+     */
+    colorPalettes = {
+        // Classic pixel art palette (8 colors)
+        classic: [
+            '#000000', '#FFFFFF', '#FF0000', '#00FF00', 
+            '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'
+        ],
+        
+        // Earth tones palette
+        earth: [
+            '#8B4513', '#D2691E', '#CD853F', '#DEB887',
+            '#F4A460', '#D2B48C', '#BC8F8F', '#A0522D'
+        ],
+        
+        // Pastel palette
+        pastel: [
+            '#FFB6C1', '#87CEEB', '#98FB98', '#DDA0DD',
+            '#F0E68C', '#FFA07A', '#B0E0E6', '#FFC0CB'
+        ],
+        
+        // Monochrome palette
+        monochrome: [
+            '#000000', '#333333', '#666666', '#999999',
+            '#CCCCCC', '#FFFFFF', '#E6E6E6', '#B3B3B3'
+        ],
+        
+        // Neon palette
+        neon: [
+            '#FF0080', '#00FF80', '#0080FF', '#FFFF00',
+            '#FF8000', '#8000FF', '#00FFFF', '#FF0080'
+        ],
+        
+        // Retro gaming palette
+        retro: [
+            '#0F380F', '#306230', '#8BAC0F', '#9BBC0F',
+            '#306230', '#8BAC0F', '#9BBC0F', '#306230'
+        ]
+    };
+
+    /**
+     * Initialize color palette
+     */
+    initColorPalette() {
+        const paletteContainer = document.getElementById('color-palette');
+        if (!paletteContainer) {
+            console.warn('Color palette container not found');
+            return;
+        }
+
+        // Get palette from current canvas
+        const currentCanvas = appState.get('currentCanvas');
+        const paletteType = currentCanvas?.palette_type || 'classic';
+        
+        this.currentPalette = paletteType;
+        this.generateColorPalette(this.currentPalette);
+    }
+
+    /**
+     * Generate color palette in the UI
+     */
+    generateColorPalette(paletteName = 'classic') {
+        const paletteContainer = document.getElementById('color-palette');
+        if (!paletteContainer) return;
+
+        const colors = this.colorPalettes[paletteName] || this.colorPalettes.classic;
+        
+        paletteContainer.innerHTML = '';
+        
+        colors.forEach(color => {
+            const colorSquare = document.createElement('div');
+            colorSquare.className = 'color-square';
+            colorSquare.style.backgroundColor = color;
+            colorSquare.setAttribute('data-color', color);
+            colorSquare.title = color;
+            
+            colorSquare.addEventListener('click', () => {
+                this.selectColor(color);
+            });
+            
+            paletteContainer.appendChild(colorSquare);
+        });
+
+        // Select first color by default
+        if (colors.length > 0) {
+            this.selectColor(colors[0]);
+        }
+    }
+
+
+
+    /**
+     * Select a color
+     */
+    selectColor(color) {
+        // Update active color square
+        const colorSquares = document.querySelectorAll('.color-square');
+        colorSquares.forEach(square => {
+            square.classList.remove('active');
+            if (square.getAttribute('data-color') === color) {
+                square.classList.add('active');
+            }
+        });
+
+        // Update pixel editor
+        if (window.PixelEditor) {
+            window.PixelEditor.setColor(color);
+        }
+
+        // Update custom color picker
+        const customColorPicker = document.getElementById('custom-color-picker');
+        if (customColorPicker) {
+            customColorPicker.value = color;
+        }
+
+        console.log('🎨 Color selected:', color);
+    }
+
+    /**
+     * Create custom palette from image
+     */
+    async createCustomPaletteFromImage(imageUrl, colorCount = 8) {
+        try {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            return new Promise((resolve, reject) => {
+                img.onload = () => {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const colors = this.extractColorsFromImageData(imageData, colorCount);
+                    
+                    resolve(colors);
+                };
+                
+                img.onerror = reject;
+                img.src = imageUrl;
+            });
+        } catch (error) {
+            console.error('Failed to create custom palette from image:', error);
+            return this.colorPalettes.classic;
+        }
+    }
+
+    /**
+     * Extract dominant colors from image data
+     */
+    extractColorsFromImageData(imageData, colorCount) {
+        const pixels = imageData.data;
+        const colorMap = new Map();
+        
+        // Count color frequencies
+        for (let i = 0; i < pixels.length; i += 4) {
+            const r = Math.floor(pixels[i] / 32) * 32; // Quantize to reduce similar colors
+            const g = Math.floor(pixels[i + 1] / 32) * 32;
+            const b = Math.floor(pixels[i + 2] / 32) * 32;
+            const color = `rgb(${r}, ${g}, ${b})`;
+            
+            colorMap.set(color, (colorMap.get(color) || 0) + 1);
+        }
+        
+        // Sort by frequency and take top colors
+        const sortedColors = Array.from(colorMap.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, colorCount)
+            .map(entry => entry[0]);
+        
+        return sortedColors;
+    }
+
+    /**
+     * Get current palette
+     */
+    getCurrentPalette() {
+        return this.colorPalettes[this.currentPalette] || this.colorPalettes.classic;
+    }
+
+    /**
+     * Add custom palette
+     */
+    addCustomPalette(name, colors) {
+        this.colorPalettes[name] = colors;
+        
+        // Update selector if it exists
+        const selector = document.getElementById('palette-selector');
+        if (selector) {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+            selector.appendChild(option);
+        }
+    }
 }
 
 // Create global instance

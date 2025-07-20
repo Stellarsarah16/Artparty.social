@@ -406,6 +406,7 @@ class NavigationManager {
             description: formData.get('description') || '',
             width: parseInt(formData.get('width')),
             height: parseInt(formData.get('height')),
+            palette_type: formData.get('palette_type'),
             max_tiles_per_user: parseInt(formData.get('max_tiles_per_user')),
             is_public: formData.get('is_public') === 'on'
         };
@@ -610,6 +611,10 @@ class NavigationManager {
                 <div class="canvas-stat">
                     <i class="fas fa-palette"></i>
                     <span>${canvas.tile_count || 0} tiles</span>
+                </div>
+                <div class="canvas-stat">
+                    <i class="fas fa-palette"></i>
+                    <span>${canvas.palette_type || 'classic'} palette</span>
                 </div>
             </div>
         `;
@@ -941,6 +946,14 @@ class NavigationManager {
                 tileCoords.textContent = `${statusText}: (${tile.x}, ${tile.y})`;
             }
             
+            // Update tile info fields in editor header
+            this.updateEditorTileInfo(tile);
+            
+            // Initialize color palette with canvas palette
+            if (window.UIManager) {
+                window.UIManager.initColorPalette();
+            }
+            
             // Emit tile opened event
             eventManager.emit('tile:opened', tile);
             
@@ -979,7 +992,7 @@ class NavigationManager {
         for (let y = 0; y < 32; y++) {
             pixelData[y] = [];
             for (let x = 0; x < 32; x++) {
-                pixelData[y][x] = 'transparent';
+                pixelData[y][x] = 'white';
             }
         }
         return JSON.stringify(pixelData);
@@ -1116,6 +1129,10 @@ class NavigationManager {
                 window.PixelEditor.init(pixelCanvas);
                 console.log('🎨 PixelEditor initialized successfully');
                 
+                // Clear the pixel editor to ensure fresh start
+                window.PixelEditor.clearPixelData();
+                console.log('🎨 PixelEditor cleared for fresh start');
+                
                 // Load the tile's pixel data
                 console.log('🎨 Tile data received:', tile);
                 console.log('🎨 Pixel data exists:', !!tile.pixel_data);
@@ -1162,7 +1179,10 @@ class NavigationManager {
                     }
                 } else {
                     console.log('🎨 No pixel data, starting with empty tile');
-                    window.PixelEditor.loadPixelData(window.PixelEditor.createEmptyPixelData());
+                    const emptyData = window.PixelEditor.createEmptyPixelData();
+                    console.log('🎨 Empty pixel data created:', emptyData);
+                    console.log('🎨 Empty data sample - first row:', emptyData[0]);
+                    window.PixelEditor.loadPixelData(emptyData);
                 }
                 
                 // Set up save button handler
@@ -1244,6 +1264,24 @@ class NavigationManager {
                     
                 } catch (error) {
                     console.error('Failed to save tile:', error);
+                    
+                    // Show error message to user
+                    if (window.UIManager) {
+                        let errorMessage = 'Failed to save tile';
+                        
+                        // Extract error message from API response
+                        if (error.data && error.data.detail) {
+                            if (Array.isArray(error.data.detail)) {
+                                errorMessage = error.data.detail[0]?.msg || error.data.detail[0]?.detail || errorMessage;
+                            } else {
+                                errorMessage = error.data.detail;
+                            }
+                        } else if (error.message) {
+                            errorMessage = error.message;
+                        }
+                        
+                        window.UIManager.showToast(errorMessage, 'error');
+                    }
                 }
             });
             
@@ -1267,7 +1305,8 @@ class NavigationManager {
         const toolButtons = {
             'paint-tool': 'paint',
             'eraser-tool': 'eraser',
-            'picker-tool': 'picker'
+            'picker-tool': 'picker',
+            'fill-tool': 'fill'
         };
         
         Object.entries(toolButtons).forEach(([buttonId, toolName]) => {
@@ -1299,6 +1338,11 @@ class NavigationManager {
                     window.PixelEditor.setColor(e.target.value);
                 }
             });
+        }
+        
+        // Initialize color palette with canvas palette
+        if (window.UIManager) {
+            window.UIManager.initColorPalette();
         }
     }
     
@@ -1668,6 +1712,56 @@ class NavigationManager {
             loadingScreen.style.display = 'none';
         }
     }
+
+    /**
+     * Update tile info fields in editor header
+     */
+    updateEditorTileInfo(tile) {
+        try {
+            console.log('📝 Updating editor tile info:', tile);
+            
+            // Update owner
+            const ownerElement = document.getElementById('tile-info-owner');
+            if (ownerElement) {
+                const ownerName = tile.creator_username || tile.creator_id || 'Unknown';
+                ownerElement.textContent = `Owner: ${ownerName}`;
+            }
+            
+            // Update canvas name
+            const canvasElement = document.getElementById('tile-info-canvas');
+            if (canvasElement) {
+                const canvas = appState.get('currentCanvas');
+                const canvasName = canvas ? canvas.name : 'Unknown Canvas';
+                canvasElement.textContent = `Canvas: ${canvasName}`;
+            }
+            
+            // Update created date
+            const createdElement = document.getElementById('tile-info-created');
+            if (createdElement && tile.created_at) {
+                const createdDate = new Date(tile.created_at).toLocaleDateString();
+                createdElement.textContent = `Created: ${createdDate}`;
+            } else if (createdElement) {
+                createdElement.textContent = 'Created: -';
+            }
+            
+            // Update updated date
+            const updatedElement = document.getElementById('tile-info-updated');
+            if (updatedElement && tile.updated_at) {
+                const updatedDate = new Date(tile.updated_at).toLocaleDateString();
+                updatedElement.textContent = `Updated: ${updatedDate}`;
+            } else if (updatedElement) {
+                updatedElement.textContent = 'Updated: -';
+            }
+            
+            console.log('✅ Editor tile info updated');
+        } catch (error) {
+            console.error('Failed to update editor tile info:', error);
+        }
+    }
+
+    /**
+     * Update tile info in canvas viewer
+     */
 }
 
 // Create singleton instance

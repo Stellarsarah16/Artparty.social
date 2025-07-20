@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tile Limit Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .error-message {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success-message {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        button {
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #1976d2;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tile Limit Error Message Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Simulate Tile Limit Error</h2>
+        <p>This test simulates the error response from the backend when a user tries to create more tiles than allowed.</p>
+        <button onclick="testTileLimitError()">Test Tile Limit Error</button>
+        <div id="test1-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Test Error Message Extraction</h2>
+        <p>This test verifies that the error message extraction logic works correctly.</p>
+        <button onclick="testErrorExtraction()">Test Error Extraction</button>
+        <div id="test2-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Test Toast Display</h2>
+        <p>This test verifies that the toast notification system works correctly.</p>
+        <button onclick="testToastDisplay()">Test Toast Display</button>
+        <div id="test3-result"></div>
+    </div>
+
+    <script>
+        // Mock API response for tile limit error
+        const mockTileLimitError = {
+            status: 403,
+            data: {
+                detail: "Limit of 10 tiles reached"
+            }
+        };
+
+        // Mock error extraction function (similar to what's in api.js)
+        function extractErrorMessage(error) {
+            let errorMessage = 'Access denied';
+            if (error.data && error.data.detail) {
+                if (Array.isArray(error.data.detail)) {
+                    errorMessage = error.data.detail[0]?.msg || error.data.detail[0]?.detail || errorMessage;
+                } else {
+                    errorMessage = error.data.detail;
+                }
+            }
+            return errorMessage;
+        }
+
+        // Mock toast display function
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: ${type === 'error' ? '#ffebee' : '#e8f5e8'};
+                color: ${type === 'error' ? '#c62828' : '#2e7d32'};
+                padding: 15px;
+                border-radius: 4px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                z-index: 1000;
+                max-width: 300px;
+            `;
+            document.body.appendChild(toast);
+            
+            // Remove toast after 3 seconds
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 3000);
+        }
+
+        function testTileLimitError() {
+            const resultDiv = document.getElementById('test1-result');
+            resultDiv.innerHTML = '';
+            
+            try {
+                // Simulate the error handling from navigation.js
+                const errorMessage = extractErrorMessage(mockTileLimitError);
+                
+                if (errorMessage === "Limit of 10 tiles reached") {
+                    resultDiv.innerHTML = '<div class="success-message">✅ Test passed! Error message correctly extracted: "' + errorMessage + '"</div>';
+                } else {
+                    resultDiv.innerHTML = '<div class="error-message">❌ Test failed! Expected "Limit of 10 tiles reached" but got "' + errorMessage + '"</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error-message">❌ Test failed with error: ' + error.message + '</div>';
+            }
+        }
+
+        function testErrorExtraction() {
+            const resultDiv = document.getElementById('test2-result');
+            resultDiv.innerHTML = '';
+            
+            const testCases = [
+                {
+                    name: "Tile limit error",
+                    error: { status: 403, data: { detail: "Limit of 10 tiles reached" } },
+                    expected: "Limit of 10 tiles reached"
+                },
+                {
+                    name: "Array error detail",
+                    error: { status: 403, data: { detail: [{ msg: "Custom error message" }] } },
+                    expected: "Custom error message"
+                },
+                {
+                    name: "No detail field",
+                    error: { status: 403, data: {} },
+                    expected: "Access denied"
+                },
+                {
+                    name: "No data field",
+                    error: { status: 403 },
+                    expected: "Access denied"
+                }
+            ];
+            
+            let results = '';
+            let allPassed = true;
+            
+            testCases.forEach(testCase => {
+                const result = extractErrorMessage(testCase.error);
+                if (result === testCase.expected) {
+                    results += `<div class="success-message">✅ ${testCase.name}: "${result}"</div>`;
+                } else {
+                    results += `<div class="error-message">❌ ${testCase.name}: Expected "${testCase.expected}" but got "${result}"</div>`;
+                    allPassed = false;
+                }
+            });
+            
+            if (allPassed) {
+                results = '<div class="success-message">🎉 All error extraction tests passed!</div>' + results;
+            } else {
+                results = '<div class="error-message">❌ Some error extraction tests failed!</div>' + results;
+            }
+            
+            resultDiv.innerHTML = results;
+        }
+
+        function testToastDisplay() {
+            const resultDiv = document.getElementById('test3-result');
+            resultDiv.innerHTML = '';
+            
+            // Test the toast display
+            showToast("Limit of 10 tiles reached", "error");
+            
+            resultDiv.innerHTML = '<div class="success-message">✅ Toast notification displayed! Check the bottom-right corner of the screen.</div>';
+        }
+    </script>
+</body>
+</html> 

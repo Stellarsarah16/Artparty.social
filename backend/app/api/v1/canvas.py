@@ -73,6 +73,7 @@ async def get_canvas_details(
         width=canvas.width,
         height=canvas.height,
         tile_size=canvas.tile_size,
+        palette_type=canvas.palette_type,
         is_active=canvas.is_active,
         max_tiles_per_user=canvas.max_tiles_per_user,
         created_at=canvas.created_at,
@@ -95,6 +96,7 @@ async def create_canvas(
             width=canvas_create.width,
             height=canvas_create.height,
             tile_size=canvas_create.tile_size,
+            palette_type=canvas_create.palette_type,
             max_tiles_per_user=canvas_create.max_tiles_per_user
         )
         
@@ -111,6 +113,7 @@ async def create_canvas(
                 width=canvas.width,
                 height=canvas.height,
                 tile_size=canvas.tile_size,
+                palette_type=canvas.palette_type,
                 is_active=canvas.is_active,
                 max_tiles_per_user=canvas.max_tiles_per_user,
                 created_at=canvas.created_at,
@@ -164,6 +167,7 @@ async def update_canvas(
                 width=canvas.width,
                 height=canvas.height,
                 tile_size=canvas.tile_size,
+                palette_type=canvas.palette_type,
                 is_active=canvas.is_active,
                 max_tiles_per_user=canvas.max_tiles_per_user,
                 created_at=canvas.created_at,

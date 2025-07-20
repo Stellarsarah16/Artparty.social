@@ -289,9 +289,17 @@ class APIClient {
                 window.UIManager.showToast('Session expired. Please log in again.', 'error');
             }
         } else if (error.status === 403) {
-            // Forbidden
+            // Forbidden - show actual error message from server
+            let errorMessage = 'Access denied';
+            if (error.data && error.data.detail) {
+                if (Array.isArray(error.data.detail)) {
+                    errorMessage = error.data.detail[0]?.msg || error.data.detail[0]?.detail || errorMessage;
+                } else {
+                    errorMessage = error.data.detail;
+                }
+            }
             if (window.UIManager) {
-                window.UIManager.showToast('Access denied', 'error');
+                window.UIManager.showToast(errorMessage, 'error');
             }
         } else if (error.status === 404) {
             // Not found

@@ -184,4 +184,8 @@ class AppState {
 
 // Create and export singleton instance
 const appState = new AppState();
+
+// Make appState available globally for non-module scripts
+window.appState = appState;
+
 export default appState; 

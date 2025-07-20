@@ -47,7 +47,7 @@ class TileService:
         if user_tiles_count >= canvas.max_tiles_per_user:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Maximum {canvas.max_tiles_per_user} tiles per user on this canvas"
+                detail=f"Limit of {canvas.max_tiles_per_user} tiles reached"
             )
         
         # Validate position is within canvas bounds

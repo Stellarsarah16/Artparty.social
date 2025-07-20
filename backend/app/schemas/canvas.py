@@ -10,6 +10,7 @@ class CanvasCreate(BaseModel):
     width: int = 1024
     height: int = 1024
     tile_size: int = 32
+    palette_type: str = 'classic'
     max_tiles_per_user: int = 5
     
     @validator('name')
@@ -32,6 +33,13 @@ class CanvasCreate(BaseModel):
     def validate_tile_size(cls, v):
         if v not in [16, 32, 64]:
             raise ValueError('Tile size must be 16, 32, or 64 pixels')
+        return v
+    
+    @validator('palette_type')
+    def validate_palette_type(cls, v):
+        valid_palettes = ['classic', 'earth', 'pastel', 'monochrome', 'neon', 'retro']
+        if v not in valid_palettes:
+            raise ValueError(f'Palette type must be one of: {", ".join(valid_palettes)}')
         return v
 
 
@@ -59,6 +67,7 @@ class CanvasResponse(BaseModel):
     width: int
     height: int
     tile_size: int
+    palette_type: str
     is_active: bool
     max_tiles_per_user: int
     created_at: datetime
@@ -76,6 +85,7 @@ class CanvasWithTiles(BaseModel):
     width: int
     height: int
     tile_size: int
+    palette_type: str
     is_active: bool
     max_tiles_per_user: int
     created_at: datetime

@@ -10,7 +10,7 @@ import logging
 
 from ...core.database import get_db
 from ...schemas.user import UserCreate, UserLogin, UserResponse
-from ...services.authentication import authentication_service
+from ...services.auth import auth_service
 from ...models.user import User
 
 router = APIRouter()
@@ -45,8 +45,9 @@ async def register(
     try:
         logger.info(f"Registration attempt for username: {user_create.username}")
         
-        # Use the new authentication service
-        token_response = authentication_service.register_user(db, user_create)
+        # Use the original auth service
+        user = auth_service.create_user(db, user_create)
+        token_response = auth_service.create_token_response(user)
         
         logger.info(f"User registered successfully: {user_create.username}")
         return token_response
@@ -85,10 +86,16 @@ async def login(
     try:
         logger.info(f"Login attempt for username: {user_login.username}")
         
-        # Use the new authentication service
-        token_response = authentication_service.login_user(
-            db, user_login.username, user_login.password
-        )
+        # Use the original auth service
+        user = auth_service.authenticate_user(db, user_login.username, user_login.password)
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password"
+            )
+        
+        token_response = auth_service.create_token_response(user)
         
         logger.info(f"User logged in successfully: {user_login.username}")
         return token_response
@@ -110,7 +117,7 @@ async def get_current_user(
 ) -> User:
     """Dependency to get current authenticated user"""
     token = credentials.credentials
-    return authentication_service.get_current_user(db, token)
+    return auth_service.get_current_user(db, token)
 
 
 @router.get("/me", response_model=UserResponse)
