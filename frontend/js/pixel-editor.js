@@ -138,6 +138,7 @@ class PixelEditor {
         if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize) {
             // Only allow left mouse button (button 0) for painting
             if (e.button === 0) {
+                console.log('🖱️ Mouse down - Left button, starting to draw');
                 this.drawingState.isDrawing = true;
                 this.drawingState.button = e.button;
                 this.drawingState.lastX = x;
@@ -148,6 +149,8 @@ class PixelEditor {
                 
                 this.applyTool(x, y, false); // Always false for left mouse button
                 this.updatePositionIndicator(x, y);
+            } else {
+                console.log('🖱️ Mouse down - Ignoring non-left button:', e.button);
             }
         }
     }
@@ -180,6 +183,7 @@ class PixelEditor {
     handleMouseUp(e) {
         // Only handle mouse up for the button that was pressed
         if (this.drawingState.isDrawing && this.drawingState.button === e.button) {
+            console.log('🖱️ Mouse up - Stopping drawing');
             this.drawingState.isDrawing = false;
             this.drawingState.button = null;
             this.saveToHistory();
@@ -188,6 +192,12 @@ class PixelEditor {
             if (this.onPixelChanged) {
                 this.onPixelChanged(this.pixelData);
             }
+        } else {
+            console.log('🖱️ Mouse up - Not drawing or wrong button:', {
+                isDrawing: this.drawingState.isDrawing,
+                button: this.drawingState.button,
+                eventButton: e.button
+            });
         }
     }
     
@@ -974,8 +984,8 @@ class PixelEditor {
         }
         
         // Update undo/redo buttons if navigation manager exists
-        if (window.NavigationManager && window.NavigationManager.updateUndoRedoButtons) {
-            window.NavigationManager.updateUndoRedoButtons();
+        if (window.navigationManager && window.navigationManager.updateUndoRedoButtons) {
+            window.navigationManager.updateUndoRedoButtons();
         }
     }
     
@@ -983,17 +993,23 @@ class PixelEditor {
      * Undo last action
      */
     undo() {
+        console.log('⏪ Undo called - History index:', this.historyIndex, 'History length:', this.history.length);
         if (this.historyIndex > 0) {
             this.historyIndex--;
             this.pixelData = JSON.parse(JSON.stringify(this.history[this.historyIndex]));
             this.redraw();
             
-            console.log('⏪ Undo action');
+            console.log('⏪ Undo action completed');
             
             // Update undo/redo buttons
-            if (window.NavigationManager && window.NavigationManager.updateUndoRedoButtons) {
-                window.NavigationManager.updateUndoRedoButtons();
+            if (window.navigationManager && window.navigationManager.updateUndoRedoButtons) {
+                console.log('🔄 Updating undo/redo buttons');
+                window.navigationManager.updateUndoRedoButtons();
+            } else {
+                console.log('⚠️ Navigation manager not available for button update');
             }
+        } else {
+            console.log('⚠️ Cannot undo - no history available');
         }
     }
     
@@ -1009,8 +1025,8 @@ class PixelEditor {
             console.log('⏩ Redo action');
             
             // Update undo/redo buttons
-            if (window.NavigationManager && window.NavigationManager.updateUndoRedoButtons) {
-                window.NavigationManager.updateUndoRedoButtons();
+            if (window.navigationManager && window.navigationManager.updateUndoRedoButtons) {
+                window.navigationManager.updateUndoRedoButtons();
             }
         }
     }

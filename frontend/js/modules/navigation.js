@@ -1324,47 +1324,84 @@ class NavigationManager {
      * Setup undo and redo buttons
      */
     setupUndoRedoButtons() {
+        console.log('🔧 Setting up undo/redo buttons...');
         const undoBtn = document.getElementById('undo-btn');
         const redoBtn = document.getElementById('redo-btn');
         
+        console.log('🔧 Undo button found:', !!undoBtn);
+        console.log('🔧 Redo button found:', !!redoBtn);
+        
+        // Add visual debugging - make buttons more visible
         if (undoBtn) {
+            undoBtn.style.border = '2px solid #4CAF50';
+            undoBtn.style.backgroundColor = '#e8f5e8';
+            console.log('🔧 Adding click listener to undo button');
             undoBtn.addEventListener('click', () => {
+                console.log('🔄 Undo button clicked');
                 if (window.PixelEditor) {
                     window.PixelEditor.undo();
                     this.updateUndoRedoButtons();
+                } else {
+                    console.warn('⚠️ PixelEditor not available');
                 }
             });
+        } else {
+            console.error('❌ Undo button not found in DOM');
         }
         
         if (redoBtn) {
+            redoBtn.style.border = '2px solid #2196F3';
+            redoBtn.style.backgroundColor = '#e3f2fd';
+            console.log('🔧 Adding click listener to redo button');
             redoBtn.addEventListener('click', () => {
+                console.log('🔄 Redo button clicked');
                 if (window.PixelEditor) {
                     window.PixelEditor.redo();
                     this.updateUndoRedoButtons();
+                } else {
+                    console.warn('⚠️ PixelEditor not available');
                 }
             });
+        } else {
+            console.error('❌ Redo button not found in DOM');
         }
         
         // Initial button state
         this.updateUndoRedoButtons();
+        console.log('✅ Undo/redo buttons setup complete');
     }
 
     /**
      * Update undo/redo button states
      */
     updateUndoRedoButtons() {
-        if (!window.PixelEditor) return;
+        console.log('🔄 Updating undo/redo button states...');
+        if (!window.PixelEditor) {
+            console.warn('⚠️ PixelEditor not available for button update');
+            return;
+        }
         
         const undoBtn = document.getElementById('undo-btn');
         const redoBtn = document.getElementById('redo-btn');
         
+        console.log('🔄 Undo button found for update:', !!undoBtn);
+        console.log('🔄 Redo button found for update:', !!redoBtn);
+        console.log('🔄 History index:', window.PixelEditor.historyIndex);
+        console.log('🔄 History length:', window.PixelEditor.history.length);
+        
         if (undoBtn) {
-            undoBtn.disabled = window.PixelEditor.historyIndex <= 0;
+            const shouldDisableUndo = window.PixelEditor.historyIndex <= 0;
+            undoBtn.disabled = shouldDisableUndo;
+            console.log('🔄 Undo button disabled:', shouldDisableUndo);
         }
         
         if (redoBtn) {
-            redoBtn.disabled = window.PixelEditor.historyIndex >= window.PixelEditor.history.length - 1;
+            const shouldDisableRedo = window.PixelEditor.historyIndex >= window.PixelEditor.history.length - 1;
+            redoBtn.disabled = shouldDisableRedo;
+            console.log('🔄 Redo button disabled:', shouldDisableRedo);
         }
+        
+        console.log('✅ Undo/redo button states updated');
     }
     
     /**
@@ -2121,6 +2158,48 @@ window.emergencyRecovery = () => {
     } else {
         console.error('Navigation manager not available');
     }
+};
+
+// Add global test function for undo/redo buttons
+window.testUndoRedo = () => {
+    console.log('🧪 Testing undo/redo functionality...');
+    
+    // Check if buttons exist
+    const undoBtn = document.getElementById('undo-btn');
+    const redoBtn = document.getElementById('redo-btn');
+    
+    console.log('Undo button:', undoBtn);
+    console.log('Redo button:', redoBtn);
+    
+    // Check if PixelEditor exists
+    console.log('PixelEditor:', window.PixelEditor);
+    
+    // Check if navigation manager exists
+    console.log('Navigation manager:', window.navigationManager);
+    
+    // Try to manually set up buttons if they don't exist
+    if (!undoBtn || !redoBtn) {
+        console.log('⚠️ Buttons not found, trying to set them up...');
+        if (window.navigationManager) {
+            window.navigationManager.setupUndoRedoButtons();
+        }
+    }
+    
+    // Test undo/redo if PixelEditor exists
+    if (window.PixelEditor) {
+        console.log('PixelEditor history:', window.PixelEditor.history);
+        console.log('PixelEditor history index:', window.PixelEditor.historyIndex);
+        
+        // Try to add some test data
+        if (window.PixelEditor.history.length === 0) {
+            console.log('Adding test pixel data...');
+            window.PixelEditor.pixelData[0][0] = 'red';
+            window.PixelEditor.saveToHistory();
+            console.log('Test data added, history length:', window.PixelEditor.history.length);
+        }
+    }
+    
+    console.log('✅ Undo/redo test complete');
 };
 
 // Export methods for external use
