@@ -248,9 +248,30 @@ class ArtPartySocial {
 }
 
 // Initialize the app when DOM is ready
+console.log('🔧 App.js loaded, setting up DOMContentLoaded listener...');
+
 document.addEventListener('DOMContentLoaded', () => {
-    window.artPartyApp = new ArtPartySocial();
+    console.log('🚀 DOMContentLoaded fired, initializing ArtPartySocial...');
+    try {
+        window.artPartyApp = new ArtPartySocial();
+        console.log('✅ ArtPartySocial instance created');
+    } catch (error) {
+        console.error('❌ Failed to create ArtPartySocial instance:', error);
+    }
 });
+
+// Also try to initialize if DOM is already loaded
+if (document.readyState === 'loading') {
+    console.log('⏳ DOM still loading, waiting for DOMContentLoaded...');
+} else {
+    console.log('✅ DOM already loaded, initializing immediately...');
+    try {
+        window.artPartyApp = new ArtPartySocial();
+        console.log('✅ ArtPartySocial instance created (immediate)');
+    } catch (error) {
+        console.error('❌ Failed to create ArtPartySocial instance (immediate):', error);
+    }
+}
 
 // Export for module usage
 export default ArtPartySocial; 
