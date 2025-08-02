@@ -673,30 +673,41 @@ class NavigationManager {
                 return;
             }
             
-            // Safety check for CONFIG_UTILS
-            if (!window.CONFIG_UTILS || !window.CONFIG_UTILS.getApiUrl) {
-                console.warn('CONFIG_UTILS not available, using fallback URL');
-                const userTilesSpan = cardElement.querySelector('.user-tiles-count');
-                if (userTilesSpan) {
-                    userTilesSpan.textContent = '0 tiles';
-                }
-                return;
+            // Debug logging to see what's happening
+            console.log(' Debug CONFIG_UTILS:', {
+                exists: !!window.CONFIG_UTILS,
+                getApiUrl: !!window.CONFIG_UTILS?.getApiUrl,
+                currentUser: currentUser.id
+            });
+            
+            // Get API URL with fallback
+            let apiUrl;
+            if (window.CONFIG_UTILS && window.CONFIG_UTILS.getApiUrl) {
+                apiUrl = window.CONFIG_UTILS.getApiUrl('/tiles/user/' + currentUser.id + '/count');
             }
             
-            // Use the tile count API endpoint with safety check
-            const apiUrl = window.CONFIG_UTILS.getApiUrl('/tiles/user/' + currentUser.id + '/count');
+            // Fallback if CONFIG_UTILS is not available or returns undefined
             if (!apiUrl) {
-                console.warn('API URL is undefined, using fallback');
-                const userTilesSpan = cardElement.querySelector('.user-tiles-count');
-                if (userTilesSpan) {
-                    userTilesSpan.textContent = '0 tiles';
-                }
-                return;
+                console.warn('CONFIG_UTILS not available or returned undefined, using fallback URL');
+                // Use the same domain as the current page
+                const protocol = window.location.protocol;
+                const hostname = window.location.hostname;
+                apiUrl = `${protocol}//${hostname}/api/v1/tiles/user/${currentUser.id}/count`;
             }
             
-            const response = await fetch(`${apiUrl}?canvas_id=${canvasId}`, {
+            console.log('🔧 Debug API URL:', {
+                apiUrl,
+                isUndefined: apiUrl === undefined,
+                isNull: apiUrl === null,
+                type: typeof apiUrl
+            });
+            
+            const fullUrl = `${apiUrl}?canvas_id=${canvasId}`;
+            console.log('🔧 Making request to:', fullUrl);
+            
+            const response = await fetch(fullUrl, {
                 headers: {
-                    'Authorization': `Bearer ${window.CONFIG_UTILS.getAuthToken()}`,
+                    'Authorization': `Bearer ${window.CONFIG_UTILS?.getAuthToken() || ''}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -1217,7 +1228,7 @@ class NavigationManager {
         if (statusElement) {
             statusElement.textContent = 'Real-time updates unavailable';
             statusElement.style.color = '#f59e0b';
-            statusElement.title = 'WebSocket connection failed - user count may not be up to date';
+ sa           statusElement.title = 'WebSocket connection failed - user count may not be up to date';
         }
     }
     
@@ -1601,27 +1612,27 @@ class NavigationManager {
             
             const userTiles = document.getElementById('viewer-user-tiles');
             if (userTiles) {
-                // Get user's tile count for this specific canvas with safety check
+                // Get user's tile count for this specific canvas with fallback
                 try {
                     const currentUser = appState.get('currentUser');
                     if (currentUser && currentUser.id) {
-                        // Safety check for CONFIG_UTILS
-                        if (!window.CONFIG_UTILS || !window.CONFIG_UTILS.getApiUrl) {
-                            console.warn('CONFIG_UTILS not available for canvas stats');
-                            userTiles.textContent = '0';
-                            return;
+                        // Get API URL with fallback
+                        let apiUrl;
+                        if (window.CONFIG_UTILS && window.CONFIG_UTILS.getApiUrl) {
+                            apiUrl = window.CONFIG_UTILS.getApiUrl('/tiles/user/' + currentUser.id + '/count');
                         }
                         
-                        const apiUrl = window.CONFIG_UTILS.getApiUrl('/tiles/user/' + currentUser.id + '/count');
+                        // Fallback if CONFIG_UTILS is not available or returns undefined
                         if (!apiUrl) {
-                            console.warn('API URL is undefined for canvas stats');
-                            userTiles.textContent = '0';
-                            return;
+                            console.warn('CONFIG_UTILS not available for canvas stats, using fallback URL');
+                            const protocol = window.location.protocol;
+                            const hostname = window.location.hostname;
+                            apiUrl = `${protocol}//${hostname}/api/v1/tiles/user/${currentUser.id}/count`;
                         }
                         
                         const response = await fetch(`${apiUrl}?canvas_id=${canvas.id}`, {
                             headers: {
-                                'Authorization': `Bearer ${window.CONFIG_UTILS.getAuthToken()}`,
+                                'Authorization': `Bearer ${window.CONFIG_UTILS?.getAuthToken() || ''}`,
                                 'Content-Type': 'application/json'
                             }
                         });
