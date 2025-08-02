@@ -11,9 +11,9 @@ from ...core.websocket import connection_manager
 from ...services.authentication import authentication_service
 from ...services.tile import tile_service
 from ...services.user import user_service
-from ...services.canvas import canvas_service
 from ...models.user import User
 from ...models.tile import Tile
+from ...models.canvas import Canvas
 from ...schemas.tile import TileCreate, TileUpdate, TileResponse, TileWithCreator
 
 router = APIRouter()
@@ -345,7 +345,7 @@ async def unlike_tile(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error unliking tile"
-        ) 
+        )
 
 
 @router.get("/user/{user_id}/count", response_model=Dict[str, Any])
@@ -360,7 +360,7 @@ async def get_user_tile_count(
         if canvas_id:
             # Get count for specific canvas
             count = tile_service.get_user_tile_count_on_canvas(db, user_id, canvas_id)
-            canvas = canvas_service.get_canvas_by_id(db, canvas_id)
+            canvas = db.query(Canvas).filter(Canvas.id == canvas_id).first()
             max_tiles = canvas.max_tiles_per_user if canvas else 10
             return {
                 "user_id": user_id,

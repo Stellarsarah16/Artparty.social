@@ -165,6 +165,10 @@ class TileRepository(SQLAlchemyRepository[Tile, TileCreate, TileUpdate]):
             db.refresh(tile)
         return tile
 
+    def count_user_total_tiles(self, db: Session, *, creator_id: int) -> int:
+        """Count total tiles created by a user across all canvases"""
+        return db.query(Tile).filter(Tile.creator_id == creator_id).count()
+
 
 # Create a singleton instance
 tile_repository = TileRepository() 
