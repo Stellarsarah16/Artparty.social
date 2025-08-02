@@ -72,7 +72,11 @@ export class ModalManager {
         // Show modal and load settings
         this.showModal('canvas-settings');
         console.log('🔧 Modal shown, loading settings...');
-        this.loadCanvasSettings(canvasId);
+        
+        // Add a small delay to ensure modal is fully rendered before populating
+        setTimeout(() => {
+            this.loadCanvasSettings(canvasId);
+        }, 100);
     }
 
     /**
@@ -148,21 +152,27 @@ export class ModalManager {
         `;
         
         document.body.appendChild(modal);
+        console.log('🔧 Modal appended to body');
         
         // Add form submit handler
         const form = modal.querySelector('#canvas-settings-form');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const canvasId = modal.dataset.canvasId;
-            if (canvasId) {
-                await this.saveCanvasSettings(canvasId);
-                this.hideModal('canvas-settings');
-                // Refresh canvas list
-                if (window.canvasListManager) {
-                    window.canvasListManager.loadCanvases();
+        if (form) {
+            console.log('🔧 Form found in modal, adding submit handler');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const canvasId = modal.dataset.canvasId;
+                if (canvasId) {
+                    await this.saveCanvasSettings(canvasId);
+                    this.hideModal('canvas-settings');
+                    // Refresh canvas list
+                    if (window.canvasListManager) {
+                        window.canvasListManager.loadCanvases();
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            console.error('❌ Form not found in modal');
+        }
     }
 
     /**
@@ -207,6 +217,39 @@ export class ModalManager {
                 collaboration_mode: canvas.collaboration_mode,
                 is_public: canvas.is_public
             });
+            
+            // Verify values are actually set in the DOM
+            setTimeout(() => {
+                console.log('🔧 Verifying form values in DOM:', {
+                    nameValue: nameField?.value,
+                    descriptionValue: descriptionField?.value,
+                    maxTilesValue: maxTilesField?.value,
+                    paletteValue: paletteField?.value,
+                    collaborationValue: collaborationField?.value,
+                    isPublicValue: isPublicField?.checked
+                });
+                
+                // Check if elements are visible
+                console.log('🔧 Element visibility check:', {
+                    nameVisible: nameField?.offsetParent !== null,
+                    descriptionVisible: descriptionField?.offsetParent !== null,
+                    maxTilesVisible: maxTilesField?.offsetParent !== null,
+                    paletteVisible: paletteField?.offsetParent !== null,
+                    collaborationVisible: collaborationField?.offsetParent !== null,
+                    isPublicVisible: isPublicField?.offsetParent !== null
+                });
+                
+                // Check computed styles
+                if (nameField) {
+                    const computedStyle = window.getComputedStyle(nameField);
+                    console.log('🔧 Name field computed styles:', {
+                        display: computedStyle.display,
+                        visibility: computedStyle.visibility,
+                        opacity: computedStyle.opacity,
+                        color: computedStyle.color
+                    });
+                }
+            }, 50);
             
         } catch (error) {
             console.error('❌ Failed to load canvas settings:', error);
