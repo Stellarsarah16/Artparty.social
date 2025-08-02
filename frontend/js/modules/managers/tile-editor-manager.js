@@ -98,6 +98,9 @@ export class TileEditorManager {
         // Setup back button
         this.setupBackButton();
         
+        // Load neighbor tiles
+        this.loadNeighborTiles(tile);
+        
         console.log('✅ Tile editor initialization complete');
     }
 
@@ -337,5 +340,148 @@ export class TileEditorManager {
         } else {
             console.warn('⚠️ Back button not found');
         }
+    }
+    
+    /**
+     * Load and display neighbor tiles
+     */
+    async loadNeighborTiles(currentTile) {
+        try {
+            console.log('🔍 Loading neighbor tiles for tile:', currentTile.x, currentTile.y);
+            
+            // Get all tiles for the current canvas
+            const allTiles = await this.apiService.getForCanvas(currentTile.canvas_id);
+            
+            if (!allTiles || !Array.isArray(allTiles)) {
+                console.warn('⚠️ No tiles found for canvas');
+                return;
+            }
+            
+            // Find neighbor tiles (8 directions)
+            const neighbors = this.findNeighborTiles(currentTile, allTiles);
+            
+            // Display neighbor tiles
+            this.displayNeighborTiles(neighbors);
+            
+            console.log('✅ Neighbor tiles loaded:', Object.keys(neighbors).length);
+            
+        } catch (error) {
+            console.error('❌ Failed to load neighbor tiles:', error);
+        }
+    }
+    
+    /**
+     * Find neighbor tiles in all 8 directions
+     */
+    findNeighborTiles(currentTile, allTiles) {
+        const neighbors = {};
+        
+        // Define all 8 neighbor positions
+        const neighborPositions = [
+            { key: 'top', dx: 0, dy: -1 },
+            { key: 'top-right', dx: 1, dy: -1 },
+            { key: 'right', dx: 1, dy: 0 },
+            { key: 'bottom-right', dx: 1, dy: 1 },
+            { key: 'bottom', dx: 0, dy: 1 },
+            { key: 'bottom-left', dx: -1, dy: 1 },
+            { key: 'left', dx: -1, dy: 0 },
+            { key: 'top-left', dx: -1, dy: -1 }
+        ];
+        
+        neighborPositions.forEach(({ key, dx, dy }) => {
+            const neighborX = currentTile.x + dx;
+            const neighborY = currentTile.y + dy;
+            
+            const neighbor = allTiles.find(tile => 
+                tile.x === neighborX && tile.y === neighborY
+            );
+            
+            if (neighbor) {
+                neighbors[key] = neighbor;
+                console.log(`✅ Found ${key} neighbor at (${neighborX}, ${neighborY})`);
+            } else {
+                console.log(`❌ No ${key} neighbor at (${neighborX}, ${neighborY})`);
+            }
+        });
+        
+        return neighbors;
+    }
+    
+    /**
+     * Display neighbor tiles on the neighbor canvases
+     */
+    displayNeighborTiles(neighbors) {
+        const neighborPositions = [
+            'top', 'top-right', 'right', 'bottom-right',
+            'bottom', 'bottom-left', 'left', 'top-left'
+        ];
+        
+        neighborPositions.forEach(position => {
+            const neighbor = neighbors[position];
+            const canvasId = `neighbor-${position}-canvas`;
+            const canvas = document.getElementById(canvasId);
+            const cell = document.getElementById(`neighbor-${position}`);
+            
+            if (canvas && cell) {
+                if (neighbor) {
+                    // Remove empty class and draw the neighbor
+                    cell.classList.remove('empty');
+                    this.drawNeighborTile(canvas, neighbor);
+                } else {
+                    // Add empty class and clear canvas
+                    cell.classList.add('empty');
+                    this.clearNeighborCanvas(canvas);
+                }
+            }
+        });
+    }
+    
+    /**
+     * Draw a neighbor tile on its canvas
+     */
+    drawNeighborTile(canvas, neighbor) {
+        const ctx = canvas.getContext('2d');
+        const gridSize = 16; // 512px / 32 tiles = 16px per tile
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Load and draw pixel data
+        if (neighbor.pixel_data) {
+            let pixelData;
+            
+            // Parse pixel data if it's a string
+            if (typeof neighbor.pixel_data === 'string') {
+                try {
+                    pixelData = JSON.parse(neighbor.pixel_data);
+                } catch (error) {
+                    console.error('❌ Failed to parse neighbor pixel data:', error);
+                    return;
+                }
+            } else {
+                pixelData = neighbor.pixel_data;
+            }
+            
+            // Draw pixels
+            if (pixelData && Array.isArray(pixelData)) {
+                for (let y = 0; y < pixelData.length; y++) {
+                    for (let x = 0; x < pixelData[y].length; x++) {
+                        const color = pixelData[y][x];
+                        if (color && color !== 'white') {
+                            ctx.fillStyle = color;
+                            ctx.fillRect(x * gridSize, y * gridSize, gridSize, gridSize);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Clear a neighbor canvas
+     */
+    clearNeighborCanvas(canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 } 

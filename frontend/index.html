@@ -322,12 +322,22 @@
                 <div class="editor-panel">
                     <!-- Integrated Canvas with Neighbors -->
                     <div class="integrated-canvas-container">
+                        <!-- Top row with diagonal neighbors -->
                         <div class="neighbor-row">
+                            <div class="neighbor-cell empty" id="neighbor-top-left">
+                                <div class="neighbor-label">Top-Left</div>
+                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-top-left-canvas"></canvas>
+                            </div>
                             <div class="neighbor-cell empty" id="neighbor-top">
                                 <div class="neighbor-label">Top</div>
                                 <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-top-canvas"></canvas>
                             </div>
+                            <div class="neighbor-cell empty" id="neighbor-top-right">
+                                <div class="neighbor-label">Top-Right</div>
+                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-top-right-canvas"></canvas>
+                            </div>
                         </div>
+                        <!-- Middle row with main canvas -->
                         <div class="neighbor-row">
                             <div class="neighbor-cell empty" id="neighbor-left">
                                 <div class="neighbor-label">Left</div>
@@ -347,10 +357,19 @@
                                 <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-right-canvas"></canvas>
                             </div>
                         </div>
+                        <!-- Bottom row with diagonal neighbors -->
                         <div class="neighbor-row">
+                            <div class="neighbor-cell empty" id="neighbor-bottom-left">
+                                <div class="neighbor-label">Bottom-Left</div>
+                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-bottom-left-canvas"></canvas>
+                            </div>
                             <div class="neighbor-cell empty" id="neighbor-bottom">
                                 <div class="neighbor-label">Bottom</div>
                                 <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-bottom-canvas"></canvas>
+                            </div>
+                            <div class="neighbor-cell empty" id="neighbor-bottom-right">
+                                <div class="neighbor-label">Bottom-Right</div>
+                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-bottom-right-canvas"></canvas>
                             </div>
                         </div>
                     </div>
