@@ -34,5 +34,17 @@
     "content": "Fix 422 error when saving tiles - check data format and API endpoint",
     "status": "completed",
     "dependencies": []
+  },
+  {
+    "id": "fix-palette-selection-logic",
+    "content": "Fix palette selection logic to correctly get canvas palette type",
+    "status": "completed",
+    "dependencies": []
+  },
+  {
+    "id": "fix-api-method-error",
+    "content": "Fix getCanvasTiles method error - check correct API method name",
+    "status": "completed",
+    "dependencies": []
   }
 ] 

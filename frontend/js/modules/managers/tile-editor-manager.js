@@ -128,6 +128,16 @@ export class TileEditorManager {
         // Get the current canvas to access its palette type
         let paletteType = 'classic'; // default fallback
         
+        // Debug tile data
+        console.log('🎨 Tile data for palette selection:', {
+            tileId: tile.id,
+            canvasId: tile.canvas_id,
+            tileCanvasPaletteType: tile.canvas_palette_type,
+            tileCanvas: tile.canvas,
+            appState: !!window.appState,
+            currentCanvas: window.appState ? window.appState.get('currentCanvas') : null
+        });
+        
         // Try to get palette type from multiple sources
         if (tile.canvas_palette_type) {
             paletteType = tile.canvas_palette_type;
@@ -139,6 +149,10 @@ export class TileEditorManager {
             const currentCanvas = window.appState.get('currentCanvas');
             paletteType = currentCanvas.palette_type || 'classic';
             console.log('🎨 Using palette type from currentCanvas:', paletteType);
+        } else if (window.canvasViewerManager && window.canvasViewerManager.currentCanvas) {
+            const currentCanvas = window.canvasViewerManager.currentCanvas;
+            paletteType = currentCanvas.palette_type || 'classic';
+            console.log('🎨 Using palette type from canvasViewerManager.currentCanvas:', paletteType);
         } else {
             console.warn('⚠️ Could not determine palette type, using classic as default');
         }
@@ -516,8 +530,20 @@ export class TileEditorManager {
         try {
             console.log('🔍 Loading neighbor tiles for tile:', currentTile.x, currentTile.y);
             
+            // Debug API service
+            console.log('🔍 API service available:', !!this.apiService);
+            console.log('🔍 API service methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.apiService)));
+            
             // Get all tiles for the current canvas
-            const allTiles = await this.apiService.getCanvasTiles(currentTile.canvas_id);
+            let allTiles;
+            if (this.apiService.getCanvasTiles) {
+                allTiles = await this.apiService.getCanvasTiles(currentTile.canvas_id);
+            } else if (this.apiService.getForCanvas) {
+                allTiles = await this.apiService.getForCanvas(currentTile.canvas_id);
+            } else {
+                console.error('❌ No method available to get canvas tiles');
+                return;
+            }
             
             if (!allTiles || !Array.isArray(allTiles)) {
                 console.warn('⚠️ No tiles found for canvas');
