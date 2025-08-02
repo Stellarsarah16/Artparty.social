@@ -48,9 +48,9 @@ export class TileEditorManager {
         this.updateTileInfo(tile);
         
         // Initialize pixel editor
-        if (window.pixelEditor) {
+        if (window.PixelEditor) {
             console.log('✅ Pixel editor available, initializing...');
-            window.pixelEditor.initialize(tile.pixel_data, tile.palette_type);
+            window.PixelEditor.initialize(tile.pixel_data, tile.palette_type);
         } else {
             console.warn('⚠️ Pixel editor not available');
         }
@@ -124,11 +124,11 @@ export class TileEditorManager {
      */
     async saveTile(tileId) {
         try {
-            if (!window.pixelEditor) {
+            if (!window.PixelEditor) {
                 throw new Error('Pixel editor not available');
             }
             
-            const pixelData = window.pixelEditor.getPixelData();
+            const pixelData = window.PixelEditor.getPixelData();
             
             await this.apiService.update(tileId, {
                 pixel_data: pixelData
@@ -206,8 +206,8 @@ export class TileEditorManager {
         }
         
         // Set tool in pixel editor
-        if (window.pixelEditor) {
-            window.pixelEditor.setTool(tool);
+        if (window.PixelEditor) {
+            window.PixelEditor.setTool(tool);
             console.log(`✅ Tool set in pixel editor: ${tool}`);
         } else {
             console.warn('⚠️ Pixel editor not available');
@@ -236,12 +236,12 @@ export class TileEditorManager {
      * Undo last action
      */
     undo() {
-        if (this.undoStack.length > 0 && window.pixelEditor) {
-            const currentState = window.pixelEditor.getPixelData();
+        if (this.undoStack.length > 0 && window.PixelEditor) {
+            const currentState = window.PixelEditor.getPixelData();
             this.redoStack.push(currentState);
             
             const previousState = this.undoStack.pop();
-            window.pixelEditor.setPixelData(previousState);
+            window.PixelEditor.setPixelData(previousState);
             
             this.updateUndoRedoButtons();
         }
@@ -251,12 +251,12 @@ export class TileEditorManager {
      * Redo last undone action
      */
     redo() {
-        if (this.redoStack.length > 0 && window.pixelEditor) {
-            const currentState = window.pixelEditor.getPixelData();
+        if (this.redoStack.length > 0 && window.PixelEditor) {
+            const currentState = window.PixelEditor.getPixelData();
             this.undoStack.push(currentState);
             
             const nextState = this.redoStack.pop();
-            window.pixelEditor.setPixelData(nextState);
+            window.PixelEditor.setPixelData(nextState);
             
             this.updateUndoRedoButtons();
         }
