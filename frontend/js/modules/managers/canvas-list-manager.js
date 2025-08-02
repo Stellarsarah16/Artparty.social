@@ -31,14 +31,14 @@ export class CanvasListManager {
         try {
             console.log('🔄 Loading canvases...');
             console.log('🔧 this.canvasApi:', this.canvasApi);
-            console.log('🔧 this.canvasApi.getCanvases:', this.canvasApi?.getCanvases);
-            console.log('🔧 typeof this.canvasApi.getCanvases:', typeof this.canvasApi?.getCanvases);
+            console.log('🔧 this.canvasApi.list:', this.canvasApi?.list);
+            console.log('🔧 typeof this.canvasApi.list:', typeof this.canvasApi?.list);
             
-            if (!this.canvasApi || typeof this.canvasApi.getCanvases !== 'function') {
-                throw new Error(`CanvasAPI not properly initialized. canvasApi: ${this.canvasApi}, getCanvases: ${this.canvasApi?.getCanvases}`);
+            if (!this.canvasApi || typeof this.canvasApi.list !== 'function') {
+                throw new Error(`CanvasAPI not properly initialized. canvasApi: ${this.canvasApi}, list: ${this.canvasApi?.list}`);
             }
             
-            const canvases = await this.canvasApi.getCanvases();
+            const canvases = await this.canvasApi.list();
             this.renderCanvasList(canvases);
             console.log(`✅ Loaded ${canvases.length} canvases`);
         } catch (error) {
