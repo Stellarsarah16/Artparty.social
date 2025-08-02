@@ -80,6 +80,9 @@ export class CanvasViewerManager {
                     this.openTileEditor(tile);
                 };
                 
+                // Clear any existing tiles first
+                window.CanvasViewer.clearAllTiles();
+                
                 // Load tiles for this canvas
                 try {
                     const tiles = await this.tileApi.getForCanvas(canvas.id);
@@ -333,7 +336,7 @@ export class CanvasViewerManager {
             
             // Initialize the tile editor if available
             if (window.tileEditorManager) {
-                window.tileEditorManager.loadTile(tile);
+                window.tileEditorManager.openTileEditor(tile);
             }
             
             console.log('✅ Tile editor opened successfully');
