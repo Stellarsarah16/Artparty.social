@@ -181,7 +181,7 @@ const API_CONFIG = {
         USER_ACCOUNT: '/api/v1/users/account',
         
         // Canvas
-        CANVAS: '/api/v1/canvas/',
+        CANVAS: '/api/v1/canvas',
         CANVAS_REGION: '/api/v1/canvas/{id}/region',
         CANVAS_STATS: '/api/v1/canvas/{id}/stats',
         
