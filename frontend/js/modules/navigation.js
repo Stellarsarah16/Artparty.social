@@ -1228,7 +1228,7 @@ class NavigationManager {
         if (statusElement) {
             statusElement.textContent = 'Real-time updates unavailable';
             statusElement.style.color = '#f59e0b';
- sa           statusElement.title = 'WebSocket connection failed - user count may not be up to date';
+            statusElement.title = 'WebSocket connection failed - user count may not be up to date';
         }
     }
     
@@ -1641,7 +1641,7 @@ class NavigationManager {
                             const data = await response.json();
                             userTiles.textContent = data.tile_count.toString();
                         } else {
-                            userTiles.textContent = '0';
+                userTiles.textContent = '0';
                         }
                     } else {
                         userTiles.textContent = '0';
