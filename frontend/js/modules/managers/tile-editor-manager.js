@@ -42,39 +42,66 @@ export class TileEditorManager {
      * Initialize tile editor with tile data
      */
     initializeTileEditor(tile) {
+        console.log('🎨 Initializing tile editor with tile:', tile);
+        
         // Update tile info
         this.updateTileInfo(tile);
         
         // Initialize pixel editor
         if (window.pixelEditor) {
+            console.log('✅ Pixel editor available, initializing...');
             window.pixelEditor.initialize(tile.pixel_data, tile.palette_type);
+        } else {
+            console.warn('⚠️ Pixel editor not available');
         }
         
         // Setup save button
         this.setupSaveButton(tile);
+        
+        // Setup tool buttons
+        this.setupToolButtons();
+        
+        // Setup undo/redo buttons
+        this.setupUndoRedoButtons();
+        
+        console.log('✅ Tile editor initialization complete');
     }
 
     /**
      * Update tile information display
      */
     updateTileInfo(tile) {
-        const tileInfo = document.getElementById('editor-tile-info');
-        if (tileInfo) {
-            tileInfo.innerHTML = `
-                <div class="tile-info-item">
-                    <strong>Position:</strong> (${tile.x}, ${tile.y})
-                </div>
-                <div class="tile-info-item">
-                    <strong>Creator:</strong> ${tile.creator_username || 'Unknown'}
-                </div>
-                <div class="tile-info-item">
-                    <strong>Created:</strong> ${new Date(tile.created_at).toLocaleDateString()}
-                </div>
-                <div class="tile-info-item">
-                    <strong>Likes:</strong> ${tile.likes_count || 0}
-                </div>
-            `;
+        // Update current tile coordinates
+        const coordsElement = document.getElementById('current-tile-coords');
+        if (coordsElement) {
+            coordsElement.textContent = `Tile: (${tile.x}, ${tile.y})`;
         }
+        
+        // Update tile owner
+        const ownerElement = document.getElementById('tile-info-owner');
+        if (ownerElement) {
+            ownerElement.textContent = `Owner: ${tile.creator_username || 'Unknown'}`;
+        }
+        
+        // Update tile canvas info
+        const canvasElement = document.getElementById('tile-info-canvas');
+        if (canvasElement) {
+            canvasElement.textContent = `Canvas: ${tile.canvas_name || 'Unknown'}`;
+        }
+        
+        // Update created date
+        const createdElement = document.getElementById('tile-info-created');
+        if (createdElement) {
+            createdElement.textContent = `Created: ${new Date(tile.created_at).toLocaleDateString()}`;
+        }
+        
+        // Update updated date
+        const updatedElement = document.getElementById('tile-info-updated');
+        if (updatedElement) {
+            updatedElement.textContent = `Updated: ${new Date(tile.updated_at || tile.created_at).toLocaleDateString()}`;
+        }
+        
+        console.log('✅ Tile info updated:', tile);
     }
 
     /**
@@ -86,6 +113,9 @@ export class TileEditorManager {
             saveBtn.onclick = async () => {
                 await this.saveTile(tile.id);
             };
+            console.log('✅ Save button setup complete');
+        } else {
+            console.warn('⚠️ Save button not found');
         }
     }
 
@@ -125,14 +155,22 @@ export class TileEditorManager {
      * Setup tool buttons
      */
     setupToolButtons() {
-        const tools = ['pencil', 'eraser', 'fill', 'eyedropper'];
+        const tools = [
+            { id: 'paint-tool', tool: 'paint' },
+            { id: 'eraser-tool', tool: 'eraser' },
+            { id: 'fill-tool', tool: 'fill' },
+            { id: 'picker-tool', tool: 'eyedropper' }
+        ];
         
-        tools.forEach(tool => {
-            const btn = document.getElementById(`${tool}-tool-btn`);
+        tools.forEach(({ id, tool }) => {
+            const btn = document.getElementById(id);
             if (btn) {
                 btn.onclick = () => {
                     this.selectTool(tool);
                 };
+                console.log(`✅ Setup tool button: ${id} -> ${tool}`);
+            } else {
+                console.warn(`⚠️ Tool button not found: ${id}`);
             }
         });
     }
@@ -141,19 +179,38 @@ export class TileEditorManager {
      * Select a tool
      */
     selectTool(tool) {
+        console.log('🎨 Selecting tool:', tool);
+        
         // Update tool button states
         document.querySelectorAll('.tool-btn').forEach(btn => {
             btn.classList.remove('active');
         });
         
-        const activeBtn = document.getElementById(`${tool}-tool-btn`);
-        if (activeBtn) {
-            activeBtn.classList.add('active');
+        // Map tool names to button IDs
+        const toolButtonMap = {
+            'paint': 'paint-tool',
+            'eraser': 'eraser-tool',
+            'fill': 'fill-tool',
+            'eyedropper': 'picker-tool'
+        };
+        
+        const buttonId = toolButtonMap[tool];
+        if (buttonId) {
+            const activeBtn = document.getElementById(buttonId);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                console.log(`✅ Activated tool button: ${buttonId}`);
+            } else {
+                console.warn(`⚠️ Tool button not found: ${buttonId}`);
+            }
         }
         
         // Set tool in pixel editor
         if (window.pixelEditor) {
             window.pixelEditor.setTool(tool);
+            console.log(`✅ Tool set in pixel editor: ${tool}`);
+        } else {
+            console.warn('⚠️ Pixel editor not available');
         }
     }
 
