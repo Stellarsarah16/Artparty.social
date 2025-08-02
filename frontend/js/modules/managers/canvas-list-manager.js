@@ -7,10 +7,21 @@ import appState from '../app-state.js';
 
 export class CanvasListManager {
     constructor(canvasApi, tileApi, eventManager) {
+        console.log('🔧 CanvasListManager constructor called with:', {
+            canvasApi: canvasApi,
+            canvasApiType: typeof canvasApi,
+            canvasApiMethods: canvasApi ? Object.getOwnPropertyNames(Object.getPrototypeOf(canvasApi)) : 'null',
+            tileApi: tileApi,
+            eventManager: eventManager
+        });
+        
         this.canvasApi = canvasApi;
         this.tileApi = tileApi;
         this.eventManager = eventManager;
         this.canvasListContainer = document.getElementById('canvas-grid');
+        
+        console.log('🔧 CanvasListManager initialized with canvasApi methods:', 
+            this.canvasApi ? Object.getOwnPropertyNames(Object.getPrototypeOf(this.canvasApi)) : 'null');
     }
 
     /**
@@ -19,6 +30,14 @@ export class CanvasListManager {
     async loadCanvases() {
         try {
             console.log('🔄 Loading canvases...');
+            console.log('🔧 this.canvasApi:', this.canvasApi);
+            console.log('🔧 this.canvasApi.getCanvases:', this.canvasApi?.getCanvases);
+            console.log('🔧 typeof this.canvasApi.getCanvases:', typeof this.canvasApi?.getCanvases);
+            
+            if (!this.canvasApi || typeof this.canvasApi.getCanvases !== 'function') {
+                throw new Error(`CanvasAPI not properly initialized. canvasApi: ${this.canvasApi}, getCanvases: ${this.canvasApi?.getCanvases}`);
+            }
+            
             const canvases = await this.canvasApi.getCanvases();
             this.renderCanvasList(canvases);
             console.log(`✅ Loaded ${canvases.length} canvases`);
