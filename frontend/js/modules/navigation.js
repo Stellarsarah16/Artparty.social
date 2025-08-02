@@ -1252,7 +1252,7 @@ class NavigationManager {
         // If WebSocket is not connected, show at least current user
         setTimeout(() => {
             const statusElement = document.getElementById('viewer-canvas-users');
-            if (statusElement && statusElement.textContentsa === '0 users online') {
+            if (statusElement && statusElement.textContent === '0 users online') {
                 statusElement.textContent = '1 user online';
                 statusElement.title = 'You are currently viewing this canvas';
             }
