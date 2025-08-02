@@ -673,10 +673,30 @@ class NavigationManager {
                 return;
             }
             
-            // Use the tile count API endpoint - FIX: Add the endpoint parameter
-            const response = await fetch(`${CONFIG_UTILS.getApiUrl('/tiles/user/' + currentUser.id + '/count')}?canvas_id=${canvasId}`, {
+            // Safety check for CONFIG_UTILS
+            if (!window.CONFIG_UTILS || !window.CONFIG_UTILS.getApiUrl) {
+                console.warn('CONFIG_UTILS not available, using fallback URL');
+                const userTilesSpan = cardElement.querySelector('.user-tiles-count');
+                if (userTilesSpan) {
+                    userTilesSpan.textContent = '0 tiles';
+                }
+                return;
+            }
+            
+            // Use the tile count API endpoint with safety check
+            const apiUrl = window.CONFIG_UTILS.getApiUrl('/tiles/user/' + currentUser.id + '/count');
+            if (!apiUrl) {
+                console.warn('API URL is undefined, using fallback');
+                const userTilesSpan = cardElement.querySelector('.user-tiles-count');
+                if (userTilesSpan) {
+                    userTilesSpan.textContent = '0 tiles';
+                }
+                return;
+            }
+            
+            const response = await fetch(`${apiUrl}?canvas_id=${canvasId}`, {
                 headers: {
-                    'Authorization': `Bearer ${CONFIG_UTILS.getAuthToken()}`,
+                    'Authorization': `Bearer ${window.CONFIG_UTILS.getAuthToken()}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -1581,13 +1601,27 @@ class NavigationManager {
             
             const userTiles = document.getElementById('viewer-user-tiles');
             if (userTiles) {
-                // Get user's tile count for this specific canvas - FIX: Add the endpoint parameter
+                // Get user's tile count for this specific canvas with safety check
                 try {
                     const currentUser = appState.get('currentUser');
                     if (currentUser && currentUser.id) {
-                        const response = await fetch(`${CONFIG_UTILS.getApiUrl('/tiles/user/' + currentUser.id + '/count')}?canvas_id=${canvas.id}`, {
+                        // Safety check for CONFIG_UTILS
+                        if (!window.CONFIG_UTILS || !window.CONFIG_UTILS.getApiUrl) {
+                            console.warn('CONFIG_UTILS not available for canvas stats');
+                            userTiles.textContent = '0';
+                            return;
+                        }
+                        
+                        const apiUrl = window.CONFIG_UTILS.getApiUrl('/tiles/user/' + currentUser.id + '/count');
+                        if (!apiUrl) {
+                            console.warn('API URL is undefined for canvas stats');
+                            userTiles.textContent = '0';
+                            return;
+                        }
+                        
+                        const response = await fetch(`${apiUrl}?canvas_id=${canvas.id}`, {
                             headers: {
-                                'Authorization': `Bearer ${CONFIG_UTILS.getAuthToken()}`,
+                                'Authorization': `Bearer ${window.CONFIG_UTILS.getAuthToken()}`,
                                 'Content-Type': 'application/json'
                             }
                         });
