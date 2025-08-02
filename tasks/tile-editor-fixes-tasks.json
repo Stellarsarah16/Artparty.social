@@ -46,5 +46,17 @@
     "content": "Fix getCanvasTiles method error - check correct API method name",
     "status": "completed",
     "dependencies": []
+  },
+  {
+    "id": "fix-canvas-data-fetching",
+    "content": "Fix tile editor to fetch canvas data to access palette_type field",
+    "status": "completed",
+    "dependencies": []
+  },
+  {
+    "id": "fix-canvas-settings-modal",
+    "content": "Fix canvas settings modal not populating form fields with canvas data",
+    "status": "in_progress",
+    "dependencies": []
   }
 ] 

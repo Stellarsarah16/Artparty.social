@@ -13,11 +13,15 @@ export class ModalManager {
      * Show a modal by name
      */
     showModal(modalName) {
+        console.log('🔧 Showing modal:', modalName);
         const modal = document.getElementById(`${modalName}-modal`);
         if (modal) {
             modal.style.display = 'flex';
             this.activeModals.add(modalName);
             document.body.classList.add('modal-open');
+            console.log('🔧 Modal displayed successfully');
+        } else {
+            console.error('❌ Modal not found:', `${modalName}-modal`);
         }
     }
 
@@ -47,17 +51,27 @@ export class ModalManager {
      * Show canvas settings modal
      */
     showCanvasSettingsModal(canvasId) {
+        console.log('🔧 Showing canvas settings modal for canvas ID:', canvasId);
+        
         // Create modal if it doesn't exist
         if (!document.getElementById('canvas-settings-modal')) {
+            console.log('🔧 Creating canvas settings modal');
             this.createCanvasSettingsModal();
         }
         
         // Set canvas ID in modal dataset
         const modal = document.getElementById('canvas-settings-modal');
-        modal.dataset.canvasId = canvasId;
+        if (modal) {
+            modal.dataset.canvasId = canvasId;
+            console.log('🔧 Modal found and canvas ID set');
+        } else {
+            console.error('❌ Canvas settings modal not found after creation');
+            return;
+        }
         
         // Show modal and load settings
         this.showModal('canvas-settings');
+        console.log('🔧 Modal shown, loading settings...');
         this.loadCanvasSettings(canvasId);
     }
 
@@ -156,18 +170,46 @@ export class ModalManager {
      */
     async loadCanvasSettings(canvasId) {
         try {
+            console.log('🔧 Loading canvas settings for canvas ID:', canvasId);
             const canvas = await window.API.canvas.get(canvasId);
+            console.log('🔧 Canvas data received:', canvas);
+            
+            // Check if form elements exist
+            const nameField = document.getElementById('canvas-name');
+            const descriptionField = document.getElementById('canvas-description');
+            const maxTilesField = document.getElementById('max-tiles-per-user');
+            const paletteField = document.getElementById('palette-type');
+            const collaborationField = document.getElementById('collaboration-mode');
+            const isPublicField = document.getElementById('is-public');
+            
+            console.log('🔧 Form elements found:', {
+                nameField: !!nameField,
+                descriptionField: !!descriptionField,
+                maxTilesField: !!maxTilesField,
+                paletteField: !!paletteField,
+                collaborationField: !!collaborationField,
+                isPublicField: !!isPublicField
+            });
             
             // Populate settings form
-            document.getElementById('canvas-name').value = canvas.name;
-            document.getElementById('canvas-description').value = canvas.description || '';
-            document.getElementById('max-tiles-per-user').value = canvas.max_tiles_per_user;
-            document.getElementById('palette-type').value = canvas.palette_type;
-            document.getElementById('collaboration-mode').value = canvas.collaboration_mode;
-            document.getElementById('is-public').checked = canvas.is_public;
+            if (nameField) nameField.value = canvas.name || '';
+            if (descriptionField) descriptionField.value = canvas.description || '';
+            if (maxTilesField) maxTilesField.value = canvas.max_tiles_per_user || 10;
+            if (paletteField) paletteField.value = canvas.palette_type || 'classic';
+            if (collaborationField) collaborationField.value = canvas.collaboration_mode || 'free';
+            if (isPublicField) isPublicField.checked = canvas.is_public !== false;
+            
+            console.log('🔧 Form populated with values:', {
+                name: canvas.name,
+                description: canvas.description,
+                max_tiles_per_user: canvas.max_tiles_per_user,
+                palette_type: canvas.palette_type,
+                collaboration_mode: canvas.collaboration_mode,
+                is_public: canvas.is_public
+            });
             
         } catch (error) {
-            console.error('Failed to load canvas settings:', error);
+            console.error('❌ Failed to load canvas settings:', error);
             if (window.UIManager) {
                 window.UIManager.showToast('Failed to load canvas settings', 'error');
             }

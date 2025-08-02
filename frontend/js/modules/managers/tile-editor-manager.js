@@ -18,6 +18,20 @@ export class TileEditorManager {
         try {
             console.log('🔄 Opening tile editor for tile:', tile.id);
             
+            // Get canvas data to access palette type
+            let canvasData = null;
+            try {
+                if (window.API && window.API.canvas) {
+                    canvasData = await window.API.canvas.get(tile.canvas_id);
+                    console.log('🎨 Fetched canvas data:', canvasData);
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not fetch canvas data:', error);
+            }
+            
+            // Add canvas data to tile object
+            tile.canvas = canvasData;
+            
             this.currentTile = tile;
             this.initializeTileEditor(tile);
             this.setupToolButtons();
@@ -139,12 +153,12 @@ export class TileEditorManager {
         });
         
         // Try to get palette type from multiple sources
-        if (tile.canvas_palette_type) {
-            paletteType = tile.canvas_palette_type;
-            console.log('🎨 Using palette type from tile.canvas_palette_type:', paletteType);
-        } else if (tile.canvas && tile.canvas.palette_type) {
+        if (tile.canvas && tile.canvas.palette_type) {
             paletteType = tile.canvas.palette_type;
             console.log('🎨 Using palette type from tile.canvas.palette_type:', paletteType);
+        } else if (tile.canvas_palette_type) {
+            paletteType = tile.canvas_palette_type;
+            console.log('🎨 Using palette type from tile.canvas_palette_type:', paletteType);
         } else if (window.appState && window.appState.get('currentCanvas')) {
             const currentCanvas = window.appState.get('currentCanvas');
             paletteType = currentCanvas.palette_type || 'classic';
@@ -164,7 +178,13 @@ export class TileEditorManager {
             classic: ['#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'],
             earth: ['#8B4513', '#A0522D', '#CD853F', '#DEB887', '#F4A460', '#D2691E', '#B8860B', '#DAA520'],
             pastel: ['#FFB6C1', '#87CEEB', '#98FB98', '#F0E68C', '#DDA0DD', '#FFA07A', '#B0E0E6', '#F5DEB3'],
-            neon: ['#FF1493', '#00FFFF', '#00FF00', '#FFFF00', '#FF00FF', '#FF4500', '#9400D3', '#00CED1']
+            neon: ['#FF1493', '#00FFFF', '#00FF00', '#FFFF00', '#FF00FF', '#FF4500', '#9400D3', '#00CED1'],
+            monochrome: ['#000000', '#333333', '#666666', '#999999', '#CCCCCC', '#FFFFFF'],
+            retro: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'],
+            artistic: ['#8B4513', '#2F4F4F', '#CD853F', '#8B7355', '#A0522D', '#6B4423', '#8B6914', '#B8860B'],
+            sunset: ['#FF6B35', '#F7931E', '#FFB347', '#FFD700', '#FF69B4', '#FF1493', '#DC143C', '#8B0000'],
+            ocean: ['#006994', '#1E90FF', '#00BFFF', '#87CEEB', '#4682B4', '#191970', '#000080', '#4169E1'],
+            forest: ['#228B22', '#32CD32', '#90EE90', '#98FB98', '#006400', '#228B22', '#556B2F', '#8FBC8F']
         };
         
         // Get colors for the selected palette
