@@ -36,10 +36,13 @@ export const createManagers = () => {
         websocket: !!window.API.websocket
     });
     
+    // Create managers in dependency order
+    const webSocketManager = new WebSocketManager(eventManager);
+    
     const managers = {
-        webSocket: new WebSocketManager(eventManager),
+        webSocket: webSocketManager,
         canvasList: new CanvasListManager(window.API.canvas, window.API.tiles, eventManager),
-        canvasViewer: new CanvasViewerManager(window.API.canvas, window.API.tiles, managers.webSocket, eventManager),
+        canvasViewer: new CanvasViewerManager(window.API.canvas, window.API.tiles, webSocketManager, eventManager),
         modal: new ModalManager(),
         tileEditor: new TileEditorManager(window.API.tiles),
         auth: new AuthManager(window.API.auth, eventManager)
