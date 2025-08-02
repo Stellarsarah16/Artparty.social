@@ -611,10 +611,20 @@ class NavigationManager {
         card.style.cursor = 'pointer';
         card.title = `Click to open ${canvas.name}`;
         
+        // Get current user for settings button
+        const currentUser = appState.get('currentUser');
+        const isOwner = currentUser && canvas.creator_id === currentUser.id;
+        
         card.innerHTML = `
             <div class="canvas-card-header">
                 <h3 class="canvas-card-title">${canvas.name}</h3>
                 <p class="canvas-card-description">${canvas.description || 'No description'}</p>
+                ${isOwner ? `
+                    <button class="btn btn-sm btn-secondary canvas-settings-btn" 
+                            onclick="event.stopPropagation(); navigationManager.showCanvasSettingsModal(${canvas.id})">
+                        <i class="fas fa-cog"></i> Settings
+                    </button>
+                ` : ''}
             </div>
             <div class="canvas-card-stats">
                 <div class="canvas-stat">
@@ -627,7 +637,11 @@ class NavigationManager {
                 </div>
                 <div class="canvas-stat">
                     <i class="fas fa-palette"></i>
-                    <span>${canvas.tile_count || 0} tiles</span>
+                    <span>${canvas.total_tiles || 0} total tiles</span>
+                </div>
+                <div class="canvas-stat">
+                    <i class="fas fa-user-palette"></i>
+                    <span class="user-tiles-count" data-canvas-id="${canvas.id}">Loading...</span>
                 </div>
                 <div class="canvas-stat">
                     <i class="fas fa-palette"></i>
@@ -636,29 +650,149 @@ class NavigationManager {
             </div>
         `;
         
-        // Add visual feedback on hover
-        card.addEventListener('mouseenter', () => {
-            card.style.transform = 'translateY(-2px)';
-            card.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
-        });
+        // Load user's tile count for this canvas
+        this.loadUserTileCountForCanvas(canvas.id, card);
         
-        card.addEventListener('mouseleave', () => {
-            card.style.transform = 'translateY(0)';
-            card.style.boxShadow = '';
-        });
-        
-        // Add click event to open canvas
-        card.addEventListener('click', () => {
-            console.log('Canvas selected:', canvas);
-            
-            // Add visual feedback for click
-            card.style.transform = 'translateY(0)';
-            setTimeout(() => {
-                eventManager.emit('canvas:selected', canvas);
-            }, 150);
-        });
+        // Add click handler
+        card.addEventListener('click', () => this.openCanvas(canvas));
         
         return card;
+    }
+    
+    /**
+     * Load user's tile count for a specific canvas
+     */
+    async loadUserTileCountForCanvas(canvasId, cardElement) {
+        try {
+            const currentUser = appState.get('currentUser');
+            if (!currentUser || !currentUser.id) {
+                const userTilesSpan = cardElement.querySelector('.user-tiles-count');
+                if (userTilesSpan) {
+                    userTilesSpan.textContent = '0 tiles';
+                }
+                return;
+            }
+            
+            // Use the tile count API endpoint
+            const response = await fetch(`${CONFIG_UTILS.getApiUrl()}/tiles/user/${currentUser.id}/count?canvas_id=${canvasId}`, {
+                headers: {
+                    'Authorization': `Bearer ${CONFIG_UTILS.getAuthToken()}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const userTilesSpan = cardElement.querySelector('.user-tiles-count');
+                if (userTilesSpan) {
+                    userTilesSpan.textContent = `${data.tile_count} tiles`;
+                }
+            } else {
+                const userTilesSpan = cardElement.querySelector('.user-tiles-count');
+                if (userTilesSpan) {
+                    userTilesSpan.textContent = '0 tiles';
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to load user tile count for canvas:', canvasId, error);
+            const userTilesSpan = cardElement.querySelector('.user-tiles-count');
+            if (userTilesSpan) {
+                userTilesSpan.textContent = '0 tiles';
+            }
+        }
+    }
+    
+    /**
+     * Show canvas settings modal
+     */
+    showCanvasSettingsModal(canvasId) {
+        // Create modal if it doesn't exist
+        if (!document.getElementById('canvas-settings-modal')) {
+            this.createCanvasSettingsModal();
+        }
+        
+        // Show modal and load settings
+        this.showModal('canvas-settings');
+        this.loadCanvasSettings(canvasId);
+    }
+    
+    /**
+     * Create canvas settings modal
+     */
+    createCanvasSettingsModal() {
+        const modal = document.createElement('div');
+        modal.id = 'canvas-settings-modal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Canvas Settings</h3>
+                    <button class="modal-close" onclick="navigationManager.hideModal('canvas-settings')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="canvas-settings-form">
+                        <div class="form-group">
+                            <label for="canvas-name">Canvas Name</label>
+                            <input type="text" id="canvas-name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="canvas-description">Description</label>
+                            <textarea id="canvas-description" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="max-tiles-per-user">Max Tiles per User</label>
+                            <input type="number" id="max-tiles-per-user" name="max_tiles_per_user" min="1" max="100" value="10">
+                        </div>
+                        <div class="form-group">
+                            <label for="palette-type">Color Palette</label>
+                            <select id="palette-type" name="palette_type" required>
+                                <option value="classic">Classic - Basic 8-color pixel art</option>
+                                <option value="earth">Earth Tones - Natural browns and tans</option>
+                                <option value="pastel">Pastel - Soft, light colors</option>
+                                <option value="monochrome">Monochrome - Grayscale variations</option>
+                                <option value="neon">Neon - Bright, vibrant colors</option>
+                                <option value="retro">Retro Gaming - Classic game boy style</option>
+                                <option value="artistic">Artistic - Burnt umber, paynes grey, ochres</option>
+                                <option value="sunset">Sunset - Warm oranges, pinks, and purples</option>
+                                <option value="ocean">Ocean - Blues, teals, and sea greens</option>
+                                <option value="forest">Forest - Greens, browns, and natural tones</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="is-public" name="is_public" checked>
+                                Make this canvas public
+                            </label>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="navigationManager.hideModal('canvas-settings')">
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                Save Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add form submit handler
+        const form = modal.querySelector('#canvas-settings-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const canvasId = modal.dataset.canvasId;
+            if (canvasId) {
+                await this.saveCanvasSettings(canvasId);
+                this.hideModal('canvas-settings');
+                // Refresh canvas list
+                this.loadCanvases();
+            }
+        });
     }
     
     /**
@@ -694,7 +828,7 @@ class NavigationManager {
     }
     
     /**
-     * Initialize canvas viewer
+     * Initialize canvas viewer with settings button
      */
     async initializeCanvasViewer(canvas, canvasData) {
         try {
@@ -747,9 +881,23 @@ class NavigationManager {
                 throw new Error('Canvas viewer not available');
             }
             
+            // Show/hide settings button based on ownership
+            const currentUser = appState.get('currentUser');
+            const settingsBtn = document.getElementById('viewer-settings-btn');
+            if (settingsBtn) {
+                if (currentUser && canvas.creator_id === currentUser.id) {
+                    settingsBtn.style.display = 'inline-block';
+                    settingsBtn.onclick = () => this.showCanvasSettingsModal(canvas.id);
+                } else {
+                    settingsBtn.style.display = 'none';
+                }
+            }
+            
+            // Update canvas stats
+            await this.updateCanvasStats(canvas);
+            
         } catch (error) {
             console.error('Failed to initialize canvas viewer:', error);
-            throw error;
         }
     }
     
@@ -1416,7 +1564,7 @@ class NavigationManager {
     }
     
     /**
-     * Update canvas stats
+     * Update canvas stats with correct user tile count
      */
     async updateCanvasStats(canvas) {
         try {
@@ -1427,27 +1575,26 @@ class NavigationManager {
             
             const activeUsers = document.getElementById('viewer-active-users');
             if (activeUsers) {
-                activeUsers.textContent = canvas.user_count || 0;
+                // Set to at least 1 if user is viewing the canvas
+                activeUsers.textContent = Math.max(1, canvas.user_count || 0);
             }
             
             const userTiles = document.getElementById('viewer-user-tiles');
             if (userTiles) {
-                // Get user's tile count from API
+                // Get user's tile count for this specific canvas
                 try {
                     const currentUser = appState.get('currentUser');
                     if (currentUser && currentUser.id) {
-                        const userTilesResponse = await fetch(`${CONFIG_UTILS.getApiUrl()}/tiles/user/${currentUser.id}?limit=1000`, {
+                        const response = await fetch(`${CONFIG_UTILS.getApiUrl()}/tiles/user/${currentUser.id}/count?canvas_id=${canvas.id}`, {
                             headers: {
                                 'Authorization': `Bearer ${CONFIG_UTILS.getAuthToken()}`,
                                 'Content-Type': 'application/json'
                             }
                         });
                         
-                        if (userTilesResponse.ok) {
-                            const userTilesData = await userTilesResponse.json();
-                            // Count tiles that belong to the current canvas
-                            const userTilesOnCanvas = userTilesData.filter(tile => tile.canvas_id === canvas.id);
-                            userTiles.textContent = userTilesOnCanvas.length.toString();
+                        if (response.ok) {
+                            const data = await response.json();
+                            userTiles.textContent = data.tile_count.toString();
                         } else {
                             userTiles.textContent = '0';
                         }

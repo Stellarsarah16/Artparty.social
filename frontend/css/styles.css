@@ -2093,3 +2093,39 @@ form {
         margin: 0;
     }
 } 
+
+/* Canvas Settings Button */
+.canvas-settings-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.canvas-settings-btn:hover {
+    opacity: 1;
+}
+
+.canvas-card {
+    position: relative;
+}
+
+/* User tiles count styling */
+.user-tiles-count {
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+/* Canvas Settings Modal */
+#canvas-settings-modal .modal-content {
+    max-width: 600px;
+}
+
+#canvas-settings-modal .form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+} 
