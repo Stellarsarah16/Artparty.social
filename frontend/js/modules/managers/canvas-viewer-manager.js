@@ -53,8 +53,15 @@ export class CanvasViewerManager {
         this.currentCanvas = canvas;
         
         // Update canvas info
-        document.getElementById('viewer-canvas-name').textContent = canvas.name;
-        document.getElementById('viewer-canvas-description').textContent = canvas.description || 'No description';
+        const canvasTitle = document.getElementById('viewer-canvas-title');
+        if (canvasTitle) {
+            canvasTitle.textContent = canvas.name;
+        }
+        
+        const canvasDimensions = document.getElementById('viewer-canvas-dimensions');
+        if (canvasDimensions) {
+            canvasDimensions.textContent = `${canvas.width}x${canvas.height}`;
+        }
         
         // Update canvas stats
         await this.updateCanvasStats(canvas);
