@@ -6,7 +6,6 @@
 import appState from './app-state.js';
 import { showToast } from './ui-utils.js';
 import { showSection, hideModal } from './navigation.js';
-import navigationManager from './navigation.js';
 
 class AuthManager {
     constructor() {
@@ -84,9 +83,10 @@ class AuthManager {
                 appState.setAuthenticated(data.user);
                 
                 // Update navigation UI to show logged-in state
-                const navigationManager = (await import('./navigation.js')).default;
-                navigationManager.updateNavigation();
-                navigationManager.updateUserInfo(data.user);
+                if (window.navigationManager) {
+                    window.navigationManager.updateNavigation();
+                    window.navigationManager.updateUserInfo(data.user);
+                }
                 
                 // Update UI
                 hideModal('login');
@@ -159,9 +159,10 @@ class AuthManager {
                 appState.setAuthenticated(data.user);
                 
                 // Update navigation UI to show logged-in state
-                const navigationManager = (await import('./navigation.js')).default;
-                navigationManager.updateNavigation();
-                navigationManager.updateUserInfo(data.user);
+                if (window.navigationManager) {
+                    window.navigationManager.updateNavigation();
+                    window.navigationManager.updateUserInfo(data.user);
+                }
                 
                 // Update UI
                 hideModal('register');

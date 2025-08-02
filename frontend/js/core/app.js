@@ -6,7 +6,7 @@
 import { appState } from './state.js';
 import { authService } from '../services/auth.js';
 import { canvasService } from '../services/canvas.js';
-import { navigationManager } from '../modules/navigation.js';
+// Navigation manager is now a global singleton
 import { eventManager } from '../utils/events.js';
 import { uiUtils } from '../utils/ui.js';
 
@@ -19,7 +19,7 @@ class StellarArtCollabApp {
         this.modules.set('state', appState);
         this.modules.set('auth', authService);
         this.modules.set('canvas', canvasService);
-        this.modules.set('navigation', navigationManager);
+        this.modules.set('navigation', window.navigationManager);
         this.modules.set('events', eventManager);
         this.modules.set('ui', uiUtils);
         
@@ -86,7 +86,9 @@ class StellarArtCollabApp {
         appState.init();
         
         // Initialize navigation
-        navigationManager.init();
+        if (window.navigationManager) {
+            window.navigationManager.init();
+        }
         
         // Initialize event system
         eventManager.init();
@@ -107,20 +109,28 @@ class StellarArtCollabApp {
                 // User data exists in localStorage
                 appState.setUser(userData);
                 appState.setAuthenticated(true);
-                navigationManager.showSection('canvas');
+                if (window.navigationManager) {
+                    window.navigationManager.showSection('canvas');
+                }
                 await this.loadCanvases();
             } else {
                 // Token exists but no user data, verify with server
                 const isValid = await authService.verifyToken();
                 if (isValid) {
-                    navigationManager.showSection('canvas');
+                    if (window.navigationManager) {
+                        window.navigationManager.showSection('canvas');
+                    }
                     await this.loadCanvases();
                 } else {
-                    navigationManager.showSection('welcome');
+                    if (window.navigationManager) {
+                        window.navigationManager.showSection('welcome');
+                    }
                 }
             }
         } else {
-            navigationManager.showSection('welcome');
+            if (window.navigationManager) {
+                window.navigationManager.showSection('welcome');
+            }
         }
         
         console.log('✅ Authentication initialized');
@@ -260,7 +270,9 @@ class StellarArtCollabApp {
             
             switch (e.key) {
                 case 'Escape':
-                    navigationManager.hideAllModals();
+                    if (window.navigationManager) {
+                        window.navigationManager.hideAllModals();
+                    }
                     break;
                 case 'p':
                     this.selectTool('paint');
@@ -283,14 +295,18 @@ class StellarArtCollabApp {
         eventManager.on('login:success', (userData) => {
             appState.setUser(userData);
             appState.setAuthenticated(true);
-            navigationManager.showSection('canvas');
+            if (window.navigationManager) {
+                window.navigationManager.showSection('canvas');
+            }
             this.loadCanvases();
         });
         
         eventManager.on('logout:success', () => {
             appState.setUser(null);
             appState.setAuthenticated(false);
-            navigationManager.showSection('welcome');
+            if (window.navigationManager) {
+                window.navigationManager.showSection('welcome');
+            }
         });
         
         // Canvas events
@@ -332,7 +348,9 @@ class StellarArtCollabApp {
     async openCanvas(canvas) {
         try {
             appState.setCurrentCanvas(canvas);
-            navigationManager.showSection('editor');
+            if (window.navigationManager) {
+                window.navigationManager.showSection('editor');
+            }
             
             // Load canvas data
             const canvasData = await canvasService.getCanvasData(canvas.id);

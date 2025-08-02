@@ -2,7 +2,7 @@
  * ArtPartySocial - Main Application Entry Point
  */
 
-import Navigation from './modules/navigation.js';
+import { showSection, updateNavigation } from './modules/navigation.js';
 import Auth from './modules/auth.js';
 import AppState from './modules/app-state.js';
 
@@ -51,7 +51,8 @@ class ArtPartySocial {
         // Initialize modules (all are singleton instances)
         this.modules.appState = AppState;
         this.modules.auth = Auth;
-        this.modules.navigation = Navigation;
+        // Navigation is now a global singleton
+        this.modules.navigation = window.navigationManager;
         
         // All modules are already initialized as singletons
         console.log('✅ All modules initialized');
