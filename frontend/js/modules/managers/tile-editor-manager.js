@@ -125,9 +125,25 @@ export class TileEditorManager {
         // Clear existing palette
         paletteContainer.innerHTML = '';
         
-        // Get palette type from canvas or use default
-        const paletteType = tile.canvas_palette_type || 'classic';
-        console.log('🎨 Using palette type:', paletteType);
+        // Get the current canvas to access its palette type
+        let paletteType = 'classic'; // default fallback
+        
+        // Try to get palette type from multiple sources
+        if (tile.canvas_palette_type) {
+            paletteType = tile.canvas_palette_type;
+            console.log('🎨 Using palette type from tile.canvas_palette_type:', paletteType);
+        } else if (tile.canvas && tile.canvas.palette_type) {
+            paletteType = tile.canvas.palette_type;
+            console.log('🎨 Using palette type from tile.canvas.palette_type:', paletteType);
+        } else if (window.appState && window.appState.get('currentCanvas')) {
+            const currentCanvas = window.appState.get('currentCanvas');
+            paletteType = currentCanvas.palette_type || 'classic';
+            console.log('🎨 Using palette type from currentCanvas:', paletteType);
+        } else {
+            console.warn('⚠️ Could not determine palette type, using classic as default');
+        }
+        
+        console.log('🎨 Final palette type:', paletteType);
         
         // Define color palettes
         const colorPalettes = {
@@ -140,7 +156,7 @@ export class TileEditorManager {
         // Get colors for the selected palette
         const colors = colorPalettes[paletteType] || colorPalettes.classic;
         
-        console.log('🎨 Creating', colors.length, 'color squares');
+        console.log('🎨 Creating', colors.length, 'color squares for palette:', paletteType);
         
         // Create color squares
         colors.forEach((color, index) => {
@@ -163,7 +179,7 @@ export class TileEditorManager {
             this.selectColor(colors[0]);
         }
         
-        console.log('✅ Color palette initialized with', colors.length, 'colors');
+        console.log('✅ Color palette initialized with', colors.length, 'colors from palette:', paletteType);
         
         // Ensure the floating tools panel is visible
         const toolsPanel = document.getElementById('floating-tools-panel');
@@ -272,16 +288,28 @@ export class TileEditorManager {
             }
             
             const pixelData = window.PixelEditor.getPixelData();
-            console.log('💾 Pixel data to save:', pixelData);
+            console.log('💾 Raw pixel data to save:', pixelData);
+            
+            // Convert pixel data to JSON string if it's an array
+            let pixelDataToSend = pixelData;
+            if (Array.isArray(pixelData)) {
+                pixelDataToSend = JSON.stringify(pixelData);
+                console.log('💾 Converted pixel data to JSON string:', pixelDataToSend);
+            }
             
             if (!this.apiService) {
                 throw new Error('API service not available');
             }
             
+            // Prepare the update data
+            const updateData = {
+                pixel_data: pixelDataToSend
+            };
+            
+            console.log('💾 Sending update data:', updateData);
             console.log('💾 Calling API service update...');
-            const result = await this.apiService.update(tileId, {
-                pixel_data: pixelData
-            });
+            
+            const result = await this.apiService.update(tileId, updateData);
             
             console.log('💾 API call successful:', result);
             
@@ -302,11 +330,24 @@ export class TileEditorManager {
                 message: error.message,
                 stack: error.stack,
                 apiService: !!this.apiService,
-                pixelEditor: !!window.PixelEditor
+                pixelEditor: !!window.PixelEditor,
+                errorType: error.constructor.name,
+                errorResponse: error.response || error
             });
             
+            // Try to get more details about the error
+            if (error.response) {
+                try {
+                    const errorText = await error.response.text();
+                    console.error('❌ Error response body:', errorText);
+                } catch (e) {
+                    console.error('❌ Could not read error response body');
+                }
+            }
+            
             if (window.UIManager) {
-                window.UIManager.showToast('Failed to save tile: ' + error.message, 'error');
+                const errorMessage = error.message || 'Unknown error occurred';
+                window.UIManager.showToast('Failed to save tile: ' + errorMessage, 'error');
             }
         }
     }
@@ -476,7 +517,7 @@ export class TileEditorManager {
             console.log('🔍 Loading neighbor tiles for tile:', currentTile.x, currentTile.y);
             
             // Get all tiles for the current canvas
-            const allTiles = await this.apiService.getForCanvas(currentTile.canvas_id);
+            const allTiles = await this.apiService.getCanvasTiles(currentTile.canvas_id);
             
             if (!allTiles || !Array.isArray(allTiles)) {
                 console.warn('⚠️ No tiles found for canvas');

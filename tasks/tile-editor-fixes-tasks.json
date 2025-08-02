@@ -22,5 +22,17 @@
     "content": "Test all tile editor functionality after fixes",
     "status": "completed",
     "dependencies": ["fix-palette-display", "fix-save-button", "hide-undo-redo"]
+  },
+  {
+    "id": "fix-canvas-palette-selection",
+    "content": "Fix tile editor to use canvas's actual palette type instead of generic palette",
+    "status": "completed",
+    "dependencies": []
+  },
+  {
+    "id": "fix-save-422-error",
+    "content": "Fix 422 error when saving tiles - check data format and API endpoint",
+    "status": "completed",
+    "dependencies": []
   }
 ] 
