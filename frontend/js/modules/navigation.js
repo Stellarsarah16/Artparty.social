@@ -12,6 +12,28 @@ class NavigationManager {
     constructor() {
         console.log('🔧 Initializing NavigationManager...');
         
+        // Wait for API to be available before initializing managers
+        this.waitForAPIAndInitialize();
+    }
+    
+    async waitForAPIAndInitialize() {
+        // Wait for API to be available
+        let attempts = 0;
+        const maxAttempts = 50; // 5 seconds max wait
+        
+        while (!window.API && attempts < maxAttempts) {
+            console.log(`⏳ Waiting for API... (attempt ${attempts + 1}/${maxAttempts})`);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
+        if (!window.API) {
+            console.error('❌ API not available after waiting');
+            throw new Error('API not available after waiting');
+        }
+        
+        console.log('✅ API available, initializing managers...');
+        
         // Initialize all specialized managers
         this.managers = createManagers();
         

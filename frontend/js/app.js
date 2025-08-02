@@ -51,10 +51,35 @@ class ArtPartySocial {
         // Initialize modules (all are singleton instances)
         this.modules.appState = AppState;
         this.modules.auth = Auth;
-        // Navigation is now a global singleton
-        this.modules.navigation = window.navigationManager;
         
-        // All modules are already initialized as singletons
+        // Wait for navigation manager to be fully initialized
+        if (window.navigationManager) {
+            // If navigation manager exists but is still initializing, wait for it
+            if (window.navigationManager.managers) {
+                this.modules.navigation = window.navigationManager;
+                console.log('✅ Navigation manager already initialized');
+            } else {
+                console.log('⏳ Waiting for navigation manager to initialize...');
+                // Wait for managers to be available
+                let attempts = 0;
+                const maxAttempts = 100; // 10 seconds max wait
+                
+                while (!window.navigationManager.managers && attempts < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (window.navigationManager.managers) {
+                    this.modules.navigation = window.navigationManager;
+                    console.log('✅ Navigation manager initialized');
+                } else {
+                    throw new Error('Navigation manager failed to initialize');
+                }
+            }
+        } else {
+            throw new Error('Navigation manager not available');
+        }
+        
         console.log('✅ All modules initialized');
     }
 

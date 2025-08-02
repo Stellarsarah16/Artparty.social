@@ -23,6 +23,19 @@ export {
 
 // Create and export manager instances
 export const createManagers = () => {
+    // Ensure API is available before creating managers
+    if (!window.API) {
+        console.error('❌ API not available when creating managers');
+        throw new Error('API not available when creating managers');
+    }
+    
+    console.log('🔧 Creating managers with API:', {
+        canvas: !!window.API.canvas,
+        tiles: !!window.API.tiles,
+        auth: !!window.API.auth,
+        websocket: !!window.API.websocket
+    });
+    
     const managers = {
         canvasList: new CanvasListManager(window.API.canvas, window.API.tiles, eventManager),
         canvasViewer: new CanvasViewerManager(window.API.canvas, window.API.websocket, eventManager),
@@ -40,5 +53,6 @@ export const createManagers = () => {
     window.webSocketManager = managers.webSocket;
     window.authManager = managers.auth;
     
+    console.log('✅ All managers created successfully');
     return managers;
 }; 
