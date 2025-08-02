@@ -338,23 +338,28 @@ const CONFIG_UTILS = {
      * Get full API URL by combining base URL with endpoint
      */
     getApiUrl(endpoint) {
-        return `${API_CONFIG.BASE_URL}${endpoint}`;
+        // Ensure endpoint starts with /api/v1
+        const apiEndpoint = endpoint.startsWith('/api/v1') ? endpoint : `/api/v1${endpoint}`;
+        return `${API_CONFIG.BASE_URL}${apiEndpoint}`;
     },
     
     /**
      * Get API URL with fallback support
      */
     getApiUrlWithFallback(endpoint, fallbackIndex = 0) {
+        // Ensure endpoint starts with /api/v1
+        const apiEndpoint = endpoint.startsWith('/api/v1') ? endpoint : `/api/v1${endpoint}`;
+        
         if (fallbackIndex === 0) {
-            return `${API_CONFIG.BASE_URL}${endpoint}`;
+            return `${API_CONFIG.BASE_URL}${apiEndpoint}`;
         }
         
         const fallbacks = API_CONFIG.FALLBACK_URLS;
         if (fallbackIndex - 1 < fallbacks.length) {
-            return `${fallbacks[fallbackIndex - 1]}${endpoint}`;
+            return `${fallbacks[fallbackIndex - 1]}${apiEndpoint}`;
         }
         
-        return `${API_CONFIG.BASE_URL}${endpoint}`;
+        return `${API_CONFIG.BASE_URL}${apiEndpoint}`;
     },
     
     /**
