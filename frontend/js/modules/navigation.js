@@ -278,43 +278,12 @@ class NavigationManager {
      * Setup async race protection
      */
     setupAsyncRaceProtection() {
-        // Prevent multiple simultaneous operations
-        this.pendingOperations = new Map(); // Changed to Map to store operation details
+        // Initialize pending operations map for potential future use
+        this.pendingOperations = new Map();
         
-        // Add protection to async operations
-        const originalOpenCanvas = this.openCanvas.bind(this);
-        this.openCanvas = async (canvas) => {
-            const operationKey = 'openCanvas';
-            const canvasId = canvas?.id;
-            
-            if (this.pendingOperations.has(operationKey)) {
-                const existingOperation = this.pendingOperations.get(operationKey);
-                if (existingOperation.canvasId === canvasId) {
-                    console.log('🔄 Canvas opening already in progress for this canvas, ignoring duplicate request');
-                    return;
-                } else {
-                    console.warn('Canvas opening already in progress for different canvas, waiting...');
-                    // Wait a bit and try again
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    return this.openCanvas(canvas);
-                }
-            }
-            
-            this.pendingOperations.set(operationKey, { canvasId, timestamp: Date.now() });
-            console.log(`🔄 Starting canvas opening operation for canvas ${canvasId}`);
-            
-            try {
-                await originalOpenCanvas(canvas);
-                console.log(`✅ Canvas ${canvasId} opened successfully`);
-            } catch (error) {
-                console.error(`❌ Error in openCanvas operation for canvas ${canvasId}:`, error);
-                // Re-throw the error so it can be handled by the caller
-                throw error;
-            } finally {
-                this.pendingOperations.delete(operationKey);
-                console.log(`🔧 Canvas opening operation completed for canvas ${canvasId}, removed from pending operations`);
-            }
-        };
+        // For now, we'll rely on the button-level debouncing in CanvasListManager
+        // which is more reliable and user-friendly
+        console.log('🔧 Async race protection initialized (button-level debouncing active)');
     }
     
     /**

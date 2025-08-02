@@ -60,8 +60,17 @@ export class CanvasViewerManager {
         await this.updateCanvasStats(canvas);
         
         // Initialize canvas viewer component
-        if (window.canvasViewer) {
-            window.canvasViewer.initialize(canvasData);
+        if (window.CanvasViewer) {
+            const canvasElement = document.getElementById('canvas-viewer');
+            if (canvasElement) {
+                window.CanvasViewer.init(canvasElement);
+                window.CanvasViewer.setCanvasData(canvasData);
+                console.log('✅ Canvas viewer initialized with canvas element');
+            } else {
+                console.error('❌ Canvas viewer element not found');
+            }
+        } else {
+            console.error('❌ CanvasViewer not available');
         }
         
         // Setup viewer controls
@@ -180,8 +189,8 @@ export class CanvasViewerManager {
      * Handle tile updates from WebSocket
      */
     handleTileUpdate(tile) {
-        if (window.canvasViewer) {
-            window.canvasViewer.updateTile(tile);
+        if (window.CanvasViewer) {
+            window.CanvasViewer.updateTile(tile);
         }
     }
 
