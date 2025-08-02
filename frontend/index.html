@@ -549,29 +549,50 @@
     </div>
 
     <!-- Scripts -->
+    <!-- HTTPS Enforcer - Must load first! -->
+    <script src="js/https-enforcer.js"></script>
+    
     <script>
         // Cache busting for critical files
         const cacheBuster = '?v=1.2.0&t=' + Date.now();
         console.log('🔧 Cache buster generated:', cacheBuster);
+        
+        // Dynamically load scripts with cache busting
+        const scripts = [
+            'js/config.js',
+            'js/api.js',
+            'js/canvas-viewer.js',
+            'js/pixel-editor.js',
+            'js/websocket.js',
+            'js/ui.js',
+            'js/form-validation.js',
+            'js/neighbor-display.js'
+        ];
+        
+        const modules = [
+            'js/services/auth.js',
+            'js/services/canvas.js',
+            'js/modules/managers/index.js',
+            'js/modules/auth.js',
+            'js/modules/navigation.js',
+            'js/modules/app-state.js',
+            'js/app.js'
+        ];
+        
+        // Load regular scripts
+        scripts.forEach(src => {
+            const script = document.createElement('script');
+            script.src = src + cacheBuster;
+            document.head.appendChild(script);
+        });
+        
+        // Load module scripts
+        modules.forEach(src => {
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.src = src + cacheBuster;
+            document.head.appendChild(script);
+        });
     </script>
-    <!-- Debug HTTP Requests - Must load first! -->
-    <!-- <script src="js/debug-http-requests.js"></script> -->
-    <!-- HTTPS Enforcer - Must load first! -->
-    <script src="js/https-enforcer.js"></script>
-    <script src="js/config.js${cacheBuster}"></script>
-    <script src="js/api.js${cacheBuster}"></script>
-    <script src="js/canvas-viewer.js${cacheBuster}"></script>
-    <script src="js/pixel-editor.js${cacheBuster}"></script>
-    <script src="js/websocket.js${cacheBuster}"></script>
-    <script src="js/ui.js${cacheBuster}"></script>
-    <script src="js/form-validation.js${cacheBuster}"></script>
-    <script src="js/neighbor-display.js${cacheBuster}"></script>
-    <script type="module" src="js/services/auth.js${cacheBuster}"></script>
-    <script type="module" src="js/services/canvas.js${cacheBuster}"></script>
-    <script type="module" src="js/modules/managers/index.js${cacheBuster}"></script>
-    <script type="module" src="js/modules/auth.js${cacheBuster}"></script>
-    <script type="module" src="js/modules/navigation.js${cacheBuster}"></script>
-    <script type="module" src="js/modules/app-state.js${cacheBuster}"></script>
-    <script type="module" src="js/app.js${cacheBuster}"></script>
 </body>
 </html> 
