@@ -118,7 +118,7 @@ export class CanvasListManager {
                 </div>
             </div>
             <div class="canvas-card-footer">
-                <button class="btn btn-primary" onclick="navigationManager.openCanvas(${JSON.stringify(canvas).replace(/"/g, '&quot;')})">
+                <button class="btn btn-primary open-canvas-btn" data-canvas='${JSON.stringify(canvas)}'>
                     Open Canvas
                 </button>
             </div>
@@ -130,6 +130,45 @@ export class CanvasListManager {
             settingsBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.showCanvasSettingsModal(canvas.id);
+            });
+        }
+
+        // Add open canvas button event listener with debouncing
+        const openCanvasBtn = card.querySelector('.open-canvas-btn');
+        if (openCanvasBtn) {
+            let isOpening = false;
+            openCanvasBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (isOpening) {
+                    console.log('🔄 Canvas opening already in progress, ignoring click');
+                    return;
+                }
+                
+                isOpening = true;
+                openCanvasBtn.disabled = true;
+                openCanvasBtn.textContent = 'Opening...';
+                
+                try {
+                    const canvasData = JSON.parse(openCanvasBtn.dataset.canvas);
+                    console.log('🔄 Opening canvas:', canvasData.name);
+                    
+                    if (window.navigationManager) {
+                        await window.navigationManager.openCanvas(canvasData);
+                    } else {
+                        console.error('❌ Navigation manager not available');
+                    }
+                } catch (error) {
+                    console.error('❌ Error opening canvas:', error);
+                    if (window.UIManager) {
+                        window.UIManager.showToast('Failed to open canvas', 'error');
+                    }
+                } finally {
+                    isOpening = false;
+                    openCanvasBtn.disabled = false;
+                    openCanvasBtn.textContent = 'Open Canvas';
+                }
             });
         }
 
