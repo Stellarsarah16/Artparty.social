@@ -1,0 +1,26 @@
+[
+  {
+    "id": "fix-palette-display",
+    "content": "Fix color palette not showing in tile editor - ensure palette initialization is called when editor opens",
+    "status": "completed",
+    "dependencies": []
+  },
+  {
+    "id": "fix-save-button",
+    "content": "Fix save tile button not working - check event binding and API call",
+    "status": "completed", 
+    "dependencies": []
+  },
+  {
+    "id": "hide-undo-redo",
+    "content": "Hide undo and redo buttons in tile editor as requested by user",
+    "status": "completed",
+    "dependencies": []
+  },
+  {
+    "id": "test-tile-editor",
+    "content": "Test all tile editor functionality after fixes",
+    "status": "completed",
+    "dependencies": ["fix-palette-display", "fix-save-button", "hide-undo-redo"]
+  }
+] 

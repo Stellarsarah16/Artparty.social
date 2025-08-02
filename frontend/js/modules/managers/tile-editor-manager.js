@@ -47,6 +47,9 @@ export class TileEditorManager {
         // Update tile info
         this.updateTileInfo(tile);
         
+        // Initialize color palette
+        this.initializeColorPalette(tile);
+        
         // Initialize pixel editor
         if (window.PixelEditor) {
             console.log('✅ Pixel editor available, initializing...');
@@ -105,6 +108,98 @@ export class TileEditorManager {
     }
 
     /**
+     * Initialize color palette
+     */
+    initializeColorPalette(tile) {
+        console.log('🎨 Initializing color palette for tile editor');
+        
+        // Get the palette container
+        const paletteContainer = document.getElementById('color-palette');
+        if (!paletteContainer) {
+            console.warn('⚠️ Color palette container not found');
+            return;
+        }
+        
+        console.log('🎨 Found palette container:', paletteContainer);
+        
+        // Clear existing palette
+        paletteContainer.innerHTML = '';
+        
+        // Get palette type from canvas or use default
+        const paletteType = tile.canvas_palette_type || 'classic';
+        console.log('🎨 Using palette type:', paletteType);
+        
+        // Define color palettes
+        const colorPalettes = {
+            classic: ['#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'],
+            earth: ['#8B4513', '#A0522D', '#CD853F', '#DEB887', '#F4A460', '#D2691E', '#B8860B', '#DAA520'],
+            pastel: ['#FFB6C1', '#87CEEB', '#98FB98', '#F0E68C', '#DDA0DD', '#FFA07A', '#B0E0E6', '#F5DEB3'],
+            neon: ['#FF1493', '#00FFFF', '#00FF00', '#FFFF00', '#FF00FF', '#FF4500', '#9400D3', '#00CED1']
+        };
+        
+        // Get colors for the selected palette
+        const colors = colorPalettes[paletteType] || colorPalettes.classic;
+        
+        console.log('🎨 Creating', colors.length, 'color squares');
+        
+        // Create color squares
+        colors.forEach((color, index) => {
+            const colorSquare = document.createElement('div');
+            colorSquare.className = 'color-square';
+            colorSquare.style.backgroundColor = color;
+            colorSquare.setAttribute('data-color', color);
+            colorSquare.title = color;
+            
+            colorSquare.addEventListener('click', () => {
+                this.selectColor(color);
+            });
+            
+            paletteContainer.appendChild(colorSquare);
+            console.log(`🎨 Added color square ${index + 1}:`, color);
+        });
+        
+        // Select first color by default
+        if (colors.length > 0) {
+            this.selectColor(colors[0]);
+        }
+        
+        console.log('✅ Color palette initialized with', colors.length, 'colors');
+        
+        // Ensure the floating tools panel is visible
+        const toolsPanel = document.getElementById('floating-tools-panel');
+        if (toolsPanel) {
+            toolsPanel.style.display = 'block';
+            console.log('✅ Floating tools panel made visible');
+        } else {
+            console.warn('⚠️ Floating tools panel not found');
+        }
+    }
+    
+    /**
+     * Select a color
+     */
+    selectColor(color) {
+        console.log('🎨 Selecting color:', color);
+        
+        // Update active color square
+        const colorSquares = document.querySelectorAll('.color-square');
+        colorSquares.forEach(square => {
+            square.classList.remove('active');
+            if (square.getAttribute('data-color') === color) {
+                square.classList.add('active');
+            }
+        });
+        
+        // Update pixel editor
+        if (window.PixelEditor) {
+            window.PixelEditor.setColor(color);
+            console.log('✅ Color set in pixel editor:', color);
+        } else {
+            console.warn('⚠️ Pixel editor not available for color selection');
+        }
+    }
+
+    /**
      * Update tile information display
      */
     updateTileInfo(tile) {
@@ -147,9 +242,18 @@ export class TileEditorManager {
     setupSaveButton(tile) {
         const saveBtn = document.getElementById('save-tile-btn');
         if (saveBtn) {
-            saveBtn.onclick = async () => {
+            // Remove any existing event listeners
+            saveBtn.replaceWith(saveBtn.cloneNode(true));
+            const newSaveBtn = document.getElementById('save-tile-btn');
+            
+            newSaveBtn.addEventListener('click', async () => {
+                console.log('💾 Save button clicked for tile:', tile.id);
                 await this.saveTile(tile.id);
-            };
+            });
+            
+            // Enable the save button
+            newSaveBtn.disabled = false;
+            
             console.log('✅ Save button setup complete');
         } else {
             console.warn('⚠️ Save button not found');
@@ -161,15 +265,25 @@ export class TileEditorManager {
      */
     async saveTile(tileId) {
         try {
+            console.log('💾 Starting tile save for tile ID:', tileId);
+            
             if (!window.PixelEditor) {
                 throw new Error('Pixel editor not available');
             }
             
             const pixelData = window.PixelEditor.getPixelData();
+            console.log('💾 Pixel data to save:', pixelData);
             
-            await this.apiService.update(tileId, {
+            if (!this.apiService) {
+                throw new Error('API service not available');
+            }
+            
+            console.log('💾 Calling API service update...');
+            const result = await this.apiService.update(tileId, {
                 pixel_data: pixelData
             });
+            
+            console.log('💾 API call successful:', result);
             
             if (window.UIManager) {
                 window.UIManager.showToast('Tile saved successfully!', 'success');
@@ -180,10 +294,19 @@ export class TileEditorManager {
             this.redoStack = [];
             this.updateUndoRedoButtons();
             
+            console.log('✅ Tile save completed successfully');
+            
         } catch (error) {
-            console.error('Failed to save tile:', error);
+            console.error('❌ Failed to save tile:', error);
+            console.error('❌ Error details:', {
+                message: error.message,
+                stack: error.stack,
+                apiService: !!this.apiService,
+                pixelEditor: !!window.PixelEditor
+            });
+            
             if (window.UIManager) {
-                window.UIManager.showToast('Failed to save tile', 'error');
+                window.UIManager.showToast('Failed to save tile: ' + error.message, 'error');
             }
         }
     }
@@ -252,21 +375,24 @@ export class TileEditorManager {
     }
 
     /**
-     * Setup undo/redo buttons
+     * Setup undo/redo buttons (currently hidden)
      */
     setupUndoRedoButtons() {
         const undoBtn = document.getElementById('undo-btn');
         const redoBtn = document.getElementById('redo-btn');
         
+        // Hide undo and redo buttons as requested
         if (undoBtn) {
-            undoBtn.onclick = () => this.undo();
+            undoBtn.style.display = 'none';
+            console.log('✅ Undo button hidden');
         }
         
         if (redoBtn) {
-            redoBtn.onclick = () => this.redo();
+            redoBtn.style.display = 'none';
+            console.log('✅ Redo button hidden');
         }
         
-        this.updateUndoRedoButtons();
+        console.log('✅ Undo/redo buttons hidden as requested');
     }
 
     /**
