@@ -1,18 +1,25 @@
 /**
- * Navigation Module
- * Handles section navigation and modal management
+ * Navigation Module (Refactored)
+ * Main coordinator that delegates to specialized managers
+ * Follows SOLID principles with single responsibility
  */
 
 import appState from './app-state.js';
 import { eventManager } from '../utils/events.js';
-import canvasService from '../services/canvas.js';
+import { createManagers } from './managers/index.js';
 
 class NavigationManager {
     constructor() {
         console.log('🔧 Initializing NavigationManager...');
+        
+        // Initialize all specialized managers
+        this.managers = createManagers();
+        
+        // Initialize DOM elements
         this.elements = this.initializeElements();
+        
+        // Setup event listeners
         this.setupEventListeners();
-        this.setupFormHandlers();
         
         // Setup comprehensive state protection
         this.setupBrowserNavigationHandlers();
@@ -44,11 +51,6 @@ class NavigationManager {
             editorSection: document.getElementById('editor-section'),
             gallerySection: document.getElementById('gallery-section'),
             
-            // Modals
-            loginModal: document.getElementById('login-modal'),
-            registerModal: document.getElementById('register-modal'),
-            createCanvasModal: document.getElementById('create-canvas-modal'),
-            
             // Modal controls
             closeLoginModal: document.getElementById('close-login-modal'),
             closeRegisterModal: document.getElementById('close-register-modal'),
@@ -70,2478 +72,273 @@ class NavigationManager {
         // Login and Register button click events
         this.elements.loginBtn?.addEventListener('click', () => {
             console.log('Login button clicked');
-            this.showModal('login');
+            this.managers.modal.showModal('login');
         });
         
         this.elements.registerBtn?.addEventListener('click', () => {
             console.log('Register button clicked');
-            this.showModal('register');
+            this.managers.modal.showModal('register');
         });
         
         // Get Started button click event
         const getStartedBtn = document.getElementById('get-started-btn');
         getStartedBtn?.addEventListener('click', () => {
             console.log('Get Started button clicked');
-            this.showModal('register');
+            this.managers.modal.showModal('register');
         });
         
         // Create Canvas button click event
         const createCanvasBtn = document.getElementById('create-canvas-btn');
         createCanvasBtn?.addEventListener('click', () => {
             console.log('Create Canvas button clicked');
-            this.showModal('create-canvas');
+            this.managers.modal.showModal('create-canvas');
         });
         
         // Refresh Canvases button click event
         const refreshCanvasesBtn = document.getElementById('refresh-canvases-btn');
         refreshCanvasesBtn?.addEventListener('click', () => {
             console.log('Refresh Canvases button clicked');
-            this.loadCanvases();
-        });
-        
-        // Back to Canvases button click event
-        const backToCanvasesBtn = document.getElementById('back-to-canvases-btn');
-        backToCanvasesBtn?.addEventListener('click', () => {
-            console.log('Back to Canvases button clicked');
-            this.showSection('canvas');
-        });
-        
-        // Back to Grid View button click event (from editor to viewer)
-        const backToGridBtn = document.getElementById('back-to-grid-btn');
-        backToGridBtn?.addEventListener('click', () => {
-            console.log('Back to Grid View button clicked');
-            this.showSection('viewer');
-            // Refresh canvas viewer to ensure tiles are up to date
-            this.refreshCanvasViewer();
-        });
-        
-        // Viewer Back to Canvases button click event
-        const viewerBackToCanvasesBtn = document.getElementById('viewer-back-to-canvases-btn');
-        viewerBackToCanvasesBtn?.addEventListener('click', () => {
-            console.log('Viewer Back to Canvases button clicked');
-            this.showSection('canvas');
-        });
-        
-        // Viewer controls
-        const viewerRefreshBtn = document.getElementById('viewer-refresh-btn');
-        viewerRefreshBtn?.addEventListener('click', () => {
-            console.log('Viewer refresh button clicked');
-            this.refreshCanvas();
-        });
-        
-        const viewerZoomFitBtn = document.getElementById('viewer-zoom-fit-btn');
-        viewerZoomFitBtn?.addEventListener('click', () => {
-            console.log('Viewer zoom fit button clicked');
-            this.fitCanvasToScreen();
-        });
-        
-        const viewerZoomInBtn = document.getElementById('viewer-zoom-in-btn');
-        viewerZoomInBtn?.addEventListener('click', () => {
-            if (window.CanvasViewer) {
-                window.CanvasViewer.zoomIn();
-            }
-        });
-        
-        const viewerZoomOutBtn = document.getElementById('viewer-zoom-out-btn');
-        viewerZoomOutBtn?.addEventListener('click', () => {
-            if (window.CanvasViewer) {
-                window.CanvasViewer.zoomOut();
-            }
-        });
-        
-        const toggleGridBtn = document.getElementById('toggle-grid-btn');
-        toggleGridBtn?.addEventListener('click', () => {
-            if (window.CanvasViewer) {
-                window.CanvasViewer.toggleGrid();
-            }
-        });
-        
-        const toggleUserIndicatorsBtn = document.getElementById('toggle-user-indicators-btn');
-        toggleUserIndicatorsBtn?.addEventListener('click', () => {
-            if (window.CanvasViewer) {
-                window.CanvasViewer.toggleUserIndicators();
-            }
-        });
-        
-        // Admin button click event
-        const adminBtn = document.getElementById('admin-btn');
-        adminBtn?.addEventListener('click', () => {
-            console.log('Admin button clicked');
-            window.open('admin.html', '_blank');
+            this.managers.canvasList.loadCanvases();
         });
         
         // Logout button click event
-        this.elements.logoutBtn?.addEventListener('click', async () => {
+        this.elements.logoutBtn?.addEventListener('click', () => {
             console.log('Logout button clicked');
-            await this.handleLogout();
+            this.managers.auth.handleLogout();
         });
         
-        // Modal close events
-        this.elements.closeLoginModal?.addEventListener('click', () => this.hideModal('login'));
-        this.elements.closeRegisterModal?.addEventListener('click', () => this.hideModal('register'));
-        this.elements.closeCreateCanvasModal?.addEventListener('click', () => this.hideModal('create-canvas'));
-        
-        // Click outside modal to close
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
-                this.hideModal(this.getModalName(e.target));
-            }
+        // Close modal buttons
+        this.elements.closeLoginModal?.addEventListener('click', () => {
+            this.managers.modal.hideModal('login');
         });
         
-        // Escape key to close modals
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.hideAllModals();
-            }
+        this.elements.closeRegisterModal?.addEventListener('click', () => {
+            this.managers.modal.hideModal('register');
         });
         
-        // Subscribe to authentication state changes
-        appState.subscribe('isAuthenticated', (isAuthenticated) => {
-            this.updateNavigation();
+        this.elements.closeCreateCanvasModal?.addEventListener('click', () => {
+            this.managers.modal.hideModal('create-canvas');
         });
         
-        appState.subscribe('currentUser', (user) => {
-            this.updateUserInfo(user);
-        });
-        
-        // Listen for canvas events
-        eventManager.on('canvases:loaded', (canvases) => {
-            this.renderCanvasList(canvases);
-        });
-        
-        // Listen for canvas selection events
-        eventManager.on('canvas:selected', (canvas) => {
-            this.openCanvas(canvas);
-        });
-        
-        // Listen for tile editor events
-        eventManager.on('tile:opened', (tile) => {
-            this.initializeTileEditor(tile);
-        });
-        
-        console.log('✅ Event listeners set up');
-    }
-
-    /**
-     * Setup form submission handlers
-     */
-    setupFormHandlers() {
-        console.log('🔧 Setting up form handlers...');
-        
-        // Login form submission
-        const loginForm = document.getElementById('login-form');
-        loginForm?.addEventListener('submit', this.handleLoginSubmit.bind(this));
-        
-        // Register form submission
-        const registerForm = document.getElementById('register-form');
-        registerForm?.addEventListener('submit', this.handleRegisterSubmit.bind(this));
-        
-        // Create Canvas form submission
-        const createCanvasForm = document.getElementById('create-canvas-form');
-        createCanvasForm?.addEventListener('submit', this.handleCreateCanvasSubmit.bind(this));
-        
-        console.log('✅ Form handlers set up');
-    }
-
-    /**
-     * Handle login form submission
-     */
-    async handleLoginSubmit(event) {
-        event.preventDefault();
-        console.log('Login form submitted');
-        
-        const form = event.target;
-        const formData = new FormData(form);
-        
-        const credentials = {
-            username: formData.get('username'),
-            password: formData.get('password')
-        };
-        
-        console.log('Login credentials:', { username: credentials.username, password: '[HIDDEN]' });
-        
-        // Show loading state
-        const submitButton = form.querySelector('button[type="submit"]');
-        const originalText = submitButton.textContent;
-        
-        try {
-            submitButton.textContent = 'Logging in...';
-            submitButton.disabled = true;
-            
-            // Make API call
-            const response = await fetch(window.CONFIG_UTILS.getApiUrl(window.API_CONFIG.ENDPOINTS.LOGIN), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(credentials)
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-                console.log('Login successful:', data);
-                
-                // Store authentication data
-                window.CONFIG_UTILS.setAuthToken(data.access_token);
-                window.CONFIG_UTILS.setUserData(data.user);
-                
-                // Update app state
-                appState.setAuthenticated(data.user);
-                
-                // Update navigation
-                this.updateNavigation();
-                this.updateUserInfo(data.user);
-                
-                // Hide modal and show canvas
-                this.hideModal('login');
-                this.showSection('canvas');
-                
-                // Reset form
-                form.reset();
-                
-                console.log('✅ Login completed successfully');
-                
-            } else {
-                console.error('Login failed:', data);
-                // Show error message
-                this.showLoginError(data.detail || 'Login failed');
-            }
-            
-        } catch (error) {
-            console.error('Login error:', error);
-            this.showLoginError('Network error. Please try again.');
-        } finally {
-            // Restore button state
-            const submitButton = form.querySelector('button[type="submit"]');
-            submitButton.textContent = originalText;
-            submitButton.disabled = false;
-        }
-    }
-
-    /**
-     * Handle register form submission
-     */
-    async handleRegisterSubmit(event) {
-        event.preventDefault();
-        console.log('Register form submitted');
-        
-        const form = event.target;
-        const formData = new FormData(form);
-        
-        const userData = {
-            username: formData.get('username'),
-            email: formData.get('email'),
-            first_name: formData.get('first_name'),
-            last_name: formData.get('last_name'),
-            password: formData.get('password'),
-            confirm_password: formData.get('confirm_password')
-        };
-        
-        console.log('Register data:', { ...userData, password: '[HIDDEN]', confirm_password: '[HIDDEN]' });
-        
-        // Show loading state
-        const submitButton = form.querySelector('button[type="submit"]');
-        const originalText = submitButton.textContent;
-        
-        try {
-            // Basic validation
-            if (userData.password !== userData.confirm_password) {
-                this.showRegisterError('Passwords do not match');
-            } else {
-                submitButton.textContent = 'Creating account...';
-                submitButton.disabled = true;
-                
-                // Make API call
-                const response = await fetch(window.CONFIG_UTILS.getApiUrl(window.API_CONFIG.ENDPOINTS.REGISTER), {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(userData)
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    console.log('Registration successful:', data);
-                    
-                    // Store authentication data
-                    window.CONFIG_UTILS.setAuthToken(data.access_token);
-                    window.CONFIG_UTILS.setUserData(data.user);
-                    
-                    // Update app state
-                    appState.setAuthenticated(data.user);
-                    
-                    // Update navigation
-                    this.updateNavigation();
-                    this.updateUserInfo(data.user);
-                    
-                    // Hide modal and show canvas
-                    this.hideModal('register');
-                    this.showSection('canvas');
-                    
-                    // Reset form
-                    form.reset();
-                    
-                    console.log('✅ Registration completed successfully');
-                    
-                } else {
-                    console.error('Registration failed:', data);
-                    // Show error message
-                    this.showRegisterError(data.detail || 'Registration failed');
-                }
-            }
-            
-        } catch (error) {
-            console.error('Registration error:', error);
-            this.showRegisterError('Network error. Please try again.');
-        } finally {
-            // Restore button state
-            const submitButton = form.querySelector('button[type="submit"]');
-            submitButton.textContent = originalText;
-            submitButton.disabled = false;
-        }
-    }
-
-    /**
-     * Handle create canvas form submission
-     */
-    async handleCreateCanvasSubmit(event) {
-        event.preventDefault();
-        console.log('Create Canvas form submitted');
-        
-        const form = event.target;
-        const formData = new FormData(form);
-        
-        const canvasData = {
-            name: formData.get('name'),
-            description: formData.get('description') || '',
-            width: parseInt(formData.get('width')),
-            height: parseInt(formData.get('height')),
-            tile_size: parseInt(formData.get('tile_size')),
-            palette_type: formData.get('palette_type'),
-            max_tiles_per_user: parseInt(formData.get('max_tiles_per_user')),
-            collaboration_mode: formData.get('collaboration_mode'),
-            auto_save_interval: parseInt(formData.get('auto_save_interval')),
-            is_public: formData.get('is_public') === 'on',
-            is_moderated: formData.get('is_moderated') === 'on'
-        };
-        
-        console.log('Canvas data:', canvasData);
-        
-        // Show loading state
-        const submitButton = form.querySelector('button[type="submit"]');
-        const originalText = submitButton.textContent;
-        
-        try {
-            submitButton.textContent = 'Creating canvas...';
-            submitButton.disabled = true;
-            
-            // Use canvas service instead of direct API call
-            const result = await canvasService.createCanvas(canvasData);
-            
-            if (result.success) {
-                console.log('Canvas created successfully:', result.canvas);
-                
-                // Hide modal
-                this.hideModal('create-canvas');
-                
-                // Reset form
-                form.reset();
-                
-                // Success message and event emission is handled by canvasService
-                console.log('✅ Canvas creation completed successfully');
-                
-            } else {
-                console.error('Canvas creation failed:', result.error);
-                this.showCreateCanvasError(result.error?.detail || result.error?.message || 'Failed to create canvas');
-            }
-            
-        } catch (error) {
-            console.error('Canvas creation error:', error);
-            this.showCreateCanvasError('Network error. Please try again.');
-        } finally {
-            // Restore button state
-            submitButton.textContent = originalText;
-            submitButton.disabled = false;
-        }
-    }
-
-    /**
-     * Show login error message
-     */
-    showLoginError(message) {
-        console.error('Login error:', message);
-        // You can implement a proper error display here
-        alert(`Login Error: ${message}`);
-    }
-
-    /**
-     * Show register error message
-     */
-    showRegisterError(message) {
-        console.error('Register error:', message);
-        // You can implement a proper error display here
-        alert(`Registration Error: ${message}`);
-    }
-
-    /**
-     * Show create canvas success message
-     */
-    showCreateCanvasSuccess(message) {
-        console.log('Canvas creation success:', message);
-        // You can implement a proper success display here
-        alert(`Success: ${message}`);
-    }
-
-    /**
-     * Show create canvas error message
-     */
-    showCreateCanvasError(message) {
-        console.error('Canvas creation error:', message);
-        // You can implement a proper error display here
-        alert(`Canvas Creation Error: ${message}`);
+        console.log('✅ Event listeners setup complete');
     }
     
     /**
-     * Show a section and hide others
+     * Show a section by name
      */
     showSection(sectionName) {
-        console.log(`Showing section: ${sectionName}`);
+        console.log(`🔄 Showing section: ${sectionName}`);
         
-        // Hide all sections by adding hidden class
-        Object.values(this.elements).forEach(element => {
-            if (element && element.id && element.id.endsWith('-section')) {
+        // Hide all sections
+        const sections = [
+            'welcome-section',
+            'canvas-section', 
+            'viewer-section',
+            'editor-section',
+            'gallery-section'
+        ];
+        
+        sections.forEach(section => {
+            const element = document.getElementById(section);
+            if (element) {
                 element.classList.add('hidden');
             }
         });
         
-        // Show requested section by removing hidden class
-        const section = this.elements[`${sectionName}Section`];
-        if (section) {
-            section.classList.remove('hidden');
-            appState.setCurrentSection(sectionName);
-            
-            // Load canvases when showing canvas section
-            if (sectionName === 'canvas') {
-                this.loadCanvases();
-            }
-            
-            // Update URL without triggering page reload
-            history.pushState({ section: sectionName }, '', `#${sectionName}`);
-            console.log(`Section shown: ${sectionName}`);
+        // Show requested section
+        const targetSection = document.getElementById(`${sectionName}-section`);
+        if (targetSection) {
+            targetSection.classList.remove('hidden');
+            console.log(`✅ Section ${sectionName} shown`);
         } else {
-            console.warn(`Section not found: ${sectionName}`);
+            console.error(`❌ Section ${sectionName} not found`);
         }
+        
+        // Update navigation state
+        this.updateNavigation();
     }
     
     /**
-     * Load canvases from server
-     */
-    async loadCanvases() {
-        try {
-            console.log('Loading canvases...');
-            
-            // Debug: Check if required globals are available
-            console.log('CONFIG_UTILS available:', typeof CONFIG_UTILS !== 'undefined');
-            console.log('API_CONFIG available:', typeof API_CONFIG !== 'undefined');
-            
-            // Initialize canvas service if not already initialized
-            if (!canvasService.initialized) {
-                canvasService.init();
-            }
-            
-            const canvases = await canvasService.getCanvases();
-            appState.setCanvasList(canvases);
-            
-            // Emit event for other listeners
-            eventManager.emit('canvases:loaded', canvases);
-        } catch (error) {
-            console.error('Failed to load canvases:', error);
-            console.error('Error details:', error.message, error.stack);
-            
-            // Show more specific error message
-            const errorMessage = error.message || 'Failed to load canvases. Please try again.';
-            this.showCanvasError(errorMessage);
-        }
-    }
-    
-    /**
-     * Render canvas list to the UI
-     */
-    renderCanvasList(canvases) {
-        console.log('Rendering canvas list:', canvases);
-        
-        const canvasGrid = document.getElementById('canvas-grid');
-        if (!canvasGrid) {
-            console.warn('Canvas grid element not found');
-            return;
-        }
-        
-        // Clear existing content
-        canvasGrid.innerHTML = '';
-        
-        // Show loading state initially
-        if (canvases.length === 0) {
-            canvasGrid.innerHTML = `
-                <div class="empty-state">
-                    <h3>No canvases found</h3>
-                    <p>Create your first canvas to get started!</p>
-                </div>
-            `;
-            return;
-        }
-        
-        // Render canvas cards
-        canvases.forEach(canvas => {
-            const canvasCard = this.createCanvasCard(canvas);
-            canvasGrid.appendChild(canvasCard);
-        });
-        
-        console.log(`✅ Rendered ${canvases.length} canvas cards`);
-    }
-    
-    /**
-     * Create a canvas card element
-     */
-    createCanvasCard(canvas) {
-        const card = document.createElement('div');
-        card.className = 'canvas-card';
-        card.style.cursor = 'pointer';
-        card.title = `Click to open ${canvas.name}`;
-        
-        // Get current user for settings button
-        const currentUser = appState.get('currentUser');
-        const isOwner = currentUser && canvas.creator_id === currentUser.id;
-        
-        card.innerHTML = `
-            <div class="canvas-card-header">
-                <h3 class="canvas-card-title">${canvas.name}</h3>
-                <p class="canvas-card-description">${canvas.description || 'No description'}</p>
-                ${isOwner ? `
-                    <button class="btn btn-sm btn-secondary canvas-settings-btn" data-canvas-id="${canvas.id}">
-                        <i class="fas fa-cog"></i> Settings
-                    </button>
-                ` : ''}
-            </div>
-            <div class="canvas-card-stats">
-                <div class="canvas-stat">
-                    <i class="fas fa-expand-arrows-alt"></i>
-                    <span>${canvas.width}×${canvas.height}</span>
-                </div>
-                <div class="canvas-stat">
-                    <i class="fas fa-users"></i>
-                    <span>${canvas.user_count || 0} users</span>
-                </div>
-                <div class="canvas-stat">
-                    <i class="fas fa-palette"></i>
-                    <span>${canvas.total_tiles || 0} total tiles</span>
-                </div>
-                <div class="canvas-stat">
-                    <i class="fas fa-user-palette"></i>
-                    <span class="user-tiles-count" data-canvas-id="${canvas.id}">Loading...</span>
-                </div>
-                <div class="canvas-stat">
-                    <i class="fas fa-palette"></i>
-                    <span>${canvas.palette_type || 'classic'} palette</span>
-                </div>
-            </div>
-        `;
-        
-        // Add settings button event listener if user is owner
-        if (isOwner) {
-            const settingsBtn = card.querySelector('.canvas-settings-btn');
-            if (settingsBtn) {
-                settingsBtn.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    this.showCanvasSettingsModal(canvas.id);
-                });
-            }
-        }
-        
-        // Load user's tile count for this canvas
-        this.loadUserTileCountForCanvas(canvas.id, card);
-        
-        // Add click handler
-        card.addEventListener('click', () => this.openCanvas(canvas));
-        
-        return card;
-    }
-    
-    /**
-     * Load user's tile count for a specific canvas
-     */
-    async loadUserTileCountForCanvas(canvasId, cardElement) {
-        try {
-            const currentUser = appState.get('currentUser');
-            if (!currentUser || !currentUser.id) {
-                const userTilesSpan = cardElement.querySelector('.user-tiles-count');
-                if (userTilesSpan) {
-                    userTilesSpan.textContent = '0 tiles';
-                }
-                return;
-            }
-            
-            // Check if user is authenticated
-            const authToken = window.CONFIG_UTILS?.getAuthToken();
-            if (!authToken) {
-                console.warn('No authentication token available for tile count request');
-                const userTilesSpan = cardElement.querySelector('.user-tiles-count');
-                if (userTilesSpan) {
-                    userTilesSpan.textContent = '0 tiles';
-                }
-                return;
-            }
-            
-            // Debug logging to see what's happening
-            console.log(' Debug CONFIG_UTILS:', {
-                exists: !!window.CONFIG_UTILS,
-                getApiUrl: !!window.CONFIG_UTILS?.getApiUrl,
-                currentUser: currentUser.id,
-                hasAuthToken: !!authToken
-            });
-            
-            // Get API URL with fallback
-            let apiUrl;
-            if (window.CONFIG_UTILS && window.CONFIG_UTILS.getApiUrl) {
-                apiUrl = window.CONFIG_UTILS.getApiUrl('/tiles/user/' + currentUser.id + '/count');
-            }
-            
-            // Fallback if CONFIG_UTILS is not available or returns undefined
-            if (!apiUrl) {
-                console.warn('CONFIG_UTILS not available or returned undefined, using fallback URL');
-                // Use the same domain as the current page
-                const protocol = window.location.protocol;
-                const hostname = window.location.hostname;
-                apiUrl = `${protocol}//${hostname}/api/v1/tiles/user/${currentUser.id}/count`;
-            }
-            
-            console.log('🔧 Debug API URL:', {
-                apiUrl,
-                isUndefined: apiUrl === undefined,
-                isNull: apiUrl === null,
-                type: typeof apiUrl
-            });
-            
-            const fullUrl = `${apiUrl}?canvas_id=${canvasId}`;
-            console.log('🔧 Making request to:', fullUrl);
-            
-            const response = await fetch(fullUrl, {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            // Add detailed response logging
-            console.log('🔧 Response details:', {
-                status: response.status,
-                statusText: response.statusText,
-                headers: Object.fromEntries(response.headers.entries()),
-                url: response.url
-            });
-            
-            // Log the response text to see what's actually being returned
-            const responseText = await response.text();
-            console.log('🔧 Response body:', responseText);
-            
-            if (response.ok) {
-                try {
-                    const data = JSON.parse(responseText);
-                    const userTilesSpan = cardElement.querySelector('.user-tiles-count');
-                    if (userTilesSpan) {
-                        userTilesSpan.textContent = `${data.tile_count} tiles`;
-                    }
-                } catch (parseError) {
-                    console.error('Failed to parse JSON response:', parseError);
-                    const userTilesSpan = cardElement.querySelector('.user-tiles-count');
-                    if (userTilesSpan) {
-                        userTilesSpan.textContent = '0 tiles';
-                    }
-                }
-            } else {
-                console.warn('Tile count request failed:', response.status, response.statusText);
-                console.warn('Response body:', responseText);
-                const userTilesSpan = cardElement.querySelector('.user-tiles-count');
-                if (userTilesSpan) {
-                    userTilesSpan.textContent = '0 tiles';
-                }
-            }
-        } catch (error) {
-            console.warn('Failed to load user tile count for canvas:', canvasId, error);
-            const userTilesSpan = cardElement.querySelector('.user-tiles-count');
-            if (userTilesSpan) {
-                userTilesSpan.textContent = '0 tiles';
-            }
-        }
-    }
-    
-    /**
-     * Show canvas settings modal
-     */
-    showCanvasSettingsModal(canvasId) {
-        // Create modal if it doesn't exist
-        if (!document.getElementById('canvas-settings-modal')) {
-            this.createCanvasSettingsModal();
-        }
-        
-        // Set canvas ID in modal dataset
-        const modal = document.getElementById('canvas-settings-modal');
-        modal.dataset.canvasId = canvasId;
-        
-        // Show modal and load settings
-        this.showModal('canvas-settings');
-        this.loadCanvasSettings(canvasId);
-    }
-    
-    /**
-     * Create canvas settings modal
-     */
-    createCanvasSettingsModal() {
-        const modal = document.createElement('div');
-        modal.id = 'canvas-settings-modal';
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Canvas Settings</h3>
-                    <button class="modal-close" onclick="navigationManager.hideModal('canvas-settings')">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form id="canvas-settings-form">
-                        <div class="form-group">
-                            <label for="canvas-name">Canvas Name</label>
-                            <input type="text" id="canvas-name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="canvas-description">Description</label>
-                            <textarea id="canvas-description" name="description" rows="3"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="max-tiles-per-user">Max Tiles per User</label>
-                            <input type="number" id="max-tiles-per-user" name="max_tiles_per_user" min="1" max="100" value="10">
-                        </div>
-                        <div class="form-group">
-                            <label for="palette-type">Color Palette</label>
-                            <select id="palette-type" name="palette_type" required>
-                                <option value="classic">Classic - Basic 8-color pixel art</option>
-                                <option value="earth">Earth Tones - Natural browns and tans</option>
-                                <option value="pastel">Pastel - Soft, light colors</option>
-                                <option value="monochrome">Monochrome - Grayscale variations</option>
-                                <option value="neon">Neon - Bright, vibrant colors</option>
-                                <option value="retro">Retro Gaming - Classic game boy style</option>
-                                <option value="artistic">Artistic - Burnt umber, paynes grey, ochres</option>
-                                <option value="sunset">Sunset - Warm oranges, pinks, and purples</option>
-                                <option value="ocean">Ocean - Blues, teals, and sea greens</option>
-                                <option value="forest">Forest - Greens, browns, and natural tones</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="collaboration-mode">Collaboration Mode</label>
-                            <select id="collaboration-mode" name="collaboration_mode" required>
-                                <option value="free">Free - Anyone can edit</option>
-                                <option value="tile-lock">Tile Lock - Lock tiles while editing</option>
-                                <option value="area-lock">Area Lock - Lock areas while editing</option>
-                                <option value="review">Review - Requires approval</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>
-                                <input type="checkbox" id="is-public" name="is_public" checked>
-                                Make this canvas public
-                            </label>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="navigationManager.hideModal('canvas-settings')">
-                                Cancel
-                            </button>
-                            <button type="submit" class="btn btn-primary">
-                                Save Settings
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Add form submit handler
-        const form = modal.querySelector('#canvas-settings-form');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const canvasId = modal.dataset.canvasId;
-            if (canvasId) {
-                await this.saveCanvasSettings(canvasId);
-                this.hideModal('canvas-settings');
-                // Refresh canvas list
-                this.loadCanvases();
-            }
-        });
-    }
-    
-    /**
-     * Open a canvas for viewing
+     * Open a canvas (delegate to canvas viewer manager)
      */
     async openCanvas(canvas) {
-        try {
-            console.log('🎨 Opening canvas:', canvas.name || canvas.title || 'Untitled');
-            
-            // Clear all canvas state comprehensively
-            this.clearAllCanvasState();
-            
-            // Set current canvas in app state
-            appState.setCurrentCanvas(canvas);
-            console.log('✅ Current canvas set:', canvas.id);
-            
-            // Load canvas data
-            console.log('Loading canvas data for ID:', canvas.id);
-            const canvasData = await canvasService.getCanvasData(canvas.id);
-            console.log('Canvas data received:', canvasData);
-            
-            // Initialize canvas viewer with data
-            await this.initializeCanvasViewer(canvas, canvasData);
-            
-            // Show viewer section
-            this.showSection('viewer');
-            
-        } catch (error) {
-            console.error('❌ Failed to open canvas:', error);
-            console.error('Error details:', error.message, error.stack);
-            this.showCanvasError('Failed to open canvas: ' + error.message);
-        }
+        return this.managers.canvasViewer.openCanvas(canvas);
     }
     
     /**
-     * Initialize canvas viewer with settings button
+     * Load canvases (delegate to canvas list manager)
      */
-    async initializeCanvasViewer(canvas, canvasData) {
-        try {
-            console.log('Initializing canvas viewer...');
-            
-            // Get canvas elements
-            const canvasElement = document.getElementById('canvas-viewer');
-            
-            if (!canvasElement) {
-                throw new Error('Canvas viewer element not found');
-            }
-            
-            // Initialize canvas viewer
-            if (window.CanvasViewer) {
-                window.CanvasViewer.init(canvasElement);
-                window.CanvasViewer.setCanvasData(canvasData);
-                
-                if (window.ENVIRONMENT && window.ENVIRONMENT.isDevelopment) {
-                    console.log('🔧 Setting up canvas viewer callbacks');
-                    console.log('🔧 Canvas data:', canvasData);
-                }
-                
-                // Set up tile click handler to open editor
-                window.CanvasViewer.onTileClick = (tile) => {
-                    console.log('🎯 Navigation: Tile clicked, opening editor for tile:', tile);
-                    this.openTileEditor(tile);
-                };
-                
-                // Set up tile hover handler
-                window.CanvasViewer.onTileHover = (tile) => {
-                    this.updateTileInfo(tile);
-                };
-                
-                // Set up viewport change handler
-                window.CanvasViewer.onViewportChange = (x, y, zoom) => {
-                    this.updateViewportInfo(x, y, zoom);
-                };
-                
-                // Load tiles if available
-                if (canvasData.tiles && canvasData.tiles.length > 0) {
-                    console.log('📦 Loading tiles into canvas viewer:', canvasData.tiles.length);
-                    window.CanvasViewer.loadTiles(canvasData.tiles);
-                } else {
-                    console.log('⚠️ No tiles available to load');
-                }
-                
-                console.log('✅ Canvas viewer initialized');
-                console.log('🔧 onTileClick callback set:', !!window.CanvasViewer.onTileClick);
-            } else {
-                throw new Error('Canvas viewer not available');
-            }
-            
-            // Show/hide settings button based on ownership
-            const currentUser = appState.get('currentUser');
-            const settingsBtn = document.getElementById('viewer-settings-btn');
-            if (settingsBtn) {
-                if (currentUser && canvas.creator_id === currentUser.id) {
-                    settingsBtn.style.display = 'inline-block';
-                    settingsBtn.onclick = () => this.showCanvasSettingsModal(canvas.id);
-                } else {
-                    settingsBtn.style.display = 'none';
-                }
-            }
-            
-            // Update canvas stats
-            await this.updateCanvasStats(canvas);
-            
-        } catch (error) {
-            console.error('Failed to initialize canvas viewer:', error);
-        }
+    async loadCanvases() {
+        return this.managers.canvasList.loadCanvases();
     }
     
     /**
-     * Open tile editor for a specific tile
-     */
-    async openTileEditor(tile) {
-        try {
-            console.log('🚀 Opening tile editor for tile:', tile);
-            console.log('🚀 Tile data structure:', {
-                id: tile.id,
-                x: tile.x,
-                y: tile.y,
-                isEmpty: tile.isEmpty,
-                isNew: tile.isNew,
-                hasPixelData: !!tile.pixel_data,
-                pixelDataType: typeof tile.pixel_data,
-                pixelDataLength: tile.pixel_data ? (typeof tile.pixel_data === 'string' ? tile.pixel_data.length : Array.isArray(tile.pixel_data) ? tile.pixel_data.length : 'unknown') : 'none'
-            });
-            
-            // Clear pixel editor state before loading new tile
-            if (window.PixelEditor) {
-                window.PixelEditor.resetAllState();
-                console.log('🧹 Pixel editor state cleared for new tile');
-            }
-            
-            // Handle empty tile (create new tile)
-            if (tile.isEmpty) {
-                console.log('🚀 Creating new tile at position:', tile.x, tile.y);
-                tile = {
-                    x: tile.x,
-                    y: tile.y,
-                    pixel_data: this.createEmptyPixelData(),
-                    isNew: true
-                };
-                
-                // For empty tiles, fetch neighbors by position
-                try {
-                    const canvas = appState.get('currentCanvas');
-                    if (canvas) {
-                        console.log('🔍 Fetching neighbors for empty tile position:', tile.x, tile.y);
-                        const neighbors = await window.API.tiles.getAdjacentNeighborsByPosition(canvas.id, tile.x, tile.y);
-                        console.log('🔍 Neighbors for empty tile:', neighbors);
-                        tile.adjacentNeighbors = neighbors || [];
-                    }
-                } catch (error) {
-                    console.warn('⚠️ Failed to fetch neighbors for empty tile:', error);
-                    tile.adjacentNeighbors = [];
-                }
-            }
-            
-            // For existing tiles, ensure we have complete tile data and fetch neighbors
-            if (!tile.isEmpty && !tile.isNew && tile.id) {
-                console.log('🔍 Fetching complete tile data and neighbors from API...');
-                try {
-                    // Fetch both tile data and adjacent neighbors in parallel
-                    const [completeTile, neighbors] = await Promise.all([
-                        window.API.tiles.get(tile.id),
-                        window.API.tiles.getAdjacentNeighbors(tile.id)
-                    ]);
-                    
-                    console.log('🔍 API Response - Tile:', completeTile);
-                    console.log('🔍 API Response - Neighbors:', neighbors);
-                    console.log('🔍 Current tile position:', { x: completeTile.x, y: completeTile.y });
-                    console.log('🔍 Expected neighbor positions:');
-                    console.log('  Top: (', completeTile.x, ',', completeTile.y - 1, ')');
-                    console.log('  Left: (', completeTile.x - 1, ',', completeTile.y, ')');
-                    console.log('  Right: (', completeTile.x + 1, ',', completeTile.y, ')');
-                    console.log('  Bottom: (', completeTile.x, ',', completeTile.y + 1, ')');
-                    console.log('🔍 Actual neighbors returned:', neighbors.length);
-                    if (neighbors.length > 0) {
-                        neighbors.forEach((neighbor, index) => {
-                            console.log(`  Neighbor ${index}: (${neighbor.x}, ${neighbor.y}) - ID: ${neighbor.id}`);
-                        });
-                    }
-                    
-                    if (completeTile && completeTile.pixel_data) {
-                        tile = completeTile;
-                        console.log('🔍 Fetched complete tile data:', tile);
-                        console.log('🔍 Pixel data type:', typeof tile.pixel_data);
-                        console.log('🔍 Pixel data length:', tile.pixel_data ? tile.pixel_data.length : 'null');
-                        
-                        // Store neighbors for reference in the editor
-                        tile.adjacentNeighbors = neighbors || [];
-                        console.log('🔍 Adjacent neighbors:', tile.adjacentNeighbors);
-                    } else {
-                        console.warn('🔍 No pixel data in API response:', completeTile);
-                    }
-                } catch (error) {
-                    console.error('🔍 Failed to fetch tile data or neighbors:', error);
-                    console.error('🔍 Error details:', error.message, error.status, error.data);
-                }
-            }
-            
-            // Set current tile in app state
-            appState.setCurrentTile(tile);
-            
-            // Update neighbor display (if available) - don't block on this
-            try {
-                const neighborDisplayInstance = window.neighborDisplay;
-                if (neighborDisplayInstance && typeof neighborDisplayInstance.updateDisplay === 'function') {
-                    // Ensure we have valid neighbor data
-                    let neighborData = [];
-                    if (tile.adjacentNeighbors && Array.isArray(tile.adjacentNeighbors)) {
-                        neighborData = tile.adjacentNeighbors;
-                    } else if (tile.adjacentNeighbors) {
-                        console.warn('⚠️ Adjacent neighbors is not an array:', tile.adjacentNeighbors);
-                        neighborData = [];
-                    }
-                    
-                    console.log('🔍 Passing neighbors to display:', {
-                        neighborCount: neighborData.length,
-                        neighborData: neighborData,
-                        currentTile: { x: tile.x, y: tile.y }
-                    });
-                    
-                    // Debug: Log each neighbor's coordinates
-                    if (neighborData.length > 0) {
-                        console.log('🔍 Neighbor details:');
-                        neighborData.forEach((neighbor, index) => {
-                            console.log(`  Neighbor ${index}:`, {
-                                id: neighbor.id,
-                                x: neighbor.x,
-                                y: neighbor.y,
-                                dx: neighbor.x - tile.x,
-                                dy: neighbor.y - tile.y,
-                                position: this.getNeighborPosition(tile.x, tile.y, neighbor.x, neighbor.y)
-                            });
-                        });
-                    } else {
-                        console.log('🔍 No neighbors found - checking expected positions:');
-                        console.log('  Expected top: (3, 4)');
-                        console.log('  Expected left: (2, 5)');
-                        console.log('  Expected right: (4, 5)');
-                        console.log('  Expected bottom: (3, 6)');
-                    }
-                    
-                    neighborDisplayInstance.updateDisplay(tile, neighborData);
-                } else {
-                    console.log('⚠️ Neighbor display not available, skipping neighbor update');
-                }
-            } catch (error) {
-                console.warn('⚠️ Error updating neighbor display:', error);
-                // Don't let neighbor display errors block the editor
-            }
-            
-            // Show editor section
-            this.showSection('editor');
-            
-            // Initialize neighbor display after editor section is shown
-            setTimeout(() => {
-                const neighborDisplayInstance = window.neighborDisplay;
-                if (neighborDisplayInstance) {
-                    // Force re-initialization to ensure DOM elements are available
-                    if (typeof neighborDisplayInstance.forceReinit === 'function') {
-                        neighborDisplayInstance.forceReinit();
-                    }
-                    
-                    // Wait a bit more for the re-initialization to complete
-                    setTimeout(() => {
-                        if (typeof neighborDisplayInstance.updateDisplay === 'function') {
-                            // Ensure we have valid neighbor data
-                            let neighborData = [];
-                            if (tile.adjacentNeighbors && Array.isArray(tile.adjacentNeighbors)) {
-                                neighborData = tile.adjacentNeighbors;
-                            } else if (tile.adjacentNeighbors) {
-                                console.warn('⚠️ Adjacent neighbors is not an array:', tile.adjacentNeighbors);
-                                neighborData = [];
-                            }
-                            
-                            console.log('🔍 Re-initializing neighbor display with:', {
-                                neighborCount: neighborData.length,
-                                neighborData: neighborData
-                            });
-                            
-                            neighborDisplayInstance.updateDisplay(tile, neighborData);
-                        }
-                    }, 200); // Additional delay for re-initialization
-                }
-            }, 100); // Small delay to ensure DOM is ready
-            
-            // Update editor with tile data
-            const canvasTitle = document.getElementById('canvas-title');
-            if (canvasTitle) {
-                const canvas = appState.get('currentCanvas');
-                canvasTitle.textContent = canvas ? canvas.name : 'Canvas';
-            }
-            
-            const tileCoords = document.getElementById('current-tile-coords');
-            if (tileCoords) {
-                const statusText = tile.isNew ? 'New Tile' : 'Tile';
-                tileCoords.textContent = `${statusText}: (${tile.x}, ${tile.y})`;
-            }
-            
-            // Update tile info fields in editor header
-            this.updateEditorTileInfo(tile);
-            
-            // Initialize color palette with canvas palette
-            if (window.UIManager) {
-                window.UIManager.initColorPalette();
-            }
-            
-            // Emit tile opened event
-            eventManager.emit('tile:opened', tile);
-            
-            console.log('✅ Tile editor opened successfully');
-            
-        } catch (error) {
-            console.error('❌ Failed to open tile editor:', error);
-            this.showCanvasError(`Failed to open tile editor: ${error.message}`);
-        }
-    }
-
-    /**
-     * Get neighbor position relative to current tile
-     * @param {number} tileX - Current tile X coordinate
-     * @param {number} tileY - Current tile Y coordinate
-     * @param {number} neighborX - Neighbor X coordinate
-     * @param {number} neighborY - Neighbor Y coordinate
-     * @returns {string} Position (top, left, right, bottom, or unknown)
-     */
-    getNeighborPosition(tileX, tileY, neighborX, neighborY) {
-        const dx = neighborX - tileX;
-        const dy = neighborY - tileY;
-        
-        if (dx === 0 && dy === -1) return 'top';
-        if (dx === -1 && dy === 0) return 'left';
-        if (dx === 1 && dy === 0) return 'right';
-        if (dx === 0 && dy === 1) return 'bottom';
-        return 'unknown';
-    }
-    
-    /**
-     * Create empty pixel data for a new tile
-     */
-    createEmptyPixelData() {
-        const pixelData = [];
-        for (let y = 0; y < 32; y++) {
-            pixelData[y] = [];
-            for (let x = 0; x < 32; x++) {
-                pixelData[y][x] = 'white';
-            }
-        }
-        return JSON.stringify(pixelData);
-    }
-    
-    /**
-     * Connect to WebSocket for real-time updates
-     */
-    async connectWebSocket(canvasId) {
-        try {
-            console.log('🔗 Attempting to connect to WebSocket for canvas:', canvasId);
-            
-            if (!window.WebSocketClient) {
-                console.warn('WebSocket client not available - skipping real-time updates');
-                return;
-            }
-            
-            // Set up WebSocket event handlers
-            window.WebSocketClient.on('canvas_state', (message) => {
-                console.log('📊 Canvas state received:', message);
-                this.updateUserCountFromWebSocket(message.user_count, message.active_users);
-            });
-            
-            window.WebSocketClient.on('user_joined', (message) => {
-                console.log('👋 User joined:', message);
-                this.updateUserCountFromWebSocket(message.user_count);
-            });
-            
-            window.WebSocketClient.on('user_left', (message) => {
-                console.log('👋 User left:', message);
-                this.updateUserCountFromWebSocket(message.user_count);
-            });
-            
-            // Connect to WebSocket with timeout
-            const connectPromise = window.WebSocketClient.connect(canvasId);
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('WebSocket connection timeout')), 5000);
-            });
-            
-            await Promise.race([connectPromise, timeoutPromise]);
-            console.log('✅ WebSocket connected successfully');
-            
-        } catch (error) {
-            console.warn('WebSocket connection failed:', error.message);
-            // Show user that they won't get real-time updates
-            this.showWebSocketError();
-            throw error; // Re-throw so the catch in openCanvas can handle it
-        }
-    }
-    
-    /**
-     * Show WebSocket connection error to user
-     */
-    showWebSocketError() {
-        const statusElement = document.getElementById('viewer-canvas-users');
-        if (statusElement) {
-            statusElement.textContent = 'Real-time updates unavailable';
-            statusElement.style.color = '#f59e0b';
-            statusElement.title = 'WebSocket connection failed - user count may not be up to date';
-        }
-    }
-    
-    /**
-     * Set initial user count (fallback when WebSocket is not available)
-     */
-    setInitialUserCount() {
-        // If WebSocket is not connected, show at least current user
-        setTimeout(() => {
-            const statusElement = document.getElementById('viewer-canvas-users');
-            if (statusElement && statusElement.textContent === '0 users online') {
-                statusElement.textContent = '1 user online';
-                statusElement.title = 'You are currently viewing this canvas';
-            }
-        }, 1000); // Give WebSocket a chance to connect first
-    }
-    
-    /**
-     * Update user count from WebSocket messages
-     */
-    updateUserCountFromWebSocket(userCount, activeUsers = null) {
-        try {
-            // Update canvas header user count
-            const canvasUsers = document.getElementById('viewer-canvas-users');
-            if (canvasUsers) {
-                canvasUsers.textContent = `${userCount} users online`;
-            }
-            
-            // Update sidebar active users count
-            const activeUsersElement = document.getElementById('viewer-active-users');
-            if (activeUsersElement) {
-                activeUsersElement.textContent = userCount;
-            }
-            
-            // Update online users list if available
-            if (activeUsers) {
-                const usersList = document.getElementById('viewer-users-list');
-                if (usersList) {
-                    usersList.innerHTML = '';
-                    activeUsers.forEach(user => {
-                        const userElement = document.createElement('div');
-                        userElement.className = 'user-item';
-                        userElement.innerHTML = `
-                            <i class="fas fa-user"></i>
-                            <span>${user.username}</span>
-                        `;
-                        usersList.appendChild(userElement);
-                    });
-                }
-            }
-            
-            console.log('📊 User count updated to:', userCount);
-        } catch (error) {
-            console.error('Failed to update user count:', error);
-        }
-    }
-    
-    /**
-     * Initialize tile editor with pixel data
-     */
-    initializeTileEditor(tile) {
-        try {
-            console.log('🎨 Initializing tile editor for tile:', tile);
-            
-            // Get the pixel editor canvas element
-            const pixelCanvas = document.getElementById('pixel-canvas');
-            if (!pixelCanvas) {
-                console.error('Pixel canvas element not found');
-                return;
-            }
-            
-            // Initialize the pixel editor
-            if (window.PixelEditor) {
-                console.log('🎨 Initializing PixelEditor...');
-                window.PixelEditor.init(pixelCanvas);
-                console.log('🎨 PixelEditor initialized successfully');
-                
-                // Clear the pixel editor to ensure fresh start
-                window.PixelEditor.clearPixelData();
-                console.log('🎨 PixelEditor cleared for fresh start');
-                
-                // Load the tile's pixel data
-                console.log('🎨 Tile data received:', tile);
-                console.log('🎨 Pixel data exists:', !!tile.pixel_data);
-                console.log('🎨 Pixel data type:', typeof tile.pixel_data);
-                console.log('🎨 Raw pixel data:', tile.pixel_data);
-                
-                if (tile.pixel_data) {
-                    let pixelData;
-                    if (typeof tile.pixel_data === 'string') {
-                        try {
-                            pixelData = JSON.parse(tile.pixel_data);
-                            console.log('🎨 Parsed pixel data from string:', pixelData);
-                            console.log('🎨 Parsed data type:', typeof pixelData);
-                            console.log('🎨 Parsed data length:', Array.isArray(pixelData) ? pixelData.length : 'not array');
-                            console.log('🎨 First row sample:', pixelData[0]);
-                            console.log('🎨 First row length:', pixelData[0] ? pixelData[0].length : 'no first row');
-                            console.log('🎨 Sample pixels from first row:', {
-                                '0,0': pixelData[0] && pixelData[0][0],
-                                '16,0': pixelData[0] && pixelData[0][16],
-                                '17,0': pixelData[0] && pixelData[0][17],
-                                '20,0': pixelData[0] && pixelData[0][20],
-                                '21,0': pixelData[0] && pixelData[0][21]
-                            });
-                        } catch (e) {
-                            console.error('Failed to parse pixel data:', e);
-                            console.error('Raw pixel data:', tile.pixel_data);
-                            pixelData = window.PixelEditor.createEmptyPixelData();
-                        }
-                    } else {
-                        pixelData = tile.pixel_data;
-                        console.log('🎨 Using pixel data as-is:', pixelData);
-                        console.log('🎨 Data type:', typeof pixelData);
-                        console.log('🎨 Data length:', Array.isArray(pixelData) ? pixelData.length : 'not array');
-                    }
-                    
-                    // Validate pixel data structure
-                    if (Array.isArray(pixelData) && pixelData.length === 32) {
-                        window.PixelEditor.loadPixelData(pixelData);
-                        console.log('🎨 Loaded pixel data into editor successfully');
-                    } else {
-                        console.warn('Invalid pixel data structure, using empty tile:', pixelData);
-                        console.warn('Expected: Array with 32 elements, got:', typeof pixelData, Array.isArray(pixelData) ? pixelData.length : 'not array');
-                        window.PixelEditor.loadPixelData(window.PixelEditor.createEmptyPixelData());
-                    }
-                } else {
-                    console.log('🎨 No pixel data, starting with empty tile');
-                    const emptyData = window.PixelEditor.createEmptyPixelData();
-                    console.log('🎨 Empty pixel data created:', emptyData);
-                    console.log('🎨 Empty data sample - first row:', emptyData[0]);
-                    window.PixelEditor.loadPixelData(emptyData);
-                }
-                
-                // Set up save button handler
-                this.setupSaveButton(tile);
-                
-                // Set up tool buttons
-                this.setupToolButtons();
-                
-                console.log('✅ Tile editor initialized successfully');
-            } else {
-                console.error('PixelEditor not available');
-            }
-            
-        } catch (error) {
-            console.error('Failed to initialize tile editor:', error);
-        }
-    }
-    
-    /**
-     * Setup save button handler
-     */
-    setupSaveButton(tile) {
-        const saveButton = document.getElementById('save-tile-btn');
-        if (saveButton) {
-            // Remove existing event listeners
-            saveButton.replaceWith(saveButton.cloneNode(true));
-            const newSaveButton = document.getElementById('save-tile-btn');
-            
-            newSaveButton.addEventListener('click', async () => {
-                try {
-                    console.log('💾 Saving tile...');
-                    
-                    // Validate canvas state before saving
-                    if (!this.validateCanvasState()) {
-                        console.warn('⚠️ Canvas state validation failed, attempting recovery...');
-                        this.emergencyStateRecovery();
-                        return;
-                    }
-                    
-                    // Get current canvas from app state
-                    const currentCanvas = appState.getCurrentCanvas();
-                    
-                    if (!currentCanvas) {
-                        console.error('❌ No current canvas found');
-                        this.showCanvasError('No current canvas - please refresh and try again');
-                        return;
-                    }
-                    
-                    console.log('✅ Current canvas found:', currentCanvas.id);
-                    
-                    // Get pixel data from editor
-                    let pixelData = window.PixelEditor.getPixelData();
-                    
-                    // Ensure we have valid pixel data (32x32 array)
-                    if (!pixelData || !Array.isArray(pixelData) || pixelData.length !== 32) {
-                        console.warn('Invalid pixel data, creating default 32x32 array');
-                        pixelData = window.PixelEditor.createEmptyPixelData();
-                    }
-                    
-                    const tileData = {
-                        canvas_id: currentCanvas.id,
-                        x: tile.x,
-                        y: tile.y,
-                        pixel_data: JSON.stringify(pixelData)
-                    };
-                    
-                    console.log('💾 Tile data to save:', tileData);
-                    
-                    // Save via API with error recovery
-                    let response;
-                    if (tile.isNew) {
-                        response = await window.API.tiles.create(tileData);
-                    } else {
-                        response = await window.API.tiles.update(tile.id, tileData);
-                    }
-                    
-                    console.log('💾 Tile saved successfully:', response);
-                    
-                    // Update the canvas viewer with the new/updated tile
-                    if (window.CanvasViewer && response.success && response.tile) {
-                        window.CanvasViewer.addTile(response.tile, true);
-                        console.log('🎨 Added tile to canvas viewer:', response.tile);
-                    }
-                    
-                    // Go back to viewer
-                    this.showSection('viewer');
-                    
-                    // Refresh canvas viewer as fallback
-                    this.refreshCanvasViewer();
-                    
-                } catch (error) {
-                    // Use comprehensive error recovery
-                    this.handleErrorRecovery(error, 'save tile');
-                }
-            });
-            
-            // Initially enable save button (user can save even empty tiles)
-            newSaveButton.disabled = false;
-            
-            // Set up pixel change listener to enable/disable save button
-            if (window.PixelEditor) {
-                window.PixelEditor.onPixelChanged = (pixelData) => {
-                    // Enable save button when pixels are drawn
-                    newSaveButton.disabled = !window.PixelEditor.hasPixels();
-                };
-            }
-        }
-    }
-    
-    /**
-     * Setup tool buttons for pixel editor
-     */
-    setupToolButtons() {
-        const toolButtons = {
-            'paint-tool': 'paint',
-            'eraser-tool': 'eraser',
-            'picker-tool': 'picker',
-            'fill-tool': 'fill'
-        };
-        
-        Object.entries(toolButtons).forEach(([buttonId, toolName]) => {
-            const button = document.getElementById(buttonId);
-            if (button) {
-                button.addEventListener('click', () => {
-                    // Remove active class from all tool buttons
-                    Object.keys(toolButtons).forEach(id => {
-                        const btn = document.getElementById(id);
-                        if (btn) btn.classList.remove('active');
-                    });
-                    
-                    // Add active class to clicked button
-                    button.classList.add('active');
-                    
-                    // Set tool in pixel editor
-                    if (window.PixelEditor) {
-                        window.PixelEditor.setTool(toolName);
-                    }
-                });
-            }
-        });
-        
-        // Setup undo/redo buttons
-        this.setupUndoRedoButtons();
-        
-        // Initialize color palette with canvas palette
-        if (window.UIManager) {
-            window.UIManager.initColorPalette();
-        }
-    }
-
-    /**
-     * Setup undo and redo buttons
-     */
-    setupUndoRedoButtons() {
-        console.log('🔧 Setting up undo/redo buttons...');
-        const undoBtn = document.getElementById('undo-btn');
-        const redoBtn = document.getElementById('redo-btn');
-        
-        console.log('🔧 Undo button found:', !!undoBtn);
-        console.log('🔧 Redo button found:', !!redoBtn);
-        
-        // Add visual debugging - make buttons more visible
-        if (undoBtn) {
-            undoBtn.style.border = '2px solid #4CAF50';
-            undoBtn.style.backgroundColor = '#e8f5e8';
-            console.log('🔧 Adding click listener to undo button');
-            undoBtn.addEventListener('click', () => {
-                console.log('🔄 Undo button clicked');
-                if (window.PixelEditor) {
-                    window.PixelEditor.undo();
-                    this.updateUndoRedoButtons();
-                } else {
-                    console.warn('⚠️ PixelEditor not available');
-                }
-            });
-        } else {
-            console.error('❌ Undo button not found in DOM');
-        }
-        
-        if (redoBtn) {
-            redoBtn.style.border = '2px solid #2196F3';
-            redoBtn.style.backgroundColor = '#e3f2fd';
-            console.log('🔧 Adding click listener to redo button');
-            redoBtn.addEventListener('click', () => {
-                console.log('🔄 Redo button clicked');
-                if (window.PixelEditor) {
-                    window.PixelEditor.redo();
-                    this.updateUndoRedoButtons();
-                } else {
-                    console.warn('⚠️ PixelEditor not available');
-                }
-            });
-        } else {
-            console.error('❌ Redo button not found in DOM');
-        }
-        
-        // Initial button state
-        this.updateUndoRedoButtons();
-        console.log('✅ Undo/redo buttons setup complete');
-    }
-
-    /**
-     * Update undo/redo button states
-     */
-    updateUndoRedoButtons() {
-        console.log('🔄 Updating undo/redo button states...');
-        if (!window.PixelEditor) {
-            console.warn('⚠️ PixelEditor not available for button update');
-            return;
-        }
-        
-        const undoBtn = document.getElementById('undo-btn');
-        const redoBtn = document.getElementById('redo-btn');
-        
-        console.log('🔄 Undo button found for update:', !!undoBtn);
-        console.log('🔄 Redo button found for update:', !!redoBtn);
-        console.log('🔄 History index:', window.PixelEditor.historyIndex);
-        console.log('🔄 History length:', window.PixelEditor.history.length);
-        
-        if (undoBtn) {
-            const shouldDisableUndo = window.PixelEditor.historyIndex <= 0;
-            undoBtn.disabled = shouldDisableUndo;
-            console.log('🔄 Undo button disabled:', shouldDisableUndo);
-        }
-        
-        if (redoBtn) {
-            const shouldDisableRedo = window.PixelEditor.historyIndex >= window.PixelEditor.history.length - 1;
-            redoBtn.disabled = shouldDisableRedo;
-            console.log('🔄 Redo button disabled:', shouldDisableRedo);
-        }
-        
-        console.log('✅ Undo/redo button states updated');
-    }
-    
-    /**
-     * Update canvas stats with correct user tile count
-     */
-    async updateCanvasStats(canvas) {
-        try {
-            // Update total tiles - use the new total_tiles field from the API
-            const totalTiles = document.getElementById('viewer-total-tiles');
-            if (totalTiles) {
-                totalTiles.textContent = canvas.total_tiles || canvas.tile_count || 0;
-            }
-            
-            const activeUsers = document.getElementById('viewer-active-users');
-            if (activeUsers) {
-                // Set to at least 1 if user is viewing the canvas
-                activeUsers.textContent = Math.max(1, canvas.user_count || 0);
-            }
-            
-            const userTiles = document.getElementById('viewer-user-tiles');
-            if (userTiles) {
-                // Get user's tile count for this specific canvas with fallback
-                try {
-                    const currentUser = appState.get('currentUser');
-                    if (currentUser && currentUser.id) {
-                        // Get API URL with fallback
-                        let apiUrl;
-                        if (window.CONFIG_UTILS && window.CONFIG_UTILS.getApiUrl) {
-                            apiUrl = window.CONFIG_UTILS.getApiUrl('/tiles/user/' + currentUser.id + '/count');
-                        }
-                        
-                        // Fallback if CONFIG_UTILS is not available or returns undefined
-                        if (!apiUrl) {
-                            console.warn('CONFIG_UTILS not available for canvas stats, using fallback URL');
-                            const protocol = window.location.protocol;
-                            const hostname = window.location.hostname;
-                            apiUrl = `${protocol}//${hostname}/api/v1/tiles/user/${currentUser.id}/count`;
-                        }
-                        
-                        const response = await fetch(`${apiUrl}?canvas_id=${canvas.id}`, {
-                            headers: {
-                                'Authorization': `Bearer ${window.CONFIG_UTILS?.getAuthToken() || ''}`,
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        
-                        if (response.ok) {
-                            const data = await response.json();
-                            userTiles.textContent = data.tile_count.toString();
-                        } else {
-                userTiles.textContent = '0';
-                        }
-                    } else {
-                        userTiles.textContent = '0';
-                    }
-                } catch (error) {
-                    console.warn('Failed to get user tile count:', error);
-                    userTiles.textContent = '0';
-                }
-            }
-            
-        } catch (error) {
-            console.error('Failed to update canvas stats:', error);
-        }
-    }
-    
-    /**
-     * Refresh canvas viewer with latest data
-     */
-    async refreshCanvasViewer() {
-        try {
-            const canvas = appState.get('currentCanvas');
-            if (!canvas) {
-                console.warn('No current canvas to refresh');
-                return;
-            }
-            
-            console.log('🔄 Refreshing canvas viewer with latest data...');
-            
-            // Reload canvas data from server
-            const canvasData = await canvasService.getCanvasData(canvas.id);
-            
-            // Update canvas viewer with fresh data
-            if (window.CanvasViewer) {
-                window.CanvasViewer.setCanvasData(canvasData);
-                
-                if (canvasData.tiles && canvasData.tiles.length > 0) {
-                    console.log('🔄 Reloading tiles into canvas viewer:', canvasData.tiles.length);
-                    window.CanvasViewer.loadTiles(canvasData.tiles);
-                } else {
-                    console.log('🔄 No tiles to reload');
-                }
-            }
-            
-            console.log('✅ Canvas viewer refreshed successfully');
-            
-        } catch (error) {
-            console.error('Failed to refresh canvas viewer:', error);
-        }
-    }
-    
-    /**
-     * Update tile info display
-     */
-    updateTileInfo(tile) {
-        try {
-            const tileInfo = document.getElementById('viewer-tile-info');
-            if (tileInfo && tile) {
-                tileInfo.textContent = `Tile (${tile.x}, ${tile.y}) - Created by ${tile.creator_username || 'Unknown'}`;
-            } else if (tileInfo) {
-                tileInfo.textContent = 'Hover over tiles to see details';
-            }
-        } catch (error) {
-            console.error('Failed to update tile info:', error);
-        }
-    }
-    
-    /**
-     * Update viewport info
-     */
-    updateViewportInfo(x, y, zoom) {
-        try {
-            const zoomDisplay = document.getElementById('viewer-zoom-display');
-            if (zoomDisplay) {
-                zoomDisplay.textContent = `${Math.round(zoom * 100)}%`;
-            }
-            
-            const zoomLevel = document.getElementById('viewer-zoom-level');
-            if (zoomLevel) {
-                zoomLevel.textContent = `${Math.round(zoom * 100)}%`;
-            }
-            
-        } catch (error) {
-            console.error('Failed to update viewport info:', error);
-        }
-    }
-    
-    /**
-     * Refresh canvas data
-     */
-    async refreshCanvas() {
-        try {
-            const canvas = appState.get('currentCanvas');
-            if (!canvas) {
-                console.warn('No current canvas to refresh');
-                return;
-            }
-            
-            console.log('Refreshing canvas:', canvas);
-            
-            // Reload canvas data
-            const canvasData = await canvasService.getCanvasData(canvas.id);
-            
-            // Update canvas viewer
-            if (window.CanvasViewer) {
-                window.CanvasViewer.setCanvasData(canvasData);
-                
-                if (canvasData.tiles && canvasData.tiles.length > 0) {
-                    window.CanvasViewer.loadTiles(canvasData.tiles);
-                }
-            }
-            
-            // Update stats
-            this.updateCanvasStats(canvas);
-            
-            console.log('✅ Canvas refreshed');
-            
-        } catch (error) {
-            console.error('Failed to refresh canvas:', error);
-            this.showCanvasError(`Failed to refresh canvas: ${error.message}`);
-        }
-    }
-    
-    /**
-     * Fit canvas to screen
-     */
-    fitCanvasToScreen() {
-        try {
-            if (window.CanvasViewer) {
-                window.CanvasViewer.centerView();
-                window.CanvasViewer.resetZoom();
-            }
-        } catch (error) {
-            console.error('Failed to fit canvas to screen:', error);
-        }
-    }
-    
-    /**
-     * Show canvas error message
-     */
-    showCanvasError(message) {
-        console.error('Canvas error:', message);
-        // You can implement a proper error display here
-        alert(`Canvas Error: ${message}`);
-    }
-    
-    /**
-     * Show a modal
+     * Show modal (delegate to modal manager)
      */
     showModal(modalName) {
-        console.log(`Showing modal: ${modalName}`);
-        
-        // Handle different modal naming conventions
-        let modal;
-        
-        if (modalName === 'create-canvas') {
-            modal = this.elements.createCanvasModal;
-        } else if (modalName === 'login') {
-            modal = this.elements.loginModal;
-        } else if (modalName === 'register') {
-            modal = this.elements.registerModal;
-        } else {
-            // Fallback to direct DOM lookup
-            modal = document.getElementById(`${modalName}-modal`);
-        }
-        
-        if (modal) {
-            // Show modal using CSS classes and inline styles
-            modal.style.display = 'flex';
-            modal.classList.add('active');
-            document.body.classList.add('modal-open');
-            
-            // Focus first input in modal
-            const firstInput = modal.querySelector('input');
-            if (firstInput) {
-                setTimeout(() => firstInput.focus(), 100);
-            }
-            
-            console.log(`Modal opened: ${modalName}`);
-        } else {
-            console.error(`Modal not found: ${modalName}`);
-        }
+        return this.managers.modal.showModal(modalName);
     }
     
     /**
-     * Hide a modal
+     * Hide modal (delegate to modal manager)
      */
     hideModal(modalName) {
-        console.log(`Hiding modal: ${modalName}`);
-        
-        let modal;
-        
-        if (modalName === 'create-canvas') {
-            modal = this.elements.createCanvasModal;
-        } else if (modalName === 'login') {
-            modal = this.elements.loginModal;
-        } else if (modalName === 'register') {
-            modal = this.elements.registerModal;
-        } else {
-            // Fallback to direct DOM lookup
-            modal = document.getElementById(`${modalName}-modal`);
-        }
-        
-        if (modal) {
-            // Remove active class and hide
-            modal.classList.remove('active');
-            // Wait for CSS transition to complete before hiding
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 200);
-            
-            document.body.classList.remove('modal-open');
-            console.log(`Modal closed: ${modalName}`);
-        } else {
-            console.warn(`Modal not found for hiding: ${modalName}`);
+        return this.managers.modal.hideModal(modalName);
+    }
+    
+    /**
+     * Show loading (delegate to UI manager)
+     */
+    showLoading() {
+        if (window.UIManager) {
+            window.UIManager.showLoading();
         }
     }
     
     /**
-     * Hide all modals
+     * Hide loading (delegate to UI manager)
      */
-    hideAllModals() {
-        console.log('Hiding all modals...');
-        
-        // Hide using CSS classes
-        const allModals = document.querySelectorAll('.modal');
-        allModals.forEach(modal => {
-            modal.classList.remove('active');
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 200);
-        });
-        
-        document.body.classList.remove('modal-open');
-        
-        console.log('All modals hidden');
+    hideLoading() {
+        if (window.UIManager) {
+            window.UIManager.hideLoading();
+        }
     }
     
     /**
-     * Get modal name from element
-     */
-    getModalName(modalElement) {
-        const id = modalElement.id;
-        return id.replace('-modal', '');
-    }
-    
-    /**
-     * Update navigation based on authentication state
+     * Update navigation based on current state
      */
     updateNavigation() {
-        const isAuthenticated = appState.get('isAuthenticated');
-        console.log(`Updating navigation, authenticated: ${isAuthenticated}`);
+        const currentUser = appState.get('currentUser');
+        const isAuthenticated = currentUser !== null;
         
+        // Update user info if authenticated
         if (isAuthenticated) {
-            // Show authenticated navigation
-            if (this.elements.loginBtn) {
-                this.elements.loginBtn.style.display = 'none';
-            }
-            if (this.elements.registerBtn) {
-                this.elements.registerBtn.style.display = 'none';
-            }
-            if (this.elements.userInfo) {
-                this.elements.userInfo.classList.remove('hidden');
-                this.elements.userInfo.style.display = 'flex';
-            }
-        } else {
-            // Show unauthenticated navigation
-            if (this.elements.loginBtn) {
-                this.elements.loginBtn.style.display = 'inline-block';
-            }
-            if (this.elements.registerBtn) {
-                this.elements.registerBtn.style.display = 'inline-block';
-            }
-            if (this.elements.userInfo) {
-                this.elements.userInfo.classList.add('hidden');
-                this.elements.userInfo.style.display = 'none';
-            }
+            this.managers.auth.updateUserInfo(currentUser);
         }
+        
+        // Update navigation visibility
+        this.managers.auth.updateNavigation();
     }
     
     /**
-     * Update user info display
+     * Setup browser navigation handlers
      */
-    updateUserInfo(user) {
-        if (user && this.elements.username) {
-            this.elements.username.textContent = user.username;
-            console.log(`User info updated: ${user.username}`);
-            
-            // Show/hide admin button based on user role
-            const adminBtn = document.getElementById('admin-btn');
-            if (adminBtn) {
-                if (user.is_admin || user.is_superuser) {
-                    adminBtn.style.display = 'block';
-                } else {
-                    adminBtn.style.display = 'none';
-                }
-            }
-        }
-    }
-
-    /**
-     * Handle logout
-     */
-    async handleLogout() {
-        try {
-            // Clear authentication data
-            window.CONFIG_UTILS.removeAuthToken();
-            window.CONFIG_UTILS.removeUserData();
-            
-            // Update app state
-            appState.setUnauthenticated();
-            
-            // Update navigation
-            this.updateNavigation();
-            
-            // Show welcome section
-            this.showSection('welcome');
-            
-            console.log('✅ User logged out successfully');
-            
-        } catch (error) {
-            console.error('Logout error:', error);
-        }
+    setupBrowserNavigationHandlers() {
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', (event) => {
+            const section = event.state?.section || 'welcome';
+            this.showSection(section);
+        });
+        
+        // Update browser history when navigating
+        const originalShowSection = this.showSection.bind(this);
+        this.showSection = (sectionName) => {
+            originalShowSection(sectionName);
+            window.history.pushState({ section: sectionName }, '', `#${sectionName}`);
+        };
     }
     
     /**
-     * Clear all canvas state comprehensively
+     * Setup WebSocket state protection
+     */
+    setupWebSocketStateProtection() {
+        // Clean up WebSocket connections when leaving canvas viewer
+        const originalShowSection = this.showSection.bind(this);
+        this.showSection = (sectionName) => {
+            if (sectionName !== 'viewer') {
+                this.managers.webSocket.closeAll();
+            }
+            originalShowSection(sectionName);
+        };
+    }
+    
+    /**
+     * Setup async race protection
+     */
+    setupAsyncRaceProtection() {
+        // Prevent multiple simultaneous operations
+        this.pendingOperations = new Set();
+        
+        // Add protection to async operations
+        const originalOpenCanvas = this.openCanvas.bind(this);
+        this.openCanvas = async (canvas) => {
+            if (this.pendingOperations.has('openCanvas')) {
+                console.warn('Canvas opening already in progress');
+                return;
+            }
+            
+            this.pendingOperations.add('openCanvas');
+            try {
+                await originalOpenCanvas(canvas);
+            } finally {
+                this.pendingOperations.delete('openCanvas');
+            }
+        };
+    }
+    
+    /**
+     * Clear all canvas state
      */
     clearAllCanvasState() {
         console.log('🧹 Clearing all canvas state...');
         
-        // Clear pixel editor state
-        if (window.PixelEditor) {
-            window.PixelEditor.resetAllState();
-        }
+        // Clear WebSocket connections
+        this.managers.webSocket.closeAll();
         
-        // Clear canvas viewer state
-        if (window.CanvasViewer) {
-            window.CanvasViewer.resetAllState();
-        }
+        // Clear any pending operations
+        this.pendingOperations.clear();
         
         // Clear app state
-        appState.setCurrentTile(null);
+        appState.clear();
         
-        // Clear session storage
-        sessionStorage.removeItem('pixelEditorState');
-        sessionStorage.removeItem('canvasViewerState');
-        
-        // Clear any pending animations or timeouts
-        if (window.animationFrameId) {
-            cancelAnimationFrame(window.animationFrameId);
-            window.animationFrameId = null;
-        }
-        
-        console.log('✅ All canvas state cleared');
+        console.log('✅ Canvas state cleared');
     }
-
+    
     /**
-     * Handle error recovery for failed operations
+     * Handle error recovery
      */
     handleErrorRecovery(error, operation) {
         console.error(`❌ Error in ${operation}:`, error);
         
-        // Clear potentially corrupted state
+        // Clear state and show error
         this.clearAllCanvasState();
         
-        // Show user-friendly error message
-        let errorMessage = `Failed to ${operation}`;
-        if (error.message) {
-            errorMessage += `: ${error.message}`;
+        if (window.UIManager) {
+            window.UIManager.showToast(`Error in ${operation}. Please try again.`, 'error');
         }
         
-        this.showCanvasError(errorMessage);
-        
-        // Log error for debugging
-        console.error('Error details:', {
-            operation,
-            error: error.message,
-            stack: error.stack,
-            timestamp: new Date().toISOString()
-        });
+        // Return to welcome section
+        this.showSection('welcome');
     }
-
-    /**
-     * Validate canvas state integrity
-     */
-    validateCanvasState() {
-        const issues = [];
-        
-        // Check pixel editor state
-        if (window.PixelEditor) {
-            if (!window.PixelEditor.canvas || !window.PixelEditor.ctx) {
-                issues.push('Pixel editor canvas not initialized');
-            }
-            if (!Array.isArray(window.PixelEditor.pixelData)) {
-                issues.push('Pixel editor data corrupted');
-            }
-        }
-        
-        // Check canvas viewer state
-        if (window.CanvasViewer) {
-            if (!window.CanvasViewer.canvas || !window.CanvasViewer.ctx) {
-                issues.push('Canvas viewer not initialized');
-            }
-        }
-        
-        // Check app state
-        const currentCanvas = appState.getCurrentCanvas();
-        if (!currentCanvas) {
-            issues.push('No current canvas in app state');
-        }
-        
-        if (issues.length > 0) {
-            console.warn('⚠️ Canvas state validation issues:', issues);
-            return false;
-        }
-        
-        console.log('✅ Canvas state validation passed');
-        return true;
-    }
-
+    
     /**
      * Emergency state recovery
      */
     emergencyStateRecovery() {
         console.log('🚨 Emergency state recovery initiated...');
         
-        // Force clear all state
+        // Clear all state
         this.clearAllCanvasState();
         
-        // Reinitialize components
-        if (window.PixelEditor) {
-            const canvas = document.getElementById('pixel-canvas');
-            if (canvas) {
-                window.PixelEditor.init(canvas);
-            }
-        }
+        // Reset UI
+        this.updateNavigation();
         
-        if (window.CanvasViewer) {
-            const canvas = document.getElementById('canvas-viewer');
-            if (canvas) {
-                window.CanvasViewer.init(canvas);
-            }
-        }
+        // Show welcome section
+        this.showSection('welcome');
         
-        // Reset app state
-        appState.setCurrentCanvas(null);
-        appState.setCurrentTile(null);
+        // Hide all modals
+        this.managers.modal.hideAllModals();
         
-        // Show recovery message
-        this.showCanvasError('State recovered - please refresh the page if issues persist');
-        
-        console.log('✅ Emergency state recovery completed');
-    }
-
-    /**
-     * Handle browser navigation events
-     */
-    setupBrowserNavigationHandlers() {
-        // Handle back/forward navigation
-        window.addEventListener('popstate', (event) => {
-            console.log('🔄 Browser navigation detected, clearing state...');
-            this.clearAllCanvasState();
-            
-            // Restore appropriate section based on URL
-            const currentSection = this.getCurrentSection();
-            if (currentSection) {
-                this.showSection(currentSection);
-            }
-        });
-        
-        // Handle page refresh
-        window.addEventListener('beforeunload', () => {
-            // Save current state to sessionStorage
-            if (window.PixelEditor) {
-                const currentTile = appState.getCurrentTile();
-                if (currentTile) {
-                    sessionStorage.setItem('pixelEditorState', JSON.stringify({
-                        tileId: currentTile.id,
-                        pixelData: window.PixelEditor.getPixelData(),
-                        currentTool: window.PixelEditor.currentTool,
-                        currentColor: window.PixelEditor.currentColor,
-                        timestamp: Date.now()
-                    }));
-                }
-            }
-        });
-        
-        // Handle storage events (for multi-tab support)
-        window.addEventListener('storage', (event) => {
-            if (event.key === 'canvasData' || event.key === 'tileData') {
-                console.log('🔄 Storage change detected, refreshing canvas...');
-                this.refreshCanvasViewer();
-            }
-        });
-        
-        // Handle window focus/blur for state management
-        window.addEventListener('focus', () => {
-            console.log('🔄 Window focused, checking for state updates...');
-            // Check if we need to refresh data
-            const currentCanvas = appState.getCurrentCanvas();
-            if (currentCanvas) {
-                this.refreshCanvasViewer();
-            }
-        });
-        
-        console.log('✅ Browser navigation handlers set up');
-    }
-
-    /**
-     * Handle WebSocket real-time updates with state protection
-     */
-    setupWebSocketStateProtection() {
-        // Store current editing state
-        let isCurrentlyEditing = false;
-        let currentEditingTileId = null;
-        
-        // Monitor editing state
-        if (window.PixelEditor) {
-            const originalOnPixelChanged = window.PixelEditor.onPixelChanged;
-            window.PixelEditor.onPixelChanged = (pixelData) => {
-                isCurrentlyEditing = true;
-                if (originalOnPixelChanged) {
-                    originalOnPixelChanged(pixelData);
-                }
-            };
-            
-            // Reset editing state when not drawing
-            const originalHandleMouseUp = window.PixelEditor.handleMouseUp;
-            window.PixelEditor.handleMouseUp = (e) => {
-                isCurrentlyEditing = false;
-                if (originalHandleMouseUp) {
-                    originalHandleMouseUp.call(window.PixelEditor, e);
-                }
-            };
-        }
-        
-        // WebSocket tile update handler with protection
-        if (window.websocket) {
-            const originalOnMessage = window.websocket.onmessage;
-            window.websocket.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    
-                    // Handle tile updates with state protection
-                    if (data.type === 'tile_updated' && data.tile) {
-                        const currentTile = appState.getCurrentTile();
-                        
-                        // Don't auto-update if user is actively editing the same tile
-                        if (isCurrentlyEditing && currentTile && data.tile.id === currentTile.id) {
-                            console.log('🛡️ Blocking auto-update - user is actively editing');
-                            return;
-                        }
-                        
-                        // Update canvas viewer with new tile data
-                        if (window.CanvasViewer) {
-                            window.CanvasViewer.addTile(data.tile, true);
-                        }
-                    }
-                    
-                    // Call original handler
-                    if (originalOnMessage) {
-                        originalOnMessage(event);
-                    }
-                } catch (error) {
-                    console.error('Error handling WebSocket message:', error);
-                }
-            };
-        }
-        
-        console.log('✅ WebSocket state protection set up');
-    }
-
-    /**
-     * Handle async race conditions
-     */
-    setupAsyncRaceProtection() {
-        let currentOperationId = 0;
-        
-        // Wrap async operations with operation ID
-        this.executeAsyncOperation = async (operation) => {
-            const operationId = ++currentOperationId;
-            const result = await operation();
-            
-            // Check if this operation is still current
-            if (operationId !== currentOperationId) {
-                console.log('🛡️ Aborting stale operation:', operationId);
-                return null;
-            }
-            
-            return result;
-        };
-        
-        console.log('✅ Async race protection set up');
+        console.log('✅ Emergency recovery completed');
     }
     
     /**
-     * Update tile info fields in editor header
-     */
-    updateEditorTileInfo(tile) {
-        try {
-            console.log('📝 Updating editor tile info:', tile);
-            
-            // Update owner
-            const ownerElement = document.getElementById('tile-info-owner');
-            if (ownerElement) {
-                const ownerName = tile.creator_username || tile.creator_id || 'Unknown';
-                ownerElement.textContent = `Owner: ${ownerName}`;
-            }
-            
-            // Update canvas name
-            const canvasElement = document.getElementById('tile-info-canvas');
-            if (canvasElement) {
-                const canvas = appState.get('currentCanvas');
-                const canvasName = canvas ? canvas.name : 'Unknown Canvas';
-                canvasElement.textContent = `Canvas: ${canvasName}`;
-            }
-            
-            // Update created date
-            const createdElement = document.getElementById('tile-info-created');
-            if (createdElement && tile.created_at) {
-                const createdDate = new Date(tile.created_at).toLocaleDateString();
-                createdElement.textContent = `Created: ${createdDate}`;
-            } else if (createdElement) {
-                createdElement.textContent = 'Created: -';
-            }
-            
-            // Update updated date
-            const updatedElement = document.getElementById('tile-info-updated');
-            if (updatedElement && tile.updated_at) {
-                const updatedDate = new Date(tile.updated_at).toLocaleDateString();
-                updatedElement.textContent = `Updated: ${updatedDate}`;
-            } else if (updatedElement) {
-                updatedElement.textContent = 'Updated: -';
-            }
-            
-            console.log('✅ Editor tile info updated');
-        } catch (error) {
-            console.error('Failed to update editor tile info:', error);
-        }
-    }
-
-    /**
-     * Handle browser back/forward navigation
-     */
-    handlePopState(event) {
-        const section = event.state?.section || 'welcome';
-        this.showSection(section);
-    }
-
-    /**
-     * Navigate to section with browser history
-     */
-    navigateTo(sectionName) {
-        this.showSection(sectionName);
-    }
-
-    /**
-     * Get current section
-     */
-    getCurrentSection() {
-        return appState.get('currentSection');
-    }
-
-    /**
-     * Show loading screen
-     */
-    showLoading() {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-            loadingScreen.style.display = 'flex';
-        }
-    }
-
-    /**
-     * Hide loading screen
-     */
-    hideLoading() {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-            loadingScreen.style.display = 'none';
-        }
-    }
-
-    /**
-     * Test comprehensive state clearing (for debugging)
+     * Test state clearing (for debugging)
      */
     testStateClearing() {
-        console.log('🧪 Testing comprehensive state clearing...');
-        
-        // Test pixel editor state clearing
-        if (window.PixelEditor) {
-            // Set some test data
-            window.PixelEditor.currentTool = 'eraser';
-            window.PixelEditor.currentColor = '#ff0000';
-            window.PixelEditor.pixelData[0][0] = 'red';
-            
-            console.log('Before clearing - Tool:', window.PixelEditor.currentTool, 'Color:', window.PixelEditor.currentColor);
-            
-            // Clear state
-            window.PixelEditor.resetAllState();
-            
-            console.log('After clearing - Tool:', window.PixelEditor.currentTool, 'Color:', window.PixelEditor.currentColor);
-            console.log('Pixel data cleared:', window.PixelEditor.pixelData[0][0] === 'white');
-        }
-        
-        // Test canvas viewer state clearing
-        if (window.CanvasViewer) {
-            // Set some test data
-            window.CanvasViewer.zoom = 2.5;
-            window.CanvasViewer.viewportX = 100;
-            window.CanvasViewer.viewportY = 200;
-            
-            console.log('Before clearing - Zoom:', window.CanvasViewer.zoom, 'Viewport:', window.CanvasViewer.viewportX, window.CanvasViewer.viewportY);
-            
-            // Clear state
-            window.CanvasViewer.resetAllState();
-            
-            console.log('After clearing - Zoom:', window.CanvasViewer.zoom, 'Viewport:', window.CanvasViewer.viewportX, window.CanvasViewer.viewportY);
-        }
-        
-        // Test app state clearing
-        appState.setCurrentTile({ id: 'test-tile' });
-        console.log('Before clearing - Current tile:', appState.getCurrentTile());
-        
-        appState.setCurrentTile(null);
-        console.log('After clearing - Current tile:', appState.getCurrentTile());
-        
+        console.log('🧪 Testing state clearing...');
+        this.clearAllCanvasState();
         console.log('✅ State clearing test completed');
-    }
-    
-    /**
-     * Update tile count display
-     */
-    async updateTileCountDisplay(canvasId) {
-        try {
-            const currentUser = appState.get('currentUser');
-            if (!currentUser) return;
-            
-            const response = await window.API.tiles.getUserTileCount(currentUser.id, canvasId);
-            
-            // Update UI with tile count
-            this.updateTileCountUI(response.tile_count, response.max_tiles, response.remaining_tiles);
-            
-        } catch (error) {
-            console.error('Failed to get tile count:', error);
-        }
-    }
-    
-    /**
-     * Update tile count UI elements
-     */
-    updateTileCountUI(currentCount, maxTiles, remainingTiles) {
-        // Find or create tile count display
-        let tileCountElement = document.getElementById('tile-count-display');
-        if (!tileCountElement) {
-            tileCountElement = document.createElement('div');
-            tileCountElement.id = 'tile-count-display';
-            tileCountElement.className = 'tile-count-info';
-            
-            // Add to canvas toolbar
-            const canvasToolbar = document.querySelector('.canvas-toolbar');
-            if (canvasToolbar) {
-                canvasToolbar.appendChild(tileCountElement);
-            }
-        }
-        
-        // Update content
-        tileCountElement.innerHTML = `
-            <div class="tile-count">
-                <span class="count">${currentCount}/${maxTiles}</span>
-                <span class="label">tiles</span>
-                ${remainingTiles > 0 ? 
-                    `<span class="remaining">(${remainingTiles} remaining)</span>` : 
-                    '<span class="limit-reached">(limit reached)</span>'
-                }
-            </div>
-        `;
-        
-        // Add visual warning if limit reached
-        if (remainingTiles === 0) {
-            tileCountElement.classList.add('limit-reached');
-        } else {
-            tileCountElement.classList.remove('limit-reached');
-        }
-    }
-    
-    /**
-     * Show canvas settings panel
-     */
-    showCanvasSettings(canvasId) {
-        const settingsPanel = document.getElementById('canvas-settings-panel');
-        if (settingsPanel) {
-            settingsPanel.style.display = 'block';
-            this.loadCanvasSettings(canvasId);
-        }
-    }
-    
-    /**
-     * Load canvas settings for editing
-     */
-    async loadCanvasSettings(canvasId) {
-        try {
-            const canvas = await window.API.canvas.get(canvasId);
-            
-            // Populate settings form
-            document.getElementById('canvas-name').value = canvas.name;
-            document.getElementById('canvas-description').value = canvas.description || '';
-            document.getElementById('max-tiles-per-user').value = canvas.max_tiles_per_user;
-            document.getElementById('palette-type').value = canvas.palette_type;
-            document.getElementById('collaboration-mode').value = canvas.collaboration_mode;
-            document.getElementById('is-public').checked = canvas.is_public;
-            
-        } catch (error) {
-            console.error('Failed to load canvas settings:', error);
-            window.UIManager.showToast('Failed to load canvas settings', 'error');
-        }
-    }
-    
-    /**
-     * Save canvas settings
-     */
-    async saveCanvasSettings(canvasId) {
-        try {
-            const settings = {
-                name: document.getElementById('canvas-name').value,
-                description: document.getElementById('canvas-description').value,
-                max_tiles_per_user: parseInt(document.getElementById('max-tiles-per-user').value),
-                palette_type: document.getElementById('palette-type').value,
-                collaboration_mode: document.getElementById('collaboration-mode').value,
-                is_public: document.getElementById('is-public').checked
-            };
-            
-            await window.API.canvas.update(canvasId, settings);
-            window.UIManager.showToast('Canvas settings updated successfully', 'success');
-            
-            // Refresh tile count display
-            this.updateTileCountDisplay(canvasId);
-            
-        } catch (error) {
-            console.error('Failed to save canvas settings:', error);
-            window.UIManager.showToast('Failed to save canvas settings', 'error');
-        }
     }
 }
 
@@ -2551,7 +348,14 @@ const navigationManager = new NavigationManager();
 // Make navigation manager available globally for debugging
 window.navigationManager = navigationManager;
 
-// Add global test function for debugging
+// Export functions for external use
+export const showSection = (sectionName) => navigationManager.showSection(sectionName);
+export const showModal = (modalName) => navigationManager.showModal(modalName);
+export const hideModal = (modalName) => navigationManager.hideModal(modalName);
+export const showLoading = () => navigationManager.showLoading();
+export const hideLoading = () => navigationManager.hideLoading();
+
+// Add global test functions for debugging
 window.testStateClearing = () => {
     if (window.navigationManager) {
         window.navigationManager.testStateClearing();
@@ -2560,7 +364,6 @@ window.testStateClearing = () => {
     }
 };
 
-// Add global emergency recovery function
 window.emergencyRecovery = () => {
     if (window.navigationManager) {
         window.navigationManager.emergencyStateRecovery();
@@ -2569,53 +372,4 @@ window.emergencyRecovery = () => {
     }
 };
 
-// Add global test function for undo/redo buttons
-window.testUndoRedo = () => {
-    console.log('🧪 Testing undo/redo functionality...');
-    
-    // Check if buttons exist
-    const undoBtn = document.getElementById('undo-btn');
-    const redoBtn = document.getElementById('redo-btn');
-    
-    console.log('Undo button:', undoBtn);
-    console.log('Redo button:', redoBtn);
-    
-    // Check if PixelEditor exists
-    console.log('PixelEditor:', window.PixelEditor);
-    
-    // Check if navigation manager exists
-    console.log('Navigation manager:', window.navigationManager);
-    
-    // Try to manually set up buttons if they don't exist
-    if (!undoBtn || !redoBtn) {
-        console.log('⚠️ Buttons not found, trying to set them up...');
-        if (window.navigationManager) {
-            window.navigationManager.setupUndoRedoButtons();
-        }
-    }
-    
-    // Test undo/redo if PixelEditor exists
-    if (window.PixelEditor) {
-        console.log('PixelEditor history:', window.PixelEditor.history);
-        console.log('PixelEditor history index:', window.PixelEditor.historyIndex);
-        
-        // Try to add some test data
-        if (window.PixelEditor.history.length === 0) {
-            console.log('Adding test pixel data...');
-            window.PixelEditor.pixelData[0][0] = 'red';
-            window.PixelEditor.saveToHistory();
-            console.log('Test data added, history length:', window.PixelEditor.history.length);
-        }
-    }
-    
-    console.log('✅ Undo/redo test complete');
-};
-
-// Export methods for external use
-export const showSection = (sectionName) => navigationManager.showSection(sectionName);
-export const showModal = (modalName) => navigationManager.showModal(modalName);
-export const hideModal = (modalName) => navigationManager.hideModal(modalName);
-export const showLoading = () => navigationManager.showLoading();
-export const hideLoading = () => navigationManager.hideLoading();
-
-export default navigationManager; 
+console.log('✅ Navigation module loaded'); 
