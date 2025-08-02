@@ -579,19 +579,34 @@
             'js/app.js'
         ];
         
-        // Load regular scripts
-        scripts.forEach(src => {
-            const script = document.createElement('script');
-            script.src = src + cacheBuster;
-            document.head.appendChild(script);
-        });
+        // Load regular scripts first (synchronously)
+        const loadScripts = async () => {
+            for (const src of scripts) {
+                const script = document.createElement('script');
+                script.src = src + cacheBuster;
+                document.head.appendChild(script);
+                
+                // Wait for script to load
+                await new Promise((resolve, reject) => {
+                    script.onload = resolve;
+                    script.onerror = reject;
+                });
+            }
+            
+            // Wait a bit for scripts to initialize
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Load module scripts
+            modules.forEach(src => {
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.src = src + cacheBuster;
+                document.head.appendChild(script);
+            });
+        };
         
-        // Load module scripts
-        modules.forEach(src => {
-            const script = document.createElement('script');
-            script.type = 'module';
-            script.src = src + cacheBuster;
-            document.head.appendChild(script);
+        loadScripts().catch(error => {
+            console.error('❌ Failed to load scripts:', error);
         });
     </script>
 </body>
