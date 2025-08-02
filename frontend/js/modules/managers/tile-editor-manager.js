@@ -59,8 +59,23 @@ export class TileEditorManager {
                 
                 // Load the tile's pixel data
                 if (tile.pixel_data) {
-                    window.PixelEditor.loadPixelData(tile.pixel_data);
-                    console.log('✅ Pixel data loaded from tile');
+                    console.log('🎨 Loading pixel data:', typeof tile.pixel_data, 'length:', tile.pixel_data.length);
+                    
+                    // Check if it's a JSON string that needs to be parsed
+                    if (typeof tile.pixel_data === 'string') {
+                        try {
+                            const parsedData = JSON.parse(tile.pixel_data);
+                            window.PixelEditor.loadPixelData(parsedData);
+                            console.log('✅ Pixel data loaded from JSON string');
+                        } catch (error) {
+                            console.error('❌ Failed to parse pixel data JSON:', error);
+                            console.log('✅ Starting with empty canvas due to parsing error');
+                        }
+                    } else {
+                        // Assume it's already an array
+                        window.PixelEditor.loadPixelData(tile.pixel_data);
+                        console.log('✅ Pixel data loaded from array');
+                    }
                 } else {
                     console.log('✅ No pixel data found, starting with empty canvas');
                 }
@@ -79,6 +94,9 @@ export class TileEditorManager {
         
         // Setup undo/redo buttons
         this.setupUndoRedoButtons();
+        
+        // Setup back button
+        this.setupBackButton();
         
         console.log('✅ Tile editor initialization complete');
     }
@@ -301,5 +319,23 @@ export class TileEditorManager {
         this.undoStack.push(state);
         this.redoStack = []; // Clear redo stack when new action is performed
         this.updateUndoRedoButtons();
+    }
+    
+    /**
+     * Setup back button
+     */
+    setupBackButton() {
+        const backBtn = document.getElementById('back-to-grid-btn');
+        if (backBtn) {
+            backBtn.onclick = () => {
+                console.log('🔙 Back button clicked, returning to canvas viewer');
+                if (window.navigationManager) {
+                    window.navigationManager.showSection('viewer');
+                }
+            };
+            console.log('✅ Back button setup complete');
+        } else {
+            console.warn('⚠️ Back button not found');
+        }
     }
 } 
