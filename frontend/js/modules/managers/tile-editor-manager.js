@@ -50,7 +50,23 @@ export class TileEditorManager {
         // Initialize pixel editor
         if (window.PixelEditor) {
             console.log('✅ Pixel editor available, initializing...');
-            window.PixelEditor.initialize(tile.pixel_data, tile.palette_type);
+            
+            // Get the canvas element
+            const canvas = document.getElementById('pixel-canvas');
+            if (canvas) {
+                // Initialize the pixel editor with the canvas
+                window.PixelEditor.init(canvas);
+                
+                // Load the tile's pixel data
+                if (tile.pixel_data) {
+                    window.PixelEditor.loadPixelData(tile.pixel_data);
+                    console.log('✅ Pixel data loaded from tile');
+                } else {
+                    console.log('✅ No pixel data found, starting with empty canvas');
+                }
+            } else {
+                console.error('❌ Pixel canvas element not found');
+            }
         } else {
             console.warn('⚠️ Pixel editor not available');
         }
@@ -241,7 +257,7 @@ export class TileEditorManager {
             this.redoStack.push(currentState);
             
             const previousState = this.undoStack.pop();
-            window.PixelEditor.setPixelData(previousState);
+            window.PixelEditor.loadPixelData(previousState);
             
             this.updateUndoRedoButtons();
         }
@@ -256,7 +272,7 @@ export class TileEditorManager {
             this.undoStack.push(currentState);
             
             const nextState = this.redoStack.pop();
-            window.PixelEditor.setPixelData(nextState);
+            window.PixelEditor.loadPixelData(nextState);
             
             this.updateUndoRedoButtons();
         }
