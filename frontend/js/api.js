@@ -74,10 +74,24 @@ class APIClient {
      * Setup default interceptors
      */
     setupDefaultInterceptors() {
-        // Request interceptor for auth
+        // Request interceptor for auth (exclude auth endpoints)
         this.addRequestInterceptor((config) => {
-            const authHeaders = CONFIG_UTILS.getAuthHeaders();
-            config.headers = { ...config.headers, ...authHeaders };
+            // Don't add auth headers to authentication endpoints
+            const authEndpoints = [
+                API_CONFIG.ENDPOINTS.LOGIN,
+                API_CONFIG.ENDPOINTS.REGISTER,
+                API_CONFIG.ENDPOINTS.REFRESH
+            ];
+            
+            const isAuthEndpoint = authEndpoints.some(endpoint => 
+                config.url.includes(endpoint)
+            );
+            
+            if (!isAuthEndpoint) {
+                const authHeaders = CONFIG_UTILS.getAuthHeaders();
+                config.headers = { ...config.headers, ...authHeaders };
+            }
+            
             return config;
         });
         

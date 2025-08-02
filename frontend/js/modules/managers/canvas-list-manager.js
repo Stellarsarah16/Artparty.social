@@ -9,7 +9,7 @@ export class CanvasListManager {
     constructor(apiService, eventManager) {
         this.apiService = apiService;
         this.eventManager = eventManager;
-        this.canvasListContainer = document.getElementById('canvas-list');
+        this.canvasListContainer = document.getElementById('canvas-grid');
     }
 
     /**
