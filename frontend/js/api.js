@@ -600,6 +600,12 @@ class TileAPI {
         const url = API_CONFIG.ENDPOINTS.TILE_STATS.replace('{id}', id);
         return await this.client.get(url);
     }
+    
+    async getUserTileCount(userId, canvasId = null) {
+        const url = API_CONFIG.ENDPOINTS.USER_TILES.replace('{id}', userId) + '/count';
+        const params = canvasId ? { canvas_id: canvasId } : {};
+        return await this.client.get(url, { params });
+    }
 }
 
 class WebSocketAPI {
@@ -659,6 +665,7 @@ const API = {
         getForCanvas: (canvasId, params) => tileAPI.getCanvasTiles(canvasId, params),
         getAtPosition: (canvasId, x, y) => tileAPI.getTileAtPosition(canvasId, x, y),
         getForUser: (userId, params) => tileAPI.getUserTiles(userId, params),
+        getUserTileCount: (userId, canvasId) => tileAPI.getUserTileCount(userId, canvasId),
         getNeighbors: (id) => tileAPI.getTileNeighbors(id),
         getAdjacentNeighbors: (id) => tileAPI.getAdjacentNeighbors(id),
         getAdjacentNeighborsByPosition: (canvasId, x, y) => tileAPI.getAdjacentNeighborsByPosition(canvasId, x, y),

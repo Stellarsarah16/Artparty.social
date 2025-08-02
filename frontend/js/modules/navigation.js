@@ -786,6 +786,10 @@ class NavigationManager {
             this.createCanvasSettingsModal();
         }
         
+        // Set canvas ID in modal dataset
+        const modal = document.getElementById('canvas-settings-modal');
+        modal.dataset.canvasId = canvasId;
+        
         // Show modal and load settings
         this.showModal('canvas-settings');
         this.loadCanvasSettings(canvasId);
@@ -833,6 +837,15 @@ class NavigationManager {
                                 <option value="sunset">Sunset - Warm oranges, pinks, and purples</option>
                                 <option value="ocean">Ocean - Blues, teals, and sea greens</option>
                                 <option value="forest">Forest - Greens, browns, and natural tones</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="collaboration-mode">Collaboration Mode</label>
+                            <select id="collaboration-mode" name="collaboration_mode" required>
+                                <option value="free">Free - Anyone can edit</option>
+                                <option value="tile-lock">Tile Lock - Lock tiles while editing</option>
+                                <option value="area-lock">Area Lock - Lock areas while editing</option>
+                                <option value="review">Review - Requires approval</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -1643,9 +1656,10 @@ class NavigationManager {
      */
     async updateCanvasStats(canvas) {
         try {
+            // Update total tiles - use the new total_tiles field from the API
             const totalTiles = document.getElementById('viewer-total-tiles');
             if (totalTiles) {
-                totalTiles.textContent = canvas.tile_count || 0;
+                totalTiles.textContent = canvas.total_tiles || canvas.tile_count || 0;
             }
             
             const activeUsers = document.getElementById('viewer-active-users');
@@ -2488,7 +2502,7 @@ class NavigationManager {
      */
     async loadCanvasSettings(canvasId) {
         try {
-            const canvas = await window.API.canvas.getCanvas(canvasId);
+            const canvas = await window.API.canvas.get(canvasId);
             
             // Populate settings form
             document.getElementById('canvas-name').value = canvas.name;
@@ -2518,7 +2532,7 @@ class NavigationManager {
                 is_public: document.getElementById('is-public').checked
             };
             
-            await window.API.canvas.updateCanvas(canvasId, settings);
+            await window.API.canvas.update(canvasId, settings);
             window.UIManager.showToast('Canvas settings updated successfully', 'success');
             
             // Refresh tile count display

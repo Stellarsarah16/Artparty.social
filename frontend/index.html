@@ -147,6 +147,39 @@
 
         <!-- Canvas Viewer -->
         <section class="viewer-section hidden" id="viewer-section">
+            <!-- Modern Stats Bar -->
+            <div class="canvas-stats-bar">
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-th"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="viewer-total-tiles">0</div>
+                            <div class="stat-label">Total Tiles</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="viewer-active-users">0</div>
+                            <div class="stat-label">Active Users</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-paintbrush"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="viewer-user-tiles">0</div>
+                            <div class="stat-label">Your Tiles</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="viewer-header">
                 <div class="viewer-title">
                     <h2 id="viewer-canvas-title">Canvas Name</h2>
@@ -206,24 +239,8 @@
                     </div>
                 </div>
                 
-                <!-- Sidebar Info -->
+                <!-- Sidebar Info (simplified - only online users) -->
                 <div class="viewer-sidebar">
-                    <div class="canvas-stats">
-                        <h4>Canvas Stats</h4>
-                        <div class="stat-item">
-                            <span class="stat-label">Total Tiles:</span>
-                            <span class="stat-value" id="viewer-total-tiles">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Active Users:</span>
-                            <span class="stat-value" id="viewer-active-users">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Your Tiles:</span>
-                            <span class="stat-value" id="viewer-user-tiles">0</span>
-                        </div>
-                    </div>
-                    
                     <div class="online-users">
                         <h4>Online Users</h4>
                         <div class="user-list" id="viewer-users-list">

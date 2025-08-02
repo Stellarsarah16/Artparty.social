@@ -71,6 +71,7 @@ class CanvasUpdate(BaseModel):
     description: Optional[str] = None
     is_active: Optional[bool] = None
     max_tiles_per_user: Optional[int] = None
+    palette_type: Optional[str] = None
     collaboration_mode: Optional[str] = None
     auto_save_interval: Optional[int] = None
     is_public: Optional[bool] = None
@@ -82,6 +83,17 @@ class CanvasUpdate(BaseModel):
             raise ValueError('Canvas name must be at least 3 characters long')
         if v is not None and len(v) > 100:
             raise ValueError('Canvas name must be less than 100 characters')
+        return v
+    
+    @validator('palette_type')
+    def validate_palette_type(cls, v):
+        if v is not None:
+            valid_palettes = [
+                'classic', 'earth', 'pastel', 'monochrome', 'neon', 'retro',
+                'artistic', 'sunset', 'ocean', 'forest'
+            ]
+            if v not in valid_palettes:
+                raise ValueError(f'Palette type must be one of: {", ".join(valid_palettes)}')
         return v
     
     @validator('collaboration_mode')

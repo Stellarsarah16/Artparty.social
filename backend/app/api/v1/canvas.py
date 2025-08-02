@@ -201,6 +201,8 @@ async def update_canvas(
             setattr(canvas, 'is_active', canvas_update.is_active)
         if canvas_update.max_tiles_per_user is not None:
             setattr(canvas, 'max_tiles_per_user', canvas_update.max_tiles_per_user)
+        if canvas_update.palette_type is not None:
+            setattr(canvas, 'palette_type', canvas_update.palette_type)
         if canvas_update.collaboration_mode is not None:
             setattr(canvas, 'collaboration_mode', canvas_update.collaboration_mode)
         if canvas_update.auto_save_interval is not None:
