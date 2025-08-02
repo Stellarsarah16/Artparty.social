@@ -292,8 +292,13 @@ class NavigationManager {
             this.pendingOperations.add('openCanvas');
             try {
                 await originalOpenCanvas(canvas);
+            } catch (error) {
+                console.error('❌ Error in openCanvas operation:', error);
+                // Re-throw the error so it can be handled by the caller
+                throw error;
             } finally {
                 this.pendingOperations.delete('openCanvas');
+                console.log('🔧 Canvas opening operation completed, removed from pending operations');
             }
         };
     }
@@ -362,6 +367,15 @@ class NavigationManager {
         this.clearAllCanvasState();
         console.log('✅ State clearing test completed');
     }
+    
+    /**
+     * Clear pending operations (for debugging)
+     */
+    clearPendingOperations() {
+        console.log('🧹 Clearing pending operations:', Array.from(this.pendingOperations));
+        this.pendingOperations.clear();
+        console.log('✅ Pending operations cleared');
+    }
 }
 
 // Create and export singleton instance
@@ -427,6 +441,14 @@ window.testStateClearing = () => {
 window.emergencyRecovery = () => {
     if (window.navigationManager) {
         window.navigationManager.emergencyStateRecovery();
+    } else {
+        console.error('Navigation manager not available');
+    }
+};
+
+window.clearPendingOperations = () => {
+    if (window.navigationManager) {
+        window.navigationManager.clearPendingOperations();
     } else {
         console.error('Navigation manager not available');
     }
