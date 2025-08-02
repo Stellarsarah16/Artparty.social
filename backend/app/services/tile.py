@@ -1,7 +1,7 @@
 """
 Tile service for tile-related business logic
 """
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
@@ -47,7 +47,7 @@ class TileService:
         if user_tiles_count >= canvas.max_tiles_per_user:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Limit of {canvas.max_tiles_per_user} tiles reached"
+                detail="Tile limit reached, unable to create new tile"
             )
         
         # Validate position is within canvas bounds
@@ -192,6 +192,14 @@ class TileService:
             created_at=tile.created_at,
             updated_at=tile.updated_at
         )
+
+    def get_user_tile_count_on_canvas(self, db: Session, user_id: int, canvas_id: int) -> int:
+        """Get tile count for a user on a specific canvas"""
+        return self.tile_repository.count_user_tiles_on_canvas(db, canvas_id=canvas_id, creator_id=user_id)
+
+    def get_user_total_tile_count(self, db: Session, user_id: int) -> int:
+        """Get total tile count for a user across all canvases"""
+        return self.tile_repository.count_user_total_tiles(db, creator_id=user_id)
 
 
 # Create a singleton instance

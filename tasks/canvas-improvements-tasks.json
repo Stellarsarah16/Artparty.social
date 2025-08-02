@@ -1,0 +1,38 @@
+[
+  {
+    "id": "fix-tile-limit-error-message",
+    "content": "Update tile service to return clearer error message: 'Tile limit reached, unable to create new tile'",
+    "status": "pending",
+    "dependencies": []
+  },
+  {
+    "id": "add-tile-count-display",
+    "content": "Add UI to show current tile count and remaining tiles for the user",
+    "status": "pending",
+    "dependencies": ["fix-tile-limit-error-message"]
+  },
+  {
+    "id": "add-canvas-settings-ui",
+    "content": "Add canvas settings panel to modify max tiles, palette, and other settings",
+    "status": "pending",
+    "dependencies": ["add-tile-count-display"]
+  },
+  {
+    "id": "implement-canvas-update-api",
+    "content": "Ensure canvas update API is working for non-admin users to modify their canvases",
+    "status": "pending",
+    "dependencies": ["add-canvas-settings-ui"]
+  },
+  {
+    "id": "add-tile-management",
+    "content": "Add ability to view and delete user's own tiles",
+    "status": "pending",
+    "dependencies": ["add-tile-count-display"]
+  },
+  {
+    "id": "update-changelog",
+    "content": "Document all canvas improvements in CHANGELOG.md",
+    "status": "pending",
+    "dependencies": ["add-tile-management", "implement-canvas-update-api"]
+  }
+] 

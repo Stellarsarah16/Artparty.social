@@ -4,13 +4,14 @@ Tiles management endpoints - Refactored with service layer
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from ...core.database import get_db
 from ...core.websocket import connection_manager
 from ...services.authentication import authentication_service
 from ...services.tile import tile_service
 from ...services.user import user_service
+from ...services.canvas import canvas_service
 from ...models.user import User
 from ...models.tile import Tile
 from ...schemas.tile import TileCreate, TileUpdate, TileResponse, TileWithCreator
@@ -344,4 +345,39 @@ async def unlike_tile(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error unliking tile"
+        ) 
+
+
+@router.get("/user/{user_id}/count", response_model=Dict[str, Any])
+async def get_user_tile_count(
+    user_id: int,
+    canvas_id: Optional[int] = None,
+    current_user: User = Depends(get_current_user_dependency),
+    db: Session = Depends(get_db)
+):
+    """Get tile count for a user (optionally filtered by canvas)"""
+    try:
+        if canvas_id:
+            # Get count for specific canvas
+            count = tile_service.get_user_tile_count_on_canvas(db, user_id, canvas_id)
+            canvas = canvas_service.get_canvas_by_id(db, canvas_id)
+            max_tiles = canvas.max_tiles_per_user if canvas else 10
+            return {
+                "user_id": user_id,
+                "canvas_id": canvas_id,
+                "tile_count": count,
+                "max_tiles": max_tiles,
+                "remaining_tiles": max(0, max_tiles - count)
+            }
+        else:
+            # Get total count across all canvases
+            count = tile_service.get_user_total_tile_count(db, user_id)
+            return {
+                "user_id": user_id,
+                "total_tile_count": count
+            }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error retrieving tile count"
         ) 

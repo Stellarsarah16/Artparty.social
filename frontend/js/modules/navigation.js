@@ -1418,7 +1418,7 @@ class NavigationManager {
     /**
      * Update canvas stats
      */
-    updateCanvasStats(canvas) {
+    async updateCanvasStats(canvas) {
         try {
             const totalTiles = document.getElementById('viewer-total-tiles');
             if (totalTiles) {
@@ -2178,6 +2178,120 @@ class NavigationManager {
         console.log('After clearing - Current tile:', appState.getCurrentTile());
         
         console.log('✅ State clearing test completed');
+    }
+    
+    /**
+     * Update tile count display
+     */
+    async updateTileCountDisplay(canvasId) {
+        try {
+            const currentUser = appState.get('currentUser');
+            if (!currentUser) return;
+            
+            const response = await window.API.tiles.getUserTileCount(currentUser.id, canvasId);
+            
+            // Update UI with tile count
+            this.updateTileCountUI(response.tile_count, response.max_tiles, response.remaining_tiles);
+            
+        } catch (error) {
+            console.error('Failed to get tile count:', error);
+        }
+    }
+    
+    /**
+     * Update tile count UI elements
+     */
+    updateTileCountUI(currentCount, maxTiles, remainingTiles) {
+        // Find or create tile count display
+        let tileCountElement = document.getElementById('tile-count-display');
+        if (!tileCountElement) {
+            tileCountElement = document.createElement('div');
+            tileCountElement.id = 'tile-count-display';
+            tileCountElement.className = 'tile-count-info';
+            
+            // Add to canvas toolbar
+            const canvasToolbar = document.querySelector('.canvas-toolbar');
+            if (canvasToolbar) {
+                canvasToolbar.appendChild(tileCountElement);
+            }
+        }
+        
+        // Update content
+        tileCountElement.innerHTML = `
+            <div class="tile-count">
+                <span class="count">${currentCount}/${maxTiles}</span>
+                <span class="label">tiles</span>
+                ${remainingTiles > 0 ? 
+                    `<span class="remaining">(${remainingTiles} remaining)</span>` : 
+                    '<span class="limit-reached">(limit reached)</span>'
+                }
+            </div>
+        `;
+        
+        // Add visual warning if limit reached
+        if (remainingTiles === 0) {
+            tileCountElement.classList.add('limit-reached');
+        } else {
+            tileCountElement.classList.remove('limit-reached');
+        }
+    }
+    
+    /**
+     * Show canvas settings panel
+     */
+    showCanvasSettings(canvasId) {
+        const settingsPanel = document.getElementById('canvas-settings-panel');
+        if (settingsPanel) {
+            settingsPanel.style.display = 'block';
+            this.loadCanvasSettings(canvasId);
+        }
+    }
+    
+    /**
+     * Load canvas settings for editing
+     */
+    async loadCanvasSettings(canvasId) {
+        try {
+            const canvas = await window.API.canvas.getCanvas(canvasId);
+            
+            // Populate settings form
+            document.getElementById('canvas-name').value = canvas.name;
+            document.getElementById('canvas-description').value = canvas.description || '';
+            document.getElementById('max-tiles-per-user').value = canvas.max_tiles_per_user;
+            document.getElementById('palette-type').value = canvas.palette_type;
+            document.getElementById('collaboration-mode').value = canvas.collaboration_mode;
+            document.getElementById('is-public').checked = canvas.is_public;
+            
+        } catch (error) {
+            console.error('Failed to load canvas settings:', error);
+            window.UIManager.showToast('Failed to load canvas settings', 'error');
+        }
+    }
+    
+    /**
+     * Save canvas settings
+     */
+    async saveCanvasSettings(canvasId) {
+        try {
+            const settings = {
+                name: document.getElementById('canvas-name').value,
+                description: document.getElementById('canvas-description').value,
+                max_tiles_per_user: parseInt(document.getElementById('max-tiles-per-user').value),
+                palette_type: document.getElementById('palette-type').value,
+                collaboration_mode: document.getElementById('collaboration-mode').value,
+                is_public: document.getElementById('is-public').checked
+            };
+            
+            await window.API.canvas.updateCanvas(canvasId, settings);
+            window.UIManager.showToast('Canvas settings updated successfully', 'success');
+            
+            // Refresh tile count display
+            this.updateTileCountDisplay(canvasId);
+            
+        } catch (error) {
+            console.error('Failed to save canvas settings:', error);
+            window.UIManager.showToast('Failed to save canvas settings', 'error');
+        }
     }
 }
 
