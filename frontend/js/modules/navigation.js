@@ -724,14 +724,35 @@ class NavigationManager {
                 }
             });
             
+            // Add detailed response logging
+            console.log('🔧 Response details:', {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries()),
+                url: response.url
+            });
+            
+            // Log the response text to see what's actually being returned
+            const responseText = await response.text();
+            console.log('🔧 Response body:', responseText);
+            
             if (response.ok) {
-                const data = await response.json();
-                const userTilesSpan = cardElement.querySelector('.user-tiles-count');
-                if (userTilesSpan) {
-                    userTilesSpan.textContent = `${data.tile_count} tiles`;
+                try {
+                    const data = JSON.parse(responseText);
+                    const userTilesSpan = cardElement.querySelector('.user-tiles-count');
+                    if (userTilesSpan) {
+                        userTilesSpan.textContent = `${data.tile_count} tiles`;
+                    }
+                } catch (parseError) {
+                    console.error('Failed to parse JSON response:', parseError);
+                    const userTilesSpan = cardElement.querySelector('.user-tiles-count');
+                    if (userTilesSpan) {
+                        userTilesSpan.textContent = '0 tiles';
+                    }
                 }
             } else {
                 console.warn('Tile count request failed:', response.status, response.statusText);
+                console.warn('Response body:', responseText);
                 const userTilesSpan = cardElement.querySelector('.user-tiles-count');
                 if (userTilesSpan) {
                     userTilesSpan.textContent = '0 tiles';
