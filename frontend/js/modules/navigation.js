@@ -673,11 +673,23 @@ class NavigationManager {
                 return;
             }
             
+            // Check if user is authenticated
+            const authToken = window.CONFIG_UTILS?.getAuthToken();
+            if (!authToken) {
+                console.warn('No authentication token available for tile count request');
+                const userTilesSpan = cardElement.querySelector('.user-tiles-count');
+                if (userTilesSpan) {
+                    userTilesSpan.textContent = '0 tiles';
+                }
+                return;
+            }
+            
             // Debug logging to see what's happening
             console.log(' Debug CONFIG_UTILS:', {
                 exists: !!window.CONFIG_UTILS,
                 getApiUrl: !!window.CONFIG_UTILS?.getApiUrl,
-                currentUser: currentUser.id
+                currentUser: currentUser.id,
+                hasAuthToken: !!authToken
             });
             
             // Get API URL with fallback
@@ -707,7 +719,7 @@ class NavigationManager {
             
             const response = await fetch(fullUrl, {
                 headers: {
-                    'Authorization': `Bearer ${window.CONFIG_UTILS?.getAuthToken() || ''}`,
+                    'Authorization': `Bearer ${authToken}`,
                     'Content-Type': 'application/json'
                 }
             });
@@ -719,6 +731,7 @@ class NavigationManager {
                     userTilesSpan.textContent = `${data.tile_count} tiles`;
                 }
             } else {
+                console.warn('Tile count request failed:', response.status, response.statusText);
                 const userTilesSpan = cardElement.querySelector('.user-tiles-count');
                 if (userTilesSpan) {
                     userTilesSpan.textContent = '0 tiles';
@@ -1239,7 +1252,7 @@ class NavigationManager {
         // If WebSocket is not connected, show at least current user
         setTimeout(() => {
             const statusElement = document.getElementById('viewer-canvas-users');
-            if (statusElement && statusElement.textContent === '0 users online') {
+            if (statusElement && statusElement.textContentsa === '0 users online') {
                 statusElement.textContent = '1 user online';
                 statusElement.title = 'You are currently viewing this canvas';
             }
