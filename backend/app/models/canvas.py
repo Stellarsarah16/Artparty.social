@@ -22,6 +22,7 @@ class Canvas(Base):
     auto_save_interval = Column(Integer, default=60)  # Auto-save interval in seconds
     is_public = Column(Boolean, default=True)  # Whether canvas is public
     is_moderated = Column(Boolean, default=False)  # Whether changes require moderation
+    creator_id = Column(Integer, nullable=True)  # ID of the user who created the canvas
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     

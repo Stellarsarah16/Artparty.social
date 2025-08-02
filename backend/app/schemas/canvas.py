@@ -108,6 +108,9 @@ class CanvasResponse(BaseModel):
     auto_save_interval: int
     is_public: bool
     is_moderated: bool
+    creator_id: Optional[int] = None
+    total_tiles: int = 0
+    user_count: int = 0
     created_at: datetime
     updated_at: Optional[datetime] = None
     

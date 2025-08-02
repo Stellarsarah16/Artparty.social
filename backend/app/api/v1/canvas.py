@@ -32,9 +32,40 @@ async def get_canvas_list(
     limit: int = 10,
     db: Session = Depends(get_db)
 ):
-    """Get list of active canvases"""
+    """Get list of active canvases with stats"""
     canvases = db.query(Canvas).filter(Canvas.is_active == True).offset(skip).limit(limit).all()
-    return canvases
+    
+    # Add stats to each canvas
+    canvas_responses = []
+    for canvas in canvases:
+        # Get tile count for this canvas
+        tile_count = db.query(Tile).filter(Tile.canvas_id == canvas.id).count()
+        
+        # Get unique user count for this canvas
+        user_count = db.query(Tile.creator_id).filter(Tile.canvas_id == canvas.id).distinct().count()
+        
+        canvas_responses.append(CanvasResponse(
+            id=canvas.id,
+            name=canvas.name,
+            description=canvas.description,
+            width=canvas.width,
+            height=canvas.height,
+            tile_size=canvas.tile_size,
+            palette_type=canvas.palette_type,
+            is_active=canvas.is_active,
+            max_tiles_per_user=canvas.max_tiles_per_user,
+            collaboration_mode=canvas.collaboration_mode,
+            auto_save_interval=canvas.auto_save_interval,
+            is_public=canvas.is_public,
+            is_moderated=canvas.is_moderated,
+            creator_id=canvas.creator_id,
+            total_tiles=tile_count,
+            user_count=user_count,
+            created_at=canvas.created_at,
+            updated_at=canvas.updated_at
+        ))
+    
+    return canvas_responses
 
 
 @router.get("/{canvas_id}", response_model=CanvasWithTiles)
@@ -105,7 +136,8 @@ async def create_canvas(
             collaboration_mode=canvas_create.collaboration_mode,
             auto_save_interval=canvas_create.auto_save_interval,
             is_public=canvas_create.is_public,
-            is_moderated=canvas_create.is_moderated
+            is_moderated=canvas_create.is_moderated,
+            creator_id=current_user.id
         )
         
         db.add(canvas)
@@ -128,6 +160,9 @@ async def create_canvas(
                 auto_save_interval=canvas.auto_save_interval,
                 is_public=canvas.is_public,
                 is_moderated=canvas.is_moderated,
+                creator_id=canvas.creator_id,
+                total_tiles=0,
+                user_count=0,
                 created_at=canvas.created_at,
                 updated_at=canvas.updated_at
             )

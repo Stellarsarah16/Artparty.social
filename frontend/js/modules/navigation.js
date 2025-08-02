@@ -620,8 +620,7 @@ class NavigationManager {
                 <h3 class="canvas-card-title">${canvas.name}</h3>
                 <p class="canvas-card-description">${canvas.description || 'No description'}</p>
                 ${isOwner ? `
-                    <button class="btn btn-sm btn-secondary canvas-settings-btn" 
-                            onclick="event.stopPropagation(); navigationManager.showCanvasSettingsModal(${canvas.id})">
+                    <button class="btn btn-sm btn-secondary canvas-settings-btn" data-canvas-id="${canvas.id}">
                         <i class="fas fa-cog"></i> Settings
                     </button>
                 ` : ''}
@@ -649,6 +648,17 @@ class NavigationManager {
                 </div>
             </div>
         `;
+        
+        // Add settings button event listener if user is owner
+        if (isOwner) {
+            const settingsBtn = card.querySelector('.canvas-settings-btn');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    this.showCanvasSettingsModal(canvas.id);
+                });
+            }
+        }
         
         // Load user's tile count for this canvas
         this.loadUserTileCountForCanvas(canvas.id, card);
