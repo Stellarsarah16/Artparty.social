@@ -2,7 +2,7 @@
  * ArtPartySocial - Main Application Entry Point
  */
 
-import { showSection, updateNavigation } from './modules/navigation.js';
+import { showSection } from './modules/navigation.js';
 import Auth from './modules/auth.js';
 import AppState from './modules/app-state.js';
 
@@ -78,7 +78,9 @@ class ArtPartySocial {
         }
         
         // Update navigation UI
-        this.modules.navigation.updateNavigation();
+        if (window.navigationManager) {
+            window.navigationManager.updateNavigation();
+        }
         
         // Hide loading screen now that initialization is complete
         this.hideLoadingScreen();
