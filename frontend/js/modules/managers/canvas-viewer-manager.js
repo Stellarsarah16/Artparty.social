@@ -6,9 +6,10 @@
 import appState from '../app-state.js';
 
 export class CanvasViewerManager {
-    constructor(apiService, webSocketService, eventManager) {
-        this.apiService = apiService;
-        this.webSocketService = webSocketService;
+    constructor(canvasApi, tileApi, webSocketManager, eventManager) {
+        this.canvasApi = canvasApi;
+        this.tileApi = tileApi;
+        this.webSocketManager = webSocketManager;
         this.eventManager = eventManager;
         this.currentCanvas = null;
         this.webSocket = null;
@@ -25,7 +26,7 @@ export class CanvasViewerManager {
             this.showLoading();
             
             // Get full canvas data
-            const canvasData = await this.apiService.get(canvas.id);
+            const canvasData = await this.canvasApi.get(canvas.id);
             
             // Initialize viewer
             await this.initializeCanvasViewer(canvas, canvasData);
@@ -106,7 +107,7 @@ export class CanvasViewerManager {
             if (userTiles) {
                 const currentUser = appState.get('currentUser');
                 if (currentUser && currentUser.id) {
-                    const tileCount = await this.apiService.getUserTileCount(currentUser.id, canvas.id);
+                    const tileCount = await this.tileApi.getUserTileCount(currentUser.id, canvas.id);
                     userTiles.textContent = tileCount.tile_count.toString();
                 } else {
                     userTiles.textContent = '0';
@@ -126,7 +127,7 @@ export class CanvasViewerManager {
                 this.webSocket.close();
             }
             
-            this.webSocket = await this.webSocketService.connect(canvasId);
+            this.webSocket = await this.webSocketManager.connect(canvasId);
             this.setupWebSocketHandlers();
             
         } catch (error) {

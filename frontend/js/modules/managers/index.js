@@ -37,11 +37,11 @@ export const createManagers = () => {
     });
     
     const managers = {
+        webSocket: new WebSocketManager(eventManager),
         canvasList: new CanvasListManager(window.API.canvas, window.API.tiles, eventManager),
-        canvasViewer: new CanvasViewerManager(window.API.canvas, window.API.websocket, eventManager),
+        canvasViewer: new CanvasViewerManager(window.API.canvas, window.API.tiles, managers.webSocket, eventManager),
         modal: new ModalManager(),
         tileEditor: new TileEditorManager(window.API.tiles),
-        webSocket: new WebSocketManager(eventManager),
         auth: new AuthManager(window.API.auth, eventManager)
     };
     
