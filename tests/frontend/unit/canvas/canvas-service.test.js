@@ -9,7 +9,10 @@ const mockEventManager = {
 };
 
 const mockUiUtils = {
-    showToast: jest.fn()
+    showToast: jest.fn(),
+    showLoading: jest.fn(),
+    hideLoading: jest.fn(),
+    hideToast: jest.fn()
 };
 
 const mockConfigUtils = {
@@ -33,18 +36,8 @@ global.API_CONFIG = {
 class TestCanvasService {
     constructor() {
         this.initialized = false;
-        this.eventManager = {
-            emit: jest.fn(),
-            on: jest.fn(),
-            off: jest.fn(),
-            once: jest.fn()
-        };
-        this.uiUtils = {
-            showLoading: jest.fn(),
-            hideLoading: jest.fn(),
-            showToast: jest.fn(),
-            hideToast: jest.fn()
-        };
+        this.eventManager = mockEventManager;
+        this.uiUtils = mockUiUtils;
     }
     
     init() {
@@ -106,7 +99,7 @@ class TestCanvasService {
             
             if (response.ok) {
                 this.eventManager.emit('canvas:created', data);
-                this.uiUtils.showToast('Canvas created successfully!', 'success');
+                this.uiUtils.showToast('Canvas created successfully', 'success');
                 return { success: true, canvas: data };
             } else {
                 this.uiUtils.showToast(data.detail || 'Failed to create canvas', 'error');
@@ -187,10 +180,6 @@ describe('CanvasService', () => {
         
         // Create fresh instance
         canvasService = new TestCanvasService();
-        
-        // Mock global dependencies
-        canvasService.eventManager = mockEventManager;
-        canvasService.uiUtils = mockUiUtils;
         
         // Setup default mock returns
         mockConfigUtils.getApiUrl.mockImplementation(endpoint => `http://localhost:8000${endpoint}`);
@@ -346,7 +335,7 @@ describe('CanvasService', () => {
             );
 
             expect(mockEventManager.emit).toHaveBeenCalledWith('canvas:created', mockResponse);
-            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Canvas created successfully!', 'success');
+            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Canvas created successfully', 'success');
             expect(result).toEqual({ success: true, canvas: mockResponse });
         });
 

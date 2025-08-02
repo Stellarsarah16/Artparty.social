@@ -4,9 +4,38 @@
   "description": "Frontend tests for ArtPartySocial",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --config=../tests/test.config.js",
+    "test:watch": "jest --config=../tests/test.config.js --watch",
+    "test:coverage": "jest --config=../tests/test.config.js --coverage",
+    "test:unit": "jest --config=../tests/test.config.js --testPathPattern=frontend/unit",
+    "test:integration": "jest --config=../tests/test.config.js --testPathPattern=frontend/integration",
+    "test:browser": "echo \"Opening browser test runner...\" && echo \"Please open http://localhost/tests/test-runner.html in your browser\"",
+    "test:summary": "jest --config=../tests/test.config.js --coverage --verbose && echo \" Test run completed!\" && echo \" Open tests/results/test-report.html for detailed results\" && echo \"📈 Open tests/coverage/lcov-report/index.html for coverage report\""
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "@testing-library/jest-dom": "^6.1.4",
+    "jsdom": "^23.0.1",
+    "babel-jest": "^29.7.0",
+    "@babel/core": "^7.23.5",
+    "@babel/preset-env": "^7.23.5",
+    "jest-html-reporter": "^3.1.0",
+    "jest-junit": "^16.0.0"
+  },
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current"
+          }
+        }
+      ]
+    ]
+  }
 } 

@@ -1,0 +1,556 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="105" failures="19" errors="0" time="10.329">
+  <testsuite name="EventManager" errors="0" failures="1" skipped="0" timestamp="2025-08-02T15:03:27" time="4.613" tests="26">
+    <testcase classname="EventManager Initialization should initialize correctly" name="EventManager Initialization should initialize correctly" time="0.017">
+    </testcase>
+    <testcase classname="EventManager Initialization should not initialize twice" name="EventManager Initialization should not initialize twice" time="0.003">
+    </testcase>
+    <testcase classname="EventManager Event Subscription should subscribe to events" name="EventManager Event Subscription should subscribe to events" time="0.002">
+    </testcase>
+    <testcase classname="EventManager Event Subscription should handle multiple subscribers for same event" name="EventManager Event Subscription should handle multiple subscribers for same event" time="0.003">
+    </testcase>
+    <testcase classname="EventManager Event Subscription should subscribe to event once" name="EventManager Event Subscription should subscribe to event once" time="0.002">
+    </testcase>
+    <testcase classname="EventManager Event Subscription should unsubscribe from events" name="EventManager Event Subscription should unsubscribe from events" time="0.001">
+    </testcase>
+    <testcase classname="EventManager Event Subscription should return unsubscribe function" name="EventManager Event Subscription should return unsubscribe function" time="0.001">
+    </testcase>
+    <testcase classname="EventManager Event Emission should emit events to subscribers" name="EventManager Event Emission should emit events to subscribers" time="0.001">
+    </testcase>
+    <testcase classname="EventManager Event Emission should emit to multiple subscribers" name="EventManager Event Emission should emit to multiple subscribers" time="0.002">
+    </testcase>
+    <testcase classname="EventManager Event Emission should handle non-existent events gracefully" name="EventManager Event Emission should handle non-existent events gracefully" time="0.001">
+    </testcase>
+    <testcase classname="EventManager Event Emission should handle callback errors gracefully" name="EventManager Event Emission should handle callback errors gracefully" time="0.002">
+    </testcase>
+    <testcase classname="EventManager Once Events should execute once callback only once" name="EventManager Once Events should execute once callback only once" time="0.006">
+    </testcase>
+    <testcase classname="EventManager Once Events should clean up once event after execution" name="EventManager Once Events should clean up once event after execution" time="0.003">
+    </testcase>
+    <testcase classname="EventManager Once Events should return working unsubscribe function for once" name="EventManager Once Events should return working unsubscribe function for once" time="0.005">
+    </testcase>
+    <testcase classname="EventManager Event Cleanup should remove all listeners for specific event" name="EventManager Event Cleanup should remove all listeners for specific event" time="0.001">
+    </testcase>
+    <testcase classname="EventManager Event Cleanup should remove all listeners for all events" name="EventManager Event Cleanup should remove all listeners for all events" time="0.001">
+    </testcase>
+    <testcase classname="EventManager Event Cleanup should clean up empty event sets when unsubscribing" name="EventManager Event Cleanup should clean up empty event sets when unsubscribing" time="0.001">
+    </testcase>
+    <testcase classname="EventManager Event Cleanup should handle unsubscribing non-existent callbacks" name="EventManager Event Cleanup should handle unsubscribing non-existent callbacks" time="0.001">
+    </testcase>
+    <testcase classname="EventManager Event Introspection should get event information" name="EventManager Event Introspection should get event information" time="0.002">
+    </testcase>
+    <testcase classname="EventManager Event Introspection should check if event has listeners" name="EventManager Event Introspection should check if event has listeners" time="0.001">
+    </testcase>
+    <testcase classname="EventManager Event Introspection should handle checking non-existent events" name="EventManager Event Introspection should handle checking non-existent events" time="0.001">
+    </testcase>
+    <testcase classname="EventManager Memory Management should not leak memory when adding/removing many events" name="EventManager Memory Management should not leak memory when adding/removing many events" time="0.013">
+    </testcase>
+    <testcase classname="EventManager Memory Management should handle rapid subscribe/unsubscribe cycles" name="EventManager Memory Management should handle rapid subscribe/unsubscribe cycles" time="0.001">
+    </testcase>
+    <testcase classname="EventManager Edge Cases should handle callback that modifies event listeners" name="EventManager Edge Cases should handle callback that modifies event listeners" time="0.004">
+      <failure>Error: expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+Expected: &quot;data&quot;
+
+Number of calls: 0
+    at Object.toHaveBeenCalledWith (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\utils\event-manager.test.js:384:31)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="EventManager Edge Cases should handle callback that adds new listeners" name="EventManager Edge Cases should handle callback that adds new listeners" time="0.001">
+    </testcase>
+    <testcase classname="EventManager Service Lifecycle should destroy event manager properly" name="EventManager Service Lifecycle should destroy event manager properly" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="CanvasService" errors="0" failures="3" skipped="0" timestamp="2025-08-02T15:03:27" time="4.74" tests="16">
+    <testcase classname="CanvasService Initialization should initialize correctly" name="CanvasService Initialization should initialize correctly" time="0.027">
+    </testcase>
+    <testcase classname="CanvasService Initialization should not initialize twice" name="CanvasService Initialization should not initialize twice" time="0.005">
+    </testcase>
+    <testcase classname="CanvasService Get Canvases should fetch canvases successfully" name="CanvasService Get Canvases should fetch canvases successfully" time="0.002">
+    </testcase>
+    <testcase classname="CanvasService Get Canvases should handle fetch failure" name="CanvasService Get Canvases should handle fetch failure" time="0.026">
+    </testcase>
+    <testcase classname="CanvasService Get Canvases should handle network error" name="CanvasService Get Canvases should handle network error" time="0.007">
+    </testcase>
+    <testcase classname="CanvasService Get Canvas Data should fetch canvas data successfully" name="CanvasService Get Canvas Data should fetch canvas data successfully" time="0.038">
+    </testcase>
+    <testcase classname="CanvasService Get Canvas Data should handle fetch failure" name="CanvasService Get Canvas Data should handle fetch failure" time="0.004">
+    </testcase>
+    <testcase classname="CanvasService Create Canvas should create canvas successfully" name="CanvasService Create Canvas should create canvas successfully" time="0.003">
+    </testcase>
+    <testcase classname="CanvasService Create Canvas should handle creation failure" name="CanvasService Create Canvas should handle creation failure" time="0.006">
+    </testcase>
+    <testcase classname="CanvasService Create Canvas should handle network error" name="CanvasService Create Canvas should handle network error" time="0.002">
+    </testcase>
+    <testcase classname="CanvasService Save Tile should save tile successfully" name="CanvasService Save Tile should save tile successfully" time="0.008">
+      <failure>Error: expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+Expected: &quot;Tile saved successfully!&quot;, &quot;success&quot;
+
+Number of calls: 0
+    at Object.toHaveBeenCalledWith (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\canvas\canvas-service.test.js:404:43)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)</failure>
+    </testcase>
+    <testcase classname="CanvasService Save Tile should handle save failure" name="CanvasService Save Tile should handle save failure" time="0.002">
+    </testcase>
+    <testcase classname="CanvasService Save Tile should handle network error" name="CanvasService Save Tile should handle network error" time="0.005">
+      <failure>Error: expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+Expected: &quot;Network error during tile save&quot;, &quot;error&quot;
+Received: &quot;Network error during tile update&quot;, &quot;error&quot;
+
+Number of calls: 1
+    at Object.toHaveBeenCalledWith (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\canvas\canvas-service.test.js:427:43)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)</failure>
+    </testcase>
+    <testcase classname="CanvasService Error Handling should handle malformed JSON response" name="CanvasService Error Handling should handle malformed JSON response" time="0.001">
+    </testcase>
+    <testcase classname="CanvasService Error Handling should handle missing response body" name="CanvasService Error Handling should handle missing response body" time="0.001">
+      <failure>Error: expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+Expected: &quot;Failed to create canvas&quot;, &quot;error&quot;
+Received: &quot;Network error during canvas creation&quot;, &quot;error&quot;
+
+Number of calls: 1
+    at Object.toHaveBeenCalledWith (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\canvas\canvas-service.test.js:452:43)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)</failure>
+    </testcase>
+    <testcase classname="CanvasService Service Lifecycle should destroy service properly" name="CanvasService Service Lifecycle should destroy service properly" time="0.007">
+    </testcase>
+  </testsuite>
+  <testsuite name="AppState" errors="0" failures="15" skipped="0" timestamp="2025-08-02T15:03:27" time="4.811" tests="32">
+    <testcase classname="AppState Initialization should initialize with default state" name="AppState Initialization should initialize with default state" time="0.019">
+    </testcase>
+    <testcase classname="AppState Initialization should initialize correctly" name="AppState Initialization should initialize correctly" time="0.003">
+    </testcase>
+    <testcase classname="AppState Initialization should not initialize twice" name="AppState Initialization should not initialize twice" time="0.003">
+    </testcase>
+    <testcase classname="AppState State Persistence should load persisted authentication state" name="AppState State Persistence should load persisted authentication state" time="0.002">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;localStorage&apos;)
+    at Object.localStorage (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:276:18)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState State Persistence should load persisted preferences" name="AppState State Persistence should load persisted preferences" time="0.002">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;localStorage&apos;)
+    at Object.localStorage (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:289:18)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState State Persistence should handle missing preferences gracefully" name="AppState State Persistence should handle missing preferences gracefully" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;localStorage&apos;)
+    at Object.localStorage (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:298:18)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState State Persistence should handle malformed preferences gracefully" name="AppState State Persistence should handle malformed preferences gracefully" time="0.001">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;localStorage&apos;)
+    at Object.localStorage (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:307:18)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState State Persistence should save preferences to localStorage" name="AppState State Persistence should save preferences to localStorage" time="0.002">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;localStorage&apos;)
+    at Object.localStorage (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:319:25)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState State Persistence should handle localStorage save errors" name="AppState State Persistence should handle localStorage save errors" time="0.002">
+      <failure>TypeError: Cannot read properties of undefined (reading &apos;localStorage&apos;)
+    at Object.localStorage (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:329:18)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState State Management should get current state" name="AppState State Management should get current state" time="0.005">
+      <failure>Error: expect(received).not.toBe(expected) // Object.is equality
+
+Expected: not {&quot;canvases&quot;: [], &quot;currentCanvas&quot;: null, &quot;currentColor&quot;: &quot;#000000&quot;, &quot;currentSection&quot;: &quot;home&quot;, &quot;currentTool&quot;: &quot;paint&quot;, &quot;currentUser&quot;: null, &quot;isAuthenticated&quot;: false, &quot;isLoading&quot;: false, &quot;onlineUsers&quot;: [], &quot;websocketConnection&quot;: null}
+    at Object.toBe (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:346:31)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState State Management should get specific state value" name="AppState State Management should get specific state value" time="0.002">
+    </testcase>
+    <testcase classname="AppState State Management should set state value with events" name="AppState State Management should set state value with events" time="0.003">
+      <failure>Error: expect(received).toBeGreaterThan(expected)
+
+Matcher error: received value must be a number or bigint
+
+Received has value: undefined
+    at Object.toBeGreaterThan (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:361:47)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState State Management should update multiple state values" name="AppState State Management should update multiple state values" time="0.004">
+      <failure>Error: expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+Expected: &quot;state:batch:changed&quot;, Any&lt;Object&gt;
+
+Number of calls: 0
+    at Object.toHaveBeenCalledWith (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:385:43)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState Authentication State should set authentication status" name="AppState Authentication State should set authentication status" time="0.001">
+      <failure>Error: expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+Expected: &quot;state:isAuthenticated:changed&quot;, {&quot;oldValue&quot;: false, &quot;value&quot;: true}
+
+Number of calls: 0
+    at Object.toHaveBeenCalledWith (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:394:43)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState Authentication State should set user data" name="AppState Authentication State should set user data" time="0.002">
+      <failure>Error: expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+Expected: &quot;state:user:changed&quot;, {&quot;oldValue&quot;: null, &quot;value&quot;: {&quot;id&quot;: 1, &quot;username&quot;: &quot;testuser&quot;}}
+
+Number of calls: 0
+    at Object.toHaveBeenCalledWith (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:406:43)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState Authentication State should clear user data" name="AppState Authentication State should clear user data" time="0.001">
+      <failure>ReferenceError: mockUser is not defined
+    at Object.mockUser (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:418:27)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState Canvas State should set current canvas" name="AppState Canvas State should set current canvas" time="0.001">
+    </testcase>
+    <testcase classname="AppState Canvas State should set canvases list" name="AppState Canvas State should set canvases list" time="0.001">
+    </testcase>
+    <testcase classname="AppState UI State should set current section" name="AppState UI State should set current section" time="0.002">
+    </testcase>
+    <testcase classname="AppState UI State should set loading state" name="AppState UI State should set loading state" time="0.001">
+    </testcase>
+    <testcase classname="AppState Editor State should set current tool" name="AppState Editor State should set current tool" time="0.002">
+      <failure>Error: expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+Expected: &quot;tool:changed&quot;, &quot;erase&quot;
+
+Number of calls: 0
+    at Object.toHaveBeenCalledWith (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:463:43)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState Editor State should set current color" name="AppState Editor State should set current color" time="0.004">
+      <failure>Error: expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+Expected: &quot;color:changed&quot;, &quot;#FF0000&quot;
+
+Number of calls: 0
+    at Object.toHaveBeenCalledWith (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:470:43)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState WebSocket State should set websocket connection" name="AppState WebSocket State should set websocket connection" time="0.001">
+    </testcase>
+    <testcase classname="AppState WebSocket State should set online users" name="AppState WebSocket State should set online users" time="0.001">
+    </testcase>
+    <testcase classname="AppState WebSocket State should add online user" name="AppState WebSocket State should add online user" time="0.002">
+    </testcase>
+    <testcase classname="AppState WebSocket State should remove online user" name="AppState WebSocket State should remove online user" time="0">
+    </testcase>
+    <testcase classname="AppState Event Subscription should subscribe to events" name="AppState Event Subscription should subscribe to events" time="0">
+    </testcase>
+    <testcase classname="AppState Event Subscription should emit events to subscribers" name="AppState Event Subscription should emit events to subscribers" time="0.001">
+      <failure>Error: expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+Expected: {&quot;data&quot;: &quot;test&quot;}
+
+Number of calls: 0
+    at Object.toHaveBeenCalledWith (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\tests\frontend\unit\state\app-state.test.js:531:30)
+    at Promise.then.completed (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\utils.js:231:10)
+    at _callCircusTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:252:3)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:126:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at _runTestsForDescribeBlock (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:121:9)
+    at run (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\run.js:71:3)
+    at runAndTransformResultsToJestFormat (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+    at jestAdapter (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+    at runTestInternal (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:367:16)
+    at runTest (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\runTest.js:444:34)
+    at Object.worker (F:\DevFolder\PythonProjects\webApplications\StellarCollabApp\frontend\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
+    </testcase>
+    <testcase classname="AppState Event Subscription should unsubscribe from events" name="AppState Event Subscription should unsubscribe from events" time="0.001">
+    </testcase>
+    <testcase classname="AppState State Reset should reset to initial state" name="AppState State Reset should reset to initial state" time="0.001">
+    </testcase>
+    <testcase classname="AppState Debug Mode should provide debug information" name="AppState Debug Mode should provide debug information" time="0.001">
+    </testcase>
+    <testcase classname="AppState Cleanup should destroy state manager properly" name="AppState Cleanup should destroy state manager properly" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="AuthService" errors="0" failures="0" skipped="0" timestamp="2025-08-02T15:03:31" time="1.56" tests="17">
+    <testcase classname="AuthService Initialization should initialize correctly" name="AuthService Initialization should initialize correctly" time="0.004">
+    </testcase>
+    <testcase classname="AuthService Initialization should not initialize twice" name="AuthService Initialization should not initialize twice" time="0.002">
+    </testcase>
+    <testcase classname="AuthService Login should login successfully" name="AuthService Login should login successfully" time="0.003">
+    </testcase>
+    <testcase classname="AuthService Login should handle login failure" name="AuthService Login should handle login failure" time="0.003">
+    </testcase>
+    <testcase classname="AuthService Login should handle network error" name="AuthService Login should handle network error" time="0.003">
+    </testcase>
+    <testcase classname="AuthService Login should show and hide loading" name="AuthService Login should show and hide loading" time="0.001">
+    </testcase>
+    <testcase classname="AuthService Register should register successfully" name="AuthService Register should register successfully" time="0.002">
+    </testcase>
+    <testcase classname="AuthService Register should handle registration failure" name="AuthService Register should handle registration failure" time="0.002">
+    </testcase>
+    <testcase classname="AuthService Logout should logout successfully" name="AuthService Logout should logout successfully" time="0.002">
+    </testcase>
+    <testcase classname="AuthService Logout should handle server logout failure gracefully" name="AuthService Logout should handle server logout failure gracefully" time="0.001">
+    </testcase>
+    <testcase classname="AuthService Token Verification should verify valid token" name="AuthService Token Verification should verify valid token" time="0.001">
+    </testcase>
+    <testcase classname="AuthService Token Verification should handle missing token" name="AuthService Token Verification should handle missing token" time="0.004">
+    </testcase>
+    <testcase classname="AuthService Token Verification should handle invalid token" name="AuthService Token Verification should handle invalid token" time="0.002">
+    </testcase>
+    <testcase classname="AuthService Authentication Status should check authentication status" name="AuthService Authentication Status should check authentication status" time="0.001">
+    </testcase>
+    <testcase classname="AuthService Authentication Status should get current user" name="AuthService Authentication Status should get current user" time="0.001">
+    </testcase>
+    <testcase classname="AuthService Authentication Status should get auth headers" name="AuthService Authentication Status should get auth headers" time="0.001">
+    </testcase>
+    <testcase classname="AuthService Form Handling should handle login form submission" name="AuthService Form Handling should handle login form submission" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="Configuration Tests" errors="0" failures="0" skipped="0" timestamp="2025-08-02T15:03:31" time="1.501" tests="5">
+    <testcase classname="Configuration Tests should have CONFIG_UTILS available" name="Configuration Tests should have CONFIG_UTILS available" time="0.004">
+    </testcase>
+    <testcase classname="Configuration Tests should have API_CONFIG available" name="Configuration Tests should have API_CONFIG available" time="0.001">
+    </testcase>
+    <testcase classname="Configuration Tests should have APP_CONFIG available" name="Configuration Tests should have APP_CONFIG available" time="0.001">
+    </testcase>
+    <testcase classname="Configuration Tests CONFIG_UTILS.getApiUrl should return correct URL" name="Configuration Tests CONFIG_UTILS.getApiUrl should return correct URL" time="0.009">
+    </testcase>
+    <testcase classname="Configuration Tests CONFIG_UTILS.getAuthHeaders should return headers object" name="Configuration Tests CONFIG_UTILS.getAuthHeaders should return headers object" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="Basic Test Infrastructure" errors="0" failures="0" skipped="0" timestamp="2025-08-02T15:03:32" time="1.506" tests="5">
+    <testcase classname="Basic Test Infrastructure should have DOM environment available" name="Basic Test Infrastructure should have DOM environment available" time="0.004">
+    </testcase>
+    <testcase classname="Basic Test Infrastructure should have fetch mock available" name="Basic Test Infrastructure should have fetch mock available" time="0.001">
+    </testcase>
+    <testcase classname="Basic Test Infrastructure should have test utilities available" name="Basic Test Infrastructure should have test utilities available" time="0.002">
+    </testcase>
+    <testcase classname="Basic Test Infrastructure should be able to create DOM elements" name="Basic Test Infrastructure should be able to create DOM elements" time="0.005">
+    </testcase>
+    <testcase classname="Basic Test Infrastructure should be able to mock fetch responses" name="Basic Test Infrastructure should be able to mock fetch responses" time="0.004">
+    </testcase>
+  </testsuite>
+  <testsuite name="Jest Setup Verification" errors="0" failures="0" skipped="0" timestamp="2025-08-02T15:03:33" time="1.608" tests="4">
+    <testcase classname="Jest Setup Verification should have all required global objects" name="Jest Setup Verification should have all required global objects" time="0.007">
+    </testcase>
+    <testcase classname="Jest Setup Verification should be able to use test utilities" name="Jest Setup Verification should be able to use test utilities" time="0.002">
+    </testcase>
+    <testcase classname="Jest Setup Verification should be able to mock API calls" name="Jest Setup Verification should be able to mock API calls" time="0.002">
+    </testcase>
+    <testcase classname="Jest Setup Verification should have proper console mocking" name="Jest Setup Verification should have proper console mocking" time="0.003">
+    </testcase>
+  </testsuite>
+</testsuites>

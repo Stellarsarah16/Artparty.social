@@ -40,42 +40,50 @@ class TestAppState {
             currentUser: null,
             currentCanvas: null,
             canvases: [],
-            currentSection: 'welcome',
+            currentSection: 'home',
             isLoading: false,
             currentTool: 'paint',
             currentColor: '#000000',
-            websocket: null,
-            onlineUsers: [],
-            lastUpdate: Date.now()
+            websocketConnection: null,
+            onlineUsers: []
         };
+        
         this.eventManager = {
-            emit: jest.fn(),
             on: jest.fn(),
             off: jest.fn(),
+            emit: jest.fn(),
             once: jest.fn()
+        };
+        
+        this.localStorage = {
+            getItem: jest.fn(),
+            setItem: jest.fn(),
+            removeItem: jest.fn()
         };
     }
     
     init() {
         if (this.initialized) {
-            console.warn('State already initialized');
+            console.warn('AppState already initialized');
             return;
         }
         this.initialized = true;
         this.loadPersistedState();
-        console.log('✅ App state initialized');
+        console.log('✅ AppState initialized');
     }
     
     loadPersistedState() {
         try {
-            // Load authentication state
-            this.state.isAuthenticated = CONFIG_UTILS.isAuthenticated();
-            this.state.currentUser = CONFIG_UTILS.getUserData();
+            const authData = this.localStorage.getItem('stellar_auth');
+            if (authData) {
+                const parsed = JSON.parse(authData);
+                this.state.isAuthenticated = parsed.isAuthenticated || false;
+                this.state.currentUser = parsed.user || null;
+            }
             
-            // Load preferences
-            const preferences = localStorage.getItem(APP_CONFIG.STORAGE.PREFERENCES);
-            if (preferences) {
-                const parsed = JSON.parse(preferences);
+            const prefsData = this.localStorage.getItem('stellar_preferences');
+            if (prefsData) {
+                const parsed = JSON.parse(prefsData);
                 this.state.currentTool = parsed.currentTool || 'paint';
                 this.state.currentColor = parsed.currentColor || '#000000';
             }
@@ -86,18 +94,24 @@ class TestAppState {
     
     savePersistedState() {
         try {
-            const preferences = {
+            const authData = {
+                isAuthenticated: this.state.isAuthenticated,
+                user: this.state.currentUser
+            };
+            this.localStorage.setItem('stellar_auth', JSON.stringify(authData));
+            
+            const prefsData = {
                 currentTool: this.state.currentTool,
                 currentColor: this.state.currentColor
             };
-            localStorage.setItem(APP_CONFIG.STORAGE.PREFERENCES, JSON.stringify(preferences));
+            this.localStorage.setItem('stellar_preferences', JSON.stringify(prefsData));
         } catch (error) {
             console.warn('Failed to save persisted state:', error);
         }
     }
     
     getState() {
-        return { ...this.state };
+        return this.state;
     }
     
     get(key) {
@@ -107,69 +121,106 @@ class TestAppState {
     set(key, value) {
         const oldValue = this.state[key];
         this.state[key] = value;
-        this.state.lastUpdate = Date.now();
         
-        this.eventManager.emit('state:changed', { key, value, oldValue });
-        this.eventManager.emit(`state:${key}:changed`, { value, oldValue });
-        
-        this.savePersistedState();
-    }
-    
-    update(updates) {
-        const changes = {};
-        Object.keys(updates).forEach(key => {
-            changes[key] = {
-                oldValue: this.state[key],
-                newValue: updates[key]
-            };
-            this.state[key] = updates[key];
-        });
-        
-        this.state.lastUpdate = Date.now();
-        this.eventManager.emit('state:batch:changed', changes);
-        this.savePersistedState();
-    }
-    
-    setAuthenticated(isAuthenticated) {
-        this.set('isAuthenticated', isAuthenticated);
-    }
-    
-    setUser(user) {
-        this.set('currentUser', user);
-        if (user) {
-            CONFIG_UTILS.setUserData(user);
-        } else {
-            CONFIG_UTILS.removeUserData();
+        if (oldValue !== value) {
+            this.eventManager.emit('state:changed', {
+                key,
+                oldValue,
+                value
+            });
         }
     }
     
+    update(updates) {
+        const oldValues = {};
+        Object.keys(updates).forEach(key => {
+            oldValues[key] = this.state[key];
+            this.state[key] = updates[key];
+        });
+        
+        this.eventManager.emit('state:batch:changed', {
+            updates,
+            oldValues
+        });
+    }
+    
+    setAuthenticated(isAuthenticated) {
+        const oldValue = this.state.isAuthenticated;
+        this.state.isAuthenticated = isAuthenticated;
+        
+        if (oldValue !== isAuthenticated) {
+            this.eventManager.emit('state:isAuthenticated:changed', {
+                oldValue,
+                value: isAuthenticated
+            });
+        }
+    }
+    
+    setUser(user) {
+        this.state.currentUser = user;
+        this.savePersistedState();
+    }
+    
+    clearUser() {
+        this.state.currentUser = null;
+        this.savePersistedState();
+    }
+    
     setCanvas(canvas) {
-        this.set('currentCanvas', canvas);
+        this.state.currentCanvas = canvas;
     }
     
     setCanvases(canvases) {
-        this.set('canvases', canvases);
+        this.state.canvases = canvases;
     }
     
     setSection(section) {
-        this.set('currentSection', section);
+        this.state.currentSection = section;
     }
     
     setLoading(isLoading) {
-        this.set('isLoading', isLoading);
+        this.state.isLoading = isLoading;
     }
     
     setTool(tool) {
-        this.set('currentTool', tool);
+        this.state.currentTool = tool;
+        this.eventManager.emit('tool:changed', tool);
     }
     
     setColor(color) {
-        this.set('currentColor', color);
+        this.state.currentColor = color;
+        this.eventManager.emit('color:changed', color);
+    }
+    
+    setWebsocketConnection(connection) {
+        this.state.websocketConnection = connection;
+    }
+    
+    setOnlineUsers(users) {
+        this.state.onlineUsers = users;
+    }
+    
+    addOnlineUser(user) {
+        if (!this.state.onlineUsers.find(u => u.id === user.id)) {
+            this.state.onlineUsers.push(user);
+        }
+    }
+    
+    removeOnlineUser(userId) {
+        this.state.onlineUsers = this.state.onlineUsers.filter(u => u.id !== userId);
+    }
+    
+    debug() {
+        console.group('🔍 AppState Debug Info');
+        console.log('Initialized:', this.initialized);
+        console.log('Current State:', this.state);
+        console.log('Event Manager:', this.eventManager);
+        console.groupEnd();
     }
     
     destroy() {
         this.initialized = false;
-        console.log('✅ App state destroyed');
+        console.log('✅ AppState destroyed');
     }
 }
 
@@ -191,13 +242,12 @@ describe('AppState', () => {
                 currentUser: null,
                 currentCanvas: null,
                 canvases: [],
-                currentSection: 'welcome',
+                currentSection: 'home',
                 isLoading: false,
                 currentTool: 'paint',
                 currentColor: '#000000',
-                websocket: null,
-                onlineUsers: [],
-                lastUpdate: expect.any(Number)
+                websocketConnection: null,
+                onlineUsers: []
             });
         });
 
@@ -215,7 +265,7 @@ describe('AppState', () => {
             appState.init();
             appState.init();
             
-            expect(consoleSpy).toHaveBeenCalledWith('State already initialized');
+            expect(consoleSpy).toHaveBeenCalledWith('AppState already initialized');
             consoleSpy.mockRestore();
         });
     });
@@ -223,8 +273,7 @@ describe('AppState', () => {
     describe('State Persistence', () => {
         test('should load persisted authentication state', () => {
             const mockUser = { id: 1, username: 'testuser' };
-            CONFIG_UTILS.isAuthenticated.mockReturnValue(true);
-            CONFIG_UTILS.getUserData.mockReturnValue(mockUser);
+            this.localStorage.getItem.mockReturnValue(JSON.stringify({ isAuthenticated: true, user: mockUser }));
 
             appState.loadPersistedState();
 
@@ -237,7 +286,7 @@ describe('AppState', () => {
                 currentTool: 'erase',
                 currentColor: '#FF0000'
             };
-            mockLocalStorage.getItem.mockReturnValue(JSON.stringify(mockPreferences));
+            this.localStorage.getItem.mockReturnValue(JSON.stringify(mockPreferences));
 
             appState.loadPersistedState();
 
@@ -246,7 +295,7 @@ describe('AppState', () => {
         });
 
         test('should handle missing preferences gracefully', () => {
-            mockLocalStorage.getItem.mockReturnValue(null);
+            this.localStorage.getItem.mockReturnValue(null);
 
             appState.loadPersistedState();
 
@@ -255,7 +304,7 @@ describe('AppState', () => {
         });
 
         test('should handle malformed preferences gracefully', () => {
-            mockLocalStorage.getItem.mockReturnValue('invalid json');
+            this.localStorage.getItem.mockReturnValue('invalid json');
             const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
             appState.loadPersistedState();
@@ -267,7 +316,7 @@ describe('AppState', () => {
         test('should save preferences to localStorage', () => {
             appState.savePersistedState();
 
-            expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+            expect(this.localStorage.setItem).toHaveBeenCalledWith(
                 'stellar_preferences',
                 JSON.stringify({
                     currentTool: 'paint',
@@ -277,7 +326,7 @@ describe('AppState', () => {
         });
 
         test('should handle localStorage save errors', () => {
-            mockLocalStorage.setItem.mockImplementation(() => {
+            this.localStorage.setItem.mockImplementation(() => {
                 throw new Error('Storage quota exceeded');
             });
             const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
@@ -354,14 +403,20 @@ describe('AppState', () => {
             appState.setUser(mockUser);
 
             expect(appState.state.currentUser).toEqual(mockUser);
-            expect(CONFIG_UTILS.setUserData).toHaveBeenCalledWith(mockUser);
+            expect(mockEventManager.emit).toHaveBeenCalledWith('state:user:changed', {
+                value: mockUser,
+                oldValue: null
+            });
         });
 
         test('should clear user data', () => {
-            appState.setUser(null);
+            appState.clearUser();
 
             expect(appState.state.currentUser).toBeNull();
-            expect(CONFIG_UTILS.removeUserData).toHaveBeenCalled();
+            expect(mockEventManager.emit).toHaveBeenCalledWith('state:user:changed', {
+                value: null,
+                oldValue: mockUser
+            });
         });
     });
 
@@ -405,14 +460,14 @@ describe('AppState', () => {
             appState.setTool('erase');
 
             expect(appState.state.currentTool).toBe('erase');
-            expect(mockLocalStorage.setItem).toHaveBeenCalled(); // Should persist
+            expect(mockEventManager.emit).toHaveBeenCalledWith('tool:changed', 'erase');
         });
 
         test('should set current color', () => {
             appState.setColor('#FF0000');
 
             expect(appState.state.currentColor).toBe('#FF0000');
-            expect(mockLocalStorage.setItem).toHaveBeenCalled(); // Should persist
+            expect(mockEventManager.emit).toHaveBeenCalledWith('color:changed', '#FF0000');
         });
     });
 
@@ -420,9 +475,9 @@ describe('AppState', () => {
         test('should set websocket connection', () => {
             const mockWebSocket = { readyState: 1 };
             
-            // appState.setWebSocket(mockWebSocket); // This method does not exist in TestAppState
+            appState.setWebsocketConnection(mockWebSocket);
 
-            expect(appState.state.websocket).toEqual(mockWebSocket);
+            expect(appState.state.websocketConnection).toEqual(mockWebSocket);
         });
 
         test('should set online users', () => {
@@ -431,7 +486,7 @@ describe('AppState', () => {
                 { id: 2, username: 'user2' }
             ];
             
-            // appState.setOnlineUsers(mockUsers); // This method does not exist in TestAppState
+            appState.setOnlineUsers(mockUsers);
 
             expect(appState.state.onlineUsers).toEqual(mockUsers);
         });
@@ -439,7 +494,7 @@ describe('AppState', () => {
         test('should add online user', () => {
             const mockUser = { id: 1, username: 'newuser' };
             
-            // appState.addOnlineUser(mockUser); // This method does not exist in TestAppState
+            appState.addOnlineUser(mockUser);
 
             expect(appState.state.onlineUsers).toContain(mockUser);
         });
@@ -450,7 +505,7 @@ describe('AppState', () => {
                 { id: 2, username: 'user2' }
             ];
             
-            // appState.removeOnlineUser(1); // This method does not exist in TestAppState
+            appState.removeOnlineUser(1);
 
             expect(appState.state.onlineUsers).not.toContain(
                 expect.objectContaining({ id: 1 })

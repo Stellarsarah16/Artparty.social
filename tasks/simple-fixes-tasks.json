@@ -1,0 +1,26 @@
+[
+  {
+    "id": "remove-debug-files",
+    "content": "Remove unnecessary debug files that are no longer needed",
+    "status": "completed",
+    "dependencies": []
+  },
+  {
+    "id": "fix-todo-comment",
+    "content": "Implement user tile count display using existing API endpoints",
+    "status": "completed",
+    "dependencies": []
+  },
+  {
+    "id": "update-package-json",
+    "content": "Add proper test script to frontend package.json",
+    "status": "completed",
+    "dependencies": []
+  },
+  {
+    "id": "document-changes",
+    "content": "Update CHANGELOG.md with all simple fixes made",
+    "status": "completed",
+    "dependencies": ["fix-todo-comment", "update-package-json"]
+  }
+] 

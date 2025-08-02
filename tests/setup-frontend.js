@@ -3,11 +3,14 @@
  * Global setup for frontend JavaScript tests
  */
 
-// Add TextEncoder/TextDecoder polyfills for Node.js compatibility
-const { TextEncoder, TextDecoder } = require('util');
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder;
+// Set up TextEncoder/TextDecoder BEFORE importing JSDOM
+if (typeof global !== 'undefined') {
+    const { TextEncoder, TextDecoder } = require('util');
+    global.TextEncoder = TextEncoder;
+    global.TextDecoder = TextDecoder;
+}
 
+// Now import JSDOM
 const { JSDOM } = require('jsdom');
 
 // Setup DOM environment

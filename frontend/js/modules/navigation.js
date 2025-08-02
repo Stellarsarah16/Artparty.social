@@ -1432,8 +1432,32 @@ class NavigationManager {
             
             const userTiles = document.getElementById('viewer-user-tiles');
             if (userTiles) {
-                // TODO: Get user's tile count from API
-                userTiles.textContent = '0';
+                // Get user's tile count from API
+                try {
+                    const currentUser = appState.get('currentUser');
+                    if (currentUser && currentUser.id) {
+                        const userTilesResponse = await fetch(`${CONFIG_UTILS.getApiUrl()}/tiles/user/${currentUser.id}?limit=1000`, {
+                            headers: {
+                                'Authorization': `Bearer ${CONFIG_UTILS.getAuthToken()}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (userTilesResponse.ok) {
+                            const userTilesData = await userTilesResponse.json();
+                            // Count tiles that belong to the current canvas
+                            const userTilesOnCanvas = userTilesData.filter(tile => tile.canvas_id === canvas.id);
+                            userTiles.textContent = userTilesOnCanvas.length.toString();
+                        } else {
+                            userTiles.textContent = '0';
+                        }
+                    } else {
+                        userTiles.textContent = '0';
+                    }
+                } catch (error) {
+                    console.warn('Failed to get user tile count:', error);
+                    userTiles.textContent = '0';
+                }
             }
             
         } catch (error) {
