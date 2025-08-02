@@ -74,6 +74,12 @@ export class CanvasViewerManager {
                 window.CanvasViewer.init(canvasElement);
                 window.CanvasViewer.setCanvasData(canvasData);
                 
+                // Set up tile click handler
+                window.CanvasViewer.onTileClick = (tile) => {
+                    console.log('🎯 Tile clicked, opening editor:', tile);
+                    this.openTileEditor(tile);
+                };
+                
                 // Load tiles for this canvas
                 try {
                     const tiles = await this.tileApi.getForCanvas(canvas.id);
@@ -220,7 +226,25 @@ export class CanvasViewerManager {
      * Setup viewer controls
      */
     setupViewerControls() {
-        // Add any viewer-specific controls here
+        // Back to canvases button
+        const backBtn = document.getElementById('viewer-back-to-canvases-btn');
+        if (backBtn) {
+            backBtn.onclick = () => {
+                this.showSection('canvas');
+            };
+        }
+        
+        // Refresh button
+        const refreshBtn = document.getElementById('viewer-refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.onclick = async () => {
+                if (this.currentCanvas) {
+                    await this.openCanvas(this.currentCanvas);
+                }
+            };
+        }
+        
+        // Settings button
         const settingsBtn = document.getElementById('viewer-settings-btn');
         if (settingsBtn && this.currentCanvas) {
             settingsBtn.onclick = () => {
@@ -229,6 +253,31 @@ export class CanvasViewerManager {
                 }
             };
         }
+        
+        // Zoom fit button
+        const zoomFitBtn = document.getElementById('viewer-zoom-fit-btn');
+        if (zoomFitBtn && window.CanvasViewer) {
+            zoomFitBtn.onclick = () => {
+                window.CanvasViewer.zoomFit();
+            };
+        }
+        
+        // Zoom in/out buttons
+        const zoomInBtn = document.getElementById('viewer-zoom-in-btn');
+        if (zoomInBtn && window.CanvasViewer) {
+            zoomInBtn.onclick = () => {
+                window.CanvasViewer.zoomIn();
+            };
+        }
+        
+        const zoomOutBtn = document.getElementById('viewer-zoom-out-btn');
+        if (zoomOutBtn && window.CanvasViewer) {
+            zoomOutBtn.onclick = () => {
+                window.CanvasViewer.zoomOut();
+            };
+        }
+        
+        console.log('✅ Viewer controls setup complete');
     }
 
     /**
@@ -267,6 +316,34 @@ export class CanvasViewerManager {
         }
     }
 
+    /**
+     * Open tile editor for a specific tile
+     */
+    openTileEditor(tile) {
+        try {
+            console.log('🎨 Opening tile editor for tile:', tile);
+            
+            // Store the current tile in app state
+            if (window.appState) {
+                window.appState.set('currentTile', tile);
+            }
+            
+            // Show the editor section
+            this.showSection('editor');
+            
+            // Initialize the tile editor if available
+            if (window.tileEditorManager) {
+                window.tileEditorManager.loadTile(tile);
+            }
+            
+            console.log('✅ Tile editor opened successfully');
+            
+        } catch (error) {
+            console.error('❌ Failed to open tile editor:', error);
+            this.showCanvasError('Failed to open tile editor');
+        }
+    }
+    
     /**
      * Show section
      */
