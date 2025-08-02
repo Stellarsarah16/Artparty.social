@@ -16,7 +16,7 @@ export class WebSocketManager {
      */
     async connect(canvasId) {
         try {
-            const wsUrl = window.CONFIG_UTILS.getWebSocketUrl(`/ws/canvas/${canvasId}`);
+            const wsUrl = window.CONFIG_UTILS.getWebSocketUrl(canvasId);
             const ws = new WebSocket(wsUrl);
             
             ws.onopen = () => {

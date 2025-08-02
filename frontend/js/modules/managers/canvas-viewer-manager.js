@@ -73,6 +73,20 @@ export class CanvasViewerManager {
             if (canvasElement) {
                 window.CanvasViewer.init(canvasElement);
                 window.CanvasViewer.setCanvasData(canvasData);
+                
+                // Load tiles for this canvas
+                try {
+                    const tiles = await this.tileApi.getForCanvas(canvas.id);
+                    if (tiles && Array.isArray(tiles)) {
+                        window.CanvasViewer.loadTiles(tiles);
+                        console.log(`✅ Loaded ${tiles.length} tiles for canvas`);
+                    } else {
+                        console.log('✅ No tiles found for canvas');
+                    }
+                } catch (error) {
+                    console.error('❌ Failed to load tiles:', error);
+                }
+                
                 console.log('✅ Canvas viewer initialized with canvas element');
             } else {
                 console.error('❌ Canvas viewer element not found');
