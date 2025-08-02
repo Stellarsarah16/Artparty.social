@@ -673,8 +673,8 @@ class NavigationManager {
                 return;
             }
             
-            // Use the tile count API endpoint
-            const response = await fetch(`${CONFIG_UTILS.getApiUrl()}/tiles/user/${currentUser.id}/count?canvas_id=${canvasId}`, {
+            // Use the tile count API endpoint - FIX: Add the endpoint parameter
+            const response = await fetch(`${CONFIG_UTILS.getApiUrl('/tiles/user/' + currentUser.id + '/count')}?canvas_id=${canvasId}`, {
                 headers: {
                     'Authorization': `Bearer ${CONFIG_UTILS.getAuthToken()}`,
                     'Content-Type': 'application/json'
@@ -1581,11 +1581,11 @@ class NavigationManager {
             
             const userTiles = document.getElementById('viewer-user-tiles');
             if (userTiles) {
-                // Get user's tile count for this specific canvas
+                // Get user's tile count for this specific canvas - FIX: Add the endpoint parameter
                 try {
                     const currentUser = appState.get('currentUser');
                     if (currentUser && currentUser.id) {
-                        const response = await fetch(`${CONFIG_UTILS.getApiUrl()}/tiles/user/${currentUser.id}/count?canvas_id=${canvas.id}`, {
+                        const response = await fetch(`${CONFIG_UTILS.getApiUrl('/tiles/user/' + currentUser.id + '/count')}?canvas_id=${canvas.id}`, {
                             headers: {
                                 'Authorization': `Bearer ${CONFIG_UTILS.getAuthToken()}`,
                                 'Content-Type': 'application/json'
