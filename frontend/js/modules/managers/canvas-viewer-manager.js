@@ -223,7 +223,7 @@ export class CanvasViewerManager {
      */
     showLoading() {
         if (window.UIManager) {
-            window.UIManager.showLoading();
+            window.UIManager.updateLoadingState(true, 'Loading canvas...');
         }
     }
 
@@ -232,7 +232,7 @@ export class CanvasViewerManager {
      */
     hideLoading() {
         if (window.UIManager) {
-            window.UIManager.hideLoading();
+            window.UIManager.updateLoadingState(false);
         }
     }
 

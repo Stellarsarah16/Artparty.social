@@ -407,6 +407,7 @@ body {
     box-shadow: var(--shadow-md);
     transition: transform var(--transition-fast), box-shadow var(--transition-fast);
     cursor: pointer;
+    border: 1px solid var(--border-color);
 }
 
 .canvas-card:hover {
@@ -438,6 +439,42 @@ body {
     padding: var(--space-md) var(--space-lg);
     background: var(--bg-secondary);
     font-size: var(--font-size-sm);
+}
+
+.canvas-card-body {
+    padding: var(--space-lg);
+}
+
+.canvas-card-body .canvas-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.canvas-card-body .info-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.canvas-card-body .info-item i {
+    color: var(--primary-color);
+    width: 16px;
+}
+
+.user-tiles-info {
+    padding: var(--space-sm) 0;
+    border-top: 1px solid var(--border-color);
+    margin-top: var(--space-md);
+}
+
+.canvas-card-footer {
+    padding: var(--space-lg);
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
 }
 
 .canvas-stat {
@@ -1022,6 +1059,10 @@ form {
     }
     
     .canvas-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .canvas-card-body .canvas-info {
         grid-template-columns: 1fr;
     }
     

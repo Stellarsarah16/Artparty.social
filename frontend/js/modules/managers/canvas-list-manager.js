@@ -6,8 +6,9 @@
 import appState from '../app-state.js';
 
 export class CanvasListManager {
-    constructor(apiService, eventManager) {
-        this.apiService = apiService;
+    constructor(canvasApi, tileApi, eventManager) {
+        this.canvasApi = canvasApi;
+        this.tileApi = tileApi;
         this.eventManager = eventManager;
         this.canvasListContainer = document.getElementById('canvas-grid');
     }
@@ -18,7 +19,7 @@ export class CanvasListManager {
     async loadCanvases() {
         try {
             console.log('🔄 Loading canvases...');
-            const canvases = await this.apiService.list();
+            const canvases = await this.canvasApi.getCanvases();
             this.renderCanvasList(canvases);
             console.log(`✅ Loaded ${canvases.length} canvases`);
         } catch (error) {
@@ -129,7 +130,7 @@ export class CanvasListManager {
                 return;
             }
 
-            const tileCount = await this.apiService.getUserTileCount(currentUser.id, canvasId);
+            const tileCount = await this.tileApi.getUserTileCount(currentUser.id, canvasId);
             const tileCountElement = cardElement.querySelector('.user-tiles-count');
             if (tileCountElement) {
                 tileCountElement.textContent = `${tileCount.tile_count} your tiles`;

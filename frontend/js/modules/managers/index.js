@@ -24,7 +24,7 @@ export {
 // Create and export manager instances
 export const createManagers = () => {
     const managers = {
-        canvasList: new CanvasListManager(window.API.canvas, eventManager),
+        canvasList: new CanvasListManager(window.API.canvas, window.API.tiles, eventManager),
         canvasViewer: new CanvasViewerManager(window.API.canvas, window.API.websocket, eventManager),
         modal: new ModalManager(),
         tileEditor: new TileEditorManager(window.API.tiles),
