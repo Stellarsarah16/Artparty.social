@@ -365,17 +365,55 @@ class NavigationManager {
 }
 
 // Create and export singleton instance
-const navigationManager = new NavigationManager();
+let navigationManager = null;
 
-// Make navigation manager available globally for debugging
-window.navigationManager = navigationManager;
+// Initialize navigation manager asynchronously
+const initializeNavigationManager = async () => {
+    if (!navigationManager) {
+        navigationManager = new NavigationManager();
+        // Wait for the async initialization to complete
+        await navigationManager.waitForAPIAndInitialize();
+        
+        // Make navigation manager available globally for debugging
+        window.navigationManager = navigationManager;
+        console.log('✅ Navigation manager fully initialized and available globally');
+    }
+    return navigationManager;
+};
+
+// Start initialization immediately
+initializeNavigationManager().catch(error => {
+    console.error('❌ Failed to initialize navigation manager:', error);
+});
+
+// Export the initialization function for external use
+export const getNavigationManager = () => navigationManager;
 
 // Export functions for external use
-export const showSection = (sectionName) => navigationManager.showSection(sectionName);
-export const showModal = (modalName) => navigationManager.showModal(modalName);
-export const hideModal = (modalName) => navigationManager.hideModal(modalName);
-export const showLoading = () => navigationManager.showLoading();
-export const hideLoading = () => navigationManager.hideLoading();
+export const showSection = async (sectionName) => {
+    const manager = await initializeNavigationManager();
+    return manager.showSection(sectionName);
+};
+
+export const showModal = async (modalName) => {
+    const manager = await initializeNavigationManager();
+    return manager.showModal(modalName);
+};
+
+export const hideModal = async (modalName) => {
+    const manager = await initializeNavigationManager();
+    return manager.hideModal(modalName);
+};
+
+export const showLoading = async () => {
+    const manager = await initializeNavigationManager();
+    return manager.showLoading();
+};
+
+export const hideLoading = async () => {
+    const manager = await initializeNavigationManager();
+    return manager.hideLoading();
+};
 
 // Add global test functions for debugging
 window.testStateClearing = () => {
