@@ -551,7 +551,7 @@
     <!-- Scripts -->
     <script>
         // Cache busting for critical files
-        const cacheBuster = '?v=1.1.0&t=' + Date.now();
+        const cacheBuster = '?v=1.2.0&t=' + Date.now();
         console.log('🔧 Cache buster generated:', cacheBuster);
     </script>
     <!-- Debug HTTP Requests - Must load first! -->
@@ -566,12 +566,12 @@
     <script src="js/ui.js" + cacheBuster></script>
     <script src="js/form-validation.js" + cacheBuster></script>
     <script src="js/neighbor-display.js" + cacheBuster></script>
-    <script type="module" src="js/services/auth.js"></script>
-    <script type="module" src="js/services/canvas.js"></script>
-    <script type="module" src="js/modules/managers/index.js"></script>
-    <script type="module" src="js/modules/auth.js"></script>
-    <script type="module" src="js/modules/navigation.js"></script>
-    <script type="module" src="js/modules/app-state.js"></script>
-    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/services/auth.js" + cacheBuster></script>
+    <script type="module" src="js/services/canvas.js" + cacheBuster></script>
+    <script type="module" src="js/modules/managers/index.js" + cacheBuster></script>
+    <script type="module" src="js/modules/auth.js" + cacheBuster></script>
+    <script type="module" src="js/modules/navigation.js" + cacheBuster></script>
+    <script type="module" src="js/modules/app-state.js" + cacheBuster></script>
+    <script type="module" src="js/app.js" + cacheBuster></script>
 </body>
 </html> 
