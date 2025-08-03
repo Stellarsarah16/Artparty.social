@@ -1,6 +1,9 @@
 FROM nginx:alpine
 
-COPY . /usr/share/nginx/html
+# Copy only the necessary files
+COPY index.html /usr/share/nginx/html/
+COPY css/ /usr/share/nginx/html/css/
+COPY js/ /usr/share/nginx/html/js/
 
 RUN echo 'events { worker_connections 1024; }' > /etc/nginx/nginx.conf && \
     echo 'http {' >> /etc/nginx/nginx.conf && \

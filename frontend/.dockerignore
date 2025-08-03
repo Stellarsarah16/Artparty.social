@@ -1,0 +1,25 @@
+# Node.js dependencies (huge directory)
+node_modules/
+
+# Test files
+tests/
+debug/
+test-*.html
+neighbor-test.html
+server-test.html
+force-reload.html
+clear-cache.html
+admin.html
+
+# Development files
+package-lock.json
+README.md
+.git/
+.gitignore
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp 
