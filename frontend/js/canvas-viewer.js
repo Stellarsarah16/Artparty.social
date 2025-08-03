@@ -951,6 +951,7 @@ class CanvasViewer {
             const emptyTile = {
                 x: tileX,
                 y: tileY,
+                canvas_id: this.canvasData ? this.canvasData.id : null, // Add canvas_id for neighbor loading
                 isEmpty: true,
                 isNew: true
             };

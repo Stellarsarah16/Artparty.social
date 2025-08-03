@@ -16,7 +16,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-async def get_user_from_token(token: str, db: Session) -> User:
+def get_user_from_token(token: str, db: Session) -> User:
     """Get user from JWT token for WebSocket authentication"""
     try:
         user = auth_service.get_current_user(db, token)
@@ -46,8 +46,8 @@ async def websocket_canvas_endpoint(
     user = None
     
     try:
-        # Authenticate user
-        user = await get_user_from_token(token, db)
+        # Authenticate user (this is a sync function, no need for await)
+        user = get_user_from_token(token, db)
         
         # Validate canvas exists
         canvas = db.query(Canvas).filter(

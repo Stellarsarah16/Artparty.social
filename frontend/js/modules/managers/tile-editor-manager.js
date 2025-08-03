@@ -550,6 +550,12 @@ export class TileEditorManager {
         try {
             console.log('🔍 Loading neighbor tiles for tile:', currentTile.x, currentTile.y);
             
+            // Validate that we have a canvas_id
+            if (!currentTile.canvas_id) {
+                console.warn('⚠️ No canvas_id provided for tile, cannot load neighbors');
+                return;
+            }
+            
             // Debug API service
             console.log('🔍 API service available:', !!this.apiService);
             console.log('🔍 API service methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.apiService)));

@@ -1,26 +1,98 @@
 [
   {
-    "id": "remove-debug-files",
-    "content": "Remove unnecessary debug files that are no longer needed",
+    "id": "analyze-auth-flow",
+    "content": "Analyze current authentication flow and identify logout/disconnect handling gaps",
     "status": "completed",
     "dependencies": []
   },
   {
-    "id": "fix-todo-comment",
-    "content": "Implement user tile count display using existing API endpoints",
+    "id": "fix-logout-redirect",
+    "content": "Implement proper logout/disconnect handling to redirect users to login modal or welcome page",
+    "status": "completed",
+    "dependencies": ["analyze-auth-flow"]
+  },
+  {
+    "id": "add-auth-state-monitoring",
+    "content": "Add WebSocket disconnect monitoring and automatic redirect to login when user gets disconnected",
+    "status": "completed",
+    "dependencies": ["fix-logout-redirect"]
+  },
+  {
+    "id": "investigate-websocket-error",
+    "content": "Investigate WebSocket connection failure when opening canvas viewer",
     "status": "completed",
     "dependencies": []
   },
   {
-    "id": "update-package-json",
-    "content": "Add proper test script to frontend package.json",
+    "id": "fix-websocket-authentication",
+    "content": "Fix WebSocket authentication by correcting async/sync function mismatch",
     "status": "completed",
+    "dependencies": ["investigate-websocket-error"]
+  },
+  {
+    "id": "analyze-tile-editor-neighbors",
+    "content": "Investigate why neighbor tiles don't show up when opening tile editor for non-existent tiles",
+    "status": "pending",
     "dependencies": []
   },
   {
-    "id": "document-changes",
-    "content": "Update CHANGELOG.md with all simple fixes made",
-    "status": "completed",
-    "dependencies": ["fix-todo-comment", "update-package-json"]
+    "id": "fix-neighbor-tile-display",
+    "content": "Fix neighbor tile display in tile editor to show empty neighbor positions correctly",
+    "status": "pending",
+    "dependencies": ["analyze-tile-editor-neighbors"]
+  },
+  {
+    "id": "design-email-verification",
+    "content": "Design email verification system architecture including database schema changes",
+    "status": "pending",
+    "dependencies": []
+  },
+  {
+    "id": "implement-email-service",
+    "content": "Create email service for sending verification and password reset emails",
+    "status": "pending",
+    "dependencies": ["design-email-verification"]
+  },
+  {
+    "id": "add-email-verification-endpoints",
+    "content": "Add backend API endpoints for email verification and password reset",
+    "status": "pending",
+    "dependencies": ["implement-email-service"]
+  },
+  {
+    "id": "update-user-model",
+    "content": "Update user model to include email verification fields (is_verified, verification_token, etc.)",
+    "status": "pending",
+    "dependencies": ["design-email-verification"]
+  },
+  {
+    "id": "implement-password-reset",
+    "content": "Implement password reset functionality with email verification",
+    "status": "pending",
+    "dependencies": ["add-email-verification-endpoints", "update-user-model"]
+  },
+  {
+    "id": "add-captcha-support",
+    "content": "Add captcha support for registration and password reset forms",
+    "status": "pending",
+    "dependencies": ["implement-password-reset"]
+  },
+  {
+    "id": "update-frontend-auth-forms",
+    "content": "Update frontend login/register forms to include email verification and captcha",
+    "status": "pending",
+    "dependencies": ["add-captcha-support"]
+  },
+  {
+    "id": "test-auth-improvements",
+    "content": "Test all authentication improvements including logout redirect, email verification, and captcha",
+    "status": "pending",
+    "dependencies": ["update-frontend-auth-forms", "fix-neighbor-tile-display"]
+  },
+  {
+    "id": "update-documentation",
+    "content": "Update documentation and changelog with all authentication and tile editor improvements",
+    "status": "pending",
+    "dependencies": ["test-auth-improvements"]
   }
 ] 
