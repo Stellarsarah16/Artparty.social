@@ -344,6 +344,15 @@ export class ModalManager {
                 this.hideAllModals();
             }
         });
+
+        // Handle close buttons for new modals
+        document.getElementById('close-email-verification-modal')?.addEventListener('click', () => {
+            this.hideModal('email-verification');
+        });
+
+        document.getElementById('close-password-reset-modal')?.addEventListener('click', () => {
+            this.hideModal('password-reset');
+        });
     }
 
     /**

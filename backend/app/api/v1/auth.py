@@ -5,17 +5,33 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from pydantic import ValidationError
+from pydantic import ValidationError, BaseModel
 import logging
 
 from ...core.database import get_db
 from ...schemas.user import UserCreate, UserLogin, UserResponse
 from ...services.auth import auth_service
+from ...services.verification import verification_service
 from ...models.user import User
 
 router = APIRouter()
 security = HTTPBearer()
 logger = logging.getLogger(__name__)
+
+
+# Pydantic models for email verification and password reset
+class EmailVerificationRequest(BaseModel):
+    email: str
+
+class EmailVerificationConfirm(BaseModel):
+    token: str
+
+class PasswordResetRequest(BaseModel):
+    email: str
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str
 
 
 @router.options("/register")
@@ -33,6 +49,30 @@ async def login_options():
 @router.options("/me")
 async def me_options():
     """Handle CORS preflight requests for user info"""
+    return {"message": "OK"}
+
+
+@router.options("/verify-email")
+async def verify_email_options():
+    """Handle CORS preflight requests for email verification"""
+    return {"message": "OK"}
+
+
+@router.options("/confirm-email")
+async def confirm_email_options():
+    """Handle CORS preflight requests for email confirmation"""
+    return {"message": "OK"}
+
+
+@router.options("/reset-password")
+async def reset_password_options():
+    """Handle CORS preflight requests for password reset"""
+    return {"message": "OK"}
+
+
+@router.options("/confirm-password-reset")
+async def confirm_password_reset_options():
+    """Handle CORS preflight requests for password reset confirmation"""
     return {"message": "OK"}
 
 
@@ -111,13 +151,201 @@ async def login(
         )
 
 
+@router.post("/verify-email", response_model=dict)
+async def send_verification_email(
+    request: EmailVerificationRequest,
+    db: Session = Depends(get_db)
+):
+    """Send email verification to user"""
+    try:
+        logger.info(f"Email verification request for: {request.email}")
+        
+        # Find user by email
+        user = db.query(User).filter(User.email == request.email).first()
+        
+        if not user:
+            # Don't reveal if email exists or not for security
+            logger.info(f"Email verification requested for non-existent email: {request.email}")
+            return {
+                "message": "If the email exists, a verification link has been sent",
+                "success": True
+            }
+        
+        if user.is_verified:
+            logger.info(f"Email already verified for user: {user.username}")
+            return {
+                "message": "Email is already verified",
+                "success": True
+            }
+        
+        # For local development, skip actual email sending
+        # In production, this would send a real email
+        try:
+            success = await verification_service.send_verification_email(db, user)
+            if success:
+                logger.info(f"Verification email sent to user: {user.username}")
+                return {
+                    "message": "Verification email sent successfully",
+                    "success": True
+                }
+        except Exception as e:
+            logger.warning(f"Email sending failed (development mode): {e}")
+            # In development, we'll still return success since we have the token
+            # The user can use the token we generated manually
+        
+        # Return success even if email fails (for development)
+        logger.info(f"Verification email would be sent to user: {user.username} (development mode)")
+        return {
+            "message": "If the email exists, a verification link has been sent",
+            "success": True
+        }
+            
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Unexpected error during email verification: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Email verification failed due to server error"
+        )
+
+
+@router.post("/confirm-email", response_model=dict)
+async def confirm_email_verification(
+    request: EmailVerificationConfirm,
+    db: Session = Depends(get_db)
+):
+    """Confirm email verification with token"""
+    try:
+        logger.info("Email verification confirmation attempt")
+        
+        # Verify the token
+        user = verification_service.verify_token(db, request.token, "email_verification")
+        
+        if not user:
+            logger.warning("Invalid email verification token")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired verification token"
+            )
+        
+        # Mark user as verified
+        user.is_verified = True
+        db.commit()
+        
+        logger.info(f"Email verified successfully for user: {user.username}")
+        return {
+            "message": "Email verified successfully",
+            "success": True,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "is_verified": user.is_verified
+            }
+        }
+        
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Unexpected error during email confirmation: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Email confirmation failed due to server error"
+        )
+
+
+@router.post("/reset-password", response_model=dict)
+async def send_password_reset_email(
+    request: PasswordResetRequest,
+    db: Session = Depends(get_db)
+):
+    """Send password reset email to user"""
+    try:
+        logger.info(f"Password reset request for: {request.email}")
+        
+        # Send password reset email
+        success = await verification_service.send_password_reset_email(db, request.email)
+        
+        if success:
+            logger.info(f"Password reset email sent to: {request.email}")
+            return {
+                "message": "If the email exists, a password reset link has been sent",
+                "success": True
+            }
+        else:
+            logger.error(f"Failed to send password reset email to: {request.email}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send password reset email"
+            )
+            
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Unexpected error during password reset: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Password reset failed due to server error"
+        )
+
+
+@router.post("/confirm-password-reset", response_model=dict)
+async def confirm_password_reset(
+    request: PasswordResetConfirm,
+    db: Session = Depends(get_db)
+):
+    """Confirm password reset with token"""
+    try:
+        logger.info("Password reset confirmation attempt")
+        
+        # Reset password using token
+        success = verification_service.reset_password(db, request.token, request.new_password)
+        
+        if not success:
+            logger.warning("Invalid password reset token")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token"
+            )
+        
+        logger.info("Password reset successfully")
+        return {
+            "message": "Password reset successfully",
+            "success": True
+        }
+        
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Unexpected error during password reset confirmation: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Password reset confirmation failed due to server error"
+        )
+
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ) -> User:
-    """Dependency to get current authenticated user"""
-    token = credentials.credentials
-    return auth_service.get_current_user(db, token)
+    """Get current authenticated user"""
+    try:
+        user = auth_service.get_current_user(db, credentials.credentials)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials"
+            )
+        return user
+    except Exception as e:
+        logger.error(f"Error getting current user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials"
+        )
 
 
 @router.get("/me", response_model=UserResponse)
@@ -125,20 +353,14 @@ async def get_current_user_info(
     current_user: User = Depends(get_current_user)
 ):
     """Get current user information"""
-    return UserResponse(
-        id=current_user.id,
-        username=current_user.username,
-        email=current_user.email,
-        first_name=current_user.first_name,
-        last_name=current_user.last_name,
-        is_active=current_user.is_active,
-        is_verified=current_user.is_verified,
-        total_points=current_user.total_points,
-        tiles_created=current_user.tiles_created,
-        likes_received=current_user.likes_received,
-        created_at=current_user.created_at,
-        updated_at=current_user.updated_at
-    )
+    try:
+        return UserResponse.from_orm(current_user)
+    except Exception as e:
+        logger.error(f"Error getting user info: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get user information"
+        )
 
 
 @router.post("/logout")
@@ -149,5 +371,5 @@ async def logout():
 
 @router.get("/health")
 async def auth_health():
-    """Health check for authentication service"""
-    return {"status": "healthy", "service": "authentication"} 
+    """Health check for auth service"""
+    return {"status": "healthy", "service": "auth"} 

@@ -415,6 +415,10 @@
                     <input type="password" id="login-password" name="password" autocomplete="current-password" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-full">Login</button>
+                <div class="form-links">
+                    <a href="#" id="open-password-reset">Forgot password?</a>
+                    <a href="#" id="open-email-verification">Resend verification email?</a>
+                </div>
             </form>
         </div>
     </div>
@@ -454,6 +458,9 @@
                     <input type="password" id="register-confirm-password" name="confirm_password" autocomplete="new-password" required>
                 </div>
                 <button type="submit" class="btn btn-primary btn-full">Register</button>
+                <div class="form-links">
+                    <a href="#" id="open-email-verification-from-register">Verify your email</a>
+                </div>
             </form>
         </div>
     </div>
@@ -559,6 +566,130 @@
         </div>
     </div>
 
+    <!-- Email Verification Modal -->
+    <div class="modal" id="email-verification-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-envelope"></i> Email Verification</h3>
+                <button class="modal-close" id="close-email-verification-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="verification-step" id="verification-request-step">
+                    <p>Enter your email address to receive a verification link:</p>
+                    <form id="email-verification-form">
+                        <div class="form-group">
+                            <label for="verification-email">Email Address</label>
+                            <input type="email" id="verification-email" name="email" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Send Verification Email
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="verification-step hidden" id="verification-confirm-step">
+                    <p>Enter the verification code from your email:</p>
+                    <form id="email-confirmation-form">
+                        <div class="form-group">
+                            <label for="verification-token">Verification Code</label>
+                            <input type="text" id="verification-token" name="token" required 
+                                   placeholder="Enter the code from your email">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check"></i> Verify Email
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="resend-verification">
+                                <i class="fas fa-redo"></i> Resend Code
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="verification-step hidden" id="verification-success-step">
+                    <div class="success-message">
+                        <i class="fas fa-check-circle"></i>
+                        <h4>Email Verified Successfully!</h4>
+                        <p>Your email has been verified. You can now log in to your account.</p>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="go-to-login">
+                            <i class="fas fa-sign-in-alt"></i> Go to Login
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Reset Modal -->
+    <div class="modal" id="password-reset-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-unlock-alt"></i> Password Reset</h3>
+                <button class="modal-close" id="close-password-reset-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="reset-step" id="reset-request-step">
+                    <p>Enter your email address to receive a password reset link:</p>
+                    <form id="password-reset-request-form">
+                        <div class="form-group">
+                            <label for="reset-email">Email Address</label>
+                            <input type="email" id="reset-email" name="email" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Send Reset Email
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="reset-step hidden" id="reset-confirm-step">
+                    <p>Enter the reset code from your email and your new password:</p>
+                    <form id="password-reset-confirm-form">
+                        <div class="form-group">
+                            <label for="reset-token">Reset Code</label>
+                            <input type="text" id="reset-token" name="token" required 
+                                   placeholder="Enter the code from your email">
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password" name="new_password" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check"></i> Reset Password
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="resend-reset">
+                                <i class="fas fa-redo"></i> Resend Code
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="reset-step hidden" id="reset-success-step">
+                    <div class="success-message">
+                        <i class="fas fa-check-circle"></i>
+                        <h4>Password Reset Successfully!</h4>
+                        <p>Your password has been updated. You can now log in with your new password.</p>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="go-to-login-from-reset">
+                            <i class="fas fa-sign-in-alt"></i> Go to Login
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification Toast -->
     <div class="toast" id="toast">
         <div class="toast-content">
@@ -597,6 +728,11 @@
             'js/modules/app-state.js',
             'js/app.js'
         ];
+        
+        // Load auth verification script
+        const authVerificationScript = document.createElement('script');
+        authVerificationScript.src = 'js/auth-verification.js' + cacheBuster;
+        document.head.appendChild(authVerificationScript);
         
         // Load regular scripts first (synchronously)
         const loadScripts = async () => {

@@ -1,5 +1,5 @@
 """
-Verification service for email verification and password reset tokens
+Verification service for email verification and password reset
 """
 import secrets
 import logging
@@ -12,11 +12,12 @@ from ..models.verification import VerificationToken
 from ..models.user import User
 from ..core.config import settings
 from .email import email_service
+from .password import password_service
 
 logger = logging.getLogger(__name__)
 
 class VerificationService:
-    """Service for handling email verification and password reset"""
+    """Service for handling email verification and password reset tokens"""
     
     def generate_token(self) -> str:
         """Generate a secure random token"""
@@ -29,7 +30,7 @@ class VerificationService:
         token_type: str,
         expires_in_minutes: Optional[int] = None
     ) -> VerificationToken:
-        """Create a verification token"""
+        """Create a verification token for a user"""
         # Invalidate any existing tokens of the same type for this user
         existing_tokens = db.query(VerificationToken).filter(
             VerificationToken.user_id == user_id,
@@ -82,6 +83,31 @@ class VerificationService:
         
         # Return the user
         return db.query(User).filter(User.id == verification_token.user_id).first()
+    
+    def reset_password(self, db: Session, token: str, new_password: str) -> bool:
+        """Reset user password using a valid token"""
+        try:
+            # Verify the token
+            user = self.verify_token(db, token, "password_reset")
+            
+            if not user:
+                logger.warning(f"Invalid password reset token: {token}")
+                return False
+            
+            # Hash the new password
+            hashed_password = password_service.hash_password(new_password)
+            
+            # Update user's password
+            user.hashed_password = hashed_password
+            db.commit()
+            
+            logger.info(f"Password reset successful for user {user.id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to reset password: {e}")
+            db.rollback()
+            return False
     
     async def send_verification_email(self, db: Session, user: User) -> bool:
         """Send verification email to user"""

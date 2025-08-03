@@ -1,7 +1,7 @@
 """Add verification tokens table
 
-Revision ID: add_verification_tokens
-Revises: [your_previous_revision]
+Revision ID: 001_add_verification_tokens
+Revises: 
 Create Date: 2024-01-03 10:00:00.000000
 
 """
@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = 'add_verification_tokens'
-down_revision = None  # Update this to your last migration
+revision = '001_add_verification_tokens'
+down_revision = None
 branch_labels = None
 depends_on = None
 

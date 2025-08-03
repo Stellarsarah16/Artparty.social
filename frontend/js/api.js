@@ -511,6 +511,24 @@ class AuthAPI {
     async getUserStats() {
         return await this.client.get(API_CONFIG.ENDPOINTS.USER_STATS);
     }
+    
+    // Email verification methods
+    async sendVerificationEmail(email) {
+        return await this.client.post('/api/v1/auth/verify-email', { email });
+    }
+    
+    async confirmEmailVerification(token) {
+        return await this.client.post('/api/v1/auth/confirm-email', { token });
+    }
+    
+    // Password reset methods
+    async sendPasswordResetEmail(email) {
+        return await this.client.post('/api/v1/auth/reset-password', { email });
+    }
+    
+    async confirmPasswordReset(token, new_password) {
+        return await this.client.post('/api/v1/auth/confirm-password-reset', { token, new_password });
+    }
 }
 
 class CanvasAPI {
@@ -661,7 +679,13 @@ const API = {
         updateProfile: (data) => authAPI.updateProfile(data),
         updatePassword: (data) => authAPI.updatePassword(data),
         deleteAccount: () => authAPI.deleteAccount(),
-        getUserStats: () => authAPI.getUserStats()
+        getUserStats: () => authAPI.getUserStats(),
+        // Email verification
+        sendVerificationEmail: (email) => authAPI.sendVerificationEmail(email),
+        confirmEmailVerification: (token) => authAPI.confirmEmailVerification(token),
+        // Password reset
+        sendPasswordResetEmail: (email) => authAPI.sendPasswordResetEmail(email),
+        confirmPasswordReset: (token, new_password) => authAPI.confirmPasswordReset(token, new_password)
     },
     
     // Canvas management
