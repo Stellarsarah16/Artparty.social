@@ -328,20 +328,18 @@ export class TileEditorManager {
             let pixelDataToSend = pixelData;
             if (Array.isArray(pixelData)) {
                 pixelDataToSend = JSON.stringify(pixelData);
-                console.log('💾 Converted pixel data to JSON string:', pixelDataToSend);
             }
+            console.log('💾 Converted pixel data to JSON string:', pixelDataToSend);
             
-            if (!this.apiService) {
-                throw new Error('API service not available');
-            }
-            
-            let result;
-            
-            // Check if this is a new tile (no ID) or existing tile
-            if (!tileId || tileId === 'undefined' || tileId === undefined) {
+            // Determine if this is a new tile or existing tile
+            if (!tileId || tileId === 'undefined') {
                 console.log('💾 Creating new tile...');
                 
-                // Prepare data for new tile creation
+                // Validate that we have a canvas_id
+                if (!this.currentTile || !this.currentTile.canvas_id) {
+                    throw new Error('Missing canvas_id for new tile');
+                }
+                
                 const createData = {
                     canvas_id: this.currentTile.canvas_id,
                     x: this.currentTile.x,
@@ -350,38 +348,46 @@ export class TileEditorManager {
                 };
                 
                 console.log('💾 Creating tile with data:', createData);
-                result = await this.apiService.createTile(createData);
-                console.log('💾 New tile created:', result);
+                
+                // Use the correct method name: 'create' instead of 'createTile'
+                const newTile = await this.apiService.create(createData);
+                console.log('✅ New tile created successfully:', newTile);
                 
                 // Update the current tile with the new ID
-                if (result && result.id) {
-                    this.currentTile.id = result.id;
-                    console.log('💾 Updated current tile with new ID:', result.id);
-                }
+                this.currentTile = newTile;
+                
+                // Clear undo/redo stacks
+                this.undoStack = [];
+                this.redoStack = [];
+                
+                // Show success message
+                window.UIManager.showToast('Tile created successfully!', 'success');
+                
+                // Emit event for other components
+                this.eventManager.emit('tileCreated', newTile);
                 
             } else {
                 console.log('💾 Updating existing tile...');
                 
-                // Prepare the update data
                 const updateData = {
                     pixel_data: pixelDataToSend
                 };
                 
-                console.log('💾 Sending update data:', updateData);
-                result = await this.apiService.update(tileId, updateData);
-                console.log('💾 Tile updated:', result);
-            }
-            
-            if (window.UIManager) {
+                console.log('💾 Updating tile with data:', updateData);
+                
+                const updatedTile = await this.apiService.update(tileId, updateData);
+                console.log('✅ Tile updated successfully:', updatedTile);
+                
+                // Clear undo/redo stacks
+                this.undoStack = [];
+                this.redoStack = [];
+                
+                // Show success message
                 window.UIManager.showToast('Tile saved successfully!', 'success');
+                
+                // Emit event for other components
+                this.eventManager.emit('tileUpdated', updatedTile);
             }
-            
-            // Clear undo/redo stacks after save
-            this.undoStack = [];
-            this.redoStack = [];
-            this.updateUndoRedoButtons();
-            
-            console.log('✅ Tile save completed successfully');
             
         } catch (error) {
             console.error('❌ Failed to save tile:', error);
@@ -391,25 +397,12 @@ export class TileEditorManager {
                 apiService: !!this.apiService,
                 pixelEditor: !!window.PixelEditor,
                 errorType: error.constructor.name,
-                errorResponse: error.response || error,
                 tileId: tileId,
                 currentTile: this.currentTile
             });
             
-            // Try to get more details about the error
-            if (error.response) {
-                try {
-                    const errorText = await error.response.text();
-                    console.error('❌ Error response body:', errorText);
-                } catch (e) {
-                    console.error('❌ Could not read error response body');
-                }
-            }
-            
-            if (window.UIManager) {
-                const errorMessage = error.message || 'Unknown error occurred';
-                window.UIManager.showToast('Failed to save tile: ' + errorMessage, 'error');
-            }
+            // Show error message
+            window.UIManager.showToast(`Failed to save tile: ${error.message}`, 'error');
         }
     }
 
