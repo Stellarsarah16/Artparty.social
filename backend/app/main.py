@@ -22,24 +22,26 @@ class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
     """Middleware to ensure HTTPS redirects in production"""
     
     async def dispatch(self, request: Request, call_next):
-        # Check if this is a redirect response and we're behind a proxy
+        # Check if we're behind a proxy and already using HTTPS
+        forwarded_proto = request.headers.get('x-forwarded-proto')
+        forwarded_ssl = request.headers.get('x-forwarded-ssl')
+        
+        # If we're already behind a proxy with HTTPS, don't do any redirects
+        if forwarded_proto == 'https' or forwarded_ssl == 'on':
+            return await call_next(request)
+        
+        # Only do HTTPS redirects for direct HTTP requests (not behind proxy)
         response = await call_next(request)
         
         # Only modify redirects (status codes 301, 302, 307, 308)
         if response.status_code in [301, 302, 307, 308] and hasattr(response, 'headers'):
-            # Check if the original request was HTTPS
-            forwarded_proto = request.headers.get('x-forwarded-proto')
-            forwarded_ssl = request.headers.get('x-forwarded-ssl')
-            
-            # If we're behind a proxy and the original request was HTTPS
-            if forwarded_proto == 'https' or forwarded_ssl == 'on':
-                # Get the Location header (the redirect URL)
-                location = response.headers.get('location')
-                if location and location.startswith('http://'):
-                    # Convert HTTP to HTTPS
-                    https_location = location.replace('http://', 'https://')
-                    response.headers['location'] = https_location
-                    logger.info(f"HTTPS Redirect: {location} -> {https_location}")
+            # Get the Location header (the redirect URL)
+            location = response.headers.get('location')
+            if location and location.startswith('http://'):
+                # Convert HTTP to HTTPS
+                https_location = location.replace('http://', 'https://')
+                response.headers['location'] = https_location
+                logger.info(f"HTTPS Redirect: {location} -> {https_location}")
         
         return response
 
