@@ -28,4 +28,5 @@ class User(Base):
     
     # Relationships
     tiles = relationship("Tile", back_populates="creator")
-    likes_given = relationship("Like", back_populates="user") 
+    likes_given = relationship("Like", back_populates="user")
+    verification_tokens = relationship("VerificationToken", back_populates="user") 

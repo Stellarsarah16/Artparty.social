@@ -167,6 +167,25 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
 
+    # Email settings
+    MAIL_USERNAME: str = "your-email@gmail.com"
+    MAIL_PASSWORD: str = "your-app-password"
+    MAIL_FROM: str = "noreply@artparty.social"
+    MAIL_PORT: int = 587
+    MAIL_SERVER: str = "smtp.gmail.com"
+    MAIL_STARTTLS: bool = True
+    MAIL_SSL_TLS: bool = False
+    
+    # Frontend URL for email links
+    FRONTEND_URL: str = "https://artparty.social"
+    
+    # App name for emails
+    APP_NAME: str = "ArtParty Social"
+    
+    # Token expiration times
+    VERIFICATION_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 60  # 1 hour
+
 
 # Create settings instance
 settings = Settings() 
