@@ -19,10 +19,15 @@ logger = logging.getLogger(__name__)
 def get_user_from_token(token: str, db: Session) -> User:
     """Get user from JWT token for WebSocket authentication"""
     try:
+        logger.info(f"Attempting to authenticate WebSocket token: {token[:20]}...")
         user = auth_service.get_current_user(db, token)
+        logger.info(f"WebSocket authentication successful for user: {user.username}")
         return user
+    except HTTPException as e:
+        logger.error(f"WebSocket authentication HTTP error: {e.detail}")
+        raise e
     except Exception as e:
-        logger.error(f"WebSocket authentication failed: {e}")
+        logger.error(f"WebSocket authentication failed with exception: {type(e).__name__}: {str(e)}")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 
@@ -46,7 +51,12 @@ async def websocket_canvas_endpoint(
     user = None
     
     try:
-        # Authenticate user (this is a sync function, no need for await)
+        logger.info(f"WebSocket connection attempt for canvas {canvas_id}")
+        
+        # Accept the WebSocket connection first
+        await websocket.accept()
+        
+        # Authenticate user
         user = get_user_from_token(token, db)
         
         # Validate canvas exists
@@ -56,6 +66,7 @@ async def websocket_canvas_endpoint(
         ).first()
         
         if not canvas:
+            logger.warning(f"Canvas {canvas_id} not found or inactive")
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Canvas not found")
             return
         
@@ -66,6 +77,7 @@ async def websocket_canvas_endpoint(
         }
         
         await connection_manager.connect(websocket, canvas_id, user.id, user_info)
+        logger.info(f"User {user.username} connected to canvas {canvas_id}")
         
         try:
             # Listen for incoming messages (optional - for future features like chat)
@@ -82,17 +94,19 @@ async def websocket_canvas_endpoint(
         except WebSocketDisconnect:
             logger.info(f"User {user.id} disconnected from canvas {canvas_id}")
         
-    except HTTPException:
+    except HTTPException as e:
+        logger.error(f"WebSocket HTTP error: {e.detail}")
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Authentication failed")
         return
     except Exception as e:
-        logger.error(f"WebSocket error: {e}")
+        logger.error(f"WebSocket error: {type(e).__name__}: {str(e)}")
         await websocket.close(code=status.WS_1011_INTERNAL_ERROR, reason="Internal server error")
     
     finally:
         # Clean up connection
         if user:
             await connection_manager.disconnect(canvas_id, user.id)
+            logger.info(f"User {user.username} disconnected from canvas {canvas_id}")
 
 
 async def handle_websocket_message(canvas_id: int, user_id: int, message: dict, db: Session):
@@ -100,53 +114,21 @@ async def handle_websocket_message(canvas_id: int, user_id: int, message: dict, 
     message_type = message.get("type")
     
     if message_type == "ping":
-        # Respond to ping with pong
-        await connection_manager.send_to_user(canvas_id, user_id, {
-            "type": "pong",
-            "timestamp": connection_manager._get_timestamp()
-        })
-    
-    elif message_type == "request_canvas_state":
-        # Send current canvas state
-        canvas_users = []
-        for uid in connection_manager.canvas_users.get(canvas_id, set()):
-            if uid in connection_manager.user_info:
-                canvas_users.append({
-                    "user_id": uid,
-                    "username": connection_manager.user_info[uid]["username"],
-                    "display_name": connection_manager.user_info[uid].get("display_name")
-                })
-        
-        await connection_manager.send_to_user(canvas_id, user_id, {
-            "type": "canvas_state",
-            "active_users": canvas_users,
-            "user_count": len(canvas_users),
-            "timestamp": connection_manager._get_timestamp()
-        })
-    
-    elif message_type == "typing_indicator":
-        # Broadcast typing indicator to other users (for future chat feature)
-        position = message.get("position")  # {"x": int, "y": int}
-        if position:
-            await connection_manager.broadcast_to_canvas(canvas_id, {
-                "type": "user_typing",
-                "user_id": user_id,
-                "username": connection_manager.user_info.get(user_id, {}).get("username", "unknown"),
-                "position": position,
-                "timestamp": connection_manager._get_timestamp()
-            }, exclude_user=user_id)
-    
+        # Handle ping messages
+        pass
+    elif message_type == "chat":
+        # Handle chat messages (future feature)
+        pass
     else:
-        logger.warning(f"Unknown message type '{message_type}' from user {user_id}")
+        logger.warning(f"Unknown message type: {message_type}")
 
 
 @router.get("/stats")
 async def get_websocket_stats():
     """Get WebSocket connection statistics"""
     return {
-        "total_connections": connection_manager.get_total_connections(),
-        "active_canvases": len(connection_manager.canvas_connections),
-        "canvas_details": connection_manager.get_canvas_list()
+        "total_connections": len(connection_manager.active_connections),
+        "canvas_connections": connection_manager.get_canvas_stats()
     }
 
 
@@ -156,16 +138,6 @@ async def admin_broadcast(
     message: dict,
     db: Session = Depends(get_db)
 ):
-    """
-    Admin endpoint to broadcast messages to all users on a canvas
-    (Future feature - requires admin authentication)
-    """
-    # TODO: Add admin authentication
-    
-    await connection_manager.broadcast_to_canvas(canvas_id, {
-        "type": "admin_message",
-        "message": message,
-        "timestamp": connection_manager._get_timestamp()
-    })
-    
-    return {"message": f"Broadcasted to canvas {canvas_id}", "user_count": connection_manager.get_canvas_user_count(canvas_id)} 
+    """Admin endpoint to broadcast messages to a canvas"""
+    await connection_manager.broadcast_to_canvas(canvas_id, message)
+    return {"message": "Broadcast sent"} 

@@ -97,20 +97,20 @@ export class ModalManager {
                 <div class="modal-body">
                     <form id="canvas-settings-form">
                         <div class="form-group">
-                            <label for="canvas-name">Canvas Name</label>
-                            <input type="text" id="canvas-name" name="name" required>
+                            <label for="settings-canvas-name">Canvas Name</label>
+                            <input type="text" id="settings-canvas-name" name="name" required>
                         </div>
                         <div class="form-group">
-                            <label for="canvas-description">Description</label>
-                            <textarea id="canvas-description" name="description" rows="3"></textarea>
+                            <label for="settings-canvas-description">Description</label>
+                            <textarea id="settings-canvas-description" name="description" rows="3"></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="max-tiles-per-user">Max Tiles per User</label>
-                            <input type="number" id="max-tiles-per-user" name="max_tiles_per_user" min="1" max="100" value="10">
+                            <label for="settings-max-tiles-per-user">Max Tiles per User</label>
+                            <input type="number" id="settings-max-tiles-per-user" name="max_tiles_per_user" min="1" max="100" value="10">
                         </div>
                         <div class="form-group">
-                            <label for="palette-type">Color Palette</label>
-                            <select id="palette-type" name="palette_type" required>
+                            <label for="settings-palette-type">Color Palette</label>
+                            <select id="settings-palette-type" name="palette_type" required>
                                 <option value="classic">Classic - Basic 8-color pixel art</option>
                                 <option value="earth">Earth Tones - Natural browns and tans</option>
                                 <option value="pastel">Pastel - Soft, light colors</option>
@@ -124,8 +124,8 @@ export class ModalManager {
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="collaboration-mode">Collaboration Mode</label>
-                            <select id="collaboration-mode" name="collaboration_mode" required>
+                            <label for="settings-collaboration-mode">Collaboration Mode</label>
+                            <select id="settings-collaboration-mode" name="collaboration_mode" required>
                                 <option value="free">Free - Anyone can edit</option>
                                 <option value="tile-lock">Tile Lock - Lock tiles while editing</option>
                                 <option value="area-lock">Area Lock - Lock areas while editing</option>
@@ -134,7 +134,7 @@ export class ModalManager {
                         </div>
                         <div class="form-group">
                             <label>
-                                <input type="checkbox" id="is-public" name="is_public" checked>
+                                <input type="checkbox" id="settings-is-public" name="is_public" checked>
                                 Make this canvas public
                             </label>
                         </div>
@@ -184,13 +184,13 @@ export class ModalManager {
             const canvas = await window.API.canvas.get(canvasId);
             console.log('🔧 Canvas data received:', canvas);
             
-            // Check if form elements exist
-            const nameField = document.getElementById('canvas-name');
-            const descriptionField = document.getElementById('canvas-description');
-            const maxTilesField = document.getElementById('max-tiles-per-user');
-            const paletteField = document.getElementById('palette-type');
-            const collaborationField = document.getElementById('collaboration-mode');
-            const isPublicField = document.getElementById('is-public');
+            // Check if form elements exist (using new unique IDs)
+            const nameField = document.getElementById('settings-canvas-name');
+            const descriptionField = document.getElementById('settings-canvas-description');
+            const maxTilesField = document.getElementById('settings-max-tiles-per-user');
+            const paletteField = document.getElementById('settings-palette-type');
+            const collaborationField = document.getElementById('settings-collaboration-mode');
+            const isPublicField = document.getElementById('settings-is-public');
             
             console.log('🔧 Form elements found:', {
                 nameField: !!nameField,
@@ -265,12 +265,12 @@ export class ModalManager {
     async saveCanvasSettings(canvasId) {
         try {
             const settings = {
-                name: document.getElementById('canvas-name').value,
-                description: document.getElementById('canvas-description').value,
-                max_tiles_per_user: parseInt(document.getElementById('max-tiles-per-user').value),
-                palette_type: document.getElementById('palette-type').value,
-                collaboration_mode: document.getElementById('collaboration-mode').value,
-                is_public: document.getElementById('is-public').checked
+                name: document.getElementById('settings-canvas-name').value,
+                description: document.getElementById('settings-canvas-description').value,
+                max_tiles_per_user: parseInt(document.getElementById('settings-max-tiles-per-user').value),
+                palette_type: document.getElementById('settings-palette-type').value,
+                collaboration_mode: document.getElementById('settings-collaboration-mode').value,
+                is_public: document.getElementById('settings-is-public').checked
             };
             
             await window.API.canvas.update(canvasId, settings);
