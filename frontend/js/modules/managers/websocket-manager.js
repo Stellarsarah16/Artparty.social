@@ -59,8 +59,19 @@ export class WebSocketManager {
             }, 1000 * this.reconnectAttempts); // Exponential backoff
         } else {
             console.error('Max WebSocket reconnection attempts reached');
-            if (window.UIManager) {
-                window.UIManager.showToast('Connection lost. Please refresh the page.', 'error');
+            
+            // Check if this is an authentication issue
+            const token = window.CONFIG_UTILS.getAuthToken();
+            if (!token) {
+                // No token - redirect to login
+                if (window.authManager) {
+                    window.authManager.handleAuthFailure('Connection lost - please log in again');
+                }
+            } else {
+                // Has token but connection failed - show generic message
+                if (window.UIManager) {
+                    window.UIManager.showToast('Connection lost. Please refresh the page.', 'error');
+                }
             }
         }
     }

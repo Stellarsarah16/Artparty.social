@@ -10,6 +10,7 @@ export class AuthManager {
         this.apiService = apiService;
         this.eventManager = eventManager;
         this.setupFormHandlers();
+        this.setupAuthStateMonitoring();
     }
 
     /**
@@ -33,6 +34,31 @@ export class AuthManager {
         if (createCanvasForm) {
             createCanvasForm.addEventListener('submit', (e) => this.handleCreateCanvasSubmit(e));
         }
+    }
+
+    /**
+     * Setup authentication state monitoring
+     */
+    setupAuthStateMonitoring() {
+        // Listen for token verification events
+        if (this.eventManager) {
+            this.eventManager.on('token:invalid', () => {
+                this.handleAuthFailure('Session expired');
+            });
+            
+            this.eventManager.on('token:error', (error) => {
+                this.handleAuthFailure('Authentication error');
+            });
+        }
+
+        // Monitor network status changes
+        window.addEventListener('online', () => {
+            this.handleNetworkRestored();
+        });
+
+        window.addEventListener('offline', () => {
+            this.handleNetworkLost();
+        });
     }
 
     /**
@@ -142,25 +168,17 @@ export class AuthManager {
             description: formData.get('description'),
             width: parseInt(formData.get('width')),
             height: parseInt(formData.get('height')),
-            max_tiles_per_user: parseInt(formData.get('max_tiles_per_user')),
-            palette_type: formData.get('palette_type'),
-            collaboration_mode: formData.get('collaboration_mode'),
-            is_public: formData.get('is_public') === 'on'
+            palette_type: formData.get('palette_type')
         };
 
         try {
             console.log('🔄 Creating canvas...');
             
-            const response = await window.API.canvas.create(canvasData);
+            const response = await this.apiService.createCanvas(canvasData);
             
             // Hide modal
             if (window.modalManager) {
                 window.modalManager.hideModal('create-canvas');
-            }
-            
-            // Show success message
-            if (window.UIManager) {
-                window.UIManager.showToast('Canvas created successfully!', 'success');
             }
             
             // Refresh canvas list
@@ -189,6 +207,11 @@ export class AuthManager {
         // Clear user data
         appState.clear();
         
+        // Close all WebSocket connections
+        if (window.webSocketManager) {
+            window.webSocketManager.closeAll();
+        }
+        
         // Update UI
         this.updateNavigation();
         
@@ -198,6 +221,86 @@ export class AuthManager {
         }
         
         console.log('✅ Logout successful');
+    }
+
+    /**
+     * Handle authentication failure (401, token expired, etc.)
+     */
+    handleAuthFailure(reason = 'Session expired') {
+        console.log('🔐 Authentication failure:', reason);
+        
+        // Clear user data
+        appState.clear();
+        
+        // Close all WebSocket connections
+        if (window.webSocketManager) {
+            window.webSocketManager.closeAll();
+        }
+        
+        // Update UI
+        this.updateNavigation();
+        
+        // Show login modal instead of just welcome page
+        if (window.navigationManager) {
+            window.navigationManager.showSection('welcome');
+            // Show login modal after a brief delay to ensure welcome page is loaded
+            setTimeout(() => {
+                if (window.modalManager) {
+                    window.modalManager.showModal('login');
+                }
+            }, 100);
+        }
+        
+        // Show user-friendly message
+        if (window.UIManager) {
+            window.UIManager.showToast(`${reason}. Please log in again.`, 'error');
+        }
+        
+        console.log('✅ Auth failure handled - redirected to login');
+    }
+
+    /**
+     * Handle network restoration
+     */
+    handleNetworkRestored() {
+        console.log('✅ Network connection restored');
+        
+        // Verify token if user is logged in
+        const currentUser = appState.get('currentUser');
+        if (currentUser) {
+            this.verifyTokenOnNetworkRestore();
+        }
+    }
+
+    /**
+     * Handle network loss
+     */
+    handleNetworkLost() {
+        console.log(' Network connection lost');
+        
+        // Show warning but don't log out immediately
+        if (window.UIManager) {
+            window.UIManager.showToast('Connection lost. Some features may be unavailable.', 'warning');
+        }
+    }
+
+    /**
+     * Verify token when network is restored
+     */
+    async verifyTokenOnNetworkRestore() {
+        try {
+            const isValid = await this.apiService.verifyToken();
+            if (!isValid) {
+                this.handleAuthFailure('Session expired during connection loss');
+            } else {
+                if (window.UIManager) {
+                    window.UIManager.showToast('Connection restored', 'success');
+                }
+            }
+        } catch (error) {
+            console.error('Token verification failed on network restore:', error);
+            this.handleAuthFailure('Session verification failed');
+        }
     }
 
     /**

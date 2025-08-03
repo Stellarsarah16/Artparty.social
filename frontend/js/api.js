@@ -289,18 +289,23 @@ class APIClient {
      */
     async handleAPIError(error) {
         if (error.status === 401) {
-            // Unauthorized - redirect to login
+            // Unauthorized - redirect to login modal
             CONFIG_UTILS.removeAuthToken();
             CONFIG_UTILS.removeUserData();
             
-            // Update main app interface
-            if (window.ArtPartySocial) {
-                window.ArtPartySocial.showSection('welcome');
-                window.ArtPartySocial.updateNavigation();
-            }
-            
-            if (window.UIManager) {
-                window.UIManager.showToast('Session expired. Please log in again.', 'error');
+            // Use AuthManager to handle the redirect properly
+            if (window.authManager) {
+                window.authManager.handleAuthFailure('Session expired');
+            } else {
+                // Fallback to old behavior
+                if (window.ArtPartySocial) {
+                    window.ArtPartySocial.showSection('welcome');
+                    window.ArtPartySocial.updateNavigation();
+                }
+                
+                if (window.UIManager) {
+                    window.UIManager.showToast('Session expired. Please log in again.', 'error');
+                }
             }
         } else if (error.status === 403) {
             // Forbidden - show actual error message from server
