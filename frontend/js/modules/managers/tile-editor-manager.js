@@ -75,28 +75,64 @@ export class TileEditorManager {
                 // Initialize the pixel editor with the canvas
                 window.PixelEditor.init(canvas);
                 
-                // Load the tile's pixel data
-                if (tile.pixel_data) {
+                // FIXED: Always clear the pixel editor first to prevent data bleeding
+                window.PixelEditor.clearPixelData();
+                console.log('🧹 Cleared pixel editor to prevent data bleeding');
+                
+                // Load the tile's pixel data (only if it exists and is not empty)
+                if (tile.pixel_data && tile.pixel_data !== '[]' && tile.pixel_data !== 'null') {
                     console.log('🎨 Loading pixel data:', typeof tile.pixel_data, 'length:', tile.pixel_data.length);
                     
                     // Check if it's a JSON string that needs to be parsed
                     if (typeof tile.pixel_data === 'string') {
                         try {
                             const parsedData = JSON.parse(tile.pixel_data);
-                            window.PixelEditor.loadPixelData(parsedData);
-                            console.log('✅ Pixel data loaded from JSON string');
+                            
+                            // FIXED: Check if parsed data is actually empty
+                            if (parsedData && Array.isArray(parsedData) && parsedData.length > 0) {
+                                // Check if the data contains any non-white pixels
+                                const hasNonWhitePixels = parsedData.some(row => 
+                                    row && Array.isArray(row) && row.some(pixel => pixel && pixel !== 'white')
+                                );
+                                
+                                if (hasNonWhitePixels) {
+                                    window.PixelEditor.loadPixelData(parsedData);
+                                    console.log('✅ Pixel data loaded from JSON string');
+                                } else {
+                                    console.log('✅ Parsed data contains only white pixels, keeping empty canvas');
+                                }
+                            } else {
+                                console.log('✅ Parsed data is empty, keeping empty canvas');
+                            }
                         } catch (error) {
                             console.error('❌ Failed to parse pixel data JSON:', error);
                             console.log('✅ Starting with empty canvas due to parsing error');
                         }
                     } else {
                         // Assume it's already an array
-                        window.PixelEditor.loadPixelData(tile.pixel_data);
-                        console.log('✅ Pixel data loaded from array');
+                        if (Array.isArray(tile.pixel_data) && tile.pixel_data.length > 0) {
+                            // Check if the data contains any non-white pixels
+                            const hasNonWhitePixels = tile.pixel_data.some(row => 
+                                row && Array.isArray(row) && row.some(pixel => pixel && pixel !== 'white')
+                            );
+                            
+                            if (hasNonWhitePixels) {
+                                window.PixelEditor.loadPixelData(tile.pixel_data);
+                                console.log('✅ Pixel data loaded from array');
+                            } else {
+                                console.log('✅ Array data contains only white pixels, keeping empty canvas');
+                            }
+                        } else {
+                            console.log('✅ Array data is empty, keeping empty canvas');
+                        }
                     }
                 } else {
                     console.log('✅ No pixel data found, starting with empty canvas');
                 }
+                
+                // FIXED: Force a redraw to ensure the canvas is properly updated
+                window.PixelEditor.redraw();
+                
             } else {
                 console.error('❌ Pixel canvas element not found');
             }

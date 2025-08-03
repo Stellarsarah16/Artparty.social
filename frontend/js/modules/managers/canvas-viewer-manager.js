@@ -302,14 +302,27 @@ export class CanvasViewerManager {
             };
         }
         
-        // Settings button
+        // FIXED: Settings button - show for canvas owners
         const settingsBtn = document.getElementById('viewer-settings-btn');
         if (settingsBtn && this.currentCanvas) {
-            settingsBtn.onclick = () => {
-                if (window.modalManager) {
-                    window.modalManager.showCanvasSettingsModal(this.currentCanvas.id);
-                }
-            };
+            // Check if current user is the canvas owner
+            const currentUser = appState.get('currentUser');
+            const isOwner = currentUser && this.currentCanvas.creator_id === currentUser.id;
+            
+            if (isOwner) {
+                // Show the settings button for canvas owners
+                settingsBtn.style.display = 'inline-block';
+                settingsBtn.onclick = () => {
+                    if (window.modalManager) {
+                        window.modalManager.showCanvasSettingsModal(this.currentCanvas.id);
+                    }
+                };
+                console.log('✅ Settings button shown for canvas owner');
+            } else {
+                // Hide the settings button for non-owners
+                settingsBtn.style.display = 'none';
+                console.log('✅ Settings button hidden for non-owner');
+            }
         }
         
         // Zoom fit button
