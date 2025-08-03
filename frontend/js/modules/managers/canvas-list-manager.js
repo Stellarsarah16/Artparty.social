@@ -112,6 +112,10 @@ export class CanvasListManager {
                         <i class="fas fa-palette"></i>
                         <span>${canvas.palette_type || 'classic'}</span>
                     </div>
+                    <div class="info-item">
+                        <i class="fas fa-user-lock"></i>
+                        <span>Max ${canvas.max_tiles_per_user || 10} tiles/user</span>
+                    </div>
                 </div>
                 <div class="user-tiles-info">
                     <span class="user-tiles-count">Loading...</span>
@@ -127,52 +131,23 @@ export class CanvasListManager {
         // Add settings button event listener
         const settingsBtn = card.querySelector('.canvas-settings-btn');
         if (settingsBtn) {
-            settingsBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
+            settingsBtn.addEventListener('click', () => {
                 this.showCanvasSettingsModal(canvas.id);
             });
         }
 
-        // Add open canvas button event listener with debouncing
-        const openCanvasBtn = card.querySelector('.open-canvas-btn');
-        if (openCanvasBtn) {
-            let isOpening = false;
-            openCanvasBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                if (isOpening) {
-                    console.log('🔄 Canvas opening already in progress, ignoring click');
-                    return;
-                }
-                
-                isOpening = true;
-                openCanvasBtn.disabled = true;
-                openCanvasBtn.textContent = 'Opening...';
-                
-                try {
-                    const canvasData = JSON.parse(openCanvasBtn.dataset.canvas);
-                    console.log('🔄 Opening canvas:', canvasData.name);
-                    
-                    if (window.navigationManager) {
-                        await window.navigationManager.openCanvas(canvasData);
-                    } else {
-                        console.error('❌ Navigation manager not available');
-                    }
-                } catch (error) {
-                    console.error('❌ Error opening canvas:', error);
-                    if (window.UIManager) {
-                        window.UIManager.showToast('Failed to open canvas', 'error');
-                    }
-                } finally {
-                    isOpening = false;
-                    openCanvasBtn.disabled = false;
-                    openCanvasBtn.textContent = 'Open Canvas';
+        // Add open canvas button event listener
+        const openBtn = card.querySelector('.open-canvas-btn');
+        if (openBtn) {
+            openBtn.addEventListener('click', () => {
+                const canvasData = JSON.parse(openBtn.dataset.canvas);
+                if (window.canvasViewerManager) {
+                    window.canvasViewerManager.openCanvas(canvasData);
                 }
             });
         }
 
-        // Load user tile count
+        // Load user tile count for this canvas
         this.loadUserTileCountForCanvas(canvas.id, card);
 
         return card;

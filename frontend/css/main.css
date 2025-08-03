@@ -792,3 +792,47 @@ form.loading input {
         justify-content: center;
     }
 } 
+
+.viewer-title .canvas-info .palette-info {
+    color: #8B4513;
+    font-weight: 500;
+}
+
+.viewer-title .canvas-info .max-tiles-info {
+    color: #2E8B57;
+    font-weight: 500;
+}
+
+.viewer-title .canvas-info .description-info {
+    color: #4682B4;
+    font-style: italic;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Responsive adjustments for the new info items */
+@media (max-width: 1200px) {
+    .viewer-title .canvas-info {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .viewer-title .canvas-info .description-info {
+        max-width: 200px;
+    }
+}
+
+@media (max-width: 768px) {
+    .viewer-title .canvas-info {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+    
+    .viewer-title .canvas-info .description-info {
+        max-width: none;
+        white-space: normal;
+    }
+} 

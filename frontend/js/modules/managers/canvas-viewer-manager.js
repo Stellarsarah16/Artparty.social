@@ -64,6 +64,9 @@ export class CanvasViewerManager {
             canvasDimensions.textContent = `${canvas.width}x${canvas.height}`;
         }
         
+        // Add palette type and description to the header
+        this.updateCanvasHeaderInfo(canvasData);
+        
         // Update canvas stats
         await this.updateCanvasStats(canvas);
         
@@ -354,5 +357,37 @@ export class CanvasViewerManager {
         if (window.navigationManager) {
             window.navigationManager.showSection(sectionName);
         }
+    }
+
+    /**
+     * Update canvas header with additional info (palette type, description, max tiles)
+     */
+    updateCanvasHeaderInfo(canvasData) {
+        // Get or create the canvas info container
+        let canvasInfoContainer = document.querySelector('.viewer-title .canvas-info');
+        if (!canvasInfoContainer) {
+            canvasInfoContainer = document.createElement('div');
+            canvasInfoContainer.className = 'canvas-info';
+            const viewerTitle = document.querySelector('.viewer-title');
+            if (viewerTitle) {
+                viewerTitle.appendChild(canvasInfoContainer);
+            }
+        }
+        
+        // Clear existing content and add new info
+        canvasInfoContainer.innerHTML = `
+            <span id="viewer-canvas-users">0 users online</span>
+            <span id="viewer-canvas-dimensions">${canvasData.width}x${canvasData.height}</span>
+            <span id="viewer-canvas-palette" class="palette-info">
+                <i class="fas fa-palette"></i> ${canvasData.palette_type || 'classic'}
+            </span>
+            <span id="viewer-canvas-max-tiles" class="max-tiles-info">
+                <i class="fas fa-user-lock"></i> Max ${canvasData.max_tiles_per_user || 10} tiles/user
+            </span>
+            ${canvasData.description ? `<span id="viewer-canvas-description" class="description-info">
+                <i class="fas fa-info-circle"></i> ${canvasData.description}
+            </span>` : ''}
+            <span id="viewer-instructions">Click on a tile to edit it</span>
+        `;
     }
 } 

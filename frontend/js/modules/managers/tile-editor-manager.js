@@ -335,17 +335,42 @@ export class TileEditorManager {
                 throw new Error('API service not available');
             }
             
-            // Prepare the update data
-            const updateData = {
-                pixel_data: pixelDataToSend
-            };
+            let result;
             
-            console.log('💾 Sending update data:', updateData);
-            console.log('💾 Calling API service update...');
-            
-            const result = await this.apiService.update(tileId, updateData);
-            
-            console.log('💾 API call successful:', result);
+            // Check if this is a new tile (no ID) or existing tile
+            if (!tileId || tileId === 'undefined' || tileId === undefined) {
+                console.log('💾 Creating new tile...');
+                
+                // Prepare data for new tile creation
+                const createData = {
+                    canvas_id: this.currentTile.canvas_id,
+                    x: this.currentTile.x,
+                    y: this.currentTile.y,
+                    pixel_data: pixelDataToSend
+                };
+                
+                console.log('💾 Creating tile with data:', createData);
+                result = await this.apiService.createTile(createData);
+                console.log('💾 New tile created:', result);
+                
+                // Update the current tile with the new ID
+                if (result && result.id) {
+                    this.currentTile.id = result.id;
+                    console.log('💾 Updated current tile with new ID:', result.id);
+                }
+                
+            } else {
+                console.log('💾 Updating existing tile...');
+                
+                // Prepare the update data
+                const updateData = {
+                    pixel_data: pixelDataToSend
+                };
+                
+                console.log('💾 Sending update data:', updateData);
+                result = await this.apiService.update(tileId, updateData);
+                console.log('💾 Tile updated:', result);
+            }
             
             if (window.UIManager) {
                 window.UIManager.showToast('Tile saved successfully!', 'success');
@@ -366,7 +391,9 @@ export class TileEditorManager {
                 apiService: !!this.apiService,
                 pixelEditor: !!window.PixelEditor,
                 errorType: error.constructor.name,
-                errorResponse: error.response || error
+                errorResponse: error.response || error,
+                tileId: tileId,
+                currentTile: this.currentTile
             });
             
             // Try to get more details about the error
