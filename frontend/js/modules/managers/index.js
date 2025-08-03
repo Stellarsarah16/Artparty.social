@@ -44,7 +44,7 @@ export const createManagers = () => {
         canvasList: new CanvasListManager(window.API.canvas, window.API.tiles, eventManager),
         canvasViewer: new CanvasViewerManager(window.API.canvas, window.API.tiles, webSocketManager, eventManager),
         modal: new ModalManager(),
-        tileEditor: new TileEditorManager(window.API.tiles),
+        tileEditor: new TileEditorManager(window.API.tiles, eventManager), // FIXED: Added eventManager
         auth: new AuthManager(window.API.auth, eventManager)
     };
     

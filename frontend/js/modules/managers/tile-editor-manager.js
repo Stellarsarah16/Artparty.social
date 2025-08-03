@@ -4,8 +4,9 @@
  */
 
 export class TileEditorManager {
-    constructor(apiService) {
+    constructor(apiService, eventManager = null) {
         this.apiService = apiService;
+        this.eventManager = eventManager;
         this.currentTile = null;
         this.undoStack = [];
         this.redoStack = [];
@@ -363,8 +364,12 @@ export class TileEditorManager {
                 // Show success message
                 window.UIManager.showToast('Tile created successfully!', 'success');
                 
-                // Emit event for other components
-                this.eventManager.emit('tileCreated', newTile);
+                // FIXED: Emit event for other components (only if eventManager exists)
+                if (this.eventManager) {
+                    this.eventManager.emit('tileCreated', newTile);
+                } else {
+                    console.warn('⚠️ Event manager not available, skipping event emission');
+                }
                 
             } else {
                 console.log('💾 Updating existing tile...');
@@ -385,8 +390,12 @@ export class TileEditorManager {
                 // Show success message
                 window.UIManager.showToast('Tile saved successfully!', 'success');
                 
-                // Emit event for other components
-                this.eventManager.emit('tileUpdated', updatedTile);
+                // FIXED: Emit event for other components (only if eventManager exists)
+                if (this.eventManager) {
+                    this.eventManager.emit('tileUpdated', updatedTile);
+                } else {
+                    console.warn('⚠️ Event manager not available, skipping event emission');
+                }
             }
             
             // FIXED: Return to canvas viewer after successful save
