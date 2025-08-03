@@ -389,6 +389,19 @@ export class TileEditorManager {
                 this.eventManager.emit('tileUpdated', updatedTile);
             }
             
+            // FIXED: Return to canvas viewer after successful save
+            setTimeout(() => {
+                if (window.navigationManager) {
+                    window.navigationManager.showSection('viewer');
+                } else {
+                    // Fallback: hide editor section and show viewer section
+                    const editorSection = document.getElementById('editor-section');
+                    const viewerSection = document.getElementById('viewer-section');
+                    if (editorSection) editorSection.classList.add('hidden');
+                    if (viewerSection) viewerSection.classList.remove('hidden');
+                }
+            }, 500); // Small delay to show the success message
+            
         } catch (error) {
             console.error('❌ Failed to save tile:', error);
             console.error('❌ Error details:', {

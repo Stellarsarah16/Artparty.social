@@ -19,6 +19,11 @@ export class ModalManager {
             modal.style.display = 'flex';
             this.activeModals.add(modalName);
             document.body.classList.add('modal-open');
+            
+            // FIXED: Focus on first form field and reset form
+            this.focusFirstField(modal);
+            this.resetForm(modal);
+            
             console.log('🔧 Modal displayed successfully');
         } else {
             console.error('❌ Modal not found:', `${modalName}-modal`);
@@ -45,6 +50,28 @@ export class ModalManager {
             this.hideModal(modalName);
         });
         this.activeModals.clear();
+    }
+
+    /**
+     * FIXED: Focus on first form field in modal
+     */
+    focusFirstField(modal) {
+        const firstInput = modal.querySelector('input, select, textarea');
+        if (firstInput) {
+            setTimeout(() => {
+                firstInput.focus();
+            }, 100);
+        }
+    }
+
+    /**
+     * FIXED: Reset form in modal
+     */
+    resetForm(modal) {
+        const form = modal.querySelector('form');
+        if (form) {
+            form.reset();
+        }
     }
 
     /**
@@ -291,19 +318,29 @@ export class ModalManager {
      * Setup modal event handlers
      */
     setupModalHandlers() {
-        // Close modals when clicking outside
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
-                const modalName = this.getModalName(e.target);
+        // FIXED: Prevent modal from closing when clicking outside
+        document.addEventListener('click', (event) => {
+            const modal = event.target.closest('.modal');
+            if (event.target.classList.contains('modal') && !event.target.closest('.modal-content')) {
+                // Don't close modal when clicking outside - let user use close button
+                event.stopPropagation();
+            }
+        });
+
+        // Close modal when clicking close button
+        document.addEventListener('click', (event) => {
+            if (event.target.closest('.modal-close')) {
+                const modal = event.target.closest('.modal');
+                const modalName = this.getModalName(modal);
                 if (modalName) {
                     this.hideModal(modalName);
                 }
             }
         });
 
-        // Close modals with escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
+        // Close modal on Escape key
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
                 this.hideAllModals();
             }
         });

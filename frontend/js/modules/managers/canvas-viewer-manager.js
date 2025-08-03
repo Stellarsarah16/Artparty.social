@@ -116,31 +116,83 @@ export class CanvasViewerManager {
      */
     async updateCanvasStats(canvas) {
         try {
-            // Update total tiles
-            const totalTiles = document.getElementById('viewer-total-tiles');
-            if (totalTiles) {
-                totalTiles.textContent = canvas.total_tiles || canvas.tile_count || 0;
+            console.log('📊 Updating canvas stats for canvas:', canvas.id);
+            
+            // Get current user
+            const currentUser = appState.get('currentUser');
+            if (!currentUser) {
+                console.warn('⚠️ No current user found for stats update');
+                return;
             }
             
-            // Update active users
-            const activeUsers = document.getElementById('viewer-active-users');
-            if (activeUsers) {
-                activeUsers.textContent = Math.max(1, canvas.user_count || 0);
+            // Get user's tile count for this canvas
+            const userTileCount = await this.tileApi.getUserTileCount(currentUser.id, canvas.id);
+            console.log(' User tile count:', userTileCount);
+            
+            // Get total tiles for this canvas
+            const allTiles = await this.tileApi.getForCanvas(canvas.id);
+            const totalTiles = allTiles.length;
+            console.log('📊 Total tiles:', totalTiles);
+            
+            // Update stats display
+            const statsContainer = document.querySelector('.canvas-stats');
+            if (statsContainer) {
+                statsContainer.innerHTML = `
+                    <h4>Canvas Statistics</h4>
+                    <div class="stat-item">
+                        <span class="stat-label">Your Tiles:</span>
+                        <span class="stat-value">${userTileCount.count || 0}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Total Tiles:</span>
+                        <span class="stat-value">${totalTiles}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Max Tiles Per User:</span>
+                        <span class="stat-value">${canvas.max_tiles_per_user || 'Unlimited'}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Canvas Size:</span>
+                        <span class="stat-value">${canvas.width} × ${canvas.height}</span>
+                    </div>
+                `;
+                console.log('✅ Canvas stats updated');
+            } else {
+                console.warn('⚠️ Stats container not found');
             }
             
-            // Update user's tile count
-            const userTiles = document.getElementById('viewer-user-tiles');
-            if (userTiles) {
-                const currentUser = appState.get('currentUser');
-                if (currentUser && currentUser.id) {
-                    const tileCount = await this.tileApi.getUserTileCount(currentUser.id, canvas.id);
-                    userTiles.textContent = tileCount.tile_count.toString();
-                } else {
-                    userTiles.textContent = '0';
-                }
-            }
         } catch (error) {
-            console.error('Failed to update canvas stats:', error);
+            console.error('❌ Failed to update canvas stats:', error);
+        }
+    }
+
+    /**
+     * FIXED: Refresh canvas display to show new tiles
+     */
+    async refreshCanvasDisplay() {
+        try {
+            console.log('🔄 Refreshing canvas display');
+            
+            if (!this.currentCanvas) {
+                console.warn('⚠️ No current canvas to refresh');
+                return;
+            }
+            
+            // Reload tiles from server
+            const tiles = await this.tileApi.getForCanvas(this.currentCanvas.id);
+            console.log('🔄 Loaded tiles for refresh:', tiles.length);
+            
+            // Update canvas viewer with new tiles
+            if (window.CanvasViewer) {
+                window.CanvasViewer.loadTiles(tiles);
+                console.log('✅ Canvas viewer refreshed with new tiles');
+            }
+            
+            // Update stats
+            await this.updateCanvasStats(this.currentCanvas);
+            
+        } catch (error) {
+            console.error('❌ Failed to refresh canvas display:', error);
         }
     }
 
@@ -282,6 +334,30 @@ export class CanvasViewerManager {
                 window.CanvasViewer.zoomOut();
             };
         }
+        
+        // FIXED: Add refresh button
+        const refreshCanvasBtn = document.getElementById('refresh-canvas-btn');
+        if (refreshCanvasBtn) {
+            refreshCanvasBtn.onclick = () => {
+                this.refreshCanvasDisplay();
+            };
+            console.log('✅ Refresh button setup complete');
+        }
+        
+        // FIXED: Listen for tile events to auto-refresh
+        this.eventManager.on('tileCreated', () => {
+            console.log('🔄 Auto-refreshing canvas after tile creation');
+            setTimeout(() => {
+                this.refreshCanvasDisplay();
+            }, 1000); // Small delay to ensure server has processed the change
+        });
+        
+        this.eventManager.on('tileUpdated', () => {
+            console.log('🔄 Auto-refreshing canvas after tile update');
+            setTimeout(() => {
+                this.refreshCanvasDisplay();
+            }, 1000);
+        });
         
         console.log('✅ Viewer controls setup complete');
     }
