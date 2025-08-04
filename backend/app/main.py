@@ -25,23 +25,33 @@ class HTTPSRedirectMiddleware(BaseHTTPMiddleware):
         # Check if we're behind a proxy and already using HTTPS
         forwarded_proto = request.headers.get('x-forwarded-proto')
         forwarded_ssl = request.headers.get('x-forwarded-ssl')
+        forwarded_host = request.headers.get('x-forwarded-host')
         
-        # If we're already behind a proxy with HTTPS, don't do any redirects
-        if forwarded_proto == 'https' or forwarded_ssl == 'on':
-            return await call_next(request)
+        # Determine if we're in HTTPS mode
+        is_https = (
+            forwarded_proto == 'https' or 
+            forwarded_ssl == 'on' or
+            request.url.scheme == 'https'
+        )
         
-        # Only do HTTPS redirects for direct HTTP requests (not behind proxy)
+        # Get the response
         response = await call_next(request)
         
         # Only modify redirects (status codes 301, 302, 307, 308)
         if response.status_code in [301, 302, 307, 308] and hasattr(response, 'headers'):
             # Get the Location header (the redirect URL)
             location = response.headers.get('location')
-            if location and location.startswith('http://'):
-                # Convert HTTP to HTTPS
-                https_location = location.replace('http://', 'https://')
-                response.headers['location'] = https_location
-                logger.info(f"HTTPS Redirect: {location} -> {https_location}")
+            if location:
+                # Convert HTTP to HTTPS if we're in HTTPS mode
+                if location.startswith('http://') and is_https:
+                    https_location = location.replace('http://', 'https://')
+                    response.headers['location'] = https_location
+                    logger.info(f"HTTPS Redirect: {location} -> {https_location}")
+                # Also handle relative URLs that might be missing the protocol
+                elif location.startswith('/') and is_https and forwarded_host:
+                    https_location = f"https://{forwarded_host}{location}"
+                    response.headers['location'] = https_location
+                    logger.info(f"HTTPS Redirect: {location} -> {https_location}")
         
         return response
 
@@ -72,7 +82,12 @@ app = FastAPI(
     title="StellarArtCollab API",
     description="Collaborative pixel art canvas platform",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    # Trust proxy headers for proper HTTPS detection
+    root_path="",
+    root_path_in_servers=False,
+    # Disable automatic redirects for trailing slashes
+    redirect_slashes=False
 )
 
 # Add HTTPS redirect middleware first

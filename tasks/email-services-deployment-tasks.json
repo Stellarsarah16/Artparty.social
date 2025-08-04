@@ -1,0 +1,155 @@
+[
+  {
+    "id": "deploy-canvas-route-fix",
+    "content": "Deploy the canvas route fix to resolve 307 redirects",
+    "status": "completed",
+    "dependencies": [],
+    "priority": "critical",
+    "estimated_time": "15 minutes",
+    "steps": [
+      "Commit and push the canvas route fix (remove trailing slash)",
+      "Use deployment script to rebuild backend",
+      "Test canvas API endpoint directly",
+      "Verify no more 307 redirects"
+    ]
+  },
+  {
+    "id": "test-api-functionality",
+    "content": "Test that all API endpoints work without redirects",
+    "status": "in_progress",
+    "dependencies": ["deploy-canvas-route-fix"],
+    "priority": "critical",
+    "estimated_time": "10 minutes",
+    "steps": [
+      "Test canvas list endpoint",
+      "Test login endpoint",
+      "Test tile endpoints",
+      "Verify frontend can load canvas list"
+    ]
+  },
+  {
+    "id": "optimize-backend-dockerfile",
+    "content": "Optimize backend Dockerfile for faster builds",
+    "status": "pending",
+    "dependencies": [],
+    "priority": "high",
+    "estimated_time": "30 minutes",
+    "steps": [
+      "Implement multi-stage build",
+      "Optimize layer caching",
+      "Reduce build context size",
+      "Test build time improvement"
+    ]
+  },
+  {
+    "id": "optimize-frontend-dockerfile",
+    "content": "Optimize frontend Dockerfile for faster builds",
+    "status": "pending",
+    "dependencies": [],
+    "priority": "high",
+    "estimated_time": "20 minutes",
+    "steps": [
+      "Ensure .dockerignore is working properly",
+      "Optimize nginx configuration copying",
+      "Test build time improvement"
+    ]
+  },
+  {
+    "id": "implement-build-caching",
+    "content": "Implement Docker build caching strategy",
+    "status": "pending",
+    "dependencies": ["optimize-backend-dockerfile", "optimize-frontend-dockerfile"],
+    "priority": "medium",
+    "estimated_time": "25 minutes",
+    "steps": [
+      "Add cache_from directives to docker-compose",
+      "Implement parallel builds",
+      "Test incremental build performance",
+      "Document build optimization results"
+    ]
+  },
+  {
+    "id": "test-email-verification",
+    "content": "Test email verification and password reset features",
+    "status": "pending",
+    "dependencies": ["test-api-functionality"],
+    "priority": "high",
+    "estimated_time": "30 minutes",
+    "steps": [
+      "Test email verification flow end-to-end",
+      "Test password reset flow end-to-end",
+      "Verify email templates work correctly",
+      "Test error handling for invalid tokens"
+    ]
+  },
+  {
+    "id": "setup-production-email",
+    "content": "Configure production email settings",
+    "status": "pending",
+    "dependencies": ["test-email-verification"],
+    "priority": "medium",
+    "estimated_time": "20 minutes",
+    "steps": [
+      "Set up Gmail App Password or SMTP server",
+      "Update production .env with email settings",
+      "Test email sending in production",
+      "Verify email delivery"
+    ]
+  },
+  {
+    "id": "performance-benchmarking",
+    "content": "Benchmark build and deployment performance",
+    "status": "pending",
+    "dependencies": ["implement-build-caching"],
+    "priority": "medium",
+    "estimated_time": "15 minutes",
+    "steps": [
+      "Measure current build times",
+      "Document performance improvements",
+      "Create baseline for future comparisons",
+      "Set performance targets"
+    ]
+  },
+  {
+    "id": "test-websocket-functionality",
+    "content": "Verify WebSocket connections still work",
+    "status": "pending",
+    "dependencies": ["test-api-functionality"],
+    "priority": "high",
+    "estimated_time": "15 minutes",
+    "steps": [
+      "Test real-time tile updates",
+      "Verify WebSocket authentication",
+      "Test canvas collaboration features",
+      "Check for any WebSocket errors"
+    ]
+  },
+  {
+    "id": "documentation-update",
+    "content": "Update deployment documentation",
+    "status": "pending",
+    "dependencies": ["performance-benchmarking"],
+    "priority": "low",
+    "estimated_time": "20 minutes",
+    "steps": [
+      "Document build optimization changes",
+      "Update deployment procedures",
+      "Create troubleshooting guide",
+      "Document email service setup"
+    ]
+  },
+  {
+    "id": "final-integration-test",
+    "content": "Complete end-to-end integration testing",
+    "status": "pending",
+    "dependencies": ["setup-production-email", "test-websocket-functionality"],
+    "priority": "critical",
+    "estimated_time": "30 minutes",
+    "steps": [
+      "Test complete user journey: login → canvas list → tile editing → save",
+      "Test email verification during registration",
+      "Test password reset flow",
+      "Verify all features work together"
+    ]
+  }
+] 

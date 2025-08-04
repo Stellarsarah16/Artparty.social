@@ -79,9 +79,7 @@ class NavigationManager {
             closeCreateCanvasModal: document.getElementById('close-create-canvas-modal')
         };
         
-        console.log('📋 DOM elements found:', Object.keys(elements).filter(key => elements[key] !== null));
-        console.log('❌ DOM elements missing:', Object.keys(elements).filter(key => elements[key] === null));
-        
+       
         return elements;
     }
     

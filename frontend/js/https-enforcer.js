@@ -11,7 +11,7 @@
         return;
     }
     
-    console.log('🔒 HTTPS ENFORCER: Initializing for production domain');
+    //console.log('🔒 HTTPS ENFORCER: Initializing for production domain');
     
     // Override fetch immediately
     if (window.fetch) {
@@ -28,7 +28,7 @@
             
             return originalFetch.apply(this, args);
         };
-        console.log('✅ HTTPS ENFORCER: Fetch override installed');
+        //console.log('✅ HTTPS ENFORCER: Fetch override installed');
     }
     
     // Override XMLHttpRequest immediately
@@ -44,7 +44,7 @@
             
             return originalXHROpen.apply(this, [method, url, ...args]);
         };
-        console.log('✅ HTTPS ENFORCER: XMLHttpRequest override installed');
+        //console.log('✅ HTTPS ENFORCER: XMLHttpRequest override installed');
     }
     
     // Monitor for any remaining HTTP requests
@@ -58,10 +58,10 @@
     
     try {
         observer.observe({ entryTypes: ['resource'] });
-        console.log('✅ HTTPS ENFORCER: Performance monitoring installed');
+        //console.log('✅ HTTPS ENFORCER: Performance monitoring installed');
     } catch (e) {
-        console.warn('⚠️ HTTPS ENFORCER: Performance monitoring not available');
+        //console.warn('⚠️ HTTPS ENFORCER: Performance monitoring not available');
     }
     
-    console.log('🔒 HTTPS ENFORCER: Initialization complete');
+    //console.log('🔒 HTTPS ENFORCER: Initialization complete');
 })(); 

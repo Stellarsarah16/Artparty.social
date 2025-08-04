@@ -26,7 +26,7 @@ async def get_current_user_dependency(
     return auth_service.get_current_user(db, token)
 
 
-@router.get("", response_model=List[CanvasResponse])
+@router.get("/", response_model=List[CanvasResponse])
 async def get_canvas_list(
     skip: int = 0,
     limit: int = 10,
