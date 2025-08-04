@@ -86,6 +86,12 @@ export class AuthManager {
             this.updateUserInfo(response.user);
             this.updateNavigation();
             
+            // Force navigation update after a short delay to ensure DOM is ready
+            setTimeout(() => {
+                console.log('🔧 Forcing delayed navigation update...');
+                this.updateNavigation();
+            }, 100);
+            
             // Hide modal and show canvas section
             if (window.modalManager) {
                 window.modalManager.hideModal('login');
@@ -307,14 +313,22 @@ export class AuthManager {
      * Update user information display
      */
     updateUserInfo(user) {
+        console.log('🔧 AuthManager.updateUserInfo() called', { user });
+        
         const usernameElement = document.getElementById('username');
         if (usernameElement) {
             usernameElement.textContent = user.username;
+            console.log('✅ Username updated:', user.username);
+        } else {
+            console.error('❌ Username element not found');
         }
         
         const userInfoElement = document.getElementById('user-info');
         if (userInfoElement) {
             userInfoElement.style.display = 'flex';
+            console.log('✅ User info element shown');
+        } else {
+            console.error('❌ User info element not found');
         }
     }
 
@@ -324,18 +338,47 @@ export class AuthManager {
     updateNavigation() {
         const isAuthenticated = appState.get('currentUser') !== null;
         
+        console.log('🔧 AuthManager.updateNavigation() called', {
+            isAuthenticated,
+            currentUser: appState.get('currentUser')
+        });
+        
         const loginBtn = document.getElementById('login-btn');
         const registerBtn = document.getElementById('register-btn');
         const userInfo = document.getElementById('user-info');
         
+        console.log('🔧 DOM elements found:', {
+            loginBtn: !!loginBtn,
+            registerBtn: !!registerBtn,
+            userInfo: !!userInfo
+        });
+        
         if (isAuthenticated) {
-            if (loginBtn) loginBtn.style.display = 'none';
-            if (registerBtn) registerBtn.style.display = 'none';
-            if (userInfo) userInfo.style.display = 'flex';
+            if (loginBtn) {
+                loginBtn.style.display = 'none';
+                console.log('✅ Login button hidden');
+            }
+            if (registerBtn) {
+                registerBtn.style.display = 'none';
+                console.log('✅ Register button hidden');
+            }
+            if (userInfo) {
+                userInfo.style.display = 'flex';
+                console.log('✅ User info shown');
+            }
         } else {
-            if (loginBtn) loginBtn.style.display = 'block';
-            if (registerBtn) registerBtn.style.display = 'block';
-            if (userInfo) userInfo.style.display = 'none';
+            if (loginBtn) {
+                loginBtn.style.display = 'block';
+                console.log('✅ Login button shown');
+            }
+            if (registerBtn) {
+                registerBtn.style.display = 'block';
+                console.log('✅ Register button shown');
+            }
+            if (userInfo) {
+                userInfo.style.display = 'none';
+                console.log('✅ User info hidden');
+            }
         }
     }
 
