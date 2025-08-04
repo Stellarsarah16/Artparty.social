@@ -541,7 +541,7 @@ class CanvasAPI {
     }
     
     async getCanvas(id) {
-        return await this.client.get(`${API_CONFIG.ENDPOINTS.CANVAS}/${id}`);
+        return await this.client.get(`${API_CONFIG.ENDPOINTS.CANVAS}${id}`);
     }
     
     async createCanvas(canvasData) {
@@ -549,11 +549,11 @@ class CanvasAPI {
     }
     
     async updateCanvas(id, canvasData) {
-        return await this.client.put(`${API_CONFIG.ENDPOINTS.CANVAS}/${id}`, canvasData);
+        return await this.client.put(`${API_CONFIG.ENDPOINTS.CANVAS}${id}`, canvasData);
     }
     
     async deleteCanvas(id) {
-        return await this.client.delete(`${API_CONFIG.ENDPOINTS.CANVAS}/${id}`);
+        return await this.client.delete(`${API_CONFIG.ENDPOINTS.CANVAS}${id}`);
     }
     
     async getCanvasRegion(id, bounds) {
