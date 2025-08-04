@@ -210,7 +210,7 @@ export class AuthManager {
         }
         
         // Clear user data
-        appState.clear();
+        appState.setUnauthenticated();
         
         // Close all WebSocket connections
         if (window.webSocketManager) {
@@ -235,7 +235,7 @@ export class AuthManager {
         console.log('🔐 Authentication failure:', reason);
         
         // Clear user data
-        appState.clear();
+        appState.setUnauthenticated();
         
         // Close all WebSocket connections
         if (window.webSocketManager) {
