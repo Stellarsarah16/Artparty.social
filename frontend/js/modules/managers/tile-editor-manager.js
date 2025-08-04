@@ -21,12 +21,25 @@ export class TileEditorManager {
         try {
             console.log('🔄 Opening tile editor for tile:', tile.id);
             
+            // Fetch full tile details including creator information
+            let fullTileData = tile;
+            try {
+                if (window.API && window.API.tiles) {
+                    const tileDetails = await window.API.tiles.get(tile.id);
+                    fullTileData = tileDetails;
+                    console.log('✅ Fetched full tile details:', tileDetails);
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not fetch full tile details, using provided tile data:', error);
+                // Continue with the provided tile data
+            }
+            
             // First, try to acquire a lock for this tile
             try {
                 if (window.API && window.API.tiles) {
-                    const lockResult = await window.API.tiles.acquireTileLock(tile.id);
+                    const lockResult = await window.API.tiles.acquireTileLock(fullTileData.id);
                     this.currentLock = {
-                        tileId: tile.id,
+                        tileId: fullTileData.id,
                         lockId: lockResult.lock_id,
                         expiresAt: new Date(lockResult.expires_at)
                     };
@@ -52,7 +65,7 @@ export class TileEditorManager {
             let canvasData = null;
             try {
                 if (window.API && window.API.canvas) {
-                    canvasData = await window.API.canvas.get(tile.canvas_id);
+                    canvasData = await window.API.canvas.get(fullTileData.canvas_id);
                     console.log('🎨 Fetched canvas data:', canvasData);
                 }
             } catch (error) {
@@ -60,12 +73,15 @@ export class TileEditorManager {
             }
             
             // Add canvas data to tile object
-            tile.canvas = canvasData;
+            fullTileData.canvas = canvasData;
             
-            this.currentTile = tile;
-            this.initializeTileEditor(tile);
+            this.currentTile = fullTileData;
+            this.initializeTileEditor(fullTileData);
             this.setupToolButtons();
             this.setupUndoRedoButtons();
+            
+            // Set default tool to paint and activate the paint button
+            this.selectTool('paint');
             
             // Show editor section
             if (window.navigationManager) {
@@ -504,7 +520,7 @@ export class TileEditorManager {
             { id: 'paint-tool', tool: 'paint' },
             { id: 'eraser-tool', tool: 'eraser' },
             { id: 'fill-tool', tool: 'fill' },
-            { id: 'picker-tool', tool: 'eyedropper' }
+            { id: 'picker-tool', tool: 'picker' }  // Fixed: was 'eyedropper', should be 'picker'
         ];
         
         tools.forEach(({ id, tool }) => {
@@ -536,7 +552,7 @@ export class TileEditorManager {
             'paint': 'paint-tool',
             'eraser': 'eraser-tool',
             'fill': 'fill-tool',
-            'eyedropper': 'picker-tool'
+            'picker': 'picker-tool'  // Fixed: was 'eyedropper', should be 'picker'
         };
         
         const buttonId = toolButtonMap[tool];
