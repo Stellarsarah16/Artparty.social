@@ -239,19 +239,21 @@ class TileService:
         # Check permissions based on collaboration mode
         self._check_tile_permissions(db, tile, current_user, "update")
         
-        # Check if user has the lock for this tile
+        # Check if there's an active lock by another user
         lock = self.tile_lock_repository.get_by_tile_id(db, tile_id)
-        if not lock or lock.user_id != current_user.id:
+        if lock and lock.user_id != current_user.id and not lock.is_expired():
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You must acquire a lock before editing this tile"
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Tile is currently being edited by another user"
             )
+        
+        # If there's an expired lock or no lock, allow the update
+        # Clean up any expired lock
+        if lock and lock.is_expired():
+            self.tile_lock_repository.cleanup_expired_locks(db)
         
         # Update the tile
         updated_tile = self.tile_repository.update(db, db_obj=tile, obj_in=tile_update)
-        
-        # Release the lock after successful update
-        self.tile_lock_repository.release_lock(db, tile_id, current_user.id)
         
         return updated_tile
     
