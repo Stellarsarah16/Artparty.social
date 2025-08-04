@@ -123,6 +123,8 @@ export class AuthManager {
         const userData = {
             username: formData.get('username'),
             email: formData.get('email'),
+            first_name: formData.get('first_name'),
+            last_name: formData.get('last_name'),
             password: formData.get('password')
         };
 
