@@ -594,6 +594,32 @@ class PixelEditor {
     }
     
     /**
+     * Pick color from external canvas (like neighbor tiles)
+     * @param {HTMLCanvasElement} canvas - The canvas to pick from
+     * @param {number} x - X coordinate on the canvas
+     * @param {number} y - Y coordinate on the canvas
+     * @param {Array} pixelData - The pixel data array for the external canvas
+     */
+    pickColorFromExternalCanvas(canvas, x, y, pixelData) {
+        if (!canvas || !pixelData || !Array.isArray(pixelData)) return;
+        
+        // Convert canvas coordinates to pixel coordinates
+        const rect = canvas.getBoundingClientRect();
+        const canvasX = Math.floor((x - rect.left) / (canvas.width / this.tileSize));
+        const canvasY = Math.floor((y - rect.top) / (canvas.height / this.tileSize));
+        
+        // Check bounds
+        if (canvasX < 0 || canvasX >= this.tileSize || canvasY < 0 || canvasY >= this.tileSize) return;
+        
+        // Get color from pixel data
+        const color = pixelData[canvasY] && pixelData[canvasY][canvasX];
+        if (color && color !== 'transparent' && color !== 'white') {
+            this.setColor(color);
+            console.log(`🎨 Picked color ${color} from neighbor tile at (${canvasX}, ${canvasY})`);
+        }
+    }
+    
+    /**
      * Flood fill algorithm
      * @param {number} x - X coordinate
      * @param {number} y - Y coordinate

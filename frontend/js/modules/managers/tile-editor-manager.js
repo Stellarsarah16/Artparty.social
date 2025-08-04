@@ -12,6 +12,7 @@ export class TileEditorManager {
         this.redoStack = [];
         this.currentLock = null;
         this.lockInterval = null;
+        this.neighborTiles = {}; // Store neighbor tile data for color picking
     }
 
     /**
@@ -776,10 +777,21 @@ export class TileEditorManager {
                     // Remove empty class and draw the neighbor
                     cell.classList.remove('empty');
                     this.drawNeighborTile(canvas, neighbor);
+                    
+                    // Store neighbor data for color picking
+                    this.neighborTiles[position] = neighbor;
+                    
+                    // Add click handler for color picking
+                    this.setupNeighborCanvasClickHandler(canvas, neighbor, position);
+                    
                 } else {
                     // Add empty class and clear canvas
                     cell.classList.add('empty');
                     this.clearNeighborCanvas(canvas);
+                    
+                    // Remove neighbor data and click handler
+                    delete this.neighborTiles[position];
+                    this.removeNeighborCanvasClickHandler(canvas);
                 }
             }
         });
@@ -833,6 +845,62 @@ export class TileEditorManager {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
+    
+    /**
+     * Setup click handler for neighbor canvas color picking
+     */
+    setupNeighborCanvasClickHandler(canvas, neighbor, position) {
+        // Remove any existing click handler
+        this.removeNeighborCanvasClickHandler(canvas);
+        
+        // Add new click handler
+        const clickHandler = (event) => {
+            // Only handle clicks if picker tool is active
+            if (window.PixelEditor && window.PixelEditor.currentTool === 'picker') {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // Parse neighbor pixel data
+                let pixelData;
+                if (typeof neighbor.pixel_data === 'string') {
+                    try {
+                        pixelData = JSON.parse(neighbor.pixel_data);
+                    } catch (error) {
+                        console.error('❌ Failed to parse neighbor pixel data for color picking:', error);
+                        return;
+                    }
+                } else {
+                    pixelData = neighbor.pixel_data;
+                }
+                
+                if (pixelData && Array.isArray(pixelData)) {
+                    // Use the pixel editor's external color picking method
+                    window.PixelEditor.pickColorFromExternalCanvas(
+                        canvas, 
+                        event.clientX, 
+                        event.clientY, 
+                        pixelData
+                    );
+                }
+            }
+        };
+        
+        // Store the handler reference for later removal
+        canvas._neighborClickHandler = clickHandler;
+        canvas.addEventListener('click', clickHandler);
+        
+        console.log(`✅ Added color picker click handler to ${position} neighbor canvas`);
+    }
+    
+    /**
+     * Remove click handler from neighbor canvas
+     */
+    removeNeighborCanvasClickHandler(canvas) {
+        if (canvas._neighborClickHandler) {
+            canvas.removeEventListener('click', canvas._neighborClickHandler);
+            delete canvas._neighborClickHandler;
+        }
+    }
 
     /**
      * Start lock extension interval
@@ -884,5 +952,22 @@ export class TileEditorManager {
         this.currentTile = null;
         this.undoStack = [];
         this.redoStack = [];
+        
+        // Clean up neighbor canvas click handlers
+        const neighborPositions = [
+            'top', 'top-right', 'right', 'bottom-right',
+            'bottom', 'bottom-left', 'left', 'top-left'
+        ];
+        
+        neighborPositions.forEach(position => {
+            const canvasId = `neighbor-${position}-canvas`;
+            const canvas = document.getElementById(canvasId);
+            if (canvas) {
+                this.removeNeighborCanvasClickHandler(canvas);
+            }
+        });
+        
+        // Clear neighbor tiles data
+        this.neighborTiles = {};
     }
 } 
