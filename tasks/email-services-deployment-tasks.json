@@ -16,7 +16,7 @@
   {
     "id": "test-api-functionality",
     "content": "Test that all API endpoints work without redirects",
-    "status": "in_progress",
+    "status": "completed",
     "dependencies": ["deploy-canvas-route-fix"],
     "priority": "critical",
     "estimated_time": "10 minutes",
