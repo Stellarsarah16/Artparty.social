@@ -9,7 +9,14 @@ from typing import Optional
 class TileLockCreate(BaseModel):
     """Schema for creating a tile lock"""
     tile_id: int
-    minutes: int = 30
+    user_id: int
+    expires_at: datetime
+
+
+class TileLockUpdate(BaseModel):
+    """Schema for updating a tile lock"""
+    expires_at: Optional[datetime] = None
+    is_active: Optional[bool] = None
 
 
 class TileLockResponse(BaseModel):

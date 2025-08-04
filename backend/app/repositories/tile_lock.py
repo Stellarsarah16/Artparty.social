@@ -6,11 +6,15 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
 from ..models.tile_lock import TileLock
-from ..repositories.base import BaseRepository
+from ..repositories.base import SQLAlchemyRepository
+from ..schemas.tile_lock import TileLockCreate, TileLockUpdate
 
 
-class TileLockRepository(BaseRepository[TileLock]):
+class TileLockRepository(SQLAlchemyRepository[TileLock, TileLockCreate, TileLockUpdate]):
     """Repository for tile lock operations"""
+    
+    def __init__(self):
+        super().__init__(TileLock)
     
     def get_by_tile_id(self, db: Session, tile_id: int) -> Optional[TileLock]:
         """Get active lock for a tile"""
