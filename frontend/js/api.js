@@ -643,6 +643,23 @@ class TileAPI {
         const params = canvasId ? { canvas_id: canvasId } : {};
         return await this.client.get(url, { params });
     }
+    
+    // Tile lock methods
+    async acquireTileLock(tileId) {
+        return await this.client.post(`${API_CONFIG.ENDPOINTS.TILES}/${tileId}/lock`);
+    }
+    
+    async releaseTileLock(tileId) {
+        return await this.client.delete(`${API_CONFIG.ENDPOINTS.TILES}/${tileId}/lock`);
+    }
+    
+    async extendTileLock(tileId) {
+        return await this.client.put(`${API_CONFIG.ENDPOINTS.TILES}/${tileId}/lock`);
+    }
+    
+    async getTileLockStatus(tileId) {
+        return await this.client.get(`${API_CONFIG.ENDPOINTS.TILES}/${tileId}/lock`);
+    }
 }
 
 class WebSocketAPI {

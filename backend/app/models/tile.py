@@ -33,4 +33,5 @@ class Tile(Base):
     # Relationships
     canvas = relationship("Canvas", back_populates="tiles")
     creator = relationship("User", back_populates="tiles")
-    likes = relationship("Like", back_populates="tile") 
+    likes = relationship("Like", back_populates="tile")
+    lock = relationship("TileLock", back_populates="tile", uselist=False) 

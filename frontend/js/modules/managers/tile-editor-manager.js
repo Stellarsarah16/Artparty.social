@@ -10,6 +10,8 @@ export class TileEditorManager {
         this.currentTile = null;
         this.undoStack = [];
         this.redoStack = [];
+        this.currentLock = null;
+        this.lockInterval = null;
     }
 
     /**
@@ -18,6 +20,33 @@ export class TileEditorManager {
     async openTileEditor(tile) {
         try {
             console.log('🔄 Opening tile editor for tile:', tile.id);
+            
+            // First, try to acquire a lock for this tile
+            try {
+                if (window.API && window.API.tiles) {
+                    const lockResult = await window.API.tiles.acquireTileLock(tile.id);
+                    this.currentLock = {
+                        tileId: tile.id,
+                        lockId: lockResult.lock_id,
+                        expiresAt: new Date(lockResult.expires_at)
+                    };
+                    console.log('🔒 Acquired tile lock:', this.currentLock);
+                    
+                    // Start lock extension interval (extend every 25 minutes)
+                    this.startLockExtension();
+                }
+            } catch (error) {
+                if (error.status === 409) {
+                    // Tile is locked by another user
+                    if (window.UIManager) {
+                        window.UIManager.showToast('This tile is currently being edited by another user', 'error');
+                    }
+                    return;
+                } else {
+                    console.warn('⚠️ Could not acquire tile lock:', error);
+                    // Continue without lock for now
+                }
+            }
             
             // Get canvas data to access palette type
             let canvasData = null;
@@ -434,6 +463,9 @@ export class TileEditorManager {
                 }
             }
             
+            // Release the lock after successful save
+            await this.releaseCurrentLock();
+            
             // FIXED: Return to canvas viewer after successful save
             setTimeout(() => {
                 if (window.navigationManager) {
@@ -609,8 +641,12 @@ export class TileEditorManager {
     setupBackButton() {
         const backBtn = document.getElementById('back-to-grid-btn');
         if (backBtn) {
-            backBtn.onclick = () => {
+            backBtn.onclick = async () => {
                 console.log('🔙 Back button clicked, returning to canvas viewer');
+                
+                // Release the lock before going back
+                await this.releaseCurrentLock();
+                
                 if (window.navigationManager) {
                     window.navigationManager.showSection('viewer');
                 }
@@ -780,5 +816,57 @@ export class TileEditorManager {
     clearNeighborCanvas(canvas) {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    /**
+     * Start lock extension interval
+     */
+    startLockExtension() {
+        if (this.lockInterval) {
+            clearInterval(this.lockInterval);
+        }
+        
+        // Extend lock every 25 minutes (before 30-minute expiration)
+        this.lockInterval = setInterval(async () => {
+            if (this.currentLock && window.API && window.API.tiles) {
+                try {
+                    await window.API.tiles.extendTileLock(this.currentLock.tileId);
+                    console.log('🔒 Extended tile lock');
+                } catch (error) {
+                    console.warn('⚠️ Failed to extend tile lock:', error);
+                }
+            }
+        }, 25 * 60 * 1000); // 25 minutes
+    }
+
+    /**
+     * Release current tile lock
+     */
+    async releaseCurrentLock() {
+        if (this.currentLock && window.API && window.API.tiles) {
+            try {
+                await window.API.tiles.releaseTileLock(this.currentLock.tileId);
+                console.log('🔓 Released tile lock');
+            } catch (error) {
+                console.warn('⚠️ Failed to release tile lock:', error);
+            }
+        }
+        
+        this.currentLock = null;
+        
+        if (this.lockInterval) {
+            clearInterval(this.lockInterval);
+            this.lockInterval = null;
+        }
+    }
+
+    /**
+     * Clean up when closing tile editor
+     */
+    async closeTileEditor() {
+        await this.releaseCurrentLock();
+        this.currentTile = null;
+        this.undoStack = [];
+        this.redoStack = [];
     }
 } 

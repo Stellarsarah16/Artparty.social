@@ -1,0 +1,68 @@
+[
+  {
+    "id": "investigate-collaboration-bug",
+    "content": "Investigate 403 error when saving tiles in free collaboration mode",
+    "status": "completed",
+    "dependencies": []
+  },
+  {
+    "id": "identify-permission-logic",
+    "content": "Identify that tile service enforces ownership regardless of canvas collaboration mode",
+    "status": "completed", 
+    "dependencies": ["investigate-collaboration-bug"]
+  },
+  {
+    "id": "modify-tile-service",
+    "content": "Modify tile service to check canvas collaboration mode before enforcing ownership",
+    "status": "completed",
+    "dependencies": ["identify-permission-logic"]
+  },
+  {
+    "id": "add-canvas-lookup",
+    "content": "Add canvas lookup in tile service to get collaboration mode",
+    "status": "completed",
+    "dependencies": ["modify-tile-service"]
+  },
+  {
+    "id": "implement-collaboration-logic",
+    "content": "Implement logic to allow editing in free mode, restrict in other modes",
+    "status": "completed",
+    "dependencies": ["add-canvas-lookup"]
+  },
+  {
+    "id": "add-concurrent-editing-protection",
+    "content": "Add tile locking mechanism to prevent multiple users editing same tile",
+    "status": "completed",
+    "dependencies": ["implement-collaboration-logic"]
+  },
+  {
+    "id": "implement-tile-lock-api",
+    "content": "Create API endpoints for acquiring and releasing tile locks",
+    "status": "completed",
+    "dependencies": ["add-concurrent-editing-protection"]
+  },
+  {
+    "id": "add-frontend-lock-management",
+    "content": "Add frontend logic to acquire locks when opening tile editor",
+    "status": "completed",
+    "dependencies": ["implement-tile-lock-api"]
+  },
+  {
+    "id": "add-lock-timeout",
+    "content": "Implement automatic lock timeout and cleanup",
+    "status": "completed",
+    "dependencies": ["add-frontend-lock-management"]
+  },
+  {
+    "id": "test-collaboration-fix",
+    "content": "Test that users can edit any tile in free mode, but not in restricted modes",
+    "status": "pending",
+    "dependencies": ["implement-collaboration-logic"]
+  },
+  {
+    "id": "test-concurrent-editing",
+    "content": "Test that only one user can edit a tile at a time",
+    "status": "pending",
+    "dependencies": ["add-lock-timeout"]
+  }
+] 

@@ -8,6 +8,7 @@ from fastapi import HTTPException, status
 from ..repositories.tile import tile_repository
 from ..repositories.canvas import canvas_repository
 from ..repositories.like import like_repository
+from ..repositories.tile_lock import tile_lock_repository
 from ..schemas.tile import TileCreate, TileUpdate, TileResponse
 from ..models.tile import Tile
 from ..models.user import User
@@ -20,6 +21,7 @@ class TileService:
         self.tile_repository = tile_repository
         self.canvas_repository = canvas_repository
         self.like_repository = like_repository
+        self.tile_lock_repository = tile_lock_repository
     
     def create_tile(self, db: Session, tile_create: TileCreate, creator: User) -> Tile:
         """Create a new tile with validation"""
@@ -98,8 +100,31 @@ class TileService:
         """Get adjacent neighbors for a position (even if tile doesn't exist)"""
         return self.tile_repository.get_adjacent_neighbors_by_position(db, canvas_id=canvas_id, x=x, y=y)
     
-    def update_tile(self, db: Session, tile_id: int, tile_update: TileUpdate, current_user: User) -> Optional[Tile]:
-        """Update tile (only owner can update)"""
+    def _check_tile_permissions(self, db: Session, tile: Tile, current_user: User, action: str = "modify") -> None:
+        """Check if user has permission to modify/delete a tile based on canvas collaboration mode"""
+        # Get canvas to check collaboration mode
+        canvas = self.canvas_repository.get(db, tile.canvas_id)
+        if not canvas:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Canvas not found"
+            )
+        
+        # In free mode, anyone can modify any tile
+        if canvas.collaboration_mode == 'free':
+            return
+        
+        # For all other modes, only the creator can modify their tiles
+        if tile.creator_id != current_user.id:
+            mode_name = canvas.collaboration_mode.replace('-', ' ')
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"You can only {action} your own tiles in {mode_name} mode"
+            )
+    
+    def acquire_tile_lock(self, db: Session, tile_id: int, current_user: User, minutes: int = 30) -> Dict[str, Any]:
+        """Acquire a lock for editing a tile"""
+        # Check if tile exists
         tile = self.tile_repository.get(db, tile_id)
         if not tile:
             raise HTTPException(
@@ -107,16 +132,131 @@ class TileService:
                 detail="Tile not found"
             )
         
-        if tile.creator_id != current_user.id:
+        # Check permissions based on collaboration mode
+        self._check_tile_permissions(db, tile, current_user, "edit")
+        
+        # Try to acquire lock
+        lock = self.tile_lock_repository.acquire_lock(db, tile_id, current_user.id, minutes)
+        if not lock:
+            # Check if tile is locked by someone else
+            existing_lock = self.tile_lock_repository.get_by_tile_id(db, tile_id)
+            if existing_lock:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"Tile is currently being edited by another user"
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to acquire tile lock"
+                )
+        
+        return {
+            "lock_id": lock.id,
+            "tile_id": lock.tile_id,
+            "expires_at": lock.expires_at.isoformat(),
+            "message": "Tile lock acquired successfully"
+        }
+    
+    def release_tile_lock(self, db: Session, tile_id: int, current_user: User) -> Dict[str, str]:
+        """Release a lock for a tile"""
+        success = self.tile_lock_repository.release_lock(db, tile_id, current_user.id)
+        if success:
+            return {"message": "Tile lock released successfully"}
+        else:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You can only update your own tiles"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No active lock found for this tile"
+            )
+    
+    def extend_tile_lock(self, db: Session, tile_id: int, current_user: User, minutes: int = 30) -> Dict[str, str]:
+        """Extend a lock for a tile"""
+        success = self.tile_lock_repository.extend_lock(db, tile_id, current_user.id, minutes)
+        if success:
+            return {"message": "Tile lock extended successfully"}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No active lock found for this tile"
+            )
+    
+    def get_tile_lock_status(self, db: Session, tile_id: int, current_user: User) -> Dict[str, Any]:
+        """Get the lock status for a tile"""
+        # Check if tile exists
+        tile = self.tile_repository.get(db, tile_id)
+        if not tile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tile not found"
             )
         
-        return self.tile_repository.update(db, db_obj=tile, obj_in=tile_update)
+        lock = self.tile_lock_repository.get_by_tile_id(db, tile_id)
+        
+        if not lock:
+            return {
+                "is_locked": False,
+                "can_acquire": True,
+                "message": "Tile is available for editing"
+            }
+        
+        # Check if lock is expired
+        if lock.is_expired():
+            # Clean up expired lock
+            self.tile_lock_repository.cleanup_expired_locks(db)
+            return {
+                "is_locked": False,
+                "can_acquire": True,
+                "message": "Tile is available for editing"
+            }
+        
+        # Check if current user owns the lock
+        if lock.user_id == current_user.id:
+            return {
+                "is_locked": True,
+                "locked_by_user_id": lock.user_id,
+                "expires_at": lock.expires_at.isoformat(),
+                "can_acquire": False,
+                "message": "You have the lock for this tile"
+            }
+        else:
+            return {
+                "is_locked": True,
+                "locked_by_user_id": lock.user_id,
+                "expires_at": lock.expires_at.isoformat(),
+                "can_acquire": False,
+                "message": "Tile is being edited by another user"
+            }
+    
+    def update_tile(self, db: Session, tile_id: int, tile_update: TileUpdate, current_user: User) -> Optional[Tile]:
+        """Update tile with collaboration mode support"""
+        tile = self.tile_repository.get(db, tile_id)
+        if not tile:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tile not found"
+            )
+        
+        # Check permissions based on collaboration mode
+        self._check_tile_permissions(db, tile, current_user, "update")
+        
+        # Check if user has the lock for this tile
+        lock = self.tile_lock_repository.get_by_tile_id(db, tile_id)
+        if not lock or lock.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You must acquire a lock before editing this tile"
+            )
+        
+        # Update the tile
+        updated_tile = self.tile_repository.update(db, db_obj=tile, obj_in=tile_update)
+        
+        # Release the lock after successful update
+        self.tile_lock_repository.release_lock(db, tile_id, current_user.id)
+        
+        return updated_tile
     
     def delete_tile(self, db: Session, tile_id: int, current_user: User) -> Optional[Tile]:
-        """Delete tile (only owner can delete)"""
+        """Delete tile with collaboration mode support"""
         tile = self.tile_repository.get(db, tile_id)
         if not tile:
             raise HTTPException(
@@ -124,11 +264,11 @@ class TileService:
                 detail="Tile not found"
             )
         
-        if tile.creator_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You can only delete your own tiles"
-            )
+        # Check permissions based on collaboration mode
+        self._check_tile_permissions(db, tile, current_user, "delete")
+        
+        # Release any lock on this tile
+        self.tile_lock_repository.release_lock(db, tile_id, current_user.id)
         
         return self.tile_repository.delete(db, id=tile_id)
     
