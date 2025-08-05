@@ -258,16 +258,246 @@ export class TileEditorManager {
         
         // Define color palettes
         const colorPalettes = {
-            classic: ['#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'],
-            earth: ['#8B4513', '#A0522D', '#CD853F', '#DEB887', '#F4A460', '#D2691E', '#B8860B', '#DAA520'],
-            pastel: ['#FFB6C1', '#87CEEB', '#98FB98', '#F0E68C', '#DDA0DD', '#FFA07A', '#B0E0E6', '#F5DEB3'],
-            neon: ['#FF1493', '#00FFFF', '#00FF00', '#FFFF00', '#FF00FF', '#FF4500', '#9400D3', '#00CED1'],
-            monochrome: ['#000000', '#333333', '#666666', '#999999', '#CCCCCC', '#FFFFFF'],
-            retro: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'],
-            artistic: ['#8B4513', '#2F4F4F', '#CD853F', '#8B7355', '#A0522D', '#6B4423', '#8B6914', '#B8860B'],
-            sunset: ['#FF6B35', '#F7931E', '#FFB347', '#FFD700', '#FF69B4', '#FF1493', '#DC143C', '#8B0000'],
-            ocean: ['#006994', '#1E90FF', '#00BFFF', '#87CEEB', '#4682B4', '#191970', '#000080', '#4169E1'],
-            forest: ['#228B22', '#32CD32', '#90EE90', '#98FB98', '#006400', '#228B22', '#556B2F', '#8FBC8F']
+            // Classic RGB palette - fundamental colors
+            classic: [
+                '#000000', // Black
+                '#FFFFFF', // White
+                '#FF0000', // Pure Red
+                '#00FF00', // Pure Green
+                '#0000FF', // Pure Blue
+                '#FFFF00', // Yellow
+                '#FF00FF', // Magenta
+                '#00FFFF'  // Cyan
+            ],
+            
+            // Van Gogh inspired - warm, vibrant earth tones
+            earth: [
+                '#000000', // Black
+                '#FFFFFF', // White
+                '#8B4513', // Saddle Brown - Dark
+                '#A0522D', // Sienna - Medium
+                '#CD853F', // Peru - Light
+                '#D2691E', // Chocolate - Rich
+                '#B8860B', // Dark Goldenrod - Deep
+                '#DAA520', // Goldenrod - Medium
+                '#F4A460', // Sandy Brown - Light
+                '#DEB887', // Burlywood - Soft
+                '#8B7355', // Dark Khaki - Muted
+                '#A0522D'  // Sienna - Warm
+            ],
+            
+            // Monet inspired - soft, harmonious pastels
+            pastel: [
+                '#000000', // Black
+                '#FFFFFF', // White
+                '#FFB6C1', // Light Pink - Soft
+                '#87CEEB', // Sky Blue - Gentle
+                '#98FB98', // Pale Green - Fresh
+                '#F0E68C', // Khaki - Warm
+                '#DDA0DD', // Plum - Delicate
+                '#FFA07A', // Light Salmon - Soft
+                '#B0E0E6', // Powder Blue - Airy
+                '#F5DEB3', // Wheat - Natural
+                '#E6E6FA', // Lavender - Dreamy
+                '#FFE4E1'  // Misty Rose - Tender
+            ],
+            
+            // 80s Synthwave inspired - electric and vibrant
+            neon: [
+                '#000000', // Black
+                '#FFFFFF', // White
+                '#FF1493', // Deep Pink - Electric
+                '#00FFFF', // Cyan - Bright
+                '#00FF00', // Lime - Vibrant
+                '#FFFF00', // Yellow - Glowing
+                '#FF00FF', // Magenta - Bold
+                '#FF4500', // Orange Red - Hot
+                '#9400D3', // Dark Violet - Electric
+                '#00CED1', // Dark Turquoise - Bright
+                '#FF69B4', // Hot Pink - Neon
+                '#32CD32'  // Lime Green - Electric
+            ],
+            
+            // Ansel Adams inspired - dramatic monochrome
+            monochrome: [
+                '#000000', // Pure Black
+                '#1A1A1A', // Very Dark Gray
+                '#333333', // Dark Gray
+                '#4D4D4D', // Medium Dark Gray
+                '#666666', // Medium Gray
+                '#808080', // Gray
+                '#999999', // Light Gray
+                '#B3B3B3', // Very Light Gray
+                '#CCCCCC', // Light Gray
+                '#E6E6E6', // Very Light Gray
+                '#F5F5F5', // Almost White
+                '#FFFFFF'  // Pure White
+            ],
+            
+            // Wes Anderson inspired - quirky, retro charm
+            retro: [
+                '#000000', // Black
+                '#FFFFFF', // White
+                '#FF6B6B', // Coral - Warm
+                '#4ECDC4', // Turquoise - Fresh
+                '#45B7D1', // Sky Blue - Vintage
+                '#96CEB4', // Sage Green - Muted
+                '#FFEAA7', // Cream - Soft
+                '#DDA0DD', // Plum - Retro
+                '#98D8C8', // Mint - Pastel
+                '#F7DC6F', // Golden - Warm
+                '#E8A87C', // Peach - Gentle
+                '#C38D9E'  // Mauve - Vintage
+            ],
+            
+            // A refined, artistic palette with specific tones and their variations.
+            artistic: [
+                '#000000', // Black
+                '#FFFFFF', // White
+                '#5D3C2A', // Burnt Umber - Dark
+                '#794D36', // Burnt Umber - Medium
+                '#9B6A56', // Burnt Umber - Light
+                '#2A3644', // Payne's Grey - Dark
+                '#3B4E63', // Payne's Grey - Medium
+                '#4F6782', // Payne's Grey - Light
+                '#9A326B', // Magenta - Dark
+                '#C73E8A', // Magenta - Medium
+                '#F35FAD', // Magenta - Light
+                '#B7811A', // Yellow Ochre - Dark
+                '#DDA032', // Yellow Ochre - Medium
+                '#FDD477', // Yellow Ochre - Light
+                '#1E6351', // Blue Shade Green - Dark
+                '#2A8C73', // Blue Shade Green - Medium
+                '#38A98E'  // Blue Shade Green - Light
+            ],
+            
+            // Turner inspired - dramatic sunset and storm colors
+            sunset: [
+                '#000000', // Black
+                '#FFFFFF', // White
+                '#FF6B35', // Orange Red - Bright
+                '#F7931E', // Orange - Warm
+                '#FFB347', // Sandy Orange - Soft
+                '#FFD700', // Gold - Radiant
+                '#FF69B4', // Hot Pink - Vibrant
+                '#FF1493', // Deep Pink - Bold
+                '#DC143C', // Crimson - Rich
+                '#8B0000', // Dark Red - Deep
+                '#FF8C00', // Dark Orange - Warm
+                '#FF4500'  // Orange Red - Fiery
+            ],
+            
+            // Hokusai inspired - ocean waves and sea colors
+            ocean: [
+                '#000000', // Black
+                '#FFFFFF', // White
+                '#006994', // Deep Sea Blue - Dark
+                '#1E90FF', // Dodger Blue - Bright
+                '#00BFFF', // Deep Sky Blue - Clear
+                '#87CEEB', // Sky Blue - Light
+                '#4682B4', // Steel Blue - Medium
+                '#191970', // Midnight Blue - Deep
+                '#000080', // Navy - Rich
+                '#4169E1', // Royal Blue - Classic
+                '#6495ED', // Cornflower Blue - Soft
+                '#B0C4DE'  // Light Steel Blue - Gentle
+            ],
+            
+            // Rousseau inspired - lush jungle and forest colors
+            forest: [
+                '#000000', // Black
+                '#FFFFFF', // White
+                '#228B22', // Forest Green - Classic
+                '#32CD32', // Lime Green - Bright
+                '#90EE90', // Light Green - Fresh
+                '#98FB98', // Pale Green - Soft
+                '#006400', // Dark Green - Deep
+                '#556B2F', // Dark Olive Green - Rich
+                '#8FBC8F', // Dark Sea Green - Muted
+                '#2E8B57', // Sea Green - Natural
+                '#3CB371', // Medium Sea Green - Fresh
+                '#20B2AA'  // Light Sea Green - Bright
+            ],
+            
+            // Blade Runner inspired - futuristic cyberpunk
+            cyberpunk: [
+                '#000000', // Black
+                '#FFFFFF', // White
+                '#E6007A', // Hot Pink - Electric
+                '#00FFFF', // Cyan - Bright
+                '#00FF00', // Lime - Neon
+                '#FFFF00', // Yellow - Glowing
+                '#FF4500', // Orange Red - Hot
+                '#8A2BE2', // Blue Violet - Electric
+                '#32CD32', // Lime Green - Bright
+                '#1E90FF', // Dodger Blue - Electric
+                '#FF1493', // Deep Pink - Bold
+                '#00CED1'  // Dark Turquoise - Bright
+            ],
+            
+            // Edward Hopper inspired - vintage Americana
+            vintage: [
+                '#000000', // Black
+                '#FFFFFF', // White
+                '#A0522D', // Sienna - Classic
+                '#D2B48C', // Tan - Warm
+                '#CD853F', // Peru - Rich
+                '#F5DEB3', // Wheat - Soft
+                '#8B4513', // Saddle Brown - Deep
+                '#695E54', // Dark Brown - Muted
+                '#D3C1AE', // Beige - Gentle
+                '#E9D8A6', // Cream - Soft
+                '#B8860B', // Dark Goldenrod - Rich
+                '#DAA520'  // Goldenrod - Warm
+            ],
+            
+            // Georgia O'Keeffe inspired - desert landscapes
+            desert: [
+                '#000000', // Black
+                '#FFFFFF', // White
+                '#FAD7A0', // Peach - Soft
+                '#F7DC6F', // Golden - Warm
+                '#E6B0AA', // Light Pink - Dusty
+                '#D7BDE2', // Light Purple - Soft
+                '#C39BD3', // Light Purple - Medium
+                '#A569BD', // Medium Purple - Rich
+                '#7D3C98', // Purple - Deep
+                '#512E5F', // Dark Purple - Rich
+                '#D4AC0D', // Golden - Bright
+                '#E67E22'  // Carrot Orange - Warm
+            ],
+            
+            // Klimt inspired - rich jewel tones
+            grapevine: [
+                '#000000', // Black
+                '#FFFFFF', // White
+                '#5B2C6F', // Dark Purple - Rich
+                '#8E44AD', // Purple - Medium
+                '#BB8FCE', // Light Purple - Soft
+                '#E8DAEF', // Very Light Purple - Gentle
+                '#D4E6F1', // Light Blue - Soft
+                '#A9CCE3', // Light Blue - Medium
+                '#5499C7', // Blue - Medium
+                '#2874A6', // Dark Blue - Rich
+                '#922B21', // Dark Red - Rich
+                '#C0392B'  // Red - Medium
+            ],
+            
+            // Rothko inspired - deep, contemplative colors
+            midnightSky: [
+                '#000000', // Black
+                '#FFFFFF', // White
+                '#000033', // Deep Blue Black - Dark
+                '#191970', // Midnight Blue - Rich
+                '#4169E1', // Royal Blue - Medium
+                '#6495ED', // Cornflower Blue - Soft
+                '#ADD8E6', // Light Blue - Gentle
+                '#B0E0E6', // Powder Blue - Airy
+                '#F0F8FF', // Alice Blue - Very Light
+                '#2F4F4F', // Dark Slate Gray - Deep
+                '#708090', // Slate Gray - Medium
+                '#C0C0C0'  // Silver - Light
+            ]
         };
         
         // Get colors for the selected palette
