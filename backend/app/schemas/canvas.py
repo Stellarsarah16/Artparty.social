@@ -44,7 +44,8 @@ class CanvasCreate(BaseModel):
     def validate_palette_type(cls, v):
         valid_palettes = [
             'classic', 'earth', 'pastel', 'monochrome', 'neon', 'retro',
-            'artistic', 'sunset', 'ocean', 'forest'
+            'artistic', 'sunset', 'ocean', 'forest', 'cyberpunk', 'vintage',
+            'desert', 'grapevine', 'midnightSky'
         ]
         if v not in valid_palettes:
             raise ValueError(f'Palette type must be one of: {", ".join(valid_palettes)}')

@@ -138,16 +138,21 @@ export class ModalManager {
                         <div class="form-group">
                             <label for="settings-palette-type">Color Palette</label>
                             <select id="settings-palette-type" name="palette_type" required>
-                                <option value="classic">Classic - Basic 8-color pixel art</option>
-                                <option value="earth">Earth Tones - Natural browns and tans</option>
-                                <option value="pastel">Pastel - Soft, light colors</option>
-                                <option value="monochrome">Monochrome - Grayscale variations</option>
-                                <option value="neon">Neon - Bright, vibrant colors</option>
-                                <option value="retro">Retro Gaming - Classic game boy style</option>
-                                <option value="artistic">Artistic - Burnt umber, paynes grey, ochres</option>
-                                <option value="sunset">Sunset - Warm oranges, pinks, and purples</option>
-                                <option value="ocean">Ocean - Blues, teals, and sea greens</option>
-                                <option value="forest">Forest - Greens, browns, and natural tones</option>
+                                <option value="classic">Classic - Basic RGB colors</option>
+                                <option value="earth">Earth - Van Gogh inspired earth tones</option>
+                                <option value="pastel">Pastel - Monet inspired soft colors</option>
+                                <option value="neon">Neon - 80s Synthwave electric colors</option>
+                                <option value="monochrome">Monochrome - Ansel Adams grayscale</option>
+                                <option value="retro">Retro - Wes Anderson vintage charm</option>
+                                <option value="artistic">Artistic - Professional art palette</option>
+                                <option value="sunset">Sunset - Turner inspired warm colors</option>
+                                <option value="ocean">Ocean - Hokusai inspired sea colors</option>
+                                <option value="forest">Forest - Rousseau inspired nature tones</option>
+                                <option value="cyberpunk">Cyberpunk - Blade Runner futuristic</option>
+                                <option value="vintage">Vintage - Edward Hopper Americana</option>
+                                <option value="desert">Desert - Georgia O'Keeffe landscapes</option>
+                                <option value="grapevine">Grapevine - Klimt jewel tones</option>
+                                <option value="midnightSky">Midnight Sky - Rothko contemplative</option>
                             </select>
                         </div>
                         <div class="form-group">
