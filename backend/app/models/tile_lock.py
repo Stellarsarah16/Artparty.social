@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from datetime import datetime, timedelta, timezone
 from ..core.database import Base
 
 
@@ -22,10 +23,10 @@ class TileLock(Base):
     
     def is_expired(self) -> bool:
         """Check if the lock has expired"""
-        from datetime import datetime
-        return datetime.utcnow() > self.expires_at
+        # Use timezone-aware datetime for comparison
+        return datetime.now(timezone.utc) > self.expires_at
     
     def extend_lock(self, minutes: int = 30):
         """Extend the lock expiration time"""
-        from datetime import datetime, timedelta
-        self.expires_at = datetime.utcnow() + timedelta(minutes=minutes) 
+        # Use timezone-aware datetime for consistency
+        self.expires_at = datetime.now(timezone.utc) + timedelta(minutes=minutes) 
