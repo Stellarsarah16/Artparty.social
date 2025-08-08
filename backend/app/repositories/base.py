@@ -107,14 +107,33 @@ class SQLAlchemyRepository(BaseRepository[T, CreateSchemaType, UpdateSchemaType]
         obj_in: UpdateSchemaType
     ) -> T:
         """Update an existing record"""
-        obj_data = obj_in.dict(exclude_unset=True)
-        for field, value in obj_data.items():
-            setattr(db_obj, field, value)
-        
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
+        try:
+            print(f"🔧 BaseRepository: Starting update for {self.model.__name__} with ID {getattr(db_obj, 'id', 'unknown')}")
+            
+            obj_data = obj_in.dict(exclude_unset=True)
+            print(f"📝 BaseRepository: Update data: {obj_data}")
+            
+            for field, value in obj_data.items():
+                print(f"🔄 BaseRepository: Setting {field} = {value}")
+                setattr(db_obj, field, value)
+            
+            print(f"💾 BaseRepository: Adding object to database")
+            db.add(db_obj)
+            
+            print(f"✅ BaseRepository: Committing changes")
+            db.commit()
+            
+            print(f"🔄 BaseRepository: Refreshing object")
+            db.refresh(db_obj)
+            
+            print(f"✅ BaseRepository: Update completed successfully")
+            return db_obj
+            
+        except Exception as e:
+            print(f"❌ BaseRepository: Error in update: {type(e).__name__}: {str(e)}")
+            import traceback
+            print(f"📋 BaseRepository: Full traceback: {traceback.format_exc()}")
+            raise e
     
     def delete(self, db: Session, *, id: int) -> T:
         """Delete a record by ID"""

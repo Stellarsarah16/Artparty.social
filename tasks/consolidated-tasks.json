@@ -465,5 +465,31 @@
     "assignee": "developer",
     "created_date": "2025-08-08",
     "due_date": "2025-08-08"
+  },
+  {
+    "id": "improve-tile-editing-permissions",
+    "content": "Improve tile editing permissions and user feedback for collaboration mode restrictions",
+    "status": "completed",
+    "priority": "high",
+    "category": "ui-ux",
+    "dependencies": ["fix-production-issues"],
+    "description": "Enhanced tile editor to provide better user feedback for permission errors, added visual indicators for tile ownership, disabled save button for read-only tiles, and improved error messages for collaboration mode restrictions",
+    "estimated_hours": 2,
+    "assignee": "developer",
+    "created_date": "2025-08-08",
+    "due_date": "2025-08-08"
+  },
+  {
+    "id": "debug-tile-update-500-error",
+    "content": "Debug and fix 500 Internal Server Error when updating tiles",
+    "status": "in_progress",
+    "priority": "critical",
+    "category": "bug-fixes",
+    "dependencies": ["improve-tile-editing-permissions"],
+    "description": "Added comprehensive logging to tile update endpoint, service, and repository to identify the root cause of 500 errors when saving tiles. Need to test and analyze logs to find the specific issue.",
+    "estimated_hours": 2,
+    "assignee": "developer",
+    "created_date": "2025-08-08",
+    "due_date": "2025-08-08"
   }
 ] 

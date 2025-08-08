@@ -229,33 +229,57 @@ class TileService:
     
     def update_tile(self, db: Session, tile_id: int, tile_update: TileUpdate, current_user: User) -> Optional[Tile]:
         """Update tile with collaboration mode support"""
-        tile = self.tile_repository.get(db, tile_id)
-        if not tile:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tile not found"
-            )
-        
-        # Check permissions based on collaboration mode
-        self._check_tile_permissions(db, tile, current_user, "update")
-        
-        # Check if there's an active lock by another user
-        lock = self.tile_lock_repository.get_by_tile_id(db, tile_id)
-        if lock and lock.user_id != current_user.id and not lock.is_expired():
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Tile is currently being edited by another user"
-            )
-        
-        # If there's an expired lock or no lock, allow the update
-        # Clean up any expired lock
-        if lock and lock.is_expired():
-            self.tile_lock_repository.cleanup_expired_locks(db)
-        
-        # Update the tile
-        updated_tile = self.tile_repository.update(db, db_obj=tile, obj_in=tile_update)
-        
-        return updated_tile
+        try:
+            print(f"🔧 TileService: Starting update for tile {tile_id}")
+            
+            tile = self.tile_repository.get(db, tile_id)
+            if not tile:
+                print(f"❌ TileService: Tile {tile_id} not found")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Tile not found"
+                )
+            
+            print(f"✅ TileService: Found tile {tile_id}, checking permissions")
+            
+            # Check permissions based on collaboration mode
+            self._check_tile_permissions(db, tile, current_user, "update")
+            
+            print(f"✅ TileService: Permissions check passed")
+            
+            # Check if there's an active lock by another user
+            lock = self.tile_lock_repository.get_by_tile_id(db, tile_id)
+            if lock and lock.user_id != current_user.id and not lock.is_expired():
+                print(f"❌ TileService: Tile {tile_id} is locked by user {lock.user_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Tile is currently being edited by another user"
+                )
+            
+            print(f"✅ TileService: Lock check passed")
+            
+            # If there's an expired lock or no lock, allow the update
+            # Clean up any expired lock
+            if lock and lock.is_expired():
+                print(f"🧹 TileService: Cleaning up expired lock for tile {tile_id}")
+                self.tile_lock_repository.cleanup_expired_locks(db)
+            
+            print(f"🔄 TileService: Updating tile with data: {tile_update.dict(exclude_unset=True)}")
+            
+            # Update the tile
+            updated_tile = self.tile_repository.update(db, db_obj=tile, obj_in=tile_update)
+            
+            print(f"✅ TileService: Tile {tile_id} updated successfully")
+            return updated_tile
+            
+        except HTTPException as e:
+            print(f"❌ TileService: HTTP Exception in update_tile: {e.status_code} - {e.detail}")
+            raise e
+        except Exception as e:
+            print(f"❌ TileService: Unexpected error in update_tile: {type(e).__name__}: {str(e)}")
+            import traceback
+            print(f"📋 TileService: Full traceback: {traceback.format_exc()}")
+            raise e
     
     def delete_tile(self, db: Session, tile_id: int, current_user: User) -> Optional[Tile]:
         """Delete tile with collaboration mode support"""

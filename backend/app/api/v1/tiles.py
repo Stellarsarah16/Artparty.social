@@ -136,8 +136,13 @@ async def update_tile(
 ):
     """Update tile (only owner can update)"""
     try:
+        print(f"🔄 Updating tile {tile_id} for user {current_user.username}")
+        print(f"📝 Update data: {tile_update.dict(exclude_unset=True)}")
+        
         # Update tile using service
         tile = tile_service.update_tile(db, tile_id, tile_update, current_user)
+        
+        print(f"✅ Tile {tile_id} updated successfully")
         
         # Broadcast tile update to WebSocket clients
         tile_data = {
@@ -162,12 +167,16 @@ async def update_tile(
         }
         
     except HTTPException as e:
+        print(f"❌ HTTP Exception in update_tile: {e.status_code} - {e.detail}")
         raise e
     except Exception as e:
+        print(f"❌ Unexpected error in update_tile: {type(e).__name__}: {str(e)}")
+        import traceback
+        print(f"📋 Full traceback: {traceback.format_exc()}")
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error updating tile"
+            detail=f"Internal server error updating tile: {str(e)}"
         )
 
 

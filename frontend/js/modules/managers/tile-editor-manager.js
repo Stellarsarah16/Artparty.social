@@ -50,15 +50,32 @@ export class TileEditorManager {
                     this.startLockExtension();
                 }
             } catch (error) {
-                if (error.status === 409) {
+                if (error.status === 403) {
+                    // Permission denied - user cannot edit this tile
+                    const errorMessage = 'You can only edit your own tiles in this canvas mode. This tile was created by another user.';
+                    if (window.UIManager) {
+                        window.UIManager.showToast(errorMessage, 'error');
+                    }
+                    console.warn('🔒 Permission denied: Cannot edit tile created by another user');
+                    return;
+                } else if (error.status === 409) {
                     // Tile is locked by another user
                     if (window.UIManager) {
                         window.UIManager.showToast('This tile is currently being edited by another user', 'error');
                     }
                     return;
+                } else if (error.status === 404) {
+                    // Tile not found
+                    if (window.UIManager) {
+                        window.UIManager.showToast('Tile not found. It may have been deleted.', 'error');
+                    }
+                    return;
                 } else {
                     console.warn('⚠️ Could not acquire tile lock:', error);
-                    // Continue without lock for now
+                    // Continue without lock for now, but warn the user
+                    if (window.UIManager) {
+                        window.UIManager.showToast('Warning: Could not acquire tile lock. Changes may not be saved.', 'warning');
+                    }
                 }
             }
             
@@ -566,22 +583,40 @@ export class TileEditorManager {
      * Update tile information display
      */
     updateTileInfo(tile) {
+        // Get current user for ownership comparison
+        const currentUser = window.CONFIG_UTILS ? window.CONFIG_UTILS.getUserData() : null;
+        const isOwner = currentUser && tile.creator_id === currentUser.id;
+        
         // Update current tile coordinates
         const coordsElement = document.getElementById('current-tile-coords');
         if (coordsElement) {
             coordsElement.textContent = `Tile: (${tile.x}, ${tile.y})`;
         }
         
-        // Update tile owner
+        // Update tile owner with ownership indicator
         const ownerElement = document.getElementById('tile-info-owner');
         if (ownerElement) {
-            ownerElement.textContent = `Owner: ${tile.creator_username || 'Unknown'}`;
+            const ownerName = tile.creator_username || 'Unknown';
+            const ownershipIcon = isOwner ? '👤' : '🔒';
+            const ownershipText = isOwner ? 'Your tile' : `Created by ${ownerName}`;
+            ownerElement.innerHTML = `${ownershipIcon} ${ownershipText}`;
+            
+            // Add visual styling for ownership
+            if (isOwner) {
+                ownerElement.style.color = '#4CAF50'; // Green for owned tiles
+                ownerElement.title = 'You can edit this tile';
+            } else {
+                ownerElement.style.color = '#FF9800'; // Orange for other users' tiles
+                ownerElement.title = 'You cannot edit tiles created by other users in this canvas mode';
+            }
         }
         
         // Update tile canvas info
         const canvasElement = document.getElementById('tile-info-canvas');
         if (canvasElement) {
-            canvasElement.textContent = `Canvas: ${tile.canvas_name || 'Unknown'}`;
+            const canvasName = tile.canvas_name || 'Unknown';
+            const collaborationMode = tile.canvas?.collaboration_mode || 'unknown';
+            canvasElement.innerHTML = `Canvas: ${canvasName} <span style="font-size: 0.8em; color: #666;">(${collaborationMode} mode)</span>`;
         }
         
         // Update created date
@@ -594,6 +629,27 @@ export class TileEditorManager {
         const updatedElement = document.getElementById('tile-info-updated');
         if (updatedElement) {
             updatedElement.textContent = `Updated: ${new Date(tile.updated_at || tile.created_at).toLocaleDateString()}`;
+        }
+        
+        // Add collaboration mode warning if user doesn't own the tile
+        if (!isOwner && tile.canvas?.collaboration_mode !== 'free') {
+            const warningElement = document.getElementById('tile-edit-warning');
+            if (warningElement) {
+                warningElement.innerHTML = `
+                    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                        <strong>⚠️ Read-only tile</strong><br>
+                        You can only edit your own tiles in ${tile.canvas?.collaboration_mode || 'restricted'} mode.
+                        <br><small>Try creating a new tile in an empty position instead.</small>
+                    </div>
+                `;
+                warningElement.style.display = 'block';
+            }
+        } else {
+            // Hide warning if user owns the tile or canvas is in free mode
+            const warningElement = document.getElementById('tile-edit-warning');
+            if (warningElement) {
+                warningElement.style.display = 'none';
+            }
         }
         
         console.log('✅ Tile info updated:', tile);
@@ -609,15 +665,35 @@ export class TileEditorManager {
             saveBtn.replaceWith(saveBtn.cloneNode(true));
             const newSaveBtn = document.getElementById('save-tile-btn');
             
-            newSaveBtn.addEventListener('click', async () => {
-                console.log('💾 Save button clicked for tile:', tile.id);
-                await this.saveTile(tile.id);
-            });
+            // Check if user can edit this tile
+            const currentUser = window.CONFIG_UTILS ? window.CONFIG_UTILS.getUserData() : null;
+            const isOwner = currentUser && tile.creator_id === currentUser.id;
+            const isFreeMode = tile.canvas?.collaboration_mode === 'free';
+            const canEdit = isOwner || isFreeMode;
             
-            // Enable the save button
-            newSaveBtn.disabled = false;
-            
-            console.log('✅ Save button setup complete');
+            if (canEdit) {
+                // User can edit this tile
+                newSaveBtn.addEventListener('click', async () => {
+                    console.log('💾 Save button clicked for tile:', tile.id);
+                    await this.saveTile(tile.id);
+                });
+                
+                // Enable the save button
+                newSaveBtn.disabled = false;
+                newSaveBtn.textContent = 'Save Tile';
+                newSaveBtn.style.backgroundColor = '#4CAF50';
+                newSaveBtn.title = 'Save your changes to this tile';
+                
+                console.log('✅ Save button enabled for editable tile');
+            } else {
+                // User cannot edit this tile
+                newSaveBtn.disabled = true;
+                newSaveBtn.textContent = 'Read Only';
+                newSaveBtn.style.backgroundColor = '#9E9E9E';
+                newSaveBtn.title = 'You can only edit your own tiles in this canvas mode';
+                
+                console.log('🔒 Save button disabled for read-only tile');
+            }
         } else {
             console.warn('⚠️ Save button not found');
         }
@@ -741,8 +817,37 @@ export class TileEditorManager {
                 currentTile: this.currentTile
             });
             
+            // Handle specific error types with better user feedback
+            let errorMessage = 'Failed to save tile';
+            
+            if (error.status === 403) {
+                // Permission denied - likely collaboration mode restriction
+                errorMessage = 'You can only edit your own tiles in this canvas mode. This tile was created by another user.';
+            } else if (error.status === 409) {
+                // Conflict - tile is locked by another user
+                errorMessage = 'This tile is currently being edited by another user. Please try again later.';
+            } else if (error.status === 404) {
+                // Not found
+                errorMessage = 'Tile not found. It may have been deleted by another user.';
+            } else if (error.status === 422) {
+                // Validation error
+                errorMessage = 'Invalid tile data. Please check your changes and try again.';
+            } else if (error.status >= 500) {
+                // Server error
+                errorMessage = 'Server error occurred. Please try again later.';
+            } else if (error.message) {
+                // Use the specific error message if available
+                errorMessage = error.message;
+            }
+            
             // Show error message
-            window.UIManager.showToast(`Failed to save tile: ${error.message}`, 'error');
+            window.UIManager.showToast(errorMessage, 'error');
+            
+            // For permission errors, also show a more detailed message in console
+            if (error.status === 403) {
+                console.warn('🔒 Permission denied: This tile was created by another user and cannot be modified in the current canvas mode.');
+                console.warn('💡 Tip: Try creating a new tile in an empty position instead.');
+            }
         }
     }
 
