@@ -1,6 +1,6 @@
 # 🚀 Digital Ocean Deployment Guide
 
-Complete guide to deploy StellarCollabApp on Digital Ocean Ubuntu server.
+Complete guide to deploy Artparty.social on Digital Ocean Ubuntu server.
 
 ## Prerequisites
 
@@ -52,14 +52,14 @@ ssh root@YOUR_SERVER_IP
 ```bash
 # On your server
 cd /opt
-git clone https://github.com/YOUR_USERNAME/StellarCollabApp.git
-cd StellarCollabApp
+git clone https://github.com/YOUR_USERNAME/Artparty.social.git
+cd Artparty.social
 ```
 
 ### Option B: Using SCP (Upload from Windows)
 ```bash
 # From your Windows machine
-scp -r F:\DevFolder\PythonProjects\webApplications\StellarCollabApp root@YOUR_SERVER_IP:/opt/
+scp -r F:\DevFolder\PythonProjects\webApplications\Artparty.social root@YOUR_SERVER_IP:/opt/
 ```
 
 ## Step 4: Server Setup and Deployment
@@ -67,7 +67,7 @@ scp -r F:\DevFolder\PythonProjects\webApplications\StellarCollabApp root@YOUR_SE
 ### 4.1 Run Server Setup Script
 ```bash
 # On your server
-cd /opt/StellarCollabApp/deployment
+cd /opt/Artparty.social/deployment
 chmod +x server-setup.sh
 ./server-setup.sh
 ```
@@ -103,7 +103,7 @@ POSTGRES_USER=stellarcollab
 DATABASE_URL=postgresql://stellarcollab:your_strong_database_password_here@db:5432/stellarcollab_prod
 
 # App settings
-APP_NAME=StellarCollabApp
+APP_NAME=Artparty.social
 APP_VERSION=1.0.0
 DEBUG=false
 JWT_ALGORITHM=HS256
@@ -286,7 +286,7 @@ If you encounter issues:
 
 ## 🎉 You're Live!
 
-Your StellarCollabApp is now running on Digital Ocean! Users can:
+Your Artparty.social is now running on Digital Ocean! Users can:
 - Create accounts and log in
 - Create collaborative pixel art canvases
 - Paint 32x32 pixel art tiles in real-time

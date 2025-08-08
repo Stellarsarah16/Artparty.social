@@ -25,28 +25,28 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/445</span>
+                <span class='fraction'>0/456</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/246</span>
+                <span class='fraction'>0/264</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/56</span>
+                <span class='fraction'>0/57</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/422</span>
+                <span class='fraction'>0/431</span>
             </div>
         
             
@@ -1290,7 +1290,33 @@
 <a name='L1225'></a><a href='#L1225'>1225</a>
 <a name='L1226'></a><a href='#L1226'>1226</a>
 <a name='L1227'></a><a href='#L1227'>1227</a>
-<a name='L1228'></a><a href='#L1228'>1228</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L1228'></a><a href='#L1228'>1228</a>
+<a name='L1229'></a><a href='#L1229'>1229</a>
+<a name='L1230'></a><a href='#L1230'>1230</a>
+<a name='L1231'></a><a href='#L1231'>1231</a>
+<a name='L1232'></a><a href='#L1232'>1232</a>
+<a name='L1233'></a><a href='#L1233'>1233</a>
+<a name='L1234'></a><a href='#L1234'>1234</a>
+<a name='L1235'></a><a href='#L1235'>1235</a>
+<a name='L1236'></a><a href='#L1236'>1236</a>
+<a name='L1237'></a><a href='#L1237'>1237</a>
+<a name='L1238'></a><a href='#L1238'>1238</a>
+<a name='L1239'></a><a href='#L1239'>1239</a>
+<a name='L1240'></a><a href='#L1240'>1240</a>
+<a name='L1241'></a><a href='#L1241'>1241</a>
+<a name='L1242'></a><a href='#L1242'>1242</a>
+<a name='L1243'></a><a href='#L1243'>1243</a>
+<a name='L1244'></a><a href='#L1244'>1244</a>
+<a name='L1245'></a><a href='#L1245'>1245</a>
+<a name='L1246'></a><a href='#L1246'>1246</a>
+<a name='L1247'></a><a href='#L1247'>1247</a>
+<a name='L1248'></a><a href='#L1248'>1248</a>
+<a name='L1249'></a><a href='#L1249'>1249</a>
+<a name='L1250'></a><a href='#L1250'>1250</a>
+<a name='L1251'></a><a href='#L1251'>1251</a>
+<a name='L1252'></a><a href='#L1252'>1252</a>
+<a name='L1253'></a><a href='#L1253'>1253</a>
+<a name='L1254'></a><a href='#L1254'>1254</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1879,6 +1905,32 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -3113,6 +3165,32 @@ class PixelEditor {
     }
     
     /**
+     * Pick color from external canvas (like neighbor tiles)
+     * @param {HTMLCanvasElement} canvas - The canvas to pick from
+     * @param {number} x - X coordinate on the canvas
+     * @param {number} y - Y coordinate on the canvas
+     * @param {Array} pixelData - The pixel data array for the external canvas
+     */
+<span class="fstat-no" title="function not covered" >    pi</span>ckColorFromExternalCanvas(canvas, x, y, pixelData) {
+<span class="cstat-no" title="statement not covered" >        if (!canvas || !pixelData || !Array.isArray(pixelData)) <span class="cstat-no" title="statement not covered" >return;</span></span>
+        
+        // Convert canvas coordinates to pixel coordinates
+        const rect = <span class="cstat-no" title="statement not covered" >canvas.getBoundingClientRect();</span>
+        const canvasX = <span class="cstat-no" title="statement not covered" >Math.floor((x - rect.left) / (canvas.width / this.tileSize));</span>
+        const canvasY = <span class="cstat-no" title="statement not covered" >Math.floor((y - rect.top) / (canvas.height / this.tileSize));</span>
+        
+        // Check bounds
+<span class="cstat-no" title="statement not covered" >        if (canvasX &lt; 0 || canvasX &gt;= this.tileSize || canvasY &lt; 0 || canvasY &gt;= this.tileSize) <span class="cstat-no" title="statement not covered" >return;</span></span>
+        
+        // Get color from pixel data
+        const color = <span class="cstat-no" title="statement not covered" >pixelData[canvasY] &amp;&amp; pixelData[canvasY][canvasX];</span>
+<span class="cstat-no" title="statement not covered" >        if (color &amp;&amp; color !== 'transparent' &amp;&amp; color !== 'white') {</span>
+<span class="cstat-no" title="statement not covered" >            this.setColor(color);</span>
+<span class="cstat-no" title="statement not covered" >            console.log(`🎨 Picked color ${color} from neighbor tile at (${canvasX}, ${canvasY})`);</span>
+        }
+    }
+    
+    /**
      * Flood fill algorithm
      * @param {number} x - X coordinate
      * @param {number} y - Y coordinate
@@ -3751,7 +3829,7 @@ const pixelEditor = <span class="cstat-no" title="statement not covered" >new Pi
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-02T15:03:38.382Z
+                at 2025-08-08T13:31:59.572Z
             </div>
         <script src="../prettify.js"></script>
         <script>

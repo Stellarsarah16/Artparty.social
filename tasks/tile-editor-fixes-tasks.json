@@ -56,7 +56,7 @@
   {
     "id": "fix-canvas-settings-modal",
     "content": "Fix canvas settings modal not populating form fields with canvas data",
-    "status": "in_progress",
+    "status": "completed",
     "dependencies": []
   }
 ] 

@@ -1,4 +1,4 @@
-# CORS Deployment Guide - StellarCollabApp
+# CORS Deployment Guide - Artparty.social
 
 ## 🎯 Overview
 

@@ -8,7 +8,7 @@
   {
     "id": "fix-test-expectations",
     "content": "Update test expectations to match actual implementation",
-    "status": "in_progress",
+    "status": "completed",
     "dependencies": ["fix-missing-methods"]
   },
   {

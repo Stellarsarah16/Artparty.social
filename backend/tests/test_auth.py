@@ -3,23 +3,37 @@ Test Authentication Endpoints
 """
 import pytest
 import httpx
+import os
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import tempfile
-import os
 
 from app.main import app
 from app.core.database import Base, get_db
+# Import models to ensure they are registered with Base
+from app.models import User, Canvas, Tile, Like, VerificationToken, TileLock
+
+# Set test environment variables
+os.environ["ENVIRONMENT"] = "test"
+os.environ["DEBUG"] = "true"
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
 
 # Test database setup
 @pytest.fixture(scope="session")
 def test_engine():
     """Create test database engine"""
-    # Use in-memory SQLite for tests
+    # Force SQLite for tests
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+    print(f"Creating test engine: {engine.url}")
+    
+    # Import models to ensure they are registered
+    from app.models import User, Canvas, Tile, Like, VerificationToken, TileLock
+    
+    # Create all tables
     Base.metadata.create_all(bind=engine)
+    print(f"Tables created: {[table.name for table in Base.metadata.sorted_tables]}")
     return engine
 
 
@@ -30,6 +44,7 @@ def test_db(test_engine):
     
     # Create all tables
     Base.metadata.create_all(bind=test_engine)
+    print(f"Tables in test_db fixture: {[table.name for table in Base.metadata.sorted_tables]}")
     
     session = TestingSessionLocal()
     try:
@@ -65,20 +80,22 @@ class TestUserRegistration:
         """Test successful user registration"""
         user_data = {
             "username": "testuser",
-            "email": "test@example.com", 
-            "password": "testpassword123",
-            "display_name": "Test User"
+            "email": "test@example.com",
+            "password": "SecurePass123!",
+            "first_name": "Test",
+            "last_name": "User"
         }
-        
+
         response = client.post("/api/v1/auth/register", json=user_data)
-        
+
         assert response.status_code == 201
         data = response.json()
         assert "access_token" in data
         assert "user" in data
         assert data["user"]["username"] == "testuser"
         assert data["user"]["email"] == "test@example.com"
-        assert data["user"]["display_name"] == "Test User"
+        assert data["user"]["first_name"] == "Test"
+        assert data["user"]["last_name"] == "User"
         assert "password" not in data["user"]
     
     def test_register_duplicate_username(self, client):
@@ -86,7 +103,9 @@ class TestUserRegistration:
         user_data = {
             "username": "testuser",
             "email": "test1@example.com",
-            "password": "testpassword123"
+            "password": "SecurePass123!",
+            "first_name": "Test",
+            "last_name": "User"
         }
         
         # Create first user
@@ -104,7 +123,9 @@ class TestUserRegistration:
         user_data = {
             "username": "testuser1",
             "email": "test@example.com",
-            "password": "testpassword123"
+            "password": "SecurePass123!",
+            "first_name": "Test",
+            "last_name": "User"
         }
         
         # Create first user
@@ -122,7 +143,9 @@ class TestUserRegistration:
         user_data = {
             "username": "testuser",
             "email": "invalid-email",
-            "password": "testpassword123"
+            "password": "SecurePass123!",
+            "first_name": "Test",
+            "last_name": "User"
         }
         
         response = client.post("/api/v1/auth/register", json=user_data)
@@ -133,7 +156,9 @@ class TestUserRegistration:
         user_data = {
             "username": "testuser",
             "email": "test@example.com",
-            "password": "123"
+            "password": "123",
+            "first_name": "Test",
+            "last_name": "User"
         }
         
         response = client.post("/api/v1/auth/register", json=user_data)
@@ -158,7 +183,9 @@ class TestUserLogin:
         self.test_user = {
             "username": "testuser",
             "email": "test@example.com",
-            "password": "testpassword123"
+            "password": "SecurePass123!",
+            "first_name": "Test",
+            "last_name": "User"
         }
     
     def test_login_success(self, client):
@@ -298,8 +325,9 @@ class TestUserProfile:
         self.test_user = {
             "username": "testuser",
             "email": "test@example.com",
-            "password": "testpassword123",
-            "display_name": "Test User"
+            "password": "SecurePass123!",
+            "first_name": "Test",
+            "last_name": "User"
         }
     
     def get_auth_token(self, client):
@@ -320,15 +348,16 @@ class TestUserProfile:
         data = response.json()
         assert data["username"] == self.test_user["username"]
         assert data["email"] == self.test_user["email"]
-        assert data["display_name"] == self.test_user["display_name"]
+        assert data["first_name"] == self.test_user["first_name"]
+        assert data["last_name"] == self.test_user["last_name"]
     
     def test_update_user_profile(self, client):
         """Test updating user profile"""
         token = self.get_auth_token(client)
         
         update_data = {
-            "display_name": "Updated Display Name",
-            "bio": "This is my bio"
+            "first_name": "Updated",
+            "last_name": "Display Name"
         }
         
         response = client.put(
@@ -339,8 +368,8 @@ class TestUserProfile:
         
         assert response.status_code == 200
         data = response.json()
-        assert data["display_name"] == update_data["display_name"]
-        assert data["bio"] == update_data["bio"]
+        assert data["first_name"] == update_data["first_name"]
+        assert data["last_name"] == update_data["last_name"]
     
     def test_update_password(self, client):
         """Test password update"""

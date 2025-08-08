@@ -2,7 +2,7 @@
 
 ## Introduction/Overview
 
-The current StellarCollabApp has become complex with multiple ports, CORS conflicts, and confusing proxy configurations that make local development and production deployments error-prone. This refactor will simplify the architecture while maintaining functionality, enabling smooth weekly production deployments with reliable local testing.
+The current Artparty.social has become complex with multiple ports, CORS conflicts, and confusing proxy configurations that make local development and production deployments error-prone. This refactor will simplify the architecture while maintaining functionality, enabling smooth weekly production deployments with reliable local testing.
 
 ## Goals
 

@@ -1,13 +1,13 @@
-# 🏗️ StellarArtCollab Architecture Documentation
+# 🏗️ Artparty.social Architecture Documentation
 
 ## Overview
 
-StellarArtCollab has been refactored to follow **SOLID principles** and modern software engineering best practices. This document outlines the new architecture, design patterns, and how to contribute to the codebase.
+Artparty.social follows **SOLID principles** and modern software engineering best practices with a focus on maintainability, testability, and scalability. This document outlines the current architecture, design patterns, and how to contribute to the codebase.
 
 ## 🎯 SOLID Principles Implementation
 
 ### ✅ Single Responsibility Principle (SRP)
-- **Before**: Large monolithic files (main.js: 1161 lines, tiles.py: 619 lines)
+- **Before**: Large monolithic files with multiple responsibilities
 - **After**: Focused modules with single responsibilities
 
 #### Backend Services
@@ -16,30 +16,37 @@ StellarArtCollab has been refactored to follow **SOLID principles** and modern s
 - `UserService`: Only handles user business logic
 - `TileService`: Only handles tile business logic
 - `AuthenticationService`: Orchestrates authentication workflow
+- `EmailService`: Handles email sending operations
+- `VerificationService`: Manages email verification and password reset
 
-#### Frontend Modules
-- `AppState`: Centralized state management
-- `AuthManager`: Authentication operations
-- `NavigationManager`: Section and modal navigation
-- `UIUtils`: Common UI utilities and components
+#### Frontend Managers
+- `AuthManager`: Authentication operations and user session management
+- `CanvasListManager`: Canvas listing and management operations
+- `CanvasViewerManager`: Canvas display and tile interactions
+- `TileEditorManager`: Tile editing interface and pixel editor interactions
+- `ModalManager`: Modal dialogs and form submissions
+- `WebSocketManager`: Real-time WebSocket connections
+- `NavigationManager`: Section navigation and UI state management
 
 ### ✅ Open/Closed Principle (OCP)
 - **Repository Pattern**: Easy to extend with new data sources
 - **Service Layer**: New business logic can be added without modifying existing code
-- **Module System**: New frontend modules can be added without changing core logic
+- **Manager Pattern**: New frontend managers can be added without changing core logic
 
 ### ✅ Liskov Substitution Principle (LSP)
 - **Repository Interfaces**: All repositories implement the same base interface
 - **Service Abstractions**: Services can be swapped without breaking functionality
+- **Manager Interfaces**: Managers follow consistent patterns for easy substitution
 
 ### ✅ Interface Segregation Principle (ISP)
 - **Focused Interfaces**: Each repository has only the methods it needs
-- **Modular Frontend**: Components only depend on the functionality they use
+- **Modular Frontend**: Managers only depend on the functionality they use
+- **API Endpoints**: Each endpoint group has focused responsibilities
 
 ### ✅ Dependency Inversion Principle (DIP)
 - **Repository Pattern**: Business logic depends on abstractions, not concrete implementations
 - **Service Layer**: Controllers depend on service interfaces, not implementations
-- **Module Imports**: Frontend modules depend on abstractions
+- **Manager Pattern**: Frontend managers depend on abstractions and event-driven communication
 
 ## 🏛️ Backend Architecture
 
@@ -63,24 +70,48 @@ StellarArtCollab has been refactored to follow **SOLID principles** and modern s
 backend/app/
 ├── api/v1/              # API endpoints (controllers)
 │   ├── auth.py          # Authentication endpoints
+│   ├── users.py         # User management endpoints
+│   ├── canvas.py        # Canvas management endpoints
 │   ├── tiles.py         # Tile management endpoints
-│   └── ...
+│   ├── tile_locks.py    # Tile locking system endpoints
+│   ├── websockets.py    # WebSocket endpoints
+│   ├── admin.py         # Admin-only endpoints
+│   └── api.py           # Main API router
 ├── services/            # Business logic layer
 │   ├── authentication.py
 │   ├── user.py
 │   ├── tile.py
 │   ├── password.py
 │   ├── token.py
-│   └── ...
+│   ├── email.py
+│   ├── verification.py
+│   └── admin.py
 ├── repositories/        # Data access layer
 │   ├── base.py          # Abstract repository
 │   ├── user.py
 │   ├── tile.py
 │   ├── canvas.py
-│   └── like.py
+│   ├── like.py
+│   └── tile_lock.py
 ├── models/              # Database models
+│   ├── user.py
+│   ├── canvas.py
+│   ├── tile.py
+│   ├── tile_lock.py
+│   ├── like.py
+│   ├── social.py
+│   └── verification.py
 ├── schemas/             # Pydantic schemas
+│   ├── auth.py
+│   ├── user.py
+│   ├── canvas.py
+│   ├── tile.py
+│   ├── admin.py
+│   └── ...
 └── core/                # Core functionality
+    ├── config.py
+    ├── database.py
+    └── websocket.py
 ```
 
 ### Repository Pattern
@@ -99,162 +130,160 @@ class UserRepository(SQLAlchemyRepository[User, UserCreate, UserUpdate]):
     def is_username_taken(self, db: Session, *, username: str) -> bool: pass
 ```
 
-### Service Layer
-```python
-class UserService:
-    def __init__(self):
-        self.user_repository = user_repository
-        self.password_service = password_service
-    
-    def create_user(self, db: Session, user_create: UserCreate) -> User:
-        # Business logic for user creation
-        pass
-```
-
 ## 🎨 Frontend Architecture
 
-### Module Structure
-```
-┌─────────────────────────────────────┐
-│        Main Application             │
-├─────────────────────────────────────┤
-│           Modules                   │
-│  ┌─────────────┬─────────────────┐  │
-│  │  AppState   │  AuthManager    │  │
-│  ├─────────────┼─────────────────┤  │
-│  │ Navigation  │  UIUtils        │  │
-│  ├─────────────┼─────────────────┤  │
-│  │ CanvasManager│ ToolManager    │  │
-│  └─────────────┴─────────────────┘  │
-├─────────────────────────────────────┤
-│           Utilities                 │
-└─────────────────────────────────────┘
-```
+### Manager Pattern
+The frontend uses a **Manager Pattern** where each manager is responsible for a specific domain of functionality. Managers communicate through events and maintain their own state.
 
 ### Directory Structure
 ```
 frontend/js/
-├── main-refactored.js   # Application orchestrator
-├── modules/             # Focused modules
+├── modules/             # Core application modules
 │   ├── app-state.js     # Centralized state management
-│   ├── auth.js          # Authentication operations
-│   ├── navigation.js    # Section/modal navigation
+│   ├── navigation.js    # Navigation and UI state management
+│   ├── auth.js          # Authentication utilities
 │   ├── ui-utils.js      # Common UI utilities
-│   ├── canvas.js        # Canvas management (TODO)
-│   └── tools.js         # Tool management (TODO)
-├── config.js            # Configuration
-├── form-validation.js   # Form validation
-├── api.js               # API client
-└── ...
+│   └── managers/        # Domain-specific managers
+│       ├── auth-manager.js
+│       ├── canvas-list-manager.js
+│       ├── canvas-viewer-manager.js
+│       ├── tile-editor-manager.js
+│       ├── modal-manager.js
+│       ├── websocket-manager.js
+│       └── index.js
+├── services/            # API service layer
+│   ├── auth.js
+│   └── canvas.js
+├── utils/               # Utility functions
+│   ├── events.js
+│   └── ui.js
+├── api.js               # Centralized API client
+├── pixel-editor.js      # Pixel art editing functionality
+├── canvas-viewer.js     # Canvas display functionality
+└── app.js               # Application entry point
 ```
+
+### Manager Responsibilities
+
+#### AuthManager
+- User authentication (login, register, logout)
+- Session management
+- User data persistence
+- Authentication state updates
+
+#### CanvasListManager
+- Canvas listing and display
+- Canvas creation and deletion
+- Canvas filtering and search
+- Canvas statistics display
+
+#### CanvasViewerManager
+- Canvas display and rendering
+- Tile interactions and selection
+- WebSocket connection management
+- Real-time updates
+
+#### TileEditorManager
+- Tile editing interface
+- Pixel editor integration
+- Tool selection and management
+- Neighbor tile display
+- Save/load tile operations
+
+#### ModalManager
+- Modal dialog management
+- Form handling and validation
+- Canvas settings management
+- User feedback and notifications
+
+#### WebSocketManager
+- Real-time connection management
+- Message handling and routing
+- Connection state management
+- Reconnection logic
+
+#### NavigationManager
+- Section navigation
+- UI state management
+- Manager initialization and coordination
+- Event routing and handling
 
 ### State Management
+The application uses a centralized state management system through `AppState`:
+
 ```javascript
-// Centralized state with pub/sub pattern
-class AppState {
-    set(key, value) {
-        this.state[key] = value;
-        this.notifyListeners(key, value);
-    }
-    
-    subscribe(key, callback) {
-        // Subscribe to state changes
-    }
-}
-
-// Usage
-appState.set('currentUser', userData);
-appState.subscribe('currentUser', (user) => {
-    updateUI(user);
-});
-```
-
-## 🔄 Data Flow
-
-### Backend Request Flow
-```
-HTTP Request → Controller → Service → Repository → Database
-                     ↓
-HTTP Response ← Controller ← Service ← Repository ← Database
-```
-
-### Frontend Data Flow
-```
-User Action → Event Handler → Service/API → State Update → UI Update
-```
-
-## 🧪 Testing Strategy
-
-### Backend Testing
-- **Unit Tests**: Test individual services and repositories
-- **Integration Tests**: Test API endpoints with database
-- **Validation Tests**: Test Pydantic schema validation
-
-### Frontend Testing
-- **Unit Tests**: Test individual modules
-- **Integration Tests**: Test module interactions
-- **E2E Tests**: Test complete user workflows
-
-## 📚 Development Guidelines
-
-### Adding New Features
-
-#### Backend
-1. **Create Model** (if needed): Define database model
-2. **Create Schema**: Define Pydantic schemas for validation
-3. **Create Repository**: Implement data access methods
-4. **Create Service**: Implement business logic
-5. **Create Controller**: Implement API endpoints
-6. **Add Tests**: Write comprehensive tests
-
-#### Frontend
-1. **Identify Responsibility**: Determine which module handles the feature
-2. **Update State**: Add necessary state properties
-3. **Create/Update Module**: Implement functionality in focused module
-4. **Update UI**: Add/modify UI components
-5. **Add Event Handlers**: Wire up user interactions
-6. **Add Tests**: Write unit and integration tests
-
-### Code Style Guidelines
-
-#### Backend
-- Use type hints for all function parameters and return values
-- Follow dependency injection patterns
-- Keep controllers thin (business logic in services)
-- Use proper HTTP status codes and error handling
-- Write descriptive docstrings
-
-#### Frontend
-- Use ES6+ features and modules
-- Follow single responsibility principle
-- Use meaningful variable and function names
-- Handle errors gracefully with user feedback
-- Use semantic HTML and accessible UI patterns
-
-### Error Handling
-
-#### Backend
-```python
-# Service layer error handling
-def create_user(self, db: Session, user_create: UserCreate) -> User:
-    if self.user_repository.is_username_taken(db, username=user_create.username):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered"
-        )
-```
-
-#### Frontend
-```javascript
-// Consistent error handling with user feedback
-try {
-    const result = await apiCall();
-    showSuccess('Operation completed successfully');
-} catch (error) {
-    console.error('Operation failed:', error);
-    showError('Operation failed. Please try again.');
+// State structure
+{
+    isAuthenticated: boolean,
+    currentUser: User | null,
+    currentCanvas: Canvas | null,
+    currentTile: Tile | null,
+    currentSection: string,
+    websocket: WebSocket | null,
+    onlineUsers: User[],
+    canvasList: Canvas[],
+    currentTool: string,
+    currentColor: string,
+    isLoading: boolean
 }
 ```
+
+### Event-Driven Communication
+Managers communicate through events using the EventManager:
+
+```javascript
+// Example event usage
+appState.emit('user:login', userData);
+appState.emit('canvas:created', canvasData);
+appState.emit('tile:saved', tileData);
+```
+
+## 🔌 API Endpoints
+
+### Authentication (`/auth`)
+- `POST /auth/register` - User registration
+- `POST /auth/login` - User login
+- `POST /auth/logout` - User logout
+- `POST /auth/refresh` - Token refresh
+- `POST /auth/verify-email` - Email verification
+- `POST /auth/forgot-password` - Password reset request
+- `POST /auth/reset-password` - Password reset
+
+### Users (`/users`)
+- `GET /users/me` - Get current user profile
+- `PUT /users/me` - Update user profile
+- `DELETE /users/me` - Delete user account
+- `GET /users/{user_id}` - Get user profile (public)
+
+### Canvas (`/canvas`)
+- `GET /canvas` - List all canvases
+- `POST /canvas` - Create new canvas
+- `GET /canvas/{canvas_id}` - Get canvas details
+- `PUT /canvas/{canvas_id}` - Update canvas
+- `DELETE /canvas/{canvas_id}` - Delete canvas
+- `GET /canvas/{canvas_id}/tiles` - Get canvas tiles
+
+### Tiles (`/tiles`)
+- `GET /tiles` - List tiles (with filters)
+- `POST /tiles` - Create new tile
+- `GET /tiles/{tile_id}` - Get tile details
+- `PUT /tiles/{tile_id}` - Update tile
+- `DELETE /tiles/{tile_id}` - Delete tile
+
+### Tile Locks (`/tiles/locks`)
+- `POST /tiles/locks/acquire` - Acquire tile lock
+- `DELETE /tiles/locks/release` - Release tile lock
+- `GET /tiles/locks/status` - Get lock status
+
+### WebSockets (`/ws`)
+- `GET /ws/{canvas_id}` - WebSocket connection for real-time updates
+
+### Admin (`/admin`)
+- `GET /admin/users` - List all users (admin only)
+- `PUT /admin/users/{user_id}` - Update user (admin only)
+- `DELETE /admin/users/{user_id}` - Delete user (admin only)
+- `GET /admin/canvases` - List all canvases (admin only)
+- `DELETE /admin/canvases/{canvas_id}` - Delete canvas (admin only)
 
 ## 🚀 Performance Considerations
 
@@ -263,12 +292,14 @@ try {
 - Repository pattern enables easy caching implementation
 - Service layer allows for business logic optimization
 - Async/await for non-blocking operations
+- WebSocket connections for real-time updates
 
 ### Frontend Optimizations
-- Module lazy loading for better initial load times
+- Manager pattern for focused functionality
+- Event-driven communication reduces coupling
 - State management reduces unnecessary re-renders
 - Debounced user inputs for better performance
-- Efficient DOM manipulation through focused modules
+- Efficient DOM manipulation through focused managers
 
 ## 🔒 Security Best Practices
 
@@ -278,28 +309,33 @@ try {
 - Input validation with Pydantic schemas
 - SQL injection prevention through ORM
 - CORS configuration for production
+- Email verification for account security
+- Rate limiting on sensitive endpoints
 
 ### Frontend Security
 - XSS prevention through proper input handling
 - CSRF protection through token-based auth
 - Secure storage of authentication tokens
 - Input sanitization and validation
+- HTTPS enforcement in production
 
 ## 📈 Future Enhancements
 
 ### Planned Improvements
 1. **Dependency Injection Container**: Implement IoC container for better testability
-2. **Event-Driven Architecture**: Add event bus for loose coupling
+2. **Event-Driven Architecture**: Enhance event bus for loose coupling
 3. **Caching Layer**: Implement Redis caching in repository layer
 4. **API Versioning**: Enhance version management
 5. **Error Monitoring**: Add centralized error tracking
 6. **Performance Monitoring**: Add metrics and monitoring
+7. **Social Features**: Enhanced collaboration and social interactions
 
 ### Extension Points
 - **Authentication**: Easy to add OAuth providers through service interfaces
 - **Storage**: Easy to switch to different databases through repository pattern
 - **UI Themes**: Modular frontend supports easy theming
 - **Internationalization**: State management supports multi-language
+- **Real-time Features**: WebSocket infrastructure supports additional real-time features
 
 ## 🤝 Contributing
 
@@ -317,6 +353,7 @@ try {
 - [ ] Does it follow established patterns?
 - [ ] Is error handling comprehensive?
 - [ ] Is the code documented appropriately?
+- [ ] Are events used for cross-manager communication?
 
 ## 📞 Support
 

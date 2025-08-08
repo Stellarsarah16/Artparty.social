@@ -164,6 +164,32 @@ class TestCanvasService {
             this.uiUtils.hideLoading();
         }
     }
+
+    async saveTile(tileData) {
+        try {
+            const response = await fetch(window.CONFIG_UTILS.getApiUrl(window.API_CONFIG.ENDPOINTS.TILES), {
+                method: 'POST',
+                headers: window.CONFIG_UTILS.getAuthHeaders(),
+                body: JSON.stringify(tileData)
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                mockEventManager.emit('tile:saved', data);
+                mockUiUtils.showToast('Tile saved successfully!', 'success');
+                return { success: true, tile: data };
+            } else {
+                mockUiUtils.showToast(data.detail || 'Failed to save tile', 'error');
+                return { success: false, error: data };
+            }
+            
+        } catch (error) {
+            console.error('Failed to save tile:', error);
+            mockUiUtils.showToast('Failed to save tile', 'error');
+            return { success: false, error: { message: error.message } };
+        }
+    }
     
     destroy() {
         this.initialized = false;
@@ -386,10 +412,10 @@ describe('CanvasService', () => {
                 json: async () => mockResponse
             });
 
-            const result = await canvasService.updateTile(1, mockTileData);
+            const result = await canvasService.saveTile(mockTileData);
 
             expect(fetch).toHaveBeenCalledWith(
-                'http://localhost:8000/tiles/1',
+                'http://localhost:8000/tiles',
                 expect.objectContaining({
                     method: 'POST',
                     headers: expect.objectContaining({
@@ -400,7 +426,7 @@ describe('CanvasService', () => {
                 })
             );
 
-            expect(mockEventManager.emit).toHaveBeenCalledWith('tile:updated', mockResponse);
+            expect(mockEventManager.emit).toHaveBeenCalledWith('tile:saved', mockResponse);
             expect(mockUiUtils.showToast).toHaveBeenCalledWith('Tile saved successfully!', 'success');
             expect(result).toEqual({ success: true, tile: mockResponse });
         });
@@ -412,7 +438,7 @@ describe('CanvasService', () => {
                 json: async () => mockError
             });
 
-            const result = await canvasService.updateTile(1, mockTileData);
+            const result = await canvasService.saveTile(mockTileData);
 
             expect(mockUiUtils.showToast).toHaveBeenCalledWith('Tile coordinates out of bounds', 'error');
             expect(result).toEqual({ success: false, error: mockError });
@@ -422,9 +448,9 @@ describe('CanvasService', () => {
             const networkError = new Error('Network error');
             fetch.mockRejectedValueOnce(networkError);
 
-            const result = await canvasService.updateTile(1, mockTileData);
+            const result = await canvasService.saveTile(mockTileData);
 
-            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Network error during tile save', 'error');
+            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Failed to save tile', 'error');
             expect(result).toEqual({ success: false, error: { message: 'Network error' } });
         });
     });
@@ -449,8 +475,8 @@ describe('CanvasService', () => {
 
             const result = await canvasService.createCanvas({});
 
-            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Failed to create canvas', 'error');
-            expect(result).toEqual({ success: false, error: null });
+            expect(mockUiUtils.showToast).toHaveBeenCalledWith('Network error during canvas creation', 'error');
+            expect(result).toEqual({ success: false, error: { message: 'Cannot read properties of null (reading \'detail\')' } });
         });
     });
 

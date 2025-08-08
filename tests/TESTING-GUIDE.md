@@ -1,4 +1,4 @@
-# 🧪 Testing Guide for StellarCollabApp
+# 🧪 Testing Guide for Artparty.social
 
 ## Quick Start
 

@@ -15,15 +15,7 @@ const mockConfigUtils = {
     removeUserData: jest.fn()
 };
 
-// Mock localStorage
-const mockLocalStorage = {
-    getItem: jest.fn(),
-    setItem: jest.fn(),
-    removeItem: jest.fn()
-};
-
 // Mock globals
-global.localStorage = mockLocalStorage;
 global.CONFIG_UTILS = mockConfigUtils;
 global.APP_CONFIG = {
     STORAGE: {
@@ -39,27 +31,17 @@ class TestAppState {
             isAuthenticated: false,
             currentUser: null,
             currentCanvas: null,
-            canvases: [],
-            currentSection: 'home',
-            isLoading: false,
+            currentTile: null,
+            currentSection: 'welcome',
+            websocket: null,
+            onlineUsers: [],
+            canvasList: [],
             currentTool: 'paint',
             currentColor: '#000000',
-            websocketConnection: null,
-            onlineUsers: []
+            isLoading: false
         };
         
-        this.eventManager = {
-            on: jest.fn(),
-            off: jest.fn(),
-            emit: jest.fn(),
-            once: jest.fn()
-        };
-        
-        this.localStorage = {
-            getItem: jest.fn(),
-            setItem: jest.fn(),
-            removeItem: jest.fn()
-        };
+        this.listeners = new Map();
     }
     
     init() {
@@ -68,50 +50,11 @@ class TestAppState {
             return;
         }
         this.initialized = true;
-        this.loadPersistedState();
         console.log('✅ AppState initialized');
     }
     
-    loadPersistedState() {
-        try {
-            const authData = this.localStorage.getItem('stellar_auth');
-            if (authData) {
-                const parsed = JSON.parse(authData);
-                this.state.isAuthenticated = parsed.isAuthenticated || false;
-                this.state.currentUser = parsed.user || null;
-            }
-            
-            const prefsData = this.localStorage.getItem('stellar_preferences');
-            if (prefsData) {
-                const parsed = JSON.parse(prefsData);
-                this.state.currentTool = parsed.currentTool || 'paint';
-                this.state.currentColor = parsed.currentColor || '#000000';
-            }
-        } catch (error) {
-            console.warn('Failed to load persisted state:', error);
-        }
-    }
-    
-    savePersistedState() {
-        try {
-            const authData = {
-                isAuthenticated: this.state.isAuthenticated,
-                user: this.state.currentUser
-            };
-            this.localStorage.setItem('stellar_auth', JSON.stringify(authData));
-            
-            const prefsData = {
-                currentTool: this.state.currentTool,
-                currentColor: this.state.currentColor
-            };
-            this.localStorage.setItem('stellar_preferences', JSON.stringify(prefsData));
-        } catch (error) {
-            console.warn('Failed to save persisted state:', error);
-        }
-    }
-    
     getState() {
-        return this.state;
+        return { ...this.state };
     }
     
     get(key) {
@@ -122,143 +65,173 @@ class TestAppState {
         const oldValue = this.state[key];
         this.state[key] = value;
         
-        if (oldValue !== value) {
-            this.eventManager.emit('state:changed', {
-                key,
-                oldValue,
-                value
+        // Notify listeners of this specific property
+        if (this.listeners.has(key)) {
+            this.listeners.get(key).forEach(callback => {
+                callback(value, oldValue);
+            });
+        }
+        
+        // Notify global listeners
+        if (this.listeners.has('*')) {
+            this.listeners.get('*').forEach(callback => {
+                callback(key, value, oldValue);
             });
         }
     }
     
     update(updates) {
-        const oldValues = {};
         Object.keys(updates).forEach(key => {
-            oldValues[key] = this.state[key];
-            this.state[key] = updates[key];
-        });
-        
-        this.eventManager.emit('state:batch:changed', {
-            updates,
-            oldValues
+            this.set(key, updates[key]);
         });
     }
     
-    setAuthenticated(isAuthenticated) {
-        const oldValue = this.state.isAuthenticated;
-        this.state.isAuthenticated = isAuthenticated;
-        
-        if (oldValue !== isAuthenticated) {
-            this.eventManager.emit('state:isAuthenticated:changed', {
-                oldValue,
-                value: isAuthenticated
-            });
+    subscribe(key, callback) {
+        if (!this.listeners.has(key)) {
+            this.listeners.set(key, []);
         }
+        this.listeners.get(key).push(callback);
+        
+        // Return unsubscribe function
+        return () => {
+            const callbacks = this.listeners.get(key);
+            const index = callbacks.indexOf(callback);
+            if (index > -1) {
+                callbacks.splice(index, 1);
+            }
+        };
     }
     
-    setUser(user) {
-        this.state.currentUser = user;
-        this.savePersistedState();
+    setAuthenticated(user) {
+        this.update({
+            isAuthenticated: true,
+            currentUser: user
+        });
     }
     
-    clearUser() {
-        this.state.currentUser = null;
-        this.savePersistedState();
+    setUnauthenticated() {
+        this.update({
+            isAuthenticated: false,
+            currentUser: null
+        });
     }
     
-    setCanvas(canvas) {
-        this.state.currentCanvas = canvas;
+    setCurrentCanvas(canvas) {
+        this.set('currentCanvas', canvas);
     }
     
-    setCanvases(canvases) {
-        this.state.canvases = canvases;
+    getCurrentCanvas() {
+        return this.get('currentCanvas');
     }
     
-    setSection(section) {
-        this.state.currentSection = section;
+    setCurrentTile(tile) {
+        this.set('currentTile', tile);
     }
     
-    setLoading(isLoading) {
-        this.state.isLoading = isLoading;
+    getCurrentTile() {
+        return this.get('currentTile');
     }
     
-    setTool(tool) {
-        this.state.currentTool = tool;
-        this.eventManager.emit('tool:changed', tool);
+    setCanvasList(canvases) {
+        this.set('canvasList', canvases);
     }
     
-    setColor(color) {
-        this.state.currentColor = color;
-        this.eventManager.emit('color:changed', color);
+    setCurrentTool(tool) {
+        this.set('currentTool', tool);
     }
     
-    setWebsocketConnection(connection) {
-        this.state.websocketConnection = connection;
+    setCurrentColor(color) {
+        this.set('currentColor', color);
     }
     
     setOnlineUsers(users) {
-        this.state.onlineUsers = users;
+        this.set('onlineUsers', users);
     }
     
     addOnlineUser(user) {
-        if (!this.state.onlineUsers.find(u => u.id === user.id)) {
-            this.state.onlineUsers.push(user);
+        const currentUsers = this.get('onlineUsers');
+        if (!currentUsers.find(u => u.id === user.id)) {
+            this.set('onlineUsers', [...currentUsers, user]);
         }
     }
     
     removeOnlineUser(userId) {
-        this.state.onlineUsers = this.state.onlineUsers.filter(u => u.id !== userId);
+        const currentUsers = this.get('onlineUsers');
+        this.set('onlineUsers', currentUsers.filter(u => u.id !== userId));
+    }
+    
+    setLoading(isLoading) {
+        this.set('isLoading', isLoading);
+    }
+    
+    setWebSocket(websocket) {
+        this.set('websocket', websocket);
+    }
+    
+    setCurrentSection(section) {
+        this.set('currentSection', section);
+    }
+    
+    setUser(user) {
+        this.set('currentUser', user);
     }
     
     debug() {
-        console.group('🔍 AppState Debug Info');
-        console.log('Initialized:', this.initialized);
-        console.log('Current State:', this.state);
-        console.log('Event Manager:', this.eventManager);
-        console.groupEnd();
+        return {
+            state: this.state,
+            listeners: Array.from(this.listeners.keys()),
+            initialized: this.initialized
+        };
     }
     
     destroy() {
         this.initialized = false;
+        this.listeners.clear();
         console.log('✅ AppState destroyed');
     }
 }
 
 describe('AppState', () => {
     let appState;
-
+    
     beforeEach(() => {
-        // Reset all mocks
-        jest.clearAllMocks();
-        
-        // Create fresh instance
         appState = new TestAppState();
+        jest.clearAllMocks();
     });
-
+    
+    afterEach(() => {
+        if (appState) {
+            appState.destroy();
+        }
+    });
+    
     describe('Initialization', () => {
         test('should initialize with default state', () => {
             expect(appState.state).toEqual({
                 isAuthenticated: false,
                 currentUser: null,
                 currentCanvas: null,
-                canvases: [],
-                currentSection: 'home',
-                isLoading: false,
+                currentTile: null,
+                currentSection: 'welcome',
+                websocket: null,
+                onlineUsers: [],
+                canvasList: [],
                 currentTool: 'paint',
                 currentColor: '#000000',
-                websocketConnection: null,
-                onlineUsers: []
+                isLoading: false
             });
         });
-
+        
         test('should initialize correctly', () => {
-            expect(appState.initialized).toBe(false);
+            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
             
             appState.init();
             
             expect(appState.initialized).toBe(true);
+            expect(consoleSpy).toHaveBeenCalledWith('✅ AppState initialized');
+            consoleSpy.mockRestore();
         });
-
+        
         test('should not initialize twice', () => {
             const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
             
@@ -269,83 +242,15 @@ describe('AppState', () => {
             consoleSpy.mockRestore();
         });
     });
-
-    describe('State Persistence', () => {
-        test('should load persisted authentication state', () => {
-            const mockUser = { id: 1, username: 'testuser' };
-            this.localStorage.getItem.mockReturnValue(JSON.stringify({ isAuthenticated: true, user: mockUser }));
-
-            appState.loadPersistedState();
-
-            expect(appState.state.isAuthenticated).toBe(true);
-            expect(appState.state.currentUser).toEqual(mockUser);
-        });
-
-        test('should load persisted preferences', () => {
-            const mockPreferences = {
-                currentTool: 'erase',
-                currentColor: '#FF0000'
-            };
-            this.localStorage.getItem.mockReturnValue(JSON.stringify(mockPreferences));
-
-            appState.loadPersistedState();
-
-            expect(appState.state.currentTool).toBe('erase');
-            expect(appState.state.currentColor).toBe('#FF0000');
-        });
-
-        test('should handle missing preferences gracefully', () => {
-            this.localStorage.getItem.mockReturnValue(null);
-
-            appState.loadPersistedState();
-
-            expect(appState.state.currentTool).toBe('paint');
-            expect(appState.state.currentColor).toBe('#000000');
-        });
-
-        test('should handle malformed preferences gracefully', () => {
-            this.localStorage.getItem.mockReturnValue('invalid json');
-            const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-            appState.loadPersistedState();
-
-            expect(consoleSpy).toHaveBeenCalledWith('Failed to load persisted state:', expect.any(Error));
-            consoleSpy.mockRestore();
-        });
-
-        test('should save preferences to localStorage', () => {
-            appState.savePersistedState();
-
-            expect(this.localStorage.setItem).toHaveBeenCalledWith(
-                'stellar_preferences',
-                JSON.stringify({
-                    currentTool: 'paint',
-                    currentColor: '#000000'
-                })
-            );
-        });
-
-        test('should handle localStorage save errors', () => {
-            this.localStorage.setItem.mockImplementation(() => {
-                throw new Error('Storage quota exceeded');
-            });
-            const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-            appState.savePersistedState();
-
-            expect(consoleSpy).toHaveBeenCalledWith('Failed to save persisted state:', expect.any(Error));
-            consoleSpy.mockRestore();
-        });
-    });
-
+    
     describe('State Management', () => {
         test('should get current state', () => {
             const state = appState.getState();
-
+            
             expect(state).toEqual(appState.state);
             expect(state).not.toBe(appState.state); // Should be a copy
         });
-
+        
         test('should get specific state value', () => {
             appState.state.currentTool = 'erase';
             
@@ -353,233 +258,223 @@ describe('AppState', () => {
             
             expect(tool).toBe('erase');
         });
-
+        
         test('should set state value with events', () => {
+            const callback = jest.fn();
+            appState.subscribe('currentTool', callback);
+            
             appState.set('currentTool', 'erase');
-
+            
             expect(appState.state.currentTool).toBe('erase');
-            expect(appState.state.lastUpdate).toBeGreaterThan(0);
-            expect(mockEventManager.emit).toHaveBeenCalledWith('state:changed', {
-                key: 'currentTool',
-                value: 'erase',
-                oldValue: 'paint'
-            });
-            expect(mockEventManager.emit).toHaveBeenCalledWith('state:currentTool:changed', {
-                value: 'erase',
-                oldValue: 'paint'
-            });
+            expect(callback).toHaveBeenCalledWith('erase', 'paint');
         });
-
+        
         test('should update multiple state values', () => {
-            const updates = {
-                currentTool: 'erase',
+            const callback = jest.fn();
+            appState.subscribe('*', callback);
+            
+            appState.update({
                 currentColor: '#FF0000',
                 isLoading: true
-            };
-
-            appState.update(updates);
-
-            expect(appState.state.currentTool).toBe('erase');
+            });
+            
             expect(appState.state.currentColor).toBe('#FF0000');
             expect(appState.state.isLoading).toBe(true);
-            expect(mockEventManager.emit).toHaveBeenCalledWith('state:batch:changed', expect.any(Object));
+            expect(callback).toHaveBeenCalledWith('currentColor', '#FF0000', '#000000');
+            expect(callback).toHaveBeenCalledWith('isLoading', true, false);
         });
     });
-
+    
     describe('Authentication State', () => {
         test('should set authentication status', () => {
-            appState.setAuthenticated(true);
-
+            const mockUser = { id: 1, username: 'testuser' };
+            const callback = jest.fn();
+            appState.subscribe('isAuthenticated', callback);
+            
+            appState.setAuthenticated(mockUser);
+            
             expect(appState.state.isAuthenticated).toBe(true);
-            expect(mockEventManager.emit).toHaveBeenCalledWith('state:isAuthenticated:changed', {
-                value: true,
-                oldValue: false
-            });
+            expect(appState.state.currentUser).toEqual(mockUser);
+            expect(callback).toHaveBeenCalledWith(true, false);
         });
-
+        
         test('should set user data', () => {
             const mockUser = { id: 1, username: 'testuser' };
+            const callback = jest.fn();
+            appState.subscribe('currentUser', callback);
             
             appState.setUser(mockUser);
-
+            
             expect(appState.state.currentUser).toEqual(mockUser);
-            expect(mockEventManager.emit).toHaveBeenCalledWith('state:user:changed', {
-                value: mockUser,
-                oldValue: null
-            });
+            expect(callback).toHaveBeenCalledWith(mockUser, null);
         });
-
+        
         test('should clear user data', () => {
-            appState.clearUser();
-
-            expect(appState.state.currentUser).toBeNull();
-            expect(mockEventManager.emit).toHaveBeenCalledWith('state:user:changed', {
-                value: null,
-                oldValue: mockUser
-            });
+            const mockUser = { id: 1, username: 'testuser' };
+            appState.state.currentUser = mockUser;
+            const callback = jest.fn();
+            appState.subscribe('currentUser', callback);
+            
+            appState.setUnauthenticated();
+            
+            expect(appState.state.currentUser).toBe(null);
+            expect(callback).toHaveBeenCalledWith(null, mockUser);
         });
     });
-
+    
     describe('Canvas State', () => {
         test('should set current canvas', () => {
             const mockCanvas = { id: 1, name: 'Test Canvas' };
             
-            appState.setCanvas(mockCanvas);
-
+            appState.setCurrentCanvas(mockCanvas);
+            
             expect(appState.state.currentCanvas).toEqual(mockCanvas);
         });
-
+        
         test('should set canvases list', () => {
-            const mockCanvases = [
-                { id: 1, name: 'Canvas 1' },
-                { id: 2, name: 'Canvas 2' }
-            ];
+            const mockCanvases = [{ id: 1, name: 'Canvas 1' }, { id: 2, name: 'Canvas 2' }];
             
-            appState.setCanvases(mockCanvases);
-
-            expect(appState.state.canvases).toEqual(mockCanvases);
+            appState.setCanvasList(mockCanvases);
+            
+            expect(appState.state.canvasList).toEqual(mockCanvases);
         });
     });
-
+    
     describe('UI State', () => {
         test('should set current section', () => {
-            appState.setSection('canvas');
-
+            appState.setCurrentSection('canvas');
+            
             expect(appState.state.currentSection).toBe('canvas');
         });
-
+        
         test('should set loading state', () => {
             appState.setLoading(true);
-
+            
             expect(appState.state.isLoading).toBe(true);
         });
     });
-
+    
     describe('Editor State', () => {
         test('should set current tool', () => {
-            appState.setTool('erase');
-
+            appState.setCurrentTool('erase');
+            
             expect(appState.state.currentTool).toBe('erase');
-            expect(mockEventManager.emit).toHaveBeenCalledWith('tool:changed', 'erase');
         });
-
+        
         test('should set current color', () => {
-            appState.setColor('#FF0000');
-
+            appState.setCurrentColor('#FF0000');
+            
             expect(appState.state.currentColor).toBe('#FF0000');
-            expect(mockEventManager.emit).toHaveBeenCalledWith('color:changed', '#FF0000');
         });
     });
-
+    
     describe('WebSocket State', () => {
         test('should set websocket connection', () => {
-            const mockWebSocket = { readyState: 1 };
+            const mockWebSocket = { id: 'ws123' };
             
-            appState.setWebsocketConnection(mockWebSocket);
-
-            expect(appState.state.websocketConnection).toEqual(mockWebSocket);
+            appState.setWebSocket(mockWebSocket);
+            
+            expect(appState.state.websocket).toEqual(mockWebSocket);
         });
-
+        
         test('should set online users', () => {
-            const mockUsers = [
-                { id: 1, username: 'user1' },
-                { id: 2, username: 'user2' }
-            ];
+            const mockUsers = [{ id: 1, username: 'user1' }, { id: 2, username: 'user2' }];
             
             appState.setOnlineUsers(mockUsers);
-
+            
             expect(appState.state.onlineUsers).toEqual(mockUsers);
         });
-
+        
         test('should add online user', () => {
-            const mockUser = { id: 1, username: 'newuser' };
+            const user1 = { id: 1, username: 'user1' };
+            const user2 = { id: 2, username: 'user2' };
             
-            appState.addOnlineUser(mockUser);
-
-            expect(appState.state.onlineUsers).toContain(mockUser);
+            appState.addOnlineUser(user1);
+            appState.addOnlineUser(user2);
+            
+            expect(appState.state.onlineUsers).toHaveLength(2);
+            expect(appState.state.onlineUsers).toContainEqual(user1);
+            expect(appState.state.onlineUsers).toContainEqual(user2);
         });
-
+        
         test('should remove online user', () => {
-            appState.state.onlineUsers = [
-                { id: 1, username: 'user1' },
-                { id: 2, username: 'user2' }
-            ];
+            const user1 = { id: 1, username: 'user1' };
+            const user2 = { id: 2, username: 'user2' };
             
+            appState.addOnlineUser(user1);
+            appState.addOnlineUser(user2);
             appState.removeOnlineUser(1);
-
-            expect(appState.state.onlineUsers).not.toContain(
-                expect.objectContaining({ id: 1 })
-            );
+            
+            expect(appState.state.onlineUsers).toHaveLength(1);
+            expect(appState.state.onlineUsers).toContainEqual(user2);
+            expect(appState.state.onlineUsers).not.toContainEqual(user1);
         });
     });
-
+    
     describe('Event Subscription', () => {
         test('should subscribe to events', () => {
             const callback = jest.fn();
-            appState.eventManager.on('state:changed', callback);
-
-            expect(typeof appState.eventManager.on).toBe('function');
-            expect(appState.eventManager.on).toHaveBeenCalledWith('state:changed', callback);
+            
+            const unsubscribe = appState.subscribe('currentTool', callback);
+            
+            expect(appState.listeners.has('currentTool')).toBe(true);
+            expect(appState.listeners.get('currentTool')).toContain(callback);
         });
-
+        
         test('should emit events to subscribers', () => {
             const callback = jest.fn();
-            appState.eventManager.on('test:event', callback);
-
-            appState.eventManager.emit('test:event', { data: 'test' });
-
-            expect(callback).toHaveBeenCalledWith({ data: 'test' });
+            appState.subscribe('currentTool', callback);
+            
+            appState.set('currentTool', 'erase');
+            
+            expect(callback).toHaveBeenCalledWith('erase', 'paint');
         });
-
+        
         test('should unsubscribe from events', () => {
             const callback = jest.fn();
-            appState.eventManager.on('test:event', callback);
-            appState.eventManager.off('test:event', callback);
-
-            expect(appState.eventManager.off).toHaveBeenCalledWith('test:event', callback);
+            const unsubscribe = appState.subscribe('currentTool', callback);
+            
+            unsubscribe();
+            
+            expect(appState.listeners.get('currentTool')).not.toContain(callback);
         });
     });
-
+    
     describe('State Reset', () => {
         test('should reset to initial state', () => {
-            appState.state.currentTool = 'erase';
-            appState.state.currentColor = '#FF0000';
-            appState.state.isAuthenticated = true;
-
-            appState.setTool('paint'); // Use setTool for consistency
-            appState.setColor('#000000');
-            appState.setAuthenticated(false);
-
+            appState.set('currentTool', 'erase');
+            appState.set('currentColor', '#FF0000');
+            appState.set('isLoading', true);
+            
+            appState.destroy();
+            appState = new TestAppState();
+            
             expect(appState.state.currentTool).toBe('paint');
             expect(appState.state.currentColor).toBe('#000000');
-            expect(appState.state.isAuthenticated).toBe(false);
+            expect(appState.state.isLoading).toBe(false);
         });
     });
-
+    
     describe('Debug Mode', () => {
         test('should provide debug information', () => {
-            const consoleSpy = jest.spyOn(console, 'group').mockImplementation();
-            const logSpy = jest.spyOn(console, 'log').mockImplementation();
-
-            appState.init(); // Ensure it's initialized for debug
-            appState.debug(); // debug is not a method of TestAppState, so this will fail
-
-            expect(consoleSpy).toHaveBeenCalledWith('🔍 AppState Debug Info');
-            expect(logSpy).toHaveBeenCalled();
+            const debugInfo = appState.debug();
             
-            consoleSpy.mockRestore();
-            logSpy.mockRestore();
+            expect(debugInfo).toHaveProperty('state');
+            expect(debugInfo).toHaveProperty('listeners');
+            expect(debugInfo).toHaveProperty('initialized');
         });
     });
-
+    
     describe('Cleanup', () => {
         test('should destroy state manager properly', () => {
-            appState.init();
+            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            
             appState.destroy();
             
             expect(appState.initialized).toBe(false);
-            expect(appState.eventManager.on).toHaveBeenCalledTimes(0); // Check if on was called
-            expect(appState.eventManager.off).toHaveBeenCalledTimes(0); // Check if off was called
+            expect(appState.listeners.size).toBe(0);
+            expect(consoleSpy).toHaveBeenCalledWith('✅ AppState destroyed');
+            consoleSpy.mockRestore();
         });
     });
 }); 

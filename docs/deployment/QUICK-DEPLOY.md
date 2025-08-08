@@ -1,4 +1,4 @@
-# 🚀 Quick Deployment Guide - StellarCollabApp
+# 🚀 Quick Deployment Guide - Artparty.social
 
 ## **Step 1: Set Up Your Production Server**
 
@@ -32,8 +32,8 @@ systemctl enable docker
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/StellarCollabApp.git
-cd StellarCollabApp/deployment
+git clone https://github.com/yourusername/Artparty.social.git
+cd Artparty.social/deployment
 
 # Create your production configuration
 cp env.production.template .env.prod
@@ -53,7 +53,7 @@ CORS_ORIGINS=["https://yourdomain.com", "https://www.yourdomain.com"]
 DATABASE_URL=postgresql://stellarcollab:${DB_PASSWORD}@db:5432/stellarcollab_prod
 
 # Application settings (you can keep these)
-APP_NAME=StellarCollabApp
+APP_NAME=Artparty.social
 APP_VERSION=1.0.0
 DEBUG=false
 JWT_ALGORITHM=HS256
@@ -227,7 +227,7 @@ Before going live:
 
 ## **🎉 You're Live!**
 
-Your StellarCollabApp is now running in production! Users can:
+Your Artparty.social is now running in production! Users can:
 
 - Create accounts and log in
 - Create and join collaborative canvases

@@ -1,4 +1,4 @@
-# Production Deployment Guide - StellarCollabApp
+# Production Deployment Guide - Artparty.social
 
 ## 🚀 Quick Deploy (Fixed Version)
 

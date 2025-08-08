@@ -1,4 +1,4 @@
-# 🚀 StellarCollabApp Deployment Guide
+# 🚀 Artparty.social Deployment Guide
 
 ## Best Practices for GitHub → DigitalOcean Deployment
 
@@ -33,8 +33,8 @@ docker-compose up --build
 #### Option A: Automated Deployment (Recommended)
 ```bash
 # On your DigitalOcean server
-git clone https://github.com/yourusername/StellarCollabApp.git
-cd StellarCollabApp
+git clone https://github.com/yourusername/Artparty.social.git
+cd Artparty.social
 chmod +x deployment/deploy-digitalocean.sh
 ./deployment/deploy-digitalocean.sh
 ```
@@ -48,8 +48,8 @@ The script will ask for:
 #### Option B: Manual Deployment
 ```bash
 # 1. Clone repository
-git clone https://github.com/yourusername/StellarCollabApp.git
-cd StellarCollabApp
+git clone https://github.com/yourusername/Artparty.social.git
+cd Artparty.social
 
 # 2. Copy and edit environment file
 cp deployment/env.production.template deployment/.env
@@ -72,14 +72,14 @@ docker-compose -f deployment/docker-compose.prod.yml up -d --build
 ### Automated Update
 ```bash
 # On your DigitalOcean server
-cd StellarCollabApp
+cd Artparty.social
 ./deployment/update-from-github.sh
 ```
 
 ### Manual Update
 ```bash
 # On your DigitalOcean server
-cd StellarCollabApp
+cd Artparty.social
 git pull origin main
 docker-compose -f deployment/docker-compose.prod.yml up -d --build
 ```

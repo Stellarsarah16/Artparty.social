@@ -1,0 +1,456 @@
+[
+  {
+    "id": "consolidated-task-analysis",
+    "content": "Consolidated analysis of all open tasks across the project",
+    "status": "completed",
+    "dependencies": [],
+    "priority": "high",
+    "category": "project-management"
+  },
+  {
+    "id": "fix-canvas-settings-modal",
+    "content": "Fix canvas settings modal not populating form fields with canvas data",
+    "status": "completed",
+    "dependencies": [],
+    "priority": "high",
+    "category": "tile-editor",
+    "source": "tile-editor-fixes-tasks.json"
+  },
+  {
+    "id": "test-collaboration-fix",
+    "content": "Test that users can edit any tile in free mode, but not in restricted modes",
+    "status": "completed",
+    "dependencies": ["fix-canvas-settings-modal"],
+    "priority": "high",
+    "category": "collaboration",
+    "source": "collaboration-mode-fixes.json"
+  },
+  {
+    "id": "test-concurrent-editing",
+    "content": "Test that only one user can edit a tile at a time",
+    "status": "pending",
+    "dependencies": ["test-collaboration-fix"],
+    "priority": "high",
+    "category": "collaboration",
+    "source": "collaboration-mode-fixes.json"
+  },
+  {
+    "id": "analyze-tile-editor-neighbors",
+    "content": "Investigate why neighbor tiles don't show up when opening tile editor for non-existent tiles",
+    "status": "pending",
+    "dependencies": [],
+    "priority": "medium",
+    "category": "tile-editor",
+    "source": "simple-fixes-tasks.json"
+  },
+  {
+    "id": "fix-neighbor-tile-display",
+    "content": "Fix neighbor tile display in tile editor to show empty neighbor positions correctly",
+    "status": "pending",
+    "dependencies": ["analyze-tile-editor-neighbors"],
+    "priority": "medium",
+    "category": "tile-editor",
+    "source": "simple-fixes-tasks.json"
+  },
+  {
+    "id": "design-email-verification",
+    "content": "Design email verification system architecture including database schema changes",
+    "status": "pending",
+    "dependencies": [],
+    "priority": "medium",
+    "category": "authentication",
+    "source": "simple-fixes-tasks.json"
+  },
+  {
+    "id": "implement-email-service",
+    "content": "Create email service for sending verification and password reset emails",
+    "status": "pending",
+    "dependencies": ["design-email-verification"],
+    "priority": "medium",
+    "category": "authentication",
+    "source": "simple-fixes-tasks.json"
+  },
+  {
+    "id": "add-email-verification-endpoints",
+    "content": "Add backend API endpoints for email verification and password reset",
+    "status": "pending",
+    "dependencies": ["implement-email-service"],
+    "priority": "medium",
+    "category": "authentication",
+    "source": "simple-fixes-tasks.json"
+  },
+  {
+    "id": "update-user-model",
+    "content": "Update user model to include email verification fields (is_verified, verification_token, etc.)",
+    "status": "pending",
+    "dependencies": ["design-email-verification"],
+    "priority": "medium",
+    "category": "authentication",
+    "source": "simple-fixes-tasks.json"
+  },
+  {
+    "id": "implement-password-reset",
+    "content": "Implement password reset functionality with email verification",
+    "status": "pending",
+    "dependencies": ["add-email-verification-endpoints", "update-user-model"],
+    "priority": "medium",
+    "category": "authentication",
+    "source": "simple-fixes-tasks.json"
+  },
+  {
+    "id": "add-captcha-support",
+    "content": "Add captcha support for registration and password reset forms",
+    "status": "pending",
+    "dependencies": ["implement-password-reset"],
+    "priority": "low",
+    "category": "authentication",
+    "source": "simple-fixes-tasks.json"
+  },
+  {
+    "id": "update-frontend-auth-forms",
+    "content": "Update frontend login/register forms to include email verification and captcha",
+    "status": "pending",
+    "dependencies": ["add-captcha-support"],
+    "priority": "medium",
+    "category": "authentication",
+    "source": "simple-fixes-tasks.json"
+  },
+  {
+    "id": "test-auth-improvements",
+    "content": "Test all authentication improvements including logout redirect, email verification, and captcha",
+    "status": "completed",
+    "dependencies": ["update-frontend-auth-forms", "fix-neighbor-tile-display"],
+    "priority": "high",
+    "category": "testing",
+    "source": "simple-fixes-tasks.json"
+  },
+  {
+    "id": "update-documentation",
+    "content": "Update documentation and changelog with all authentication and tile editor improvements",
+    "status": "pending",
+    "dependencies": ["test-auth-improvements"],
+    "priority": "low",
+    "category": "documentation",
+    "source": "simple-fixes-tasks.json"
+  },
+  {
+    "id": "fix-tile-limit-error-message",
+    "content": "Update tile service to return clearer error message: 'Tile limit reached, unable to create new tile'",
+    "status": "pending",
+    "dependencies": [],
+    "priority": "low",
+    "category": "canvas",
+    "source": "canvas-improvements-tasks.json"
+  },
+  {
+    "id": "add-tile-count-display",
+    "content": "Add UI to show current tile count and remaining tiles for the user",
+    "status": "pending",
+    "dependencies": ["fix-tile-limit-error-message"],
+    "priority": "medium",
+    "category": "canvas",
+    "source": "canvas-improvements-tasks.json"
+  },
+  {
+    "id": "add-canvas-settings-ui",
+    "content": "Add canvas settings panel to modify max tiles, palette, and other settings",
+    "status": "pending",
+    "dependencies": ["add-tile-count-display"],
+    "priority": "medium",
+    "category": "canvas",
+    "source": "canvas-improvements-tasks.json"
+  },
+  {
+    "id": "implement-canvas-update-api",
+    "content": "Ensure canvas update API is working for non-admin users to modify their canvases",
+    "status": "pending",
+    "dependencies": ["add-canvas-settings-ui"],
+    "priority": "medium",
+    "category": "canvas",
+    "source": "canvas-improvements-tasks.json"
+  },
+  {
+    "id": "add-tile-management",
+    "content": "Add ability to view and delete user's own tiles",
+    "status": "pending",
+    "dependencies": ["add-tile-count-display"],
+    "priority": "low",
+    "category": "canvas",
+    "source": "canvas-improvements-tasks.json"
+  },
+  {
+    "id": "update-changelog-canvas",
+    "content": "Document all canvas improvements in CHANGELOG.md",
+    "status": "pending",
+    "dependencies": ["add-tile-management", "implement-canvas-update-api"],
+    "priority": "low",
+    "category": "documentation",
+    "source": "canvas-improvements-tasks.json"
+  },
+  {
+    "id": "fix-test-expectations",
+    "content": "Update test expectations to match actual implementation",
+    "status": "in_progress",
+    "dependencies": [],
+    "priority": "medium",
+    "category": "testing",
+    "source": "testing-infrastructure-tasks.json"
+  },
+  {
+    "id": "update-changelog-testing",
+    "content": "Document all testing infrastructure improvements in CHANGELOG.md",
+    "status": "pending",
+    "dependencies": ["fix-test-expectations"],
+    "priority": "low",
+    "category": "documentation",
+    "source": "testing-infrastructure-tasks.json"
+  },
+  {
+    "id": "optimize-backend-dockerfile",
+    "content": "Optimize backend Dockerfile for faster builds",
+    "status": "pending",
+    "dependencies": [],
+    "priority": "medium",
+    "category": "deployment",
+    "source": "email-services-deployment-tasks.json"
+  },
+  {
+    "id": "optimize-frontend-dockerfile",
+    "content": "Optimize frontend Dockerfile for faster builds",
+    "status": "pending",
+    "dependencies": [],
+    "priority": "medium",
+    "category": "deployment",
+    "source": "email-services-deployment-tasks.json"
+  },
+  {
+    "id": "implement-build-caching",
+    "content": "Implement Docker build caching strategy",
+    "status": "pending",
+    "dependencies": ["optimize-backend-dockerfile", "optimize-frontend-dockerfile"],
+    "priority": "medium",
+    "category": "deployment",
+    "source": "email-services-deployment-tasks.json"
+  },
+  {
+    "id": "test-email-verification",
+    "content": "Test email verification and password reset features",
+    "status": "pending",
+    "dependencies": [],
+    "priority": "high",
+    "category": "deployment",
+    "source": "email-services-deployment-tasks.json"
+  },
+  {
+    "id": "setup-production-email",
+    "content": "Configure production email settings",
+    "status": "pending",
+    "dependencies": ["test-email-verification"],
+    "priority": "medium",
+    "category": "deployment",
+    "source": "email-services-deployment-tasks.json"
+  },
+  {
+    "id": "performance-benchmarking",
+    "content": "Benchmark build and deployment performance",
+    "status": "pending",
+    "dependencies": ["implement-build-caching"],
+    "priority": "low",
+    "category": "deployment",
+    "source": "email-services-deployment-tasks.json"
+  },
+  {
+    "id": "test-websocket-functionality",
+    "content": "Verify WebSocket connections still work",
+    "status": "pending",
+    "dependencies": [],
+    "priority": "high",
+    "category": "deployment",
+    "source": "email-services-deployment-tasks.json"
+  },
+  {
+    "id": "documentation-update-deployment",
+    "content": "Update deployment documentation",
+    "status": "pending",
+    "dependencies": ["performance-benchmarking"],
+    "priority": "low",
+    "category": "documentation",
+    "source": "email-services-deployment-tasks.json"
+  },
+  {
+    "id": "final-integration-test",
+    "content": "Complete end-to-end integration testing",
+    "status": "pending",
+    "dependencies": ["setup-production-email", "test-websocket-functionality"],
+    "priority": "critical",
+    "category": "deployment",
+    "source": "email-services-deployment-tasks.json"
+  },
+  {
+    "id": "phase1-planning",
+    "content": "Plan Phase 1 implementation and create backup of current working state",
+    "status": "pending",
+    "dependencies": [],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "backup-current-state",
+    "content": "Create git branch and backup of current working local development setup",
+    "status": "pending",
+    "dependencies": ["phase1-planning"],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "implement-fastapi-static",
+    "content": "Add FastAPI static file serving for frontend files in local development",
+    "status": "pending",
+    "dependencies": ["backup-current-state"],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "update-backend-config",
+    "content": "Update backend configuration to serve static files and handle CORS properly",
+    "status": "pending",
+    "dependencies": ["implement-fastapi-static"],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "create-local-dev-server",
+    "content": "Create new local development server that runs everything on port 3000",
+    "status": "pending",
+    "dependencies": ["update-backend-config"],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "test-single-port-setup",
+    "content": "Test that frontend, API, and WebSocket all work on localhost:3000",
+    "status": "pending",
+    "dependencies": ["create-local-dev-server"],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "fix-cors-issues",
+    "content": "Remove nginx CORS handling and ensure FastAPI handles CORS correctly",
+    "status": "pending",
+    "dependencies": ["test-single-port-setup"],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "add-health-checks",
+    "content": "Add comprehensive health check endpoints for all services",
+    "status": "pending",
+    "dependencies": ["fix-cors-issues"],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "test-canvas-endpoints",
+    "content": "Verify all canvas endpoints work correctly in new setup",
+    "status": "pending",
+    "dependencies": ["add-health-checks"],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "test-tile-endpoints",
+    "content": "Verify all tile endpoints work correctly in new setup",
+    "status": "pending",
+    "dependencies": ["test-canvas-endpoints"],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "test-websocket-connections-arch",
+    "content": "Verify WebSocket connections work correctly in new setup",
+    "status": "pending",
+    "dependencies": ["test-tile-endpoints"],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "update-frontend-config",
+    "content": "Update frontend configuration to use single port and remove URL transformations",
+    "status": "pending",
+    "dependencies": ["test-websocket-connections-arch"],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "create-dev-scripts",
+    "content": "Create simple development scripts for starting and stopping the application",
+    "status": "pending",
+    "dependencies": ["update-frontend-config"],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "document-new-setup",
+    "content": "Document the new local development setup and how to use it",
+    "status": "pending",
+    "dependencies": ["create-dev-scripts"],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "phase1-testing",
+    "content": "Comprehensive testing of Phase 1 changes - verify all functionality works",
+    "status": "pending",
+    "dependencies": ["document-new-setup"],
+    "priority": "low",
+    "category": "architecture",
+    "source": "architecture-refactor-tasks.json"
+  },
+  {
+    "id": "review-documentation",
+    "content": "Review and update all documentation to ensure it's current with the codebase",
+    "status": "completed",
+    "dependencies": [],
+    "priority": "medium",
+    "category": "documentation"
+  },
+  {
+    "id": "create-api-documentation",
+    "content": "Create comprehensive API documentation for all endpoints",
+    "status": "completed",
+    "dependencies": ["review-documentation"],
+    "priority": "medium",
+    "category": "documentation"
+  },
+  {
+    "id": "update-architecture-docs",
+    "content": "Update architecture documentation to reflect current codebase structure",
+    "status": "completed",
+    "dependencies": ["review-documentation"],
+    "priority": "medium",
+    "category": "documentation"
+  },
+  {
+    "id": "create-user-guide",
+    "content": "Create comprehensive user guide for the application",
+    "status": "pending",
+    "dependencies": ["review-documentation"],
+    "priority": "low",
+    "category": "documentation"
+  }
+] 

@@ -1,10 +1,10 @@
-# StellarCollabApp - Production Deployment Guide
+# Artparty.social - Production Deployment Guide
 
-This guide covers deploying StellarCollabApp to production using Docker and Docker Compose.
+This guide covers deploying Artparty.social to production using Docker and Docker Compose.
 
 ## 🏗️ Architecture Overview
 
-StellarCollabApp uses a multi-container architecture:
+Artparty.social uses a multi-container architecture:
 
 - **Frontend**: Nginx serving static files + reverse proxy
 - **Backend**: FastAPI application with WebSocket support
@@ -42,8 +42,8 @@ docker compose version
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/StellarCollabApp.git
-cd StellarCollabApp
+git clone https://github.com/yourusername/Artparty.social.git
+cd Artparty.social
 ```
 
 ### 2. Configure Environment

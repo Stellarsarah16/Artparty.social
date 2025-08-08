@@ -1,15 +1,15 @@
-# 🎨 StellarArtCollab - Collaborative Pixel Canvas Game
+# 🎨 Artparty.social - Collaborative Pixel Canvas Game
 
 A **real-time collaborative pixel art platform** built with FastAPI (Python) backend and vanilla JavaScript frontend. Artists can create, share, and collaborate on pixel art in shared canvases with live updates via WebSocket connections.
 
 ---
 
 ## 🚀 **Live Demo**
-🌐 **[Try StellarArtCollab Live](http://104.248.124.8)** *(Running on DigitalOcean)*
+🌐 **[Try Artparty.social Live](http://104.248.124.8)** *(Running on DigitalOcean)*
 
-## 🌟 **What is StellarArtCollab?**
+## 🌟 **What is Artparty.social?**
 
-StellarArtCollab is a **real-time collaborative pixel art platform** where artists can create, share, and discover amazing 32x32 pixel art tiles on shared canvases. Think of it as a digital art gallery where creativity meets collaboration!
+Artparty.social is a **real-time collaborative pixel art platform** where artists can create, share, and discover amazing 32x32 pixel art tiles on shared canvases. Think of it as a digital art gallery where creativity meets collaboration!
 
 ### ✨ **Key Features**
 - 🎨 **Real-time Collaboration** - Multiple artists working together
@@ -61,8 +61,8 @@ StellarArtCollab is a **real-time collaborative pixel art platform** where artis
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/StellarArtCollab.git
-cd StellarArtCollab
+git clone https://github.com/yourusername/Artparty.social.git
+cd Artparty.social
 
 # Start the application
 docker-compose up --build

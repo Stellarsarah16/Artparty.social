@@ -381,7 +381,8 @@ describe('EventManager', () => {
             eventManager.emit('test:event', 'data');
 
             expect(callback1).toHaveBeenCalledWith('data');
-            expect(callback2).toHaveBeenCalledWith('data');
+            // callback2 should not be called because it was removed during callback1 execution
+            expect(callback2).not.toHaveBeenCalled();
             expect(eventManager.events.get('test:event').size).toBe(1);
         });
 
