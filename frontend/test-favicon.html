@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favicon Test - Artparty.Social</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="favicon.svg">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .favicon-display {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .favicon-display img {
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Favicon Test Page</h1>
+        <p>This page tests if the favicon is working correctly.</p>
+        
+        <div class="status success">
+            <h3>✅ Favicon Files Created</h3>
+            <ul>
+                <li><strong>favicon.ico</strong> - Binary ICO file (1046 bytes)</li>
+                <li><strong>favicon.svg</strong> - Vector SVG file</li>
+                <li><strong>HTML references</strong> - Added to all pages</li>
+            </ul>
+        </div>
+        
+        <div class="status info">
+            <h3>🔍 How to Test</h3>
+            <ol>
+                <li><strong>Check browser tab</strong> - You should see a colorful favicon</li>
+                <li><strong>Check console</strong> - No more 404 errors for favicon.ico</li>
+                <li><strong>Bookmark the page</strong> - Favicon should appear in bookmarks</li>
+                <li><strong>Check network tab</strong> - favicon.ico should load successfully</li>
+            </ol>
+        </div>
+        
+        <div class="favicon-display">
+            <h3>Favicon Display Test</h3>
+            <p>If you can see the favicon below, it's working correctly:</p>
+            <img src="favicon.ico" alt="ICO Favicon" title="ICO Favicon">
+            <img src="favicon.svg" alt="SVG Favicon" title="SVG Favicon" width="32" height="32">
+        </div>
+        
+        <div class="status info">
+            <h3>📊 Expected Results</h3>
+            <ul>
+                <li>✅ <strong>No 404 errors</strong> in browser console</li>
+                <li>✅ <strong>Favicon visible</strong> in browser tab</li>
+                <li>✅ <strong>Images display</strong> above (if working)</li>
+                <li>✅ <strong>Network success</strong> for favicon requests</li>
+            </ul>
+        </div>
+        
+        <div class="status info">
+            <h3>🔧 If Still Not Working</h3>
+            <ol>
+                <li><strong>Hard refresh</strong> - Ctrl+F5 to clear cache</li>
+                <li><strong>Check file permissions</strong> - Ensure favicon.ico is readable</li>
+                <li><strong>Check server config</strong> - Ensure .ico files are served</li>
+                <li><strong>Try different browser</strong> - Test in Chrome, Firefox, Edge</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        // Test if favicon loads
+        window.addEventListener('load', function() {
+            console.log('🎨 Favicon test page loaded');
+            
+            // Test favicon loading
+            const icoImg = new Image();
+            icoImg.onload = function() {
+                console.log('✅ ICO favicon loaded successfully');
+            };
+            icoImg.onerror = function() {
+                console.error('❌ ICO favicon failed to load');
+            };
+            icoImg.src = 'favicon.ico';
+            
+            const svgImg = new Image();
+            svgImg.onload = function() {
+                console.log('✅ SVG favicon loaded successfully');
+            };
+            svgImg.onerror = function() {
+                console.error('❌ SVG favicon failed to load');
+            };
+            svgImg.src = 'favicon.svg';
+        });
+    </script>
+</body>
+</html>
