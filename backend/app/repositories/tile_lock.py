@@ -89,4 +89,8 @@ class TileLockRepository(SQLAlchemyRepository[TileLock, dict, dict]):
         ).delete()
         
         db.commit()
-        return expired_count 
+        return expired_count
+
+
+# Create repository instance
+tile_lock_repository = TileLockRepository() 
