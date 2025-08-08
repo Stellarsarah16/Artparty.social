@@ -38,15 +38,21 @@ async def acquire_tile_lock(
 ):
     """Acquire a lock for editing a tile"""
     try:
+        print(f"🔒 Attempting to acquire lock for tile {tile_id} by user {current_user.username}")
         result = tile_service.acquire_tile_lock(db, tile_id, current_user)
+        print(f"✅ Successfully acquired lock for tile {tile_id}")
         return result
     except HTTPException as e:
+        print(f"❌ HTTP Exception in acquire_tile_lock: {e.status_code} - {e.detail}")
         raise e
     except Exception as e:
+        print(f"❌ Unexpected error in acquire_tile_lock: {type(e).__name__}: {str(e)}")
+        import traceback
+        print(f"📋 Full traceback: {traceback.format_exc()}")
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error acquiring tile lock"
+            detail=f"Internal server error acquiring tile lock: {str(e)}"
         )
 
 
