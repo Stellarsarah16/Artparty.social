@@ -645,7 +645,10 @@ export class TileEditorManager {
             console.log('💾 Converted pixel data to JSON string:', pixelDataToSend);
             
             // Determine if this is a new tile or existing tile
-            if (!tileId || tileId === 'undefined' || tileId === undefined) {
+            // Handle both undefined and string "undefined" cases
+            const isNewTile = !tileId || tileId === 'undefined' || tileId === undefined || tileId === null;
+            
+            if (isNewTile) {
                 console.log('💾 Creating new tile...');
                 
                 // Validate that we have a canvas_id

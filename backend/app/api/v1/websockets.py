@@ -53,10 +53,7 @@ async def websocket_canvas_endpoint(
     try:
         logger.info(f"WebSocket connection attempt for canvas {canvas_id}")
         
-        # Accept the WebSocket connection first
-        await websocket.accept()
-        
-        # Authenticate user
+        # Authenticate user BEFORE accepting the connection
         user = get_user_from_token(token, db)
         
         # Validate canvas exists
@@ -69,6 +66,9 @@ async def websocket_canvas_endpoint(
             logger.warning(f"Canvas {canvas_id} not found or inactive")
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Canvas not found")
             return
+        
+        # Now accept the WebSocket connection after authentication
+        await websocket.accept()
         
         # Connect user to canvas
         user_info = {
@@ -96,11 +96,15 @@ async def websocket_canvas_endpoint(
         
     except HTTPException as e:
         logger.error(f"WebSocket HTTP error: {e.detail}")
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Authentication failed")
+        # Don't try to close if connection wasn't accepted
+        if websocket.client_state.value == 1:  # CONNECTED
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Authentication failed")
         return
     except Exception as e:
         logger.error(f"WebSocket error: {type(e).__name__}: {str(e)}")
-        await websocket.close(code=status.WS_1011_INTERNAL_ERROR, reason="Internal server error")
+        # Don't try to close if connection wasn't accepted
+        if websocket.client_state.value == 1:  # CONNECTED
+            await websocket.close(code=status.WS_1011_INTERNAL_ERROR, reason="Internal server error")
     
     finally:
         # Clean up connection

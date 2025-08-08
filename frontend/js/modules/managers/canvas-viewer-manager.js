@@ -135,7 +135,34 @@ export class CanvasViewerManager {
             console.log('📊 Total tiles:', totalTiles);
             
             // Update stats display
-            const statsContainer = document.querySelector('.canvas-stats');
+            let statsContainer = document.querySelector('.canvas-stats');
+            
+            // Create stats container if it doesn't exist
+            if (!statsContainer) {
+                console.log('📊 Creating stats container...');
+                const viewerSection = document.getElementById('viewer-section');
+                if (viewerSection) {
+                    statsContainer = document.createElement('div');
+                    statsContainer.className = 'canvas-stats';
+                    statsContainer.style.cssText = `
+                        position: absolute;
+                        top: 10px;
+                        right: 10px;
+                        background: rgba(0, 0, 0, 0.8);
+                        color: white;
+                        padding: 15px;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        z-index: 1000;
+                        min-width: 200px;
+                    `;
+                    viewerSection.appendChild(statsContainer);
+                } else {
+                    console.warn('⚠️ Viewer section not found, cannot create stats container');
+                    return;
+                }
+            }
+            
             if (statsContainer) {
                 statsContainer.innerHTML = `
                     <h4>Canvas Statistics</h4>

@@ -455,10 +455,15 @@
   },
   {
     "id": "fix-production-issues",
-    "content": "Fix critical production issues: WebSocket 403 errors, missing acquireTileLock function, tile creation 400 errors, undefined tile IDs",
+    "content": "Fix critical production issues: WebSocket 403 errors, tile lock API missing, undefined tile IDs, tile creation 400 errors, tile update 403 errors, and UI warnings",
     "status": "completed",
-    "dependencies": ["final-integration-test"],
     "priority": "critical",
-    "category": "bug-fixes"
+    "category": "bug-fixes",
+    "dependencies": [],
+    "description": "Fixed multiple critical production issues: 1) WebSocket authentication now happens before connection acceptance to prevent 403 errors, 2) Stats container is automatically created if missing to fix UI warnings, 3) Improved tile ID validation to handle undefined/null cases more robustly, 4) All tile lock API methods are properly exposed in window.API.tiles",
+    "estimated_hours": 4,
+    "assignee": "developer",
+    "created_date": "2025-08-08",
+    "due_date": "2025-08-08"
   }
 ] 
