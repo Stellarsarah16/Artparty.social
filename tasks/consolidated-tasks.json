@@ -452,5 +452,13 @@
     "dependencies": ["review-documentation"],
     "priority": "low",
     "category": "documentation"
+  },
+  {
+    "id": "fix-production-issues",
+    "content": "Fix critical production issues: WebSocket 403 errors, missing acquireTileLock function, tile creation 400 errors, undefined tile IDs",
+    "status": "completed",
+    "dependencies": ["final-integration-test"],
+    "priority": "critical",
+    "category": "bug-fixes"
   }
 ] 

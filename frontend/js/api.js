@@ -732,7 +732,12 @@ const API = {
         like: (id) => tileAPI.likeTile(id),
         unlike: (id) => tileAPI.unlikeTile(id),
         getLikes: (id) => tileAPI.getTileLikes(id),
-        getStats: (id) => tileAPI.getTileStats(id)
+        getStats: (id) => tileAPI.getTileStats(id),
+        // Tile lock methods
+        acquireTileLock: (tileId) => tileAPI.acquireTileLock(tileId),
+        releaseTileLock: (tileId) => tileAPI.releaseTileLock(tileId),
+        extendTileLock: (tileId) => tileAPI.extendTileLock(tileId),
+        getTileLockStatus: (tileId) => tileAPI.getTileLockStatus(tileId)
     },
     
     // WebSocket

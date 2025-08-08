@@ -949,6 +949,7 @@ class CanvasViewer {
             
             // No existing tile found - return empty tile object for this position
             const emptyTile = {
+                id: undefined, // Explicitly set to undefined for new tiles
                 x: tileX,
                 y: tileY,
                 canvas_id: this.canvasData ? this.canvasData.id : null, // Add canvas_id for neighbor loading
