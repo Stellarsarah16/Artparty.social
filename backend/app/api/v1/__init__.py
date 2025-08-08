@@ -26,7 +26,7 @@ api_router.include_router(canvas_router, prefix="/canvas", tags=["canvas"])
 api_router.include_router(tiles_router, prefix="/tiles", tags=["tiles"])
 
 # Include tile locks router
-api_router.include_router(tile_locks_router, prefix="/tiles", tags=["tile-locks"])
+api_router.include_router(tile_locks_router, prefix="/tile-locks", tags=["tile-locks"])
 
 # Include WebSocket router
 api_router.include_router(websockets_router, prefix="/ws", tags=["websockets"]) 

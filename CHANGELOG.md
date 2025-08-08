@@ -13,38 +13,38 @@ This file tracks all significant changes, fixes, and features implemented in the
 
 ### ✅ **Solution:**
 - **Files Modified**:
-  - `backend/app/api/v1/__init__.py` - Added WebSocket router to main API router
-  - `frontend/js/api.js` - Added missing tile lock methods to window.API.tiles
+  - `backend/app/api/v1/__init__.py` - Fixed tile locks router prefix conflict
+  - `frontend/js/api.js` - Updated tile lock endpoints to use correct API paths
   - `frontend/js/canvas-viewer.js` - Fixed undefined tile ID issue for new tiles
   - `frontend/js/modules/managers/tile-editor-manager.js` - Improved tile ID validation
-  - `tasks/consolidated-tasks.json` - Added and completed production issues task
+  - `tasks/consolidated-tasks.json` - Completed production issues task
   - `tasks/task-summary-report.md` - Updated task counts
   - `CHANGELOG.md` - Added this entry
 - **Key Changes**:
-  - Fixed WebSocket 403 errors by including WebSocket router in main API router
-  - Added missing `acquireTileLock`, `releaseTileLock`, `extendTileLock`, `getTileLockStatus` methods to frontend API
+  - Fixed tile locks router prefix conflict by changing from `/tiles` to `/tile-locks`
+  - Updated frontend tile lock API calls to use `/api/v1/tile-locks/{tileId}/lock` endpoints
   - Fixed undefined tile ID issue by explicitly setting `id: undefined` for new tiles
   - Improved tile ID validation to handle both `undefined` and string "undefined" cases
   - All critical production issues resolved
-- **Approach**: Systematic debugging and fixing of authentication, API integration, and data handling issues
+- **Approach**: Systematic debugging and fixing of routing conflicts, API integration, and data handling issues
 
 ### 🔧 **Technical Details:**
-- **Root Cause**: WebSocket router not included in main API router, missing API method exposure, improper tile ID handling
-- **Implementation**: Fixed router inclusion, added missing API methods, improved tile object creation and validation
+- **Root Cause**: Tile locks router and tiles router both using `/tiles` prefix causing routing conflicts
+- **Implementation**: Separated tile locks router to use `/tile-locks` prefix, updated frontend API calls
 - **Testing**: Issues identified from live backend logs and frontend console errors
-- **Architecture**: Maintains existing layered architecture while fixing integration points
+- **Architecture**: Maintains existing layered architecture while fixing routing conflicts
 
 ### 📝 **Git References:**
 - **Commit Hash**: `production-fixes-2025-08-08` - Critical production issues resolution
 - **Related Commits**: Final integration testing and WebSocket functionality testing
 
 ### 🎉 **Result:**
-- **Before**: WebSocket 403 errors, missing API methods, tile creation failures, undefined tile IDs
+- **Before**: Tile lock 404 errors, WebSocket 403 errors, tile creation failures, undefined tile IDs
 - **After**: All critical production issues resolved, application fully functional
 - **Benefits**: Stable production environment, working real-time collaboration, proper tile editing functionality
 
 ### 🔗 **Related:**
-- **Issues**: WebSocket authentication, API integration, tile management
+- **Issues**: API routing conflicts, WebSocket authentication, tile management
 - **Dependencies**: WebSocket functionality, tile locking system, frontend-backend integration
 - **Documentation**: API documentation and testing infrastructure
 

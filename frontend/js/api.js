@@ -646,19 +646,19 @@ class TileAPI {
     
     // Tile lock methods
     async acquireTileLock(tileId) {
-        return await this.client.post(`${API_CONFIG.ENDPOINTS.TILES}/${tileId}/lock`);
+        return await this.client.post(`/api/v1/tile-locks/${tileId}/lock`);
     }
     
     async releaseTileLock(tileId) {
-        return await this.client.delete(`${API_CONFIG.ENDPOINTS.TILES}/${tileId}/lock`);
+        return await this.client.delete(`/api/v1/tile-locks/${tileId}/lock`);
     }
     
     async extendTileLock(tileId) {
-        return await this.client.put(`${API_CONFIG.ENDPOINTS.TILES}/${tileId}/lock`);
+        return await this.client.put(`/api/v1/tile-locks/${tileId}/lock`);
     }
     
     async getTileLockStatus(tileId) {
-        return await this.client.get(`${API_CONFIG.ENDPOINTS.TILES}/${tileId}/lock`);
+        return await this.client.get(`/api/v1/tile-locks/${tileId}/lock`);
     }
 }
 
