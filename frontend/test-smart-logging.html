@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Logging Test - Artparty.Social</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="favicon.svg">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button.success {
+            background: #28a745;
+        }
+        .button.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .button.danger {
+            background: #dc3545;
+        }
+        .console-output {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #6c757d;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <button class="mode-toggle" onclick="toggleVerboseMode()">Toggle Verbose Mode</button>
+    
+    <div class="container">
+        <h1>🧠 Smart Logging System Test</h1>
+        <p>This page demonstrates the new smart logging system that reduces console spam while maintaining debugging value.</p>
+        
+        <div class="test-section">
+            <h3>🔒 Tile Lock Operations</h3>
+            <p>These operations show how multiple related log messages are combined into a single transaction summary:</p>
+            <button class="button" onclick="testTileLockSuccess()">Successful Lock Acquisition</button>
+            <button class="button warning" onclick="testTileLockConflict()">Lock Conflict (Another User)</button>
+            <button class="button danger" onclick="testTileLockError()">Lock Error (Server Issue)</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>📡 API Operations</h3>
+            <p>API calls are grouped and show concise summaries instead of multiple request/response logs:</p>
+            <button class="button success" onclick="testAPISuccess()">Successful API Call</button>
+            <button class="button warning" onclick="testAPISlowResponse()">Slow API Response</button>
+            <button class="button danger" onclick="testAPIError()">API Error</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎨 Canvas Operations</h3>
+            <p>Complex canvas operations with multiple steps are summarized:</p>
+            <button class="button success" onclick="testCanvasLoad()">Load Canvas</button>
+            <button class="button" onclick="testTileUpdate()">Update Multiple Tiles</button>
+            <button class="button warning" onclick="testCanvasSync()">Sync Issues</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔧 Old vs New Logging Comparison</h3>
+            <p>Compare the old verbose logging with the new smart logging:</p>
+            <button class="button" onclick="demonstrateOldLogging()">Old Verbose Logging</button>
+            <button class="button success" onclick="demonstrateNewLogging()">New Smart Logging</button>
+        </div>
+        
+        <div class="console-output" id="consoleOutput">
+            <div>🧠 Smart Logger Test Page Loaded</div>
+            <div>📋 Open browser console (F12) to see the actual smart logging in action</div>
+            <div>🔄 Click buttons above to test different logging scenarios</div>
+        </div>
+    </div>
+
+    <!-- Load logging systems -->
+    <script src="js/console-manager.js"></script>
+    <script src="js/smart-logger.js"></script>
+    
+    <script>
+        // Test functions for different logging scenarios
+        
+        function testTileLockSuccess() {
+            console.log('🧪 Testing: Successful Tile Lock Acquisition');
+            
+            if (window.smartLogger) {
+                window.smartLogger.tileOperation('lock_acquire', 42, async () => {
+                    // Simulate the steps that would normally generate multiple logs
+                    await sleep(100);
+                    return { lockId: 'lock_123', tileId: 42, expiresAt: new Date(Date.now() + 300000) };
+                });
+            } else {
+                // Fallback to old style logging
+                console.log('🔒 Attempting to acquire lock for tile 42');
+                console.log('🧹 Cleaning up expired locks');
+                console.log('✅ Lock acquired successfully');
+                console.log('📊 Lock details: { lockId: "lock_123", tileId: 42 }');
+            }
+        }
+        
+        function testTileLockConflict() {
+            console.log('🧪 Testing: Tile Lock Conflict');
+            
+            if (window.smartLogger) {
+                window.smartLogger.tileOperation('lock_acquire', 42, async () => {
+                    await sleep(50);
+                    throw new Error('Tile is currently being edited by another user');
+                });
+            } else {
+                // Old style logging
+                console.log('🔒 Attempting to acquire lock for tile 42');
+                console.log('❌ Tile 42 is locked by user alice');
+                console.error('❌ Lock acquisition failed: Tile is currently being edited by another user');
+            }
+        }
+        
+        function testTileLockError() {
+            console.log('🧪 Testing: Tile Lock Server Error');
+            
+            if (window.smartLogger) {
+                window.smartLogger.tileOperation('lock_acquire', 42, async () => {
+                    await sleep(200);
+                    throw new Error('Database connection failed');
+                });
+            } else {
+                // Old style logging
+                console.log('🔒 Attempting to acquire lock for tile 42');
+                console.log('🧹 Cleaning up expired locks');
+                console.log('🔄 Unique constraint violation');
+                console.log('🔍 Performing aggressive cleanup');
+                console.error('❌ Database connection failed');
+                console.error('❌ Lock acquisition failed after multiple attempts');
+            }
+        }
+        
+        function testAPISuccess() {
+            console.log('🧪 Testing: Successful API Call');
+            
+            if (window.smartLogger) {
+                window.smartLogger.apiOperation('POST', '/api/v1/tiles', async () => {
+                    await sleep(150);
+                    return { id: 123, message: 'Tile created successfully' };
+                });
+            } else {
+                // Old style logging
+                console.log('📤 API Request: POST /api/v1/tiles');
+                console.log('🔧 Fetch URL being used: https://artparty.social/api/v1/tiles');
+                console.log('📥 API Response: 200', { id: 123, message: 'Tile created successfully' });
+            }
+        }
+        
+        function testAPISlowResponse() {
+            console.log('🧪 Testing: Slow API Response');
+            
+            if (window.smartLogger) {
+                window.smartLogger.apiOperation('GET', '/api/v1/canvas/3', async () => {
+                    await sleep(2000); // Simulate slow response
+                    return { id: 3, tiles: [] };
+                });
+            } else {
+                // Old style logging
+                console.log('📤 API Request: GET /api/v1/canvas/3');
+                console.log('🔧 Fetch URL being used: https://artparty.social/api/v1/canvas/3');
+                setTimeout(() => {
+                    console.log('📥 API Response: 200 (slow)', { id: 3, tiles: [] });
+                }, 2000);
+            }
+        }
+        
+        function testAPIError() {
+            console.log('🧪 Testing: API Error');
+            
+            if (window.smartLogger) {
+                window.smartLogger.apiOperation('PUT', '/api/v1/tiles/999', async () => {
+                    await sleep(100);
+                    throw new Error('Tile not found');
+                });
+            } else {
+                // Old style logging
+                console.log('📤 API Request: PUT /api/v1/tiles/999');
+                console.log('🔧 Fetch URL being used: https://artparty.social/api/v1/tiles/999');
+                console.error('❌ API Error: Tile not found');
+            }
+        }
+        
+        function testCanvasLoad() {
+            console.log('🧪 Testing: Canvas Load Operation');
+            
+            if (window.smartLogger) {
+                window.smartLogger.canvasOperation('load', 3, async () => {
+                    await sleep(100);
+                    // Simulate multiple sub-operations
+                    return { canvasId: 3, tilesLoaded: 25, websocketConnected: true };
+                });
+            } else {
+                // Old style logging
+                console.log('🎨 Loading canvas 3');
+                console.log('📡 Fetching canvas data');
+                console.log('🧩 Loading tiles for canvas');
+                console.log('🔌 Connecting WebSocket');
+                console.log('✅ Canvas 3 loaded successfully');
+                console.log('📊 Loaded 25 tiles, WebSocket connected');
+            }
+        }
+        
+        function testTileUpdate() {
+            console.log('🧪 Testing: Multiple Tile Updates');
+            
+            if (window.smartLogger) {
+                window.smartLogger.canvasOperation('update_tiles', 3, async () => {
+                    // Simulate updating multiple tiles
+                    for (let i = 0; i < 3; i++) {
+                        await sleep(50);
+                    }
+                    return { tilesUpdated: 3, broadcastSent: true };
+                });
+            } else {
+                // Old style logging
+                console.log('🧩 Updating tile 1');
+                console.log('📡 Broadcasting tile 1 update');
+                console.log('🧩 Updating tile 2');
+                console.log('📡 Broadcasting tile 2 update');
+                console.log('🧩 Updating tile 3');
+                console.log('📡 Broadcasting tile 3 update');
+                console.log('✅ All tiles updated successfully');
+            }
+        }
+        
+        function testCanvasSync() {
+            console.log('🧪 Testing: Canvas Sync with Issues');
+            
+            if (window.smartLogger) {
+                window.smartLogger.canvasOperation('sync', 3, async () => {
+                    await sleep(200);
+                    // Add some warnings to the transaction
+                    throw new Error('WebSocket connection unstable');
+                });
+            } else {
+                // Old style logging
+                console.log('🔄 Syncing canvas 3');
+                console.log('📡 Checking WebSocket connection');
+                console.warn('⚠️ WebSocket connection unstable');
+                console.log('🔄 Attempting to reconnect');
+                console.warn('⚠️ Sync may be delayed');
+                console.error('❌ Canvas sync failed');
+            }
+        }
+        
+        function demonstrateOldLogging() {
+            console.log('🧪 Demonstrating OLD verbose logging style:');
+            console.log('🔒 Attempting to acquire lock for tile 61 by user stellarsarah');
+            console.log('🔒 Attempting to create new lock for tile 61 by user 1');
+            console.log('🔄 Unique constraint violation during lock acquisition for tile 61');
+            console.log('⚠️ No active lock found after conflict resolution for tile 61');
+            console.log('❌ HTTP Exception in acquire_tile_lock: 500 - Failed to acquire tile lock - please try again');
+            console.log('📤 API Request: POST /api/v1/tile-locks/61/lock');
+            console.log('📥 API Response: 500');
+            console.error('❌ API Error: Internal Server Error');
+            console.log('🍞 Toast shown: Server error. Please try again later.');
+            addToConsoleOutput('OLD STYLE: 8 separate log messages for one operation! 😵');
+        }
+        
+        function demonstrateNewLogging() {
+            console.log('🧪 Demonstrating NEW smart logging style:');
+            
+            if (window.smartLogger) {
+                window.smartLogger.tileOperation('lock_acquire', 61, async () => {
+                    await sleep(100);
+                    throw new Error('Failed to acquire tile lock - please try again');
+                });
+                addToConsoleOutput('NEW STYLE: 1 concise summary with expandable details! ✨');
+            } else {
+                console.log('✅ Lock acquire tile 61 (150ms) [action:lock_acquire, tile_id:61] - 1 errors, 0 warnings');
+                addToConsoleOutput('NEW STYLE: 1 concise summary instead of 8 messages! ✨');
+            }
+        }
+        
+        function toggleVerboseMode() {
+            if (window.smartLogger) {
+                window.smartLogger.toggleVerboseMode();
+                addToConsoleOutput('Verbose mode toggled - check browser console for details');
+            } else {
+                addToConsoleOutput('Smart Logger not available - using console manager only');
+            }
+        }
+        
+        function addToConsoleOutput(message) {
+            const output = document.getElementById('consoleOutput');
+            const div = document.createElement('div');
+            div.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // Initialize
+        addToConsoleOutput('Smart Logging Test Page Ready! 🚀');
+        addToConsoleOutput('Open browser console (F12) to see actual logging output');
+    </script>
+</body>
+</html>

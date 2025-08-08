@@ -156,41 +156,66 @@ class APIClient {
         // Build URL with query parameters
         const url = this.buildURL(requestConfig.url, requestConfig.params);
         
-        try {
-            console.log(`📤 API Request: ${requestConfig.method || 'GET'} ${url}`);
-            console.log('🔧 Fetch URL being used:', url);
-            
-            // Additional debugging for mixed content detection (production only)
-            if (window.location.hostname === 'artparty.social' && url.startsWith('http://')) {
-                console.error('❌ MIXED CONTENT DETECTED in API request:', {
-                    url: url,
-                    method: requestConfig.method,
-                    stack: new Error().stack
-                });
-            }
-            
-            const response = await fetch(url, fetchOptions);
-            
-            // Apply response interceptors
-            let processedResponse = response;
-            for (const interceptor of this.responseInterceptors) {
-                if (response.ok && interceptor.onSuccess) {
-                    processedResponse = interceptor.onSuccess(processedResponse) || processedResponse;
-                } else if (!response.ok && interceptor.onError) {
-                    throw await interceptor.onError(response);
+        // Use smart logger if available, fallback to regular logging
+        const logger = window.smartLogger || console;
+        const method = requestConfig.method || 'GET';
+        const endpoint = url.replace(this.baseURL, ''); // Clean endpoint for logging
+        
+        if (window.smartLogger) {
+            return window.smartLogger.apiOperation(method, endpoint, async () => {
+                return await this._executeRequest(url, fetchOptions);
+            });
+        } else {
+            // Fallback to regular logging
+            try {
+                console.log(`📤 API: ${method} ${endpoint}`);
+                
+                // Mixed content detection (production only)
+                if (window.location.hostname === 'artparty.social' && url.startsWith('http://')) {
+                    console.error('❌ MIXED CONTENT DETECTED:', endpoint);
                 }
+                
+                const result = await this._executeRequest(url, fetchOptions);
+                console.log(`📥 API: ${method} ${endpoint} ✅`);
+                return result;
+                
+            } catch (error) {
+                console.error(`❌ API: ${method} ${endpoint} - ${error.message}`);
+                throw error;
             }
-            
-            // Parse response
-            const result = await this.parseResponse(processedResponse);
-            
-            console.log(`📥 API Response: ${response.status}`, result);
-            return result;
-            
-        } catch (error) {
-            console.error(`❌ API Error: ${error.message}`);
-            throw error;
         }
+    }
+    
+    /**
+     * Execute the actual HTTP request
+     * @param {string} url - Complete URL
+     * @param {Object} fetchOptions - Fetch options
+     * @returns {Promise} Response data
+     */
+    async _executeRequest(url, fetchOptions) {
+        // Mixed content detection (production only)
+        if (window.location.hostname === 'artparty.social' && url.startsWith('http://')) {
+            console.error('❌ MIXED CONTENT DETECTED in API request:', {
+                url: url,
+                method: fetchOptions.method,
+                stack: new Error().stack
+            });
+        }
+        
+        const response = await fetch(url, fetchOptions);
+        
+        // Apply response interceptors
+        let processedResponse = response;
+        for (const interceptor of this.responseInterceptors) {
+            if (response.ok && interceptor.onSuccess) {
+                processedResponse = interceptor.onSuccess(processedResponse) || processedResponse;
+            } else if (!response.ok && interceptor.onError) {
+                throw await interceptor.onError(response);
+            }
+        }
+        
+        // Parse response
+        return await this.parseResponse(processedResponse);
     }
     
     /**

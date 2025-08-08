@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 from .base import SQLAlchemyRepository
 from ..models.tile_lock import TileLock
+from ..utils.smart_logger import smart_logger, LogLevel
 
 
 class TileLockRepository(SQLAlchemyRepository[TileLock, dict, dict]):
@@ -28,47 +29,52 @@ class TileLockRepository(SQLAlchemyRepository[TileLock, dict, dict]):
     
     def acquire_lock(self, db: Session, tile_id: int, user_id: int, minutes: int = 30) -> Optional[TileLock]:
         """Acquire a lock for a tile with proper race condition handling"""
-        try:
-            # First, clean up any expired OR inactive locks for this tile
-            # This is crucial because the unique constraint on tile_id prevents
-            # creating new locks even if old ones are expired or inactive
-            stale_locks = db.query(TileLock).filter(
-                and_(
-                    TileLock.tile_id == tile_id,
-                    or_(
-                        TileLock.expires_at <= datetime.now(timezone.utc),  # Expired
-                        TileLock.is_active == False  # Inactive
+        with smart_logger.lock_operation("acquire", tile_id, user_id) as transaction:
+            transaction_id = transaction.id
+            
+            try:
+                # First, clean up any expired OR inactive locks for this tile
+                # This is crucial because the unique constraint on tile_id prevents
+                # creating new locks even if old ones are expired or inactive
+                stale_locks = db.query(TileLock).filter(
+                    and_(
+                        TileLock.tile_id == tile_id,
+                        or_(
+                            TileLock.expires_at <= datetime.now(timezone.utc),  # Expired
+                            TileLock.is_active == False  # Inactive
+                        )
                     )
-                )
-            ).all()
-            
-            if stale_locks:
-                print(f"🧹 Removing {len(stale_locks)} stale lock(s) for tile {tile_id}")
-                for stale_lock in stale_locks:
-                    db.delete(stale_lock)
-                db.commit()
-            
-            # Check if there's already an active lock for this tile
-            existing_lock = db.query(TileLock).filter(
-                and_(
-                    TileLock.tile_id == tile_id,
-                    TileLock.is_active == True,
-                    TileLock.expires_at > datetime.now(timezone.utc)
-                )
-            ).first()
-            
-            if existing_lock:
-                # If the existing lock is owned by the same user, extend it
-                if existing_lock.user_id == user_id:
-                    print(f"🔄 Extending existing lock for tile {tile_id} by user {user_id}")
-                    existing_lock.extend_lock(minutes)
+                ).all()
+                
+                if stale_locks:
+                    smart_logger.add_to_transaction(transaction_id, LogLevel.INFO, 
+                                                  f"Cleaning up {len(stale_locks)} stale locks")
+                    for stale_lock in stale_locks:
+                        db.delete(stale_lock)
                     db.commit()
-                    db.refresh(existing_lock)
-                    return existing_lock
-                else:
-                    # Tile is locked by another user
-                    print(f"❌ Tile {tile_id} is locked by user {existing_lock.user_id}, cannot acquire for user {user_id}")
-                    return None
+                
+                # Check if there's already an active lock for this tile
+                existing_lock = db.query(TileLock).filter(
+                    and_(
+                        TileLock.tile_id == tile_id,
+                        TileLock.is_active == True,
+                        TileLock.expires_at > datetime.now(timezone.utc)
+                    )
+                ).first()
+                
+                if existing_lock:
+                    # If the existing lock is owned by the same user, extend it
+                    if existing_lock.user_id == user_id:
+                        smart_logger.add_to_transaction(transaction_id, LogLevel.SUCCESS, "Extending existing lock")
+                        existing_lock.extend_lock(minutes)
+                        db.commit()
+                        db.refresh(existing_lock)
+                        return existing_lock
+                    else:
+                        # Tile is locked by another user
+                        smart_logger.add_to_transaction(transaction_id, LogLevel.WARN, 
+                                                      f"Tile locked by user {existing_lock.user_id}")
+                        return None
             
             # No active lock exists, try to create new one with conflict resolution
             expires_at = datetime.now(timezone.utc) + timedelta(minutes=minutes)
