@@ -1,5 +1,52 @@
 # Artparty.social Changelog
 
+## [2025-08-08] - [FIX] Critical DateTime Comparison Bug Resolution
+
+### 🎯 **Issue/Feature:**
+- **Problem**: 500 Internal Server Error when saving tiles due to datetime comparison issues
+- **Impact**: Users could not save their own tiles, breaking core functionality
+- **Scope**: Fix timezone-aware vs naive datetime comparisons in tile lock and verification systems
+
+### ✅ **Solution:**
+- **Files Modified**:
+  - `backend/app/models/tile_lock.py` - Fixed `is_expired()` and `extend_lock()` methods
+  - `backend/app/models/verification.py` - Fixed `is_expired()` method
+  - `backend/app/repositories/tile_lock.py` - Fixed all datetime comparisons in repository
+  - `backend/app/api/v1/tiles.py` - Added comprehensive logging for debugging
+  - `backend/app/services/tile.py` - Added detailed error logging
+  - `backend/app/repositories/base.py` - Added repository-level logging
+  - `tasks/consolidated-tasks.json` - Completed debugging task
+  - `CHANGELOG.md` - Added this entry
+- **Key Changes**:
+  - Replaced `datetime.utcnow()` with `datetime.now(timezone.utc)` for timezone-aware comparisons
+  - Added comprehensive logging throughout the tile update process
+  - Fixed datetime comparison issues in tile lock expiration checks
+  - Fixed datetime comparison issues in verification token expiration checks
+  - Improved error handling and debugging capabilities
+- **Approach**: Systematic debugging with enhanced logging to identify and fix datetime comparison issues
+
+### 🔧 **Technical Details:**
+- **Root Cause**: `datetime.utcnow()` (naive) being compared with `DateTime(timezone=True)` columns (timezone-aware)
+- **Implementation**: Consistent use of `datetime.now(timezone.utc)` for all datetime operations
+- **Testing**: Identified through comprehensive logging added to tile update process
+- **Architecture**: Maintains existing functionality while fixing timezone handling
+
+### 📝 **Git References:**
+- **Commit Hash**: `0d20ecb5` - Fix datetime comparison issues in tile lock and verification models
+- **Related Commits**: `42eae245` - Add comprehensive logging for tile update 500 error debugging
+
+### 🎉 **Result:**
+- **Before**: 500 Internal Server Error when saving tiles due to datetime comparison failures
+- **After**: Tile saving works correctly for all users, proper timezone handling
+- **Benefits**: Core tile editing functionality restored, improved error debugging capabilities
+
+### 🔗 **Related:**
+- **Issues**: Tile saving, datetime handling, timezone awareness
+- **Dependencies**: Tile locking system, verification system, database schema
+- **Documentation**: Enhanced debugging capabilities for future issue resolution
+
+---
+
 ## [2025-08-08] - [IMPROVEMENT] Enhanced Tile Editing Permissions & User Feedback
 
 ### 🎯 **Issue/Feature:**

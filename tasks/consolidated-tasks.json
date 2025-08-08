@@ -482,11 +482,11 @@
   {
     "id": "debug-tile-update-500-error",
     "content": "Debug and fix 500 Internal Server Error when updating tiles",
-    "status": "in_progress",
+    "status": "completed",
     "priority": "critical",
     "category": "bug-fixes",
     "dependencies": ["improve-tile-editing-permissions"],
-    "description": "Added comprehensive logging to tile update endpoint, service, and repository to identify the root cause of 500 errors when saving tiles. Need to test and analyze logs to find the specific issue.",
+    "description": "Added comprehensive logging to tile update endpoint, service, and repository to identify the root cause of 500 errors when saving tiles. Found and fixed datetime comparison issues in tile lock and verification models.",
     "estimated_hours": 2,
     "assignee": "developer",
     "created_date": "2025-08-08",
