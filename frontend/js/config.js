@@ -326,10 +326,15 @@ const APP_CONFIG = {
         PASSWORD_CHANGED: 'Password changed successfully!'
     },
     
-    // Debug settings
-    DEBUG_CANVAS: ENVIRONMENT.isDevelopment,
-    DEBUG_WEBSOCKET: ENVIRONMENT.isDevelopment,
-    DEBUG_AUTH: ENVIRONMENT.isDevelopment
+    // Debug settings - Disabled by default to prevent console spam
+    DEBUG_CANVAS: false,
+    DEBUG_WEBSOCKET: false,
+    DEBUG_AUTH: false,
+    
+    // Console logging control
+    CONSOLE_LOG_LIMIT: 50,  // Max logs per second
+    CONSOLE_IMPORTANT_ONLY: true,  // Only log important messages
+    CONSOLE_ENABLE_DEBUG: false  // Enable debug logging
 };
 
 // Utility functions
@@ -534,7 +539,51 @@ const CONFIG_UTILS = {
     },
 
     /**
-     * Throttled logging to prevent console spam
+     * Smart logging that respects console management
+     */
+    smartLog(level = 'log', ...args) {
+        // Check if console manager is available
+        if (window.ConsoleManager) {
+            // Let console manager handle the logging
+            console[level](...args);
+        } else {
+            // Fallback to safe logging
+            this.safeLog(...args);
+        }
+    },
+
+    /**
+     * Debug logging (controlled by console manager)
+     */
+    debug(...args) {
+        if (APP_CONFIG.CONSOLE_ENABLE_DEBUG) {
+            this.smartLog('log', '🐛 DEBUG:', ...args);
+        }
+    },
+
+    /**
+     * Important logging (always shown)
+     */
+    important(...args) {
+        this.smartLog('log', '🔧 IMPORTANT:', ...args);
+    },
+
+    /**
+     * Error logging (always shown)
+     */
+    error(...args) {
+        this.smartLog('error', '❌ ERROR:', ...args);
+    },
+
+    /**
+     * Warning logging (always shown)
+     */
+    warning(...args) {
+        this.smartLog('warn', '⚠️ WARNING:', ...args);
+    },
+
+    /**
+     * Throttled logging to prevent console spam (legacy support)
      */
     throttledLog: (() => {
         const logCounts = new Map();
@@ -567,20 +616,7 @@ const CONFIG_UTILS = {
     })(),
 
     /**
-     * Debug logging (only in development)
-     */
-    debug(...args) {
-        if (ENVIRONMENT.isDevelopment) {
-            try {
-                console.log('🐛 DEBUG:', ...args);
-            } catch (error) {
-                // Silent fail
-            }
-        }
-    },
-
-    /**
-     * Prevent console spam by throttling repeated messages
+     * Prevent console spam by throttling repeated messages (legacy support)
      */
     preventConsoleSpam: (() => {
         const spamTracker = new Map();

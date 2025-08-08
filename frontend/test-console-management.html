@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Console Management Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button.danger {
+            background: #dc3545;
+        }
+        .button.danger:hover {
+            background: #c82333;
+        }
+        .button.success {
+            background: #28a745;
+        }
+        .button.success:hover {
+            background: #218838;
+        }
+        .stats {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .log-output {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 5px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Console Management Test</h1>
+        <p>This page tests the console management system to ensure it's properly controlling console output.</p>
+        
+        <div class="test-section">
+            <h3>Console Manager Status</h3>
+            <div id="status" class="stats">
+                Checking console manager status...
+            </div>
+            <button class="button" onclick="checkStatus()">Check Status</button>
+            <button class="button" onclick="getStats()">Get Stats</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test Console Output</h3>
+            <p>Click buttons to test different types of console output:</p>
+            
+            <button class="button" onclick="testNormalLogs()">Test Normal Logs (10x)</button>
+            <button class="button" onclick="testSpamLogs()">Test Spam Logs (100x)</button>
+            <button class="button" onclick="testImportantLogs()">Test Important Logs (10x)</button>
+            <button class="button danger" onclick="testErrorLogs()">Test Error Logs (5x)</button>
+            <button class="button" onclick="testWarningLogs()">Test Warning Logs (5x)</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>Console Management Controls</h3>
+            <button class="button success" onclick="enableFullLogging()">Enable Full Logging</button>
+            <button class="button" onclick="restoreControlledLogging()">Restore Controlled Logging</button>
+            <button class="button" onclick="clearConsole()">Clear Console</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>Console Output (Live)</h3>
+            <div id="logOutput" class="log-output"></div>
+        </div>
+    </div>
+
+    <!-- Load console manager first -->
+    <script src="js/console-manager.js"></script>
+    
+    <script>
+        // Store original console methods for capture
+        const originalConsole = {
+            log: console.log,
+            warn: console.warn,
+            error: console.error,
+            info: console.info,
+            debug: console.debug
+        };
+        
+        // Capture console output
+        function captureConsole() {
+            ['log', 'warn', 'error', 'info', 'debug'].forEach(method => {
+                console[method] = function(...args) {
+                    // Call original method
+                    originalConsole[method].apply(console, args);
+                    
+                    // Add to our display
+                    addToLogDisplay(method, args);
+                };
+            });
+        }
+        
+        function addToLogDisplay(level, args) {
+            const logOutput = document.getElementById('logOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            const message = args.join(' ');
+            
+            const line = document.createElement('div');
+            line.style.color = level === 'error' ? '#ff6b6b' : 
+                              level === 'warn' ? '#ffd93d' : '#4ecdc4';
+            line.textContent = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
+            
+            logOutput.appendChild(line);
+            logOutput.scrollTop = logOutput.scrollHeight;
+            
+            // Keep only last 50 lines
+            while (logOutput.children.length > 50) {
+                logOutput.removeChild(logOutput.firstChild);
+            }
+        }
+        
+        function checkStatus() {
+            const status = document.getElementById('status');
+            if (window.ConsoleManager) {
+                status.innerHTML = `
+                    ✅ Console Manager is loaded and active<br>
+                    Initialized: ${window.ConsoleManager.isInitialized}<br>
+                    Max logs per second: ${window.ConsoleManager.maxLogsPerSecond}<br>
+                    Max logs per minute: ${window.ConsoleManager.maxLogsPerMinute}
+                `;
+            } else {
+                status.innerHTML = '❌ Console Manager not found';
+            }
+        }
+        
+        function getStats() {
+            if (window.ConsoleManager) {
+                const stats = window.ConsoleManager.getStats();
+                console.log('📊 Console Manager Stats:', stats);
+            } else {
+                console.error('Console Manager not available');
+            }
+        }
+        
+        function testNormalLogs() {
+            console.log('🧪 Testing normal console logs...');
+            for (let i = 0; i < 10; i++) {
+                console.log(`Normal log message ${i + 1}`);
+            }
+        }
+        
+        function testSpamLogs() {
+            console.log('🧪 Testing spam console logs...');
+            for (let i = 0; i < 100; i++) {
+                console.log(`Mouse move at position ${i}, ${i}`);
+                console.log(`Coordinate conversion: x=${i}, y=${i}`);
+                console.log(`Viewport changed: zoom=${1 + i/100}`);
+            }
+        }
+        
+        function testImportantLogs() {
+            console.log('🧪 Testing important console logs...');
+            for (let i = 0; i < 10; i++) {
+                console.log(`API request to /api/v1/canvas/${i}`);
+                console.log(`WebSocket connection established for canvas ${i}`);
+                console.log(`Authentication successful for user ${i}`);
+            }
+        }
+        
+        function testErrorLogs() {
+            console.log('🧪 Testing error console logs...');
+            for (let i = 0; i < 5; i++) {
+                console.error(`Test error message ${i + 1}`);
+                console.error(`Failed to connect to API endpoint ${i}`);
+            }
+        }
+        
+        function testWarningLogs() {
+            console.log('🧪 Testing warning console logs...');
+            for (let i = 0; i < 5; i++) {
+                console.warn(`Test warning message ${i + 1}`);
+                console.warn(`Connection timeout for request ${i}`);
+            }
+        }
+        
+        function enableFullLogging() {
+            if (window.ConsoleManager) {
+                window.ConsoleManager.enableFullLogging();
+                console.log('✅ Full logging enabled');
+            } else {
+                console.error('Console Manager not available');
+            }
+        }
+        
+        function restoreControlledLogging() {
+            if (window.ConsoleManager) {
+                window.ConsoleManager.restoreControlledLogging();
+                console.log('✅ Controlled logging restored');
+            } else {
+                console.error('Console Manager not available');
+            }
+        }
+        
+        function clearConsole() {
+            const logOutput = document.getElementById('logOutput');
+            logOutput.innerHTML = '';
+            console.log('🧹 Console display cleared');
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            captureConsole();
+            checkStatus();
+            console.log('🧪 Console Management Test Page Loaded');
+        });
+    </script>
+</body>
+</html>

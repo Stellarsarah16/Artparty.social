@@ -1,5 +1,18 @@
 [
   {
+    "id": "fix-tile-lock-race-condition",
+    "content": "Fix race condition in tile lock acquisition causing UniqueViolation errors when multiple users try to acquire locks simultaneously",
+    "status": "in_progress",
+    "dependencies": [],
+    "priority": "critical",
+    "category": "bug-fixes",
+    "description": "The tile locking system has a race condition where multiple users can trigger UniqueViolation errors when trying to acquire locks on the same tile. This needs proper error handling and database-level conflict resolution.",
+    "files_affected": [
+      "backend/app/repositories/tile_lock.py",
+      "backend/app/services/tile.py"
+    ]
+  },
+  {
     "id": "consolidated-task-analysis",
     "content": "Consolidated analysis of all open tasks across the project",
     "status": "completed",
