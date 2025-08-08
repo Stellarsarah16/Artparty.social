@@ -123,7 +123,7 @@ class TileService:
             )
     
     def acquire_tile_lock(self, db: Session, tile_id: int, current_user: User, minutes: int = 30) -> Dict[str, Any]:
-        """Acquire a lock for editing a tile"""
+        """Acquire a lock for editing a tile with improved race condition handling"""
         # Check if tile exists
         tile = self.tile_repository.get(db, tile_id)
         if not tile:
@@ -135,28 +135,52 @@ class TileService:
         # Check permissions based on collaboration mode
         self._check_tile_permissions(db, tile, current_user, "edit")
         
-        # Try to acquire lock
-        lock = self.tile_lock_repository.acquire_lock(db, tile_id, current_user.id, minutes)
-        if not lock:
-            # Check if tile is locked by someone else
-            existing_lock = self.tile_lock_repository.get_by_tile_id(db, tile_id)
-            if existing_lock and existing_lock.user_id != current_user.id:
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail=f"Tile is currently being edited by another user"
-                )
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to acquire tile lock"
-                )
+        # Try to acquire lock with retry logic for race conditions
+        max_retries = 3
+        retry_count = 0
         
-        return {
-            "lock_id": lock.id,
-            "tile_id": lock.tile_id,
-            "expires_at": lock.expires_at.isoformat(),
-            "message": "Tile lock acquired successfully"
-        }
+        while retry_count < max_retries:
+            try:
+                lock = self.tile_lock_repository.acquire_lock(db, tile_id, current_user.id, minutes)
+                if lock:
+                    return {
+                        "lock_id": lock.id,
+                        "tile_id": lock.tile_id,
+                        "expires_at": lock.expires_at.isoformat(),
+                        "message": "Tile lock acquired successfully"
+                    }
+                else:
+                    # Check if tile is locked by someone else
+                    existing_lock = self.tile_lock_repository.get_by_tile_id(db, tile_id)
+                    if existing_lock and existing_lock.user_id != current_user.id:
+                        raise HTTPException(
+                            status_code=status.HTTP_409_CONFLICT,
+                            detail=f"Tile is currently being edited by another user"
+                        )
+                    else:
+                        # This shouldn't happen with the improved repository logic
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Failed to acquire tile lock - please try again"
+                        )
+                        
+            except HTTPException:
+                # Re-raise HTTP exceptions immediately
+                raise
+            except Exception as e:
+                retry_count += 1
+                print(f"⚠️ Lock acquisition attempt {retry_count} failed for tile {tile_id}: {str(e)}")
+                
+                if retry_count >= max_retries:
+                    # Final attempt failed
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="Failed to acquire tile lock after multiple attempts - please try again"
+                    )
+                
+                # Small delay before retry to reduce contention
+                import time
+                time.sleep(0.1 * retry_count)  # Exponential backoff
     
     def release_tile_lock(self, db: Session, tile_id: int, current_user: User) -> Dict[str, str]:
         """Release a lock for a tile"""

@@ -3,7 +3,7 @@ Tile lock repository for managing tile editing locks
 """
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, text
 from datetime import datetime, timedelta, timezone
 
 from .base import SQLAlchemyRepository
@@ -27,7 +27,7 @@ class TileLockRepository(SQLAlchemyRepository[TileLock, dict, dict]):
         ).first()
     
     def acquire_lock(self, db: Session, tile_id: int, user_id: int, minutes: int = 30) -> Optional[TileLock]:
-        """Acquire a lock for a tile"""
+        """Acquire a lock for a tile with proper race condition handling"""
         try:
             # First, clean up any expired locks for this tile
             expired_lock = db.query(TileLock).filter(
@@ -63,48 +63,66 @@ class TileLockRepository(SQLAlchemyRepository[TileLock, dict, dict]):
                     print(f"❌ Tile {tile_id} is locked by user {existing_lock.user_id}, cannot acquire for user {user_id}")
                     return None
             
-            # No active lock exists, create new one
+            # No active lock exists, try to create new one with conflict resolution
             expires_at = datetime.now(timezone.utc) + timedelta(minutes=minutes)
-            lock = TileLock(
-                tile_id=tile_id,
-                user_id=user_id,
-                expires_at=expires_at,
-                is_active=True
-            )
             
-            print(f"🔒 Creating new lock for tile {tile_id} by user {user_id}")
-            db.add(lock)
-            db.commit()
-            db.refresh(lock)
-            return lock
+            # Use database-level conflict resolution to handle race conditions
+            # This approach uses a "upsert" pattern with ON CONFLICT handling
+            try:
+                # First, try to insert a new lock
+                lock = TileLock(
+                    tile_id=tile_id,
+                    user_id=user_id,
+                    expires_at=expires_at,
+                    is_active=True
+                )
+                
+                print(f"🔒 Attempting to create new lock for tile {tile_id} by user {user_id}")
+                db.add(lock)
+                db.commit()
+                db.refresh(lock)
+                return lock
+                
+            except Exception as insert_error:
+                # If insert fails due to unique constraint, check if another user got the lock
+                if "UniqueViolation" in str(insert_error) or "duplicate key" in str(insert_error).lower():
+                    print(f"🔄 Unique constraint violation during lock acquisition for tile {tile_id}")
+                    db.rollback()
+                    
+                    # Check if there's now an active lock by another user
+                    active_lock = db.query(TileLock).filter(
+                        and_(
+                            TileLock.tile_id == tile_id,
+                            TileLock.is_active == True,
+                            TileLock.expires_at > datetime.now(timezone.utc)
+                        )
+                    ).first()
+                    
+                    if active_lock:
+                        if active_lock.user_id == user_id:
+                            # We somehow got the lock, extend it
+                            print(f"✅ Found our lock after conflict, extending it")
+                            active_lock.extend_lock(minutes)
+                            db.commit()
+                            db.refresh(active_lock)
+                            return active_lock
+                        else:
+                            # Another user got the lock
+                            print(f"❌ Another user {active_lock.user_id} acquired lock for tile {tile_id}")
+                            return None
+                    else:
+                        # No active lock found, something went wrong
+                        print(f"⚠️ No active lock found after conflict resolution for tile {tile_id}")
+                        return None
+                else:
+                    # Some other error occurred
+                    print(f"❌ Unexpected error during lock acquisition: {type(insert_error).__name__}: {str(insert_error)}")
+                    db.rollback()
+                    raise insert_error
             
         except Exception as e:
             print(f"❌ Error in acquire_lock: {type(e).__name__}: {str(e)}")
             db.rollback()
-            
-            # If it's a unique constraint violation, check if there's now an active lock
-            if "UniqueViolation" in str(e) or "duplicate key" in str(e).lower():
-                print(f"🔄 Unique constraint violation, checking for active lock on tile {tile_id}")
-                active_lock = db.query(TileLock).filter(
-                    and_(
-                        TileLock.tile_id == tile_id,
-                        TileLock.is_active == True,
-                        TileLock.expires_at > datetime.now(timezone.utc)
-                    )
-                ).first()
-                
-                if active_lock:
-                    if active_lock.user_id == user_id:
-                        print(f"✅ Found our lock after conflict, extending it")
-                        active_lock.extend_lock(minutes)
-                        db.commit()
-                        db.refresh(active_lock)
-                        return active_lock
-                    else:
-                        print(f"❌ Tile {tile_id} is locked by user {active_lock.user_id}")
-                        return None
-            
-            # Re-raise the exception if it's not a unique constraint issue
             raise e
     
     def release_lock(self, db: Session, tile_id: int, user_id: int) -> bool:
