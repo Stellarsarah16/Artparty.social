@@ -22,7 +22,7 @@ class ConnectionManager:
     
     async def connect(self, websocket: WebSocket, canvas_id: int, user_id: int, user_info: Dict[str, str]):
         """Connect a user to a canvas"""
-        await websocket.accept()
+        # Note: websocket.accept() is called in the API endpoint, not here
         
         # Initialize canvas connections if not exists
         if canvas_id not in self.canvas_connections:
