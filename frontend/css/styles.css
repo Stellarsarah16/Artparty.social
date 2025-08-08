@@ -1781,6 +1781,25 @@ form {
         padding: 0.5rem 0.75rem;
     }
     
+    /* FIXED: Mobile canvas viewer layout */
+    .viewer-layout {
+        flex-direction: column;
+        height: calc(100vh - 300px); /* Account for mobile header and bottom info */
+        gap: var(--space-md);
+    }
+    
+    .viewer-sidebar {
+        flex: 0 0 auto;
+        order: 2;
+        max-height: 150px;
+    }
+    
+    .viewer-main {
+        order: 1;
+        flex: 1;
+        min-height: 250px;
+    }
+    
     .stats-container {
         /* FIXED: Keep side by side, make more compact */
         flex-direction: row;
@@ -2013,6 +2032,77 @@ form {
     white-space: nowrap;
     font-size: var(--font-size-sm);
     padding: var(--space-sm) var(--space-md);
+}
+
+/* FIXED: Canvas viewer responsive sizing */
+.viewer-layout {
+    display: flex;
+    gap: var(--space-lg);
+    height: calc(100vh - 200px); /* Adjust based on header/stats height */
+    min-height: 400px;
+}
+
+.viewer-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Allow shrinking */
+}
+
+.canvas-viewer-container {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    min-height: 300px;
+}
+
+.canvas-viewer-container canvas {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    display: block;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-primary);
+}
+
+.viewer-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: var(--space-sm);
+}
+
+.viewer-controls {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md);
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.viewer-sidebar {
+    flex: 0 0 250px;
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    padding: var(--space-lg);
+    border: 1px solid var(--border-color);
+    overflow-y: auto;
 } 
 
 /* Editor Tools */
@@ -2432,31 +2522,51 @@ form {
         backface-visibility: hidden;
     }
     
+    /* FIXED: Keep buttons on sides, stack tools/colors in middle */
     .floating-tools-panel .tools-row {
-        flex-direction: column; /* Stack vertically on mobile */
-        gap: var(--space-sm);
-        align-items: center;
-        max-width: 100%; /* Use full width */
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: var(--space-xs);
+        max-width: 100%;
         margin: 0 auto;
         padding: 0;
     }
     
-    .floating-tools-panel .tools-section {
+    /* FIXED: Back button stays on left */
+    .floating-action-left {
+        order: 1;
         flex: 0 0 auto;
-        margin: 0;
+        align-self: flex-start;
+    }
+    
+    /* FIXED: Save button stays on right */
+    .floating-action-right {
+        order: 3;
+        flex: 0 0 auto;
+        align-self: flex-start;
+    }
+    
+    /* FIXED: Tools and colors stack in the middle */
+    .floating-tools-panel .tools-section {
+        order: 2;
+        flex: 1 1 100%;
+        margin: var(--space-xs) 0 0 0;
         padding: 0;
-        width: 100%; /* Use full width */
         display: flex;
-        justify-content: center;
+        flex-direction: column;
+        align-items: center;
     }
     
     .floating-tools-panel .color-palette {
-        flex: 0 0 auto;
-        margin: 0;
+        order: 2;
+        flex: 1 1 100%;
+        margin: var(--space-xs) 0 0 0;
         padding: 0;
-        width: 100%; /* Use full width */
         display: flex;
-        justify-content: center;
+        flex-direction: column;
+        align-items: center;
     }
     
     .floating-tools-panel .color-grid {
@@ -2495,26 +2605,46 @@ form {
         backface-visibility: hidden;
     }
     
+    /* FIXED: Same layout as 768px but more compact */
     .floating-tools-panel .tools-row {
-        flex-direction: column; /* Keep stacked on very small screens */
-        gap: var(--space-xs);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 2px;
         max-width: 100%;
         margin: 0 auto;
         padding: 0;
     }
     
+    .floating-action-left {
+        order: 1;
+        flex: 0 0 auto;
+    }
+    
+    .floating-action-right {
+        order: 3;
+        flex: 0 0 auto;
+    }
+    
     .floating-tools-panel .tools-section {
-        width: 100%;
-        justify-content: center;
-        margin: 0;
+        order: 2;
+        flex: 1 1 100%;
+        margin: 2px 0;
         padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
     
     .floating-tools-panel .color-palette {
-        width: 100%;
-        justify-content: center;
-        margin: 0;
+        order: 2;
+        flex: 1 1 100%;
+        margin: 2px 0;
         padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
     
     .floating-tools-panel .color-grid {

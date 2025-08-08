@@ -122,9 +122,11 @@ class CanvasViewer {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         
-        // Set canvas size
-        this.canvas.width = 800;
-        this.canvas.height = 600;
+        // FIXED: Set responsive canvas size
+        this.resizeCanvas();
+        
+        // Add resize listener
+        window.addEventListener('resize', () => this.resizeCanvas());
         
         // Setup event listeners
         this.setupEventListeners();
@@ -133,6 +135,39 @@ class CanvasViewer {
         this.requestRender();
         
         console.log('✅ Canvas viewer initialized');
+    }
+    
+    /**
+     * FIXED: Resize canvas to fit container
+     */
+    resizeCanvas() {
+        if (!this.canvas) return;
+        
+        const container = this.canvas.parentElement;
+        if (!container) return;
+        
+        const containerRect = container.getBoundingClientRect();
+        const maxWidth = containerRect.width - 40; // Account for padding
+        const maxHeight = containerRect.height - 40;
+        
+        // Calculate optimal size maintaining aspect ratio
+        const aspectRatio = 4/3; // 800/600
+        let canvasWidth = Math.min(800, maxWidth);
+        let canvasHeight = canvasWidth / aspectRatio;
+        
+        if (canvasHeight > maxHeight) {
+            canvasHeight = maxHeight;
+            canvasWidth = canvasHeight * aspectRatio;
+        }
+        
+        // Set canvas size
+        this.canvas.width = Math.floor(canvasWidth);
+        this.canvas.height = Math.floor(canvasHeight);
+        
+        // Trigger re-render
+        this.requestRender();
+        
+        console.log(`📐 Canvas resized to ${this.canvas.width}x${this.canvas.height}`);
     }
     
     /**
