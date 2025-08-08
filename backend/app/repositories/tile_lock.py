@@ -26,13 +26,40 @@ class TileLockRepository(SQLAlchemyRepository[TileLock, dict, dict]):
             )
         ).first()
     
-    def acquire_lock(self, db: Session, tile_id: int, user_id: int, minutes: int = 30) -> TileLock:
+    def acquire_lock(self, db: Session, tile_id: int, user_id: int, minutes: int = 30) -> Optional[TileLock]:
         """Acquire a lock for a tile"""
-        # First, delete any existing lock for this tile (clean slate approach)
-        existing_lock = db.query(TileLock).filter(TileLock.tile_id == tile_id).first()
+        # Check if there's already an active lock for this tile
+        existing_lock = db.query(TileLock).filter(
+            and_(
+                TileLock.tile_id == tile_id,
+                TileLock.is_active == True,
+                TileLock.expires_at > datetime.now(timezone.utc)
+            )
+        ).first()
+        
         if existing_lock:
-            print(f"🧹 Removing existing lock for tile {tile_id} (user {existing_lock.user_id})")
-            db.delete(existing_lock)
+            # If the existing lock is owned by the same user, extend it
+            if existing_lock.user_id == user_id:
+                print(f"🔄 Extending existing lock for tile {tile_id} by user {user_id}")
+                existing_lock.extend_lock(minutes)
+                db.commit()
+                db.refresh(existing_lock)
+                return existing_lock
+            else:
+                # Tile is locked by another user
+                print(f"❌ Tile {tile_id} is locked by user {existing_lock.user_id}, cannot acquire for user {user_id}")
+                return None
+        
+        # Clean up any expired locks for this tile
+        expired_lock = db.query(TileLock).filter(
+            and_(
+                TileLock.tile_id == tile_id,
+                TileLock.expires_at <= datetime.now(timezone.utc)
+            )
+        ).first()
+        if expired_lock:
+            print(f"🧹 Removing expired lock for tile {tile_id}")
+            db.delete(expired_lock)
             db.commit()
         
         # Create new lock

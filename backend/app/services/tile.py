@@ -140,7 +140,7 @@ class TileService:
         if not lock:
             # Check if tile is locked by someone else
             existing_lock = self.tile_lock_repository.get_by_tile_id(db, tile_id)
-            if existing_lock:
+            if existing_lock and existing_lock.user_id != current_user.id:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail=f"Tile is currently being edited by another user"
