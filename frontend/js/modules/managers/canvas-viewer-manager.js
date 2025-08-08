@@ -134,58 +134,35 @@ export class CanvasViewerManager {
             const totalTiles = allTiles.length;
             console.log('📊 Total tiles:', totalTiles);
             
-            // Update stats display
-            let statsContainer = document.querySelector('.canvas-stats');
+            // FIXED: Update stats display in the designed canvas-stats-bar elements
+            console.log('📊 Updating canvas stats bar elements...');
             
-            // Create stats container if it doesn't exist
-            if (!statsContainer) {
-                console.log('📊 Creating stats container...');
-                const viewerSection = document.getElementById('viewer-section');
-                if (viewerSection) {
-                    statsContainer = document.createElement('div');
-                    statsContainer.className = 'canvas-stats';
-                    statsContainer.style.cssText = `
-                        position: absolute;
-                        top: 10px;
-                        right: 10px;
-                        background: rgba(0, 0, 0, 0.8);
-                        color: white;
-                        padding: 15px;
-                        border-radius: 8px;
-                        font-size: 14px;
-                        z-index: 1000;
-                        min-width: 200px;
-                    `;
-                    viewerSection.appendChild(statsContainer);
-                } else {
-                    console.warn('⚠️ Viewer section not found, cannot create stats container');
-                    return;
-                }
+            // Update Total Tiles
+            const totalTilesElement = document.getElementById('viewer-total-tiles');
+            if (totalTilesElement) {
+                totalTilesElement.textContent = totalTiles;
+                console.log('✅ Updated total tiles:', totalTiles);
             }
             
-            if (statsContainer) {
-                statsContainer.innerHTML = `
-                    <h4>Canvas Statistics</h4>
-                    <div class="stat-item">
-                        <span class="stat-label">Your Tiles:</span>
-                        <span class="stat-value">${userTileCount.count || 0}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Total Tiles:</span>
-                        <span class="stat-value">${totalTiles}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Max Tiles Per User:</span>
-                        <span class="stat-value">${canvas.max_tiles_per_user || 'Unlimited'}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Canvas Size:</span>
-                        <span class="stat-value">${canvas.width} × ${canvas.height}</span>
-                    </div>
-                `;
-                console.log('✅ Canvas stats updated');
-            } else {
-                console.warn('⚠️ Stats container not found');
+            // Update User Tiles
+            const userTilesElement = document.getElementById('viewer-user-tiles');
+            if (userTilesElement) {
+                userTilesElement.textContent = userTileCount.count || 0;
+                console.log('✅ Updated user tiles:', userTileCount.count || 0);
+            }
+            
+            // Update Active Users (will be updated by WebSocket)
+            const activeUsersElement = document.getElementById('viewer-active-users');
+            if (activeUsersElement) {
+                activeUsersElement.textContent = '1'; // At least current user is active
+                console.log('✅ Updated active users: 1');
+            }
+            
+            // Remove any old floating stats container if it exists
+            const oldStatsContainer = document.querySelector('.canvas-stats');
+            if (oldStatsContainer) {
+                oldStatsContainer.remove();
+                console.log('🧹 Removed old floating stats container');
             }
             
         } catch (error) {

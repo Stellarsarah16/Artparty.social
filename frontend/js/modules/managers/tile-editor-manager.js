@@ -94,6 +94,10 @@ export class TileEditorManager {
             fullTileData.canvas = canvasData;
             
             this.currentTile = fullTileData;
+            
+            // FIXED: Update canvas name in editor header
+            this.updateCanvasName(canvasData);
+            
             this.initializeTileEditor(fullTileData);
             this.setupToolButtons();
             this.setupUndoRedoButtons();
@@ -580,6 +584,23 @@ export class TileEditorManager {
     }
 
     /**
+     * FIXED: Update canvas name in editor header
+     */
+    updateCanvasName(canvasData) {
+        if (canvasData && canvasData.name) {
+            const canvasTitle = document.getElementById('canvas-title');
+            if (canvasTitle) {
+                canvasTitle.textContent = canvasData.name;
+                console.log('✅ Updated canvas name in editor:', canvasData.name);
+            } else {
+                console.warn('⚠️ Canvas title element not found in editor');
+            }
+        } else {
+            console.warn('⚠️ No canvas data or name provided');
+        }
+    }
+
+    /**
      * Update tile information display
      */
     updateTileInfo(tile) {
@@ -656,46 +677,67 @@ export class TileEditorManager {
     }
 
     /**
-     * Setup save button
+     * Setup save button (both header and floating)
      */
     setupSaveButton(tile) {
+        // Setup original header save button
         const saveBtn = document.getElementById('save-tile-btn');
-        if (saveBtn) {
-            // Remove any existing event listeners
-            saveBtn.replaceWith(saveBtn.cloneNode(true));
-            const newSaveBtn = document.getElementById('save-tile-btn');
+        // Setup new floating save button
+        const floatingSaveBtn = document.getElementById('floating-save-btn');
+        
+        const buttons = [
+            { element: saveBtn, id: 'save-tile-btn', type: 'header' },
+            { element: floatingSaveBtn, id: 'floating-save-btn', type: 'floating' }
+        ].filter(btn => btn.element); // Filter out null buttons
+        
+        // Check if user can edit this tile
+        const currentUser = window.CONFIG_UTILS ? window.CONFIG_UTILS.getUserData() : null;
+        const isOwner = currentUser && tile.creator_id === currentUser.id;
+        const isFreeMode = tile.canvas?.collaboration_mode === 'free';
+        const canEdit = isOwner || isFreeMode;
+        
+        buttons.forEach(({ element, id, type }) => {
+            console.log(`🔧 Setting up ${type} save button`);
             
-            // Check if user can edit this tile
-            const currentUser = window.CONFIG_UTILS ? window.CONFIG_UTILS.getUserData() : null;
-            const isOwner = currentUser && tile.creator_id === currentUser.id;
-            const isFreeMode = tile.canvas?.collaboration_mode === 'free';
-            const canEdit = isOwner || isFreeMode;
+            // Remove any existing event listeners by cloning
+            const newBtn = element.cloneNode(true);
+            element.parentNode.replaceChild(newBtn, element);
             
             if (canEdit) {
                 // User can edit this tile
-                newSaveBtn.addEventListener('click', async () => {
-                    console.log('💾 Save button clicked for tile:', tile.id);
+                newBtn.addEventListener('click', async () => {
+                    console.log(`💾 ${type} save button clicked for tile:`, tile.id);
                     await this.saveTile(tile.id);
                 });
                 
                 // Enable the save button
-                newSaveBtn.disabled = false;
-                newSaveBtn.textContent = 'Save Tile';
-                newSaveBtn.style.backgroundColor = '#4CAF50';
-                newSaveBtn.title = 'Save your changes to this tile';
+                newBtn.disabled = false;
+                if (type === 'floating') {
+                    newBtn.innerHTML = '<i class="fas fa-save"></i> Save';
+                } else {
+                    newBtn.innerHTML = '<i class="fas fa-save"></i> Save Tile';
+                }
+                newBtn.style.backgroundColor = '#4CAF50';
+                newBtn.title = 'Save your changes to this tile';
                 
-                console.log('✅ Save button enabled for editable tile');
+                console.log(`✅ ${type} save button enabled for editable tile`);
             } else {
                 // User cannot edit this tile
-                newSaveBtn.disabled = true;
-                newSaveBtn.textContent = 'Read Only';
-                newSaveBtn.style.backgroundColor = '#9E9E9E';
-                newSaveBtn.title = 'You can only edit your own tiles in this canvas mode';
+                newBtn.disabled = true;
+                if (type === 'floating') {
+                    newBtn.innerHTML = '<i class="fas fa-lock"></i> Locked';
+                } else {
+                    newBtn.innerHTML = '<i class="fas fa-lock"></i> Read Only';
+                }
+                newBtn.style.backgroundColor = '#9E9E9E';
+                newBtn.title = 'You can only edit your own tiles in this canvas mode';
                 
-                console.log('🔒 Save button disabled for read-only tile');
+                console.log(`🔒 ${type} save button disabled for read-only tile`);
             }
-        } else {
-            console.warn('⚠️ Save button not found');
+        });
+        
+        if (buttons.length === 0) {
+            console.warn('⚠️ No save buttons found');
         }
     }
 
@@ -991,24 +1033,35 @@ export class TileEditorManager {
     }
     
     /**
-     * Setup back button
+     * Setup back button (both header and floating)
      */
     setupBackButton() {
         const backBtn = document.getElementById('back-to-grid-btn');
-        if (backBtn) {
-            backBtn.onclick = async () => {
-                console.log('🔙 Back button clicked, returning to canvas viewer');
-                
-                // Release the lock before going back
-                await this.releaseCurrentLock();
-                
-                if (window.navigationManager) {
-                    window.navigationManager.showSection('viewer');
-                }
-            };
-            console.log('✅ Back button setup complete');
-        } else {
-            console.warn('⚠️ Back button not found');
+        const floatingBackBtn = document.getElementById('floating-back-btn');
+        
+        const buttons = [
+            { element: backBtn, type: 'header' },
+            { element: floatingBackBtn, type: 'floating' }
+        ].filter(btn => btn.element);
+        
+        const backHandler = async () => {
+            console.log('🔙 Back button clicked, returning to canvas viewer');
+            
+            // Release the lock before going back
+            await this.releaseCurrentLock();
+            
+            if (window.navigationManager) {
+                window.navigationManager.showSection('viewer');
+            }
+        };
+        
+        buttons.forEach(({ element, type }) => {
+            element.onclick = backHandler;
+            console.log(`✅ ${type} back button setup complete`);
+        });
+        
+        if (buttons.length === 0) {
+            console.warn('⚠️ No back buttons found');
         }
     }
     

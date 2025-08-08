@@ -761,6 +761,22 @@ body {
     transform: scale(1.02);
 }
 
+/* FIXED: Desktop mode - no padding, no labels */
+@media (min-width: 768px) {
+    .neighbor-cell {
+        padding: 0;
+        gap: 0;
+    }
+    
+    .neighbor-label {
+        display: none;
+    }
+    
+    .neighbor-row {
+        gap: 0;
+    }
+}
+
 .neighbor-canvas {
     border: none;
     border-radius: var(--border-radius-sm);
@@ -1688,6 +1704,37 @@ form {
     letter-spacing: 0.5px;
 }
 
+/* FIXED: Tile ownership indicators */
+.tile-owned {
+    border: 2px solid #4CAF50 !important; /* Green border for owned tiles */
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+}
+
+.tile-other {
+    border: 2px solid #FF9800 !important; /* Orange border for other users' tiles */
+    box-shadow: 0 0 8px rgba(255, 152, 0, 0.3);
+}
+
+.tile-ownership-indicator {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    z-index: 10;
+}
+
+.tile-ownership-indicator.owned {
+    background: #4CAF50;
+    border: 1px solid #388E3C;
+}
+
+.tile-ownership-indicator.other {
+    background: #FF9800;
+    border: 1px solid #F57C00;
+}
+
 /* Mobile Responsive Design */
 @media (max-width: 768px) {
     .canvas-stats-bar {
@@ -1955,10 +2002,44 @@ form {
     display: flex;
     gap: var(--space-md);
     align-items: center;
-    justify-content: center;
-    max-width: 600px;
+    justify-content: space-between;
+    max-width: 100%;
     margin: 0 auto;
     padding: 0;
+}
+
+/* FIXED: Floating action buttons on sides */
+.floating-action-left,
+.floating-action-right {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+}
+
+.floating-action-left {
+    order: 1;
+}
+
+.floating-action-right {
+    order: 3;
+}
+
+.floating-tools-panel .tools-section {
+    order: 2;
+    flex: 0 0 auto;
+}
+
+.floating-tools-panel .color-palette {
+    order: 2;
+    flex: 0 0 auto;
+}
+
+/* Center the main tools and palette */
+.floating-tools-panel .tools-row > .tools-section,
+.floating-tools-panel .tools-row > .color-palette {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .floating-tools-panel .tools-section {
