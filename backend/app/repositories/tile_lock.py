@@ -3,7 +3,7 @@ Tile lock repository for managing tile editing locks
 """
 from typing import Optional, List
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, func, text
+from sqlalchemy import and_, func, text, or_
 from datetime import datetime, timedelta, timezone
 
 from .base import SQLAlchemyRepository
@@ -29,16 +29,23 @@ class TileLockRepository(SQLAlchemyRepository[TileLock, dict, dict]):
     def acquire_lock(self, db: Session, tile_id: int, user_id: int, minutes: int = 30) -> Optional[TileLock]:
         """Acquire a lock for a tile with proper race condition handling"""
         try:
-            # First, clean up any expired locks for this tile
-            expired_lock = db.query(TileLock).filter(
+            # First, clean up any expired OR inactive locks for this tile
+            # This is crucial because the unique constraint on tile_id prevents
+            # creating new locks even if old ones are expired or inactive
+            stale_locks = db.query(TileLock).filter(
                 and_(
                     TileLock.tile_id == tile_id,
-                    TileLock.expires_at <= datetime.now(timezone.utc)
+                    or_(
+                        TileLock.expires_at <= datetime.now(timezone.utc),  # Expired
+                        TileLock.is_active == False  # Inactive
+                    )
                 )
-            ).first()
-            if expired_lock:
-                print(f"🧹 Removing expired lock for tile {tile_id}")
-                db.delete(expired_lock)
+            ).all()
+            
+            if stale_locks:
+                print(f"🧹 Removing {len(stale_locks)} stale lock(s) for tile {tile_id}")
+                for stale_lock in stale_locks:
+                    db.delete(stale_lock)
                 db.commit()
             
             # Check if there's already an active lock for this tile
@@ -111,6 +118,39 @@ class TileLockRepository(SQLAlchemyRepository[TileLock, dict, dict]):
                             print(f"❌ Another user {active_lock.user_id} acquired lock for tile {tile_id}")
                             return None
                     else:
+                        # More aggressive cleanup - remove ALL locks for this tile that aren't truly active
+                        print(f"🔍 Performing aggressive cleanup for tile {tile_id}")
+                        all_locks_for_tile = db.query(TileLock).filter(TileLock.tile_id == tile_id).all()
+                        stale_locks_found = []
+                        
+                        for lock in all_locks_for_tile:
+                            if (not lock.is_active or lock.expires_at <= datetime.now(timezone.utc)):
+                                stale_locks_found.append(lock)
+                        
+                        if stale_locks_found:
+                            print(f"🧹 Aggressive cleanup: removing {len(stale_locks_found)} stale lock(s) for tile {tile_id}")
+                            for stale_lock in stale_locks_found:
+                                db.delete(stale_lock)
+                            db.commit()
+                            
+                            # Try to create lock again after cleanup
+                            try:
+                                lock = TileLock(
+                                    tile_id=tile_id,
+                                    user_id=user_id,
+                                    expires_at=expires_at,
+                                    is_active=True
+                                )
+                                print(f"🔒 Retry: Creating new lock for tile {tile_id} by user {user_id}")
+                                db.add(lock)
+                                db.commit()
+                                db.refresh(lock)
+                                return lock
+                            except Exception as retry_error:
+                                print(f"❌ Retry failed: {type(retry_error).__name__}: {str(retry_error)}")
+                                db.rollback()
+                                return None
+                        
                         # No active lock found, something went wrong
                         print(f"⚠️ No active lock found after conflict resolution for tile {tile_id}")
                         return None
