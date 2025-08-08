@@ -167,6 +167,18 @@ export class CanvasViewerManager {
                 console.log('🧹 Removed old floating stats container');
             }
             
+            // FIXED: Update bottom info section for mobile
+            const bottomUsersElement = document.getElementById('bottom-canvas-users');
+            const bottomDimensionsElement = document.getElementById('bottom-canvas-dimensions');
+            
+            if (bottomUsersElement) {
+                bottomUsersElement.textContent = '1 user online'; // Will be updated by WebSocket
+            }
+            
+            if (bottomDimensionsElement) {
+                bottomDimensionsElement.textContent = `${canvas.width || 32}x${canvas.height || 32}`;
+            }
+            
         } catch (error) {
             console.error('❌ Failed to update canvas stats:', error);
         }
