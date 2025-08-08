@@ -28,8 +28,12 @@ class TileLockRepository(SQLAlchemyRepository[TileLock, dict, dict]):
     
     def acquire_lock(self, db: Session, tile_id: int, user_id: int, minutes: int = 30) -> TileLock:
         """Acquire a lock for a tile"""
-        # Release any existing lock first
-        self.release_lock(db, tile_id, user_id)
+        # First, delete any existing lock for this tile (clean slate approach)
+        existing_lock = db.query(TileLock).filter(TileLock.tile_id == tile_id).first()
+        if existing_lock:
+            print(f"🧹 Removing existing lock for tile {tile_id} (user {existing_lock.user_id})")
+            db.delete(existing_lock)
+            db.commit()
         
         # Create new lock
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=minutes)
@@ -40,6 +44,7 @@ class TileLockRepository(SQLAlchemyRepository[TileLock, dict, dict]):
             is_active=True
         )
         
+        print(f"🔒 Creating new lock for tile {tile_id} by user {user_id}")
         db.add(lock)
         db.commit()
         db.refresh(lock)
