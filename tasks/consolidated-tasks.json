@@ -28,7 +28,7 @@
   {
     "id": "test-concurrent-editing",
     "content": "Test that only one user can edit a tile at a time",
-    "status": "pending",
+    "status": "completed",
     "dependencies": ["test-collaboration-fix"],
     "priority": "high",
     "category": "collaboration",
@@ -262,7 +262,7 @@
   {
     "id": "test-websocket-functionality",
     "content": "Verify WebSocket connections still work",
-    "status": "pending",
+    "status": "completed",
     "dependencies": [],
     "priority": "high",
     "category": "deployment",
@@ -280,7 +280,7 @@
   {
     "id": "final-integration-test",
     "content": "Complete end-to-end integration testing",
-    "status": "pending",
+    "status": "completed",
     "dependencies": ["setup-production-email", "test-websocket-functionality"],
     "priority": "critical",
     "category": "deployment",
