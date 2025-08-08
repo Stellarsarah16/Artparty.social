@@ -1,5 +1,48 @@
 # Artparty.social Changelog
 
+## [2025-08-08] - [IMPROVEMENT] Enhanced Tile Editing Permissions & User Feedback
+
+### 🎯 **Issue/Feature:**
+- **Problem**: Users were getting confusing 403 errors when trying to edit tiles they don't own in restricted collaboration modes
+- **Impact**: Poor user experience with unclear error messages and no visual indicators for tile ownership
+- **Scope**: Improve user feedback, add visual indicators, and prevent editing attempts on read-only tiles
+
+### ✅ **Solution:**
+- **Files Modified**: 
+  - `frontend/js/modules/managers/tile-editor-manager.js` - Enhanced error handling and user feedback
+  - `tasks/consolidated-tasks.json` - Added new task for permissions improvements
+  - `CHANGELOG.md` - Added this entry
+- **Key Changes**:
+  - Added early permission checking in `openTileEditor` to prevent editing attempts on unauthorized tiles
+  - Enhanced error messages with specific feedback for different error types (403, 409, 404, 422, 500)
+  - Added visual ownership indicators with icons and colors (👤 for owned tiles, 🔒 for others)
+  - Added collaboration mode warnings for read-only tiles
+  - Disabled save button for tiles users cannot edit with clear visual feedback
+  - Improved tile info display to show ownership status and collaboration mode
+- **Approach**: Proactive user experience improvements with clear visual feedback and early error prevention
+
+### 🔧 **Technical Details:**
+- **Root Cause**: Users attempting to edit tiles they don't own in restricted collaboration modes
+- **Implementation**: Added permission checks, visual indicators, and improved error handling
+- **Testing**: Manual testing of different collaboration modes and ownership scenarios
+- **Architecture**: Maintains existing permission logic while improving user experience
+
+### 📝 **Git References:**
+- **Commit Hash**: `tile-permissions-ux-2025-08-08` - Enhanced tile editing permissions and user feedback
+- **Related Commits**: Production issues fixes and WebSocket functionality improvements
+
+### 🎉 **Result:**
+- **Before**: Confusing 403 errors with generic messages, no visual ownership indicators
+- **After**: Clear visual feedback, early permission warnings, disabled save buttons for read-only tiles
+- **Benefits**: Better user experience, reduced confusion, clear understanding of collaboration mode restrictions
+
+### 🔗 **Related:**
+- **Issues**: User experience, collaboration mode restrictions, tile editing permissions
+- **Dependencies**: Production issues fixes, tile locking system
+- **Documentation**: User guide and collaboration mode documentation
+
+---
+
 ## [2025-08-08] - [FIX] Critical Production Issues Resolution
 
 ### 🎯 **Issue/Feature:**
