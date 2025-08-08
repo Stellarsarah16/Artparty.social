@@ -57,11 +57,21 @@ export class TileEditorManager {
                         window.UIManager.showToast(errorMessage, 'error');
                     }
                     console.warn('🔒 Permission denied: Cannot edit tile created by another user');
+                    
+                    // FIXED: Return to viewer instead of staying on editor
+                    if (window.navigationManager) {
+                        window.navigationManager.showSection('viewer');
+                    }
                     return;
                 } else if (error.status === 409) {
                     // Tile is locked by another user
                     if (window.UIManager) {
                         window.UIManager.showToast('This tile is currently being edited by another user', 'error');
+                    }
+                    
+                    // FIXED: Return to viewer instead of staying on editor
+                    if (window.navigationManager) {
+                        window.navigationManager.showSection('viewer');
                     }
                     return;
                 } else if (error.status === 404) {
@@ -635,7 +645,7 @@ export class TileEditorManager {
         // Update tile canvas info
         const canvasElement = document.getElementById('tile-info-canvas');
         if (canvasElement) {
-            const canvasName = tile.canvas_name || 'Unknown';
+            const canvasName = tile.canvas?.name || tile.canvas_name || 'Unknown';
             const collaborationMode = tile.canvas?.collaboration_mode || 'unknown';
             canvasElement.innerHTML = `Canvas: ${canvasName} <span style="font-size: 0.8em; color: #666;">(${collaborationMode} mode)</span>`;
         }
@@ -787,8 +797,9 @@ export class TileEditorManager {
                 const newTile = await this.apiService.create(createData);
                 console.log('✅ New tile created successfully:', newTile);
                 
-                // Update the current tile with the new ID
+                // FIXED: Update the current tile with the new data (includes created_at/updated_at)
                 this.currentTile = newTile;
+                this.updateTileInfo(newTile);
                 
                 // Clear undo/redo stacks
                 this.undoStack = [];
@@ -815,6 +826,10 @@ export class TileEditorManager {
                 
                 const updatedTile = await this.apiService.update(tileId, updateData);
                 console.log('✅ Tile updated successfully:', updatedTile);
+                
+                // FIXED: Update current tile data with the response (includes updated_at)
+                this.currentTile = updatedTile;
+                this.updateTileInfo(updatedTile);
                 
                 // Clear undo/redo stacks
                 this.undoStack = [];

@@ -761,7 +761,7 @@ body {
     transform: scale(1.02);
 }
 
-/* FIXED: Desktop mode - no padding, no labels */
+/* FIXED: Desktop mode - no padding, no labels, no vertical spacing */
 @media (min-width: 768px) {
     .neighbor-cell {
         padding: 0;
@@ -773,6 +773,10 @@ body {
     }
     
     .neighbor-row {
+        gap: 0;
+    }
+    
+    .integrated-canvas-container {
         gap: 0;
     }
 }

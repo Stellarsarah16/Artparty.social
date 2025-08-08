@@ -262,10 +262,10 @@
             <!-- Floating Tools Panel -->
             <div class="floating-tools-panel" id="floating-tools-panel">
                 <div class="tools-row">
-                    <!-- FIXED: Save button on left -->
+                    <!-- FIXED: Back button on left -->
                     <div class="floating-action-left">
-                        <button class="btn btn-primary" id="floating-save-btn" disabled>
-                            <i class="fas fa-save"></i> Save
+                        <button class="btn btn-secondary" id="floating-back-btn">
+                            <i class="fas fa-arrow-left"></i> Back
                         </button>
                     </div>
                     
@@ -294,10 +294,10 @@
                         </div>
                     </div>
                     
-                    <!-- FIXED: Back button on right -->
+                    <!-- FIXED: Save button on right -->
                     <div class="floating-action-right">
-                        <button class="btn btn-secondary" id="floating-back-btn">
-                            <i class="fas fa-arrow-left"></i> Back
+                        <button class="btn btn-primary" id="floating-save-btn" disabled>
+                            <i class="fas fa-save"></i> Save
                         </button>
                     </div>
                 </div>
@@ -318,19 +318,20 @@
                         </div>
                     </div>
                     <div class="editor-actions">
+                        <!-- FIXED: Hide old buttons since we have floating tools panel -->
                         <button class="btn btn-secondary" id="back-to-canvases-btn" style="display: none;">
                             <i class="fas fa-arrow-left"></i> Back to Canvases
                         </button>
-                        <button class="btn btn-secondary" id="back-to-grid-btn">
+                        <button class="btn btn-secondary" id="back-to-grid-btn" style="display: none;">
                             <i class="fas fa-th"></i> Back to Grid View
                         </button>
-                        <button class="btn btn-secondary" id="undo-btn" title="Undo Last Save (Ctrl+Z)">
+                        <button class="btn btn-secondary" id="undo-btn" title="Undo Last Save (Ctrl+Z)" style="display: none;">
                             <i class="fas fa-undo"></i> Undo Last Save
                         </button>
-                        <button class="btn btn-secondary" id="redo-btn" title="Redo (Ctrl+Shift+Z)">
+                        <button class="btn btn-secondary" id="redo-btn" title="Redo (Ctrl+Shift+Z)" style="display: none;">
                             <i class="fas fa-redo"></i> Redo
                         </button>
-                        <button class="btn btn-primary" id="save-tile-btn" disabled>
+                        <button class="btn btn-primary" id="save-tile-btn" disabled style="display: none;">
                             <i class="fas fa-save"></i> Save Tile
                         </button>
                     </div>

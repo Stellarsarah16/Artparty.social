@@ -147,8 +147,10 @@ export class CanvasViewerManager {
             // Update User Tiles
             const userTilesElement = document.getElementById('viewer-user-tiles');
             if (userTilesElement) {
-                userTilesElement.textContent = userTileCount.count || 0;
-                console.log('✅ Updated user tiles:', userTileCount.count || 0);
+                // FIXED: Handle different response formats from getUserTileCount
+                const userCount = userTileCount.tile_count || userTileCount.count || 0;
+                userTilesElement.textContent = userCount;
+                console.log('✅ Updated user tiles:', userCount, 'from response:', userTileCount);
             }
             
             // Update Active Users (will be updated by WebSocket)
