@@ -2281,21 +2281,19 @@ form {
     align-items: center;
 }
 
-.floating-action-left {
-    order: 1;
-}
-
+/* Floating action buttons are positioned by the middle container structure */
+.floating-action-left,
 .floating-action-right {
-    order: 3;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
 }
 
 .floating-tools-panel .tools-section {
-    order: 2;
     flex: 0 0 auto;
 }
 
 .floating-tools-panel .color-palette {
-    order: 2;
     flex: 0 0 auto;
 }
 
@@ -2525,7 +2523,7 @@ form {
     /* FIXED: Keep buttons on sides, stack tools/colors in middle */
     .floating-tools-panel .tools-row {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         justify-content: space-between;
         align-items: flex-start;
         gap: var(--space-xs);
@@ -2536,37 +2534,42 @@ form {
     
     /* FIXED: Back button stays on left */
     .floating-action-left {
-        order: 1;
         flex: 0 0 auto;
-        align-self: flex-start;
+        align-self: center;
     }
     
     /* FIXED: Save button stays on right */
     .floating-action-right {
-        order: 3;
         flex: 0 0 auto;
-        align-self: flex-start;
+        align-self: center;
     }
     
-    /* FIXED: Tools and colors stack in the middle */
+    /* FIXED: Middle section contains both tools and colors stacked */
+    .floating-tools-middle {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-xs);
+        min-width: 0;
+    }
+    
     .floating-tools-panel .tools-section {
-        order: 2;
-        flex: 1 1 100%;
-        margin: var(--space-xs) 0 0 0;
+        margin: 0;
         padding: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
+        width: 100%;
     }
     
     .floating-tools-panel .color-palette {
-        order: 2;
-        flex: 1 1 100%;
-        margin: var(--space-xs) 0 0 0;
+        margin: 0;
         padding: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
+        width: 100%;
     }
     
     .floating-tools-panel .color-grid {
@@ -2608,7 +2611,7 @@ form {
     /* FIXED: Same layout as 768px but more compact */
     .floating-tools-panel .tools-row {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         justify-content: space-between;
         align-items: flex-start;
         gap: 2px;
@@ -2618,33 +2621,40 @@ form {
     }
     
     .floating-action-left {
-        order: 1;
         flex: 0 0 auto;
+        align-self: center;
     }
     
     .floating-action-right {
-        order: 3;
         flex: 0 0 auto;
+        align-self: center;
+    }
+    
+    .floating-tools-middle {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        min-width: 0;
     }
     
     .floating-tools-panel .tools-section {
-        order: 2;
-        flex: 1 1 100%;
-        margin: 2px 0;
+        margin: 0;
         padding: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
+        width: 100%;
     }
     
     .floating-tools-panel .color-palette {
-        order: 2;
-        flex: 1 1 100%;
-        margin: 2px 0;
+        margin: 0;
         padding: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
+        width: 100%;
     }
     
     .floating-tools-panel .color-grid {
