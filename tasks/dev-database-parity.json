@@ -1,0 +1,26 @@
+[
+  {
+    "id": "dev-db-parity",
+    "content": "Align local dev database schema/defaults with production (Alembic baseline + migrations)",
+    "status": "pending",
+    "dependencies": ["setup-database-migrations"]
+  },
+  {
+    "id": "backfill-canvas-defaults",
+    "content": "Backfill existing canvas rows with non-null defaults (palette_type, collaboration_mode, auto_save_interval, is_public, is_moderated)",
+    "status": "pending",
+    "dependencies": ["dev-db-parity"]
+  },
+  {
+    "id": "seed-local-data",
+    "content": "Seed local dev with minimal realistic data aligned to prod (palettes, collaboration modes)",
+    "status": "pending",
+    "dependencies": ["dev-db-parity"]
+  },
+  {
+    "id": "verify-cors-local",
+    "content": "Verify CORS config for local dev allows http://localhost:3000 and add tests/checks",
+    "status": "pending",
+    "dependencies": []
+  }
+]

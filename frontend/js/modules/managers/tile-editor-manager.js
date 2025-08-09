@@ -20,7 +20,59 @@ export class TileEditorManager {
      */
     async openTileEditor(tile) {
         try {
-            console.log('🔄 Opening tile editor for tile:', tile.id);
+            console.log('🎨 Opening tile editor for tile:', tile);
+            
+            // For blank tiles (undefined id), we need to create them first
+            if (!tile.id) {
+                console.log('🆕 Creating new tile for blank position...');
+                
+                try {
+                    // Create the tile first
+                    const createData = {
+                        canvas_id: tile.canvas_id,
+                        x: tile.x,
+                        y: tile.y,
+                        pixel_data: this.createEmptyPixelData(),
+                        title: `Tile at (${tile.x}, ${tile.y})`,
+                        description: 'New tile',
+                        is_public: true
+                    };
+                    
+                    console.log('📝 Creating tile with data:', createData);
+                    
+                    const newTile = await this.apiService.create(createData);
+                    console.log('✅ Tile created successfully:', newTile);
+                    
+                    // Extract tile data from response (backend returns {message: "...", tile: {...}})
+                    const tileData = newTile.tile || newTile;
+                    console.log('📋 Extracted tile data:', tileData);
+                    
+                    // Update the tile object with the new ID
+                    tile.id = tileData.id;
+                    tile.creator_id = tileData.creator_id;
+                    tile.created_at = tileData.created_at;
+                    tile.updated_at = tileData.updated_at;
+                    
+                    console.log('🔄 Updated tile object with new data:', tile);
+                    
+                } catch (createError) {
+                    console.error('❌ Failed to create tile:', createError);
+                    
+                    // Show error message to user
+                    let errorMessage = 'Failed to create tile';
+                    if (createError.data && createError.data.detail) {
+                        errorMessage = createError.data.detail;
+                    } else if (createError.message) {
+                        errorMessage = createError.message;
+                    }
+                    
+                    window.UIManager.showToast(errorMessage, 'error');
+                    
+                    // Don't open the editor - stay on viewer
+                    console.log('🚫 Staying on viewer due to tile creation failure');
+                    return;
+                }
+            }
             
             // Fetch full tile details including creator information
             let fullTileData = tile;
@@ -35,99 +87,108 @@ export class TileEditorManager {
                 // Continue with the provided tile data
             }
             
-            // First, try to acquire a lock for this tile
-            try {
-                if (window.API && window.API.tiles) {
-                    const lockResult = await window.API.tiles.acquireTileLock(fullTileData.id);
-                    this.currentLock = {
-                        tileId: fullTileData.id,
-                        lockId: lockResult.lock_id,
-                        expiresAt: new Date(lockResult.expires_at)
-                    };
-                    console.log('🔒 Acquired tile lock:', this.currentLock);
-                    
-                    // Start lock extension interval (extend every 25 minutes)
-                    this.startLockExtension();
-                }
-            } catch (error) {
-                if (error.status === 403) {
-                    // Permission denied - user cannot edit this tile
-                    const errorMessage = 'You can only edit your own tiles in this canvas mode. This tile was created by another user.';
-                    if (window.UIManager) {
-                        window.UIManager.showToast(errorMessage, 'error');
-                    }
-                    console.warn('🔒 Permission denied: Cannot edit tile created by another user');
-                    
-                    // FIXED: Return to viewer instead of staying on editor
-                    if (window.navigationManager) {
-                        window.navigationManager.showSection('viewer');
-                    }
-                    return;
-                } else if (error.status === 409) {
-                    // Tile is locked by another user
-                    if (window.UIManager) {
-                        window.UIManager.showToast('This tile is currently being edited by another user', 'error');
-                    }
-                    
-                    // FIXED: Return to viewer instead of staying on editor
-                    if (window.navigationManager) {
-                        window.navigationManager.showSection('viewer');
-                    }
-                    return;
-                } else if (error.status === 404) {
-                    // Tile not found
-                    if (window.UIManager) {
-                        window.UIManager.showToast('Tile not found. It may have been deleted.', 'error');
-                    }
-                    return;
-                } else {
-                    console.warn('⚠️ Could not acquire tile lock:', error);
-                    // Continue without lock for now, but warn the user
-                    if (window.UIManager) {
-                        window.UIManager.showToast('Warning: Could not acquire tile lock. Changes may not be saved.', 'warning');
-                    }
-                }
-            }
-            
-            // Get canvas data to access palette type
+            // Get canvas data to access palette type and collaboration mode
             let canvasData = null;
             try {
                 if (window.API && window.API.canvas) {
                     canvasData = await window.API.canvas.get(fullTileData.canvas_id);
                     console.log('🎨 Fetched canvas data:', canvasData);
+                    
+                    // Add canvas data to tile object for permission checking
+                    fullTileData.canvas = canvasData;
                 }
             } catch (error) {
                 console.warn('⚠️ Could not fetch canvas data:', error);
             }
             
-            // Add canvas data to tile object
-            fullTileData.canvas = canvasData;
+            // Update canvas name in editor header
+            if (canvasData) {
+                this.updateCanvasName(canvasData);
+            }
             
+            // Check if user can edit this tile
+            const canEdit = this.checkEditPermissions(fullTileData);
+            console.log('🔐 User can edit tile:', canEdit);
+            
+            if (!canEdit) {
+                console.log('❌ User cannot edit this tile, staying on viewer');
+                window.UIManager.showToast('You cannot edit this tile', 'warning');
+                return;
+            }
+            
+            // Try to acquire tile lock
+            try {
+                console.log('🔒 Attempting to acquire tile lock...');
+                const lockResult = await window.API.tiles.acquireTileLock(tile.id);
+                console.log('✅ Tile lock acquired:', lockResult);
+            } catch (lockError) {
+                console.error('❌ Failed to acquire tile lock:', lockError);
+                
+                let lockErrorMessage = 'Failed to acquire tile lock';
+                if (lockError.data && lockError.data.detail) {
+                    lockErrorMessage = lockError.data.detail;
+                } else if (lockError.message) {
+                    lockErrorMessage = lockError.message;
+                }
+                
+                window.UIManager.showToast(lockErrorMessage, 'error');
+                
+                // Don't open the editor - stay on viewer
+                console.log('🚫 Staying on viewer due to lock acquisition failure');
+                return;
+            }
+            
+            // Store the current tile
             this.currentTile = fullTileData;
             
-            // FIXED: Update canvas name in editor header
-            this.updateCanvasName(canvasData);
+            // Show the editor section
+            window.navigationManager.showSection('editor');
             
+            // Initialize the tile editor
             this.initializeTileEditor(fullTileData);
-            this.setupToolButtons();
-            this.setupUndoRedoButtons();
             
-            // Set default tool to paint and activate the paint button
-            this.selectTool('paint');
-            
-            // Show editor section
-            if (window.navigationManager) {
-                window.navigationManager.showSection('editor');
-            }
+            // Load neighbor tiles
+            await this.loadNeighborTiles(fullTileData);
             
             console.log('✅ Tile editor opened successfully');
             
         } catch (error) {
-            console.error('❌ Failed to open tile editor:', error);
-            if (window.UIManager) {
-                window.UIManager.showToast('Failed to open tile editor', 'error');
+            console.error('❌ Error opening tile editor:', error);
+            
+            // Show error message
+            let errorMessage = 'Failed to open tile editor';
+            if (error.data && error.data.detail) {
+                errorMessage = error.data.detail;
+            } else if (error.message) {
+                errorMessage = error.message;
             }
+            
+            window.UIManager.showToast(errorMessage, 'error');
+            
+            // Stay on viewer section
+            window.navigationManager.showSection('viewer');
         }
+    }
+    
+    /**
+     * Create empty pixel data for new tiles
+     * @returns {Array} 2D array of transparent pixels
+     */
+    createEmptyPixelData() {
+        const tileSize = 64; // Default tile size
+        const emptyPixelData = [];
+        
+        for (let y = 0; y < tileSize; y++) {
+            const row = [];
+            for (let x = 0; x < tileSize; x++) {
+                // RGBA format: [R, G, B, A] where A=0 means transparent
+                row.push([0, 0, 0, 0]); // Transparent black
+            }
+            emptyPixelData.push(row);
+        }
+        
+        // Return as JSON string since backend expects pixel_data to be a JSON string
+        return JSON.stringify(emptyPixelData);
     }
 
     /**
@@ -1447,5 +1508,16 @@ export class TileEditorManager {
         
         // Clear neighbor tiles data
         this.neighborTiles = {};
+    }
+
+    /**
+     * Check if the current user can edit the given tile.
+     * This includes ownership and collaboration mode checks.
+     */
+    checkEditPermissions(tile) {
+        const currentUser = window.CONFIG_UTILS ? window.CONFIG_UTILS.getUserData() : null;
+        const isOwner = currentUser && tile.creator_id === currentUser.id;
+        const isFreeMode = tile.canvas?.collaboration_mode === 'free';
+        return isOwner || isFreeMode;
     }
 } 
