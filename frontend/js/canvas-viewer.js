@@ -147,34 +147,19 @@ class CanvasViewer {
         if (!container) return;
         
         const containerRect = container.getBoundingClientRect();
-        const availableWidth = containerRect.width - 40; // Account for padding
-        const availableHeight = containerRect.height - 40;
-        
-        // Use full available width up to 1200px maximum
+        const availableWidth = containerRect.width - 10; // Account for padding
+        // Keep it simple: height is always 2/3 of width
         const maxWidth = 1200;
         let canvasWidth = Math.min(maxWidth, availableWidth);
-        
-        // Set height to 2/3 of width as requested
-        let canvasHeight = canvasWidth * (2/3);
-        
-        // Ensure it fits in available height
-        if (canvasHeight > availableHeight) {
-            canvasHeight = availableHeight;
-            canvasWidth = canvasHeight * (3/2); // Maintain 3:2 aspect ratio
-        }
-        
-        // Ensure minimum size for usability
         canvasWidth = Math.max(400, canvasWidth);
-        canvasHeight = Math.max(267, canvasHeight); // 267 = 400 * 2/3
+        const canvasHeight = Math.max(267, Math.floor(canvasWidth * (2 / 3)));
         
-        // Set canvas size
         this.canvas.width = Math.floor(canvasWidth);
         this.canvas.height = Math.floor(canvasHeight);
         
-        // Trigger re-render
         this.requestRender();
         
-        console.log(`📐 Canvas resized to ${this.canvas.width}x${this.canvas.height} (3:2 aspect ratio, container: ${Math.floor(availableWidth)}x${Math.floor(availableHeight)})`);
+        console.log(`📐 Canvas resized to ${this.canvas.width}x${this.canvas.height} (3:2 aspect)`);
     }
     
     /**

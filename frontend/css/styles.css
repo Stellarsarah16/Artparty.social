@@ -1745,6 +1745,34 @@ form {
         padding: 0.75rem 0;
         margin-bottom: 0.75rem;
     }
+
+    /* Keep stats in a single row with horizontal scroll if needed */
+    .stats-container {
+        flex-direction: row;
+        gap: 0.5rem;
+        padding: 0 0.5rem;
+        justify-content: flex-start;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+
+    .stats-container::-webkit-scrollbar {
+        height: 6px;
+    }
+    .stats-container::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.3);
+        border-radius: 3px;
+    }
+
+    .stat-card {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        min-width: 120px;
+    }
     
     /* FIXED: Show bottom info section on mobile */
     .viewer-bottom-info {
@@ -2769,3 +2797,24 @@ form {
     justify-content: flex-end;
     margin-top: 20px;
 } 
+
+@media (max-width: 768px) {
+    .floating-tools-panel .tools-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: var(--space-xs);
+    }
+
+    .floating-action-left { grid-column: 1; }
+    .floating-tools-middle { grid-column: 2; }
+    .floating-action-right { grid-column: 3; }
+
+    .floating-tools-middle {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-xs);
+        min-width: 0;
+    }
+}

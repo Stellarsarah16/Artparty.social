@@ -57,7 +57,7 @@ class ArtPartySocial {
         
         // Wait for the navigation manager to be available
         let attempts = 0;
-        const maxAttempts = 100; // 10 seconds max wait
+        const maxAttempts = 150; // Increase wait (15s) for slower mobile devices
         
         while (!window.navigationManager && attempts < maxAttempts) {
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -68,8 +68,14 @@ class ArtPartySocial {
             this.modules.navigation = window.navigationManager;
             console.log('✅ Navigation manager initialized');
         } else {
-            console.error('❌ Navigation manager not available or not fully initialized');
-            throw new Error('Navigation manager failed to initialize');
+            console.warn('⚠️ Navigation manager not fully ready. Proceeding with deferred init.');
+            // Defer navigation setup; try once more shortly to avoid hard failure on mobile
+            setTimeout(() => {
+                if (!this.modules.navigation && window.navigationManager && window.navigationManager.managers) {
+                    this.modules.navigation = window.navigationManager;
+                    console.log('✅ Navigation manager initialized (deferred)');
+                }
+            }, 500);
         }
         
         console.log('✅ All modules initialized');

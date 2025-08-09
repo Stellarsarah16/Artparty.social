@@ -170,6 +170,19 @@ class NavigationManager {
         if (targetSection) {
             targetSection.classList.remove('hidden');
             console.log(`✅ Section ${sectionName} shown`);
+
+            // When showing the viewer, force a resize after a tick to ensure correct initial size
+            if (sectionName === 'viewer' && window.CanvasViewer) {
+                requestAnimationFrame(() => {
+                    try {
+                        window.CanvasViewer.resizeCanvas();
+                        // Double-tick to catch late layout on mobile browsers
+                        setTimeout(() => window.CanvasViewer.resizeCanvas(), 50);
+                    } catch (e) {
+                        console.warn('Viewer resize after show failed:', e);
+                    }
+                });
+            }
         } else {
             console.error(`❌ Section ${sectionName} not found`);
         }
