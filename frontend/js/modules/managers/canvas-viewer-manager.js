@@ -78,9 +78,9 @@ export class CanvasViewerManager {
                 window.CanvasViewer.setCanvasData(canvasData);
                 
                 // Set up tile click handler
-                window.CanvasViewer.onTileClick = (tile) => {
+                window.CanvasViewer.onTileClick = async (tile) => {
                     console.log('🎯 Tile clicked, opening editor:', tile);
-                    this.openTileEditor(tile);
+                    await this.openTileEditor(tile);
                 };
                 
                 // Clear any existing tiles first
@@ -432,7 +432,7 @@ export class CanvasViewerManager {
     /**
      * Open tile editor for a specific tile
      */
-    openTileEditor(tile) {
+    async openTileEditor(tile) {
         try {
             console.log('🎨 Opening tile editor for tile:', tile);
             
@@ -441,19 +441,23 @@ export class CanvasViewerManager {
                 window.appState.set('currentTile', tile);
             }
             
-            // Show the editor section
-            this.showSection('editor');
-            
-            // Initialize the tile editor if available
+            // Initialize the tile editor if available - WAIT for this to complete
             if (window.tileEditorManager) {
-                window.tileEditorManager.openTileEditor(tile);
+                await window.tileEditorManager.openTileEditor(tile);
+                
+                // Only show the editor section if tile editor initialization succeeded
+                this.showSection('editor');
+                console.log('✅ Tile editor opened successfully');
+            } else {
+                throw new Error('Tile editor manager not available');
             }
-            
-            console.log('✅ Tile editor opened successfully');
             
         } catch (error) {
             console.error('❌ Failed to open tile editor:', error);
             this.showCanvasError('Failed to open tile editor');
+            
+            // Don't show the editor section if there was an error
+            // Stay on the current view (canvas viewer)
         }
     }
     
