@@ -2875,3 +2875,36 @@ form {
         word-break: break-word;
     }
 }
+
+@media (max-width: 768px) {
+    /* Ensure editor header content can wrap without forcing page width */
+    .editor-header-content {
+        flex-wrap: wrap;
+    }
+
+    .editor-header .editor-title,
+    .editor-header .canvas-info {
+        max-width: 100% !important;
+    }
+
+    .editor-header .canvas-info {
+        flex-wrap: wrap !important;
+        white-space: normal;
+        gap: 4px;
+    }
+
+    .editor-header .canvas-info span {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        max-width: 100%;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .editor-title h2 {
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+}
