@@ -148,10 +148,9 @@ export class TileEditorManager {
             // Load neighbor tiles
             await this.loadNeighborTiles(fullTileData);
             
-            // Show the editor section ONLY after everything is ready
-            window.navigationManager.showSection('editor');
-            
-            console.log('✅ Tile editor opened successfully');
+            // NOTE: Editor section is now shown by canvas-viewer-manager.js
+            // after this method completes successfully
+            console.log('✅ Tile editor initialized successfully');
             
         } catch (error) {
             console.error('❌ Error opening tile editor:', error);
