@@ -1,0 +1,183 @@
+[
+  {
+    "id": "define-ia-jtbd",
+    "content": "Define user roles, JTBD, and information architecture (site map, help taxonomy)",
+    "status": "in_progress",
+    "dependencies": []
+  },
+  {
+    "id": "audit-current-flows",
+    "content": "Audit current user flows (login, canvas list, viewer, editor, save) and identify help entry points",
+    "status": "pending",
+    "dependencies": []
+  },
+  {
+    "id": "create-docs-structure",
+    "content": "Create docs skeleton (docs/user-manual) with sidebar and topic template",
+    "status": "pending",
+    "dependencies": [
+      "define-ia-jtbd"
+    ]
+  },
+  {
+    "id": "write-core-topics",
+    "content": "Draft core manual topics: Getting Started, Viewer, Editor, Palettes, Collaboration, Mobile, Troubleshooting",
+    "status": "pending",
+    "dependencies": [
+      "create-docs-structure"
+    ]
+  },
+  {
+    "id": "add-docs-visuals",
+    "content": "Add annotated screenshots/GIFs for desktop and mobile",
+    "status": "pending",
+    "dependencies": [
+      "write-core-topics"
+    ]
+  },
+  {
+    "id": "help-registry",
+    "content": "Implement centralized help registry mapping contexts to topics",
+    "status": "pending",
+    "dependencies": [
+      "define-ia-jtbd"
+    ]
+  },
+  {
+    "id": "help-popover",
+    "content": "Build HelpPopover component and HelpLink with short text + link to full topic",
+    "status": "pending",
+    "dependencies": [
+      "help-registry"
+    ]
+  },
+  {
+    "id": "wire-context-help",
+    "content": "Place contextual help in viewer, editor, canvas list, settings",
+    "status": "pending",
+    "dependencies": [
+      "help-popover"
+    ]
+  },
+  {
+    "id": "help-hotkey",
+    "content": "Add '?' hotkey to open context help",
+    "status": "pending",
+    "dependencies": [
+      "help-registry"
+    ]
+  },
+  {
+    "id": "tooltips-tools",
+    "content": "Add tooltips for editor tools, back/save, zoom controls with short descriptions and shortcuts",
+    "status": "pending",
+    "dependencies": [
+      "wire-context-help"
+    ]
+  },
+  {
+    "id": "guided-tour",
+    "content": "Implement first-time guided tour for editor and viewer (progressive disclosure)",
+    "status": "pending",
+    "dependencies": [
+      "wire-context-help"
+    ]
+  },
+  {
+    "id": "accessibility-audit",
+    "content": "Run accessibility pass (focus, ARIA labels, contrast, keyboard navigation)",
+    "status": "pending",
+    "dependencies": [
+      "tooltips-tools",
+      "guided-tour"
+    ]
+  },
+  {
+    "id": "tokens-review",
+    "content": "Review and expand CSS tokens (spacing, colors, palette sizing) and replace hardcoded values incrementally",
+    "status": "pending",
+    "dependencies": []
+  },
+  {
+    "id": "stylelint-prettier",
+    "content": "Set up Stylelint and Prettier with basic rules and npm scripts",
+    "status": "pending",
+    "dependencies": []
+  },
+  {
+    "id": "extract-css-floating-toolbar",
+    "content": "Component-scope floating tools panel CSS (desktop defaults; phone-only ≤600px overrides)",
+    "status": "pending",
+    "dependencies": [
+      "tokens-review"
+    ]
+  },
+  {
+    "id": "extract-css-editor-header",
+    "content": "Component-scope editor header and canvas-info styles; ensure proper wrapping on phone only",
+    "status": "pending",
+    "dependencies": [
+      "tokens-review"
+    ]
+  },
+  {
+    "id": "extract-css-viewer-stats",
+    "content": "Component-scope viewer layout and canvas-stats-bar; keep horizontal with scroll on small screens",
+    "status": "pending",
+    "dependencies": [
+      "tokens-review"
+    ]
+  },
+  {
+    "id": "dedupe-color-grid",
+    "content": "Consolidate duplicate .color-grid definitions under component scopes (toolbar vs shared palette)",
+    "status": "pending",
+    "dependencies": [
+      "extract-css-floating-toolbar",
+      "extract-css-editor-header"
+    ]
+  },
+  {
+    "id": "keyboard-shortcuts",
+    "content": "Document and implement keyboard shortcuts (save, undo/redo, tools, zoom fit)",
+    "status": "pending",
+    "dependencies": [
+      "tooltips-tools"
+    ]
+  },
+  {
+    "id": "help-analytics",
+    "content": "Add lightweight analytics for help topic usage and helpfulness feedback",
+    "status": "pending",
+    "dependencies": [
+      "wire-context-help"
+    ]
+  },
+  {
+    "id": "feedback-widget",
+    "content": "Add 'Was this helpful?' and quick bug report entry from help popovers and docs",
+    "status": "pending",
+    "dependencies": [
+      "help-popover"
+    ]
+  },
+  {
+    "id": "in-app-docs-view",
+    "content": "Add docs viewer route/page to render manual Markdown in-app",
+    "status": "pending",
+    "dependencies": [
+      "create-docs-structure"
+    ]
+  },
+  {
+    "id": "cross-device-qa",
+    "content": "Run cross-device QA (desktop, tablet, phone) for help/UX and CSS changes",
+    "status": "pending",
+    "dependencies": [
+      "wire-context-help",
+      "extract-css-floating-toolbar",
+      "extract-css-editor-header",
+      "extract-css-viewer-stats"
+    ]
+  }
+]
