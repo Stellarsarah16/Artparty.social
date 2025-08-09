@@ -19,60 +19,61 @@ export class TileEditorManager {
      * Open tile editor
      */
     async openTileEditor(tile) {
-        try {
-            console.log('🎨 Opening tile editor for tile:', tile);
+        console.log('🎨 Opening tile editor for tile:', tile);
+        
+        // For blank tiles (undefined id), we need to create them first
+        if (!tile.id) {
+            console.log('🆕 Creating new tile for blank position...');
             
-            // For blank tiles (undefined id), we need to create them first
-            if (!tile.id) {
-                console.log('🆕 Creating new tile for blank position...');
+            try {
+                // Create the tile first
+                const createData = {
+                    canvas_id: tile.canvas_id,
+                    x: tile.x,
+                    y: tile.y,
+                    pixel_data: this.createEmptyPixelData(),
+                    title: `Tile at (${tile.x}, ${tile.y})`,
+                    description: 'New tile',
+                    is_public: true
+                };
                 
-                try {
-                    // Create the tile first
-                    const createData = {
-                        canvas_id: tile.canvas_id,
-                        x: tile.x,
-                        y: tile.y,
-                        pixel_data: this.createEmptyPixelData(),
-                        title: `Tile at (${tile.x}, ${tile.y})`,
-                        description: 'New tile',
-                        is_public: true
-                    };
-                    
-                    console.log('📝 Creating tile with data:', createData);
-                    
-                    const newTile = await this.apiService.create(createData);
-                    console.log('✅ Tile created successfully:', newTile);
-                    
-                    // Extract tile data from response (backend returns {message: "...", tile: {...}})
-                    const tileData = newTile.tile || newTile;
-                    console.log('📋 Extracted tile data:', tileData);
-                    
-                    // Update the tile object with the new ID
-                    tile.id = tileData.id;
-                    tile.creator_id = tileData.creator_id;
-                    tile.created_at = tileData.created_at;
-                    tile.updated_at = tileData.updated_at;
-                    
-                    console.log('🔄 Updated tile object with new data:', tile);
-                    
-                } catch (createError) {
-                    console.error('❌ Failed to create tile:', createError);
-                    
-                    // Show error message to user
-                    let errorMessage = 'Failed to create tile';
-                    if (createError.data && createError.data.detail) {
-                        errorMessage = createError.data.detail;
-                    } else if (createError.message) {
-                        errorMessage = createError.message;
-                    }
-                    
-                    window.UIManager.showToast(errorMessage, 'error');
-                    
-                    // Don't open the editor - stay on viewer
-                    console.log('🚫 Staying on viewer due to tile creation failure');
-                    return;
+                console.log('📝 Creating tile with data:', createData);
+                
+                const newTile = await this.apiService.create(createData);
+                console.log('✅ Tile created successfully:', newTile);
+                
+                // Extract tile data from response (backend returns {message: "...", tile: {...}})
+                const tileData = newTile.tile || newTile;
+                console.log('📋 Extracted tile data:', tileData);
+                
+                // Update the tile object with the new ID
+                tile.id = tileData.id;
+                tile.creator_id = tileData.creator_id;
+                tile.created_at = tileData.created_at;
+                tile.updated_at = tileData.updated_at;
+                
+                console.log('🔄 Updated tile object with new data:', tile);
+                
+            } catch (createError) {
+                console.error('❌ Failed to create tile:', createError);
+                
+                // Show error message to user
+                let errorMessage = 'Failed to create tile';
+                if (createError.data && createError.data.detail) {
+                    errorMessage = createError.data.detail;
+                } else if (createError.message) {
+                    errorMessage = createError.message;
                 }
+                
+                window.UIManager.showToast(errorMessage, 'error');
+                
+                // Don't open the editor - stay on viewer
+                console.log('🚫 Staying on viewer due to tile creation failure');
+                return;
             }
+        }
+        
+        try {
             
             // Fetch full tile details including creator information
             let fullTileData = tile;
