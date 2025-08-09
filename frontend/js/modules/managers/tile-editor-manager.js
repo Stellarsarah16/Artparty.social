@@ -141,14 +141,14 @@ export class TileEditorManager {
             // Store the current tile
             this.currentTile = fullTileData;
             
-            // Show the editor section
-            window.navigationManager.showSection('editor');
-            
             // Initialize the tile editor
             this.initializeTileEditor(fullTileData);
             
             // Load neighbor tiles
             await this.loadNeighborTiles(fullTileData);
+            
+            // Show the editor section ONLY after everything is ready
+            window.navigationManager.showSection('editor');
             
             console.log('✅ Tile editor opened successfully');
             
