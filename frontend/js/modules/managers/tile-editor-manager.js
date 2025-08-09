@@ -21,11 +21,11 @@ export class TileEditorManager {
     async openTileEditor(tile) {
         console.log('🎨 Opening tile editor for tile:', tile);
         
-        // For blank tiles (undefined id), we need to create them first
-        if (!tile.id) {
-            console.log('🆕 Creating new tile for blank position...');
-            
-            try {
+        try {
+            // For blank tiles (undefined id), we need to create them first
+            if (!tile.id) {
+                console.log('🆕 Creating new tile for blank position...');
+                
                 // Create the tile first
                 const createData = {
                     canvas_id: tile.canvas_id,
@@ -53,27 +53,7 @@ export class TileEditorManager {
                 tile.updated_at = tileData.updated_at;
                 
                 console.log('🔄 Updated tile object with new data:', tile);
-                
-            } catch (createError) {
-                console.error('❌ Failed to create tile:', createError);
-                
-                // Show error message to user
-                let errorMessage = 'Failed to create tile';
-                if (createError.data && createError.data.detail) {
-                    errorMessage = createError.data.detail;
-                } else if (createError.message) {
-                    errorMessage = createError.message;
-                }
-                
-                window.UIManager.showToast(errorMessage, 'error');
-                
-                // Don't open the editor - stay on viewer
-                console.log('🚫 Staying on viewer due to tile creation failure');
-                return;
             }
-        }
-        
-        try {
             
             // Fetch full tile details including creator information
             let fullTileData = tile;
@@ -114,7 +94,9 @@ export class TileEditorManager {
             if (!canEdit) {
                 console.log('❌ User cannot edit this tile, staying on viewer');
                 window.UIManager.showToast('You cannot edit this tile', 'warning');
-                return;
+                
+                // Throw error to prevent editor from opening
+                throw new Error('User does not have permission to edit this tile');
             }
             
             // Try to acquire tile lock
@@ -136,7 +118,9 @@ export class TileEditorManager {
                 
                 // Don't open the editor - stay on viewer
                 console.log('🚫 Staying on viewer due to lock acquisition failure');
-                return;
+                
+                // Throw error to prevent editor from opening
+                throw new Error(`Tile lock acquisition failed: ${lockErrorMessage}`);
             }
             
             // Store the current tile
@@ -165,8 +149,8 @@ export class TileEditorManager {
             
             window.UIManager.showToast(errorMessage, 'error');
             
-            // Stay on viewer section
-            window.navigationManager.showSection('viewer');
+            // Re-throw the error so canvas-viewer-manager can handle navigation
+            throw error;
         }
     }
     

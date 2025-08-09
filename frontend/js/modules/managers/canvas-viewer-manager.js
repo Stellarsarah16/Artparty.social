@@ -80,7 +80,12 @@ export class CanvasViewerManager {
                 // Set up tile click handler
                 window.CanvasViewer.onTileClick = async (tile) => {
                     console.log('🎯 Tile clicked, opening editor:', tile);
-                    await this.openTileEditor(tile);
+                    try {
+                        await this.openTileEditor(tile);
+                    } catch (error) {
+                        console.error('❌ Failed to open tile editor from click handler:', error);
+                        // Error is already handled by openTileEditor, just log it here
+                    }
                 };
                 
                 // Clear any existing tiles first
