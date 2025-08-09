@@ -715,10 +715,25 @@ export class TileEditorManager {
             
             if (canEdit) {
                 // User can edit this tile
-                newBtn.addEventListener('click', async () => {
+                const saveHandler = async () => {
                     console.log(`💾 ${type} save button clicked for tile:`, tile.id);
                     await this.saveTile(tile.id);
-                });
+                };
+                
+                newBtn.addEventListener('click', saveHandler);
+                
+                // Add touch event support for mobile
+                newBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    newBtn.classList.add('touch-active');
+                }, { passive: false });
+                
+                newBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    newBtn.classList.remove('touch-active');
+                    // Trigger the save handler on touch end
+                    saveHandler();
+                }, { passive: false });
                 
                 // Enable the save button
                 newBtn.disabled = false;
@@ -730,7 +745,7 @@ export class TileEditorManager {
                 newBtn.style.backgroundColor = '#4CAF50';
                 newBtn.title = 'Save your changes to this tile';
                 
-                console.log(`✅ ${type} save button enabled for editable tile`);
+                console.log(`✅ ${type} save button enabled for editable tile with touch support`);
             } else {
                 // User cannot edit this tile
                 newBtn.disabled = true;
@@ -1071,8 +1086,23 @@ export class TileEditorManager {
         };
         
         buttons.forEach(({ element, type }) => {
+            // Use both onclick and touch events for better mobile compatibility
             element.onclick = backHandler;
-            console.log(`✅ ${type} back button setup complete`);
+            
+            // Add touch event support for mobile
+            element.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                element.classList.add('touch-active');
+            }, { passive: false });
+            
+            element.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                element.classList.remove('touch-active');
+                // Trigger the back handler on touch end
+                backHandler();
+            }, { passive: false });
+            
+            console.log(`✅ ${type} back button setup complete with touch support`);
         });
         
         if (buttons.length === 0) {

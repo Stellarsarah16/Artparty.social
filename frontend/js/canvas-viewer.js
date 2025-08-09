@@ -138,7 +138,7 @@ class CanvasViewer {
     }
     
     /**
-     * FIXED: Resize canvas to fit container
+     * FIXED: Resize canvas to use full width with 1200px maximum
      */
     resizeCanvas() {
         if (!this.canvas) return;
@@ -147,18 +147,28 @@ class CanvasViewer {
         if (!container) return;
         
         const containerRect = container.getBoundingClientRect();
-        const maxWidth = containerRect.width - 40; // Account for padding
-        const maxHeight = containerRect.height - 40;
+        const availableWidth = containerRect.width - 40; // Account for padding
+        const availableHeight = containerRect.height - 40;
         
-        // Calculate optimal size maintaining aspect ratio
-        const aspectRatio = 4/3; // 800/600
-        let canvasWidth = Math.min(800, maxWidth);
-        let canvasHeight = canvasWidth / aspectRatio;
+        // Use full width up to 1200px maximum
+        const maxWidth = 1200;
+        let canvasWidth = Math.min(maxWidth, availableWidth);
         
-        if (canvasHeight > maxHeight) {
-            canvasHeight = maxHeight;
-            canvasWidth = canvasHeight * aspectRatio;
+        // Calculate height based on container aspect ratio or use reasonable default
+        const containerAspectRatio = availableWidth / availableHeight;
+        let canvasHeight;
+        
+        if (containerAspectRatio > 1.5) {
+            // Wide container - use a reasonable height that fits
+            canvasHeight = Math.min(availableHeight, canvasWidth * 0.75); // 4:3 aspect ratio
+        } else {
+            // Tall container - use most of available height
+            canvasHeight = availableHeight;
         }
+        
+        // Ensure minimum size for usability
+        canvasWidth = Math.max(400, canvasWidth);
+        canvasHeight = Math.max(300, canvasHeight);
         
         // Set canvas size
         this.canvas.width = Math.floor(canvasWidth);
@@ -167,7 +177,7 @@ class CanvasViewer {
         // Trigger re-render
         this.requestRender();
         
-        console.log(`📐 Canvas resized to ${this.canvas.width}x${this.canvas.height}`);
+        console.log(`📐 Canvas resized to ${this.canvas.width}x${this.canvas.height} (container: ${Math.floor(availableWidth)}x${Math.floor(availableHeight)})`);
     }
     
     /**

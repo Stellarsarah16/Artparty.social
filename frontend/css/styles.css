@@ -2295,6 +2295,19 @@ form {
 
 .floating-tools-panel .color-palette {
     flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* FIXED: Middle section for desktop - horizontal layout */
+.floating-tools-middle {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-lg);
+    min-width: 0;
 }
 
 /* Center the main tools and palette */
@@ -2309,6 +2322,9 @@ form {
     flex: 0 0 auto;
     margin: 0;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .floating-tools-panel .tools-section h3 {
@@ -2479,6 +2495,16 @@ form {
 .floating-tools-panel .color-square.touch-active {
     transform: scale(1.2);
     box-shadow: var(--shadow-md);
+}
+
+/* Mobile touch states for floating action buttons */
+.floating-action-left .btn:active,
+.floating-action-left .btn.touch-active,
+.floating-action-right .btn:active,
+.floating-action-right .btn.touch-active {
+    transform: scale(0.95);
+    box-shadow: var(--shadow-lg);
+    opacity: 0.9;
 }
 
 /* Mobile-specific touch feedback for color squares */
