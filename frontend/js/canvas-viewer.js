@@ -138,7 +138,7 @@ class CanvasViewer {
     }
     
     /**
-     * FIXED: Resize canvas to use full width with 1200px maximum
+     * FIXED: Resize canvas to fit full window width with 2/3 aspect ratio
      */
     resizeCanvas() {
         if (!this.canvas) return;
@@ -150,25 +150,22 @@ class CanvasViewer {
         const availableWidth = containerRect.width - 40; // Account for padding
         const availableHeight = containerRect.height - 40;
         
-        // Use full width up to 1200px maximum
+        // Use full available width up to 1200px maximum
         const maxWidth = 1200;
         let canvasWidth = Math.min(maxWidth, availableWidth);
         
-        // Calculate height based on container aspect ratio or use reasonable default
-        const containerAspectRatio = availableWidth / availableHeight;
-        let canvasHeight;
+        // Set height to 2/3 of width as requested
+        let canvasHeight = canvasWidth * (2/3);
         
-        if (containerAspectRatio > 1.5) {
-            // Wide container - use a reasonable height that fits
-            canvasHeight = Math.min(availableHeight, canvasWidth * 0.75); // 4:3 aspect ratio
-        } else {
-            // Tall container - use most of available height
+        // Ensure it fits in available height
+        if (canvasHeight > availableHeight) {
             canvasHeight = availableHeight;
+            canvasWidth = canvasHeight * (3/2); // Maintain 3:2 aspect ratio
         }
         
         // Ensure minimum size for usability
         canvasWidth = Math.max(400, canvasWidth);
-        canvasHeight = Math.max(300, canvasHeight);
+        canvasHeight = Math.max(267, canvasHeight); // 267 = 400 * 2/3
         
         // Set canvas size
         this.canvas.width = Math.floor(canvasWidth);
@@ -177,7 +174,7 @@ class CanvasViewer {
         // Trigger re-render
         this.requestRender();
         
-        console.log(`📐 Canvas resized to ${this.canvas.width}x${this.canvas.height} (container: ${Math.floor(availableWidth)}x${Math.floor(availableHeight)})`);
+        console.log(`📐 Canvas resized to ${this.canvas.width}x${this.canvas.height} (3:2 aspect ratio, container: ${Math.floor(availableWidth)}x${Math.floor(availableHeight)})`);
     }
     
     /**

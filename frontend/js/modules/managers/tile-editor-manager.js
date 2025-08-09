@@ -690,10 +690,17 @@ export class TileEditorManager {
      * Setup save button (both header and floating)
      */
     setupSaveButton(tile) {
+        console.log('🔧 Setting up save buttons for tile:', tile.id);
+        
         // Setup original header save button
         const saveBtn = document.getElementById('save-tile-btn');
         // Setup new floating save button
         const floatingSaveBtn = document.getElementById('floating-save-btn');
+        
+        console.log('🔍 Save button elements found:', {
+            header: saveBtn ? 'found' : 'not found',
+            floating: floatingSaveBtn ? 'found' : 'not found'
+        });
         
         const buttons = [
             { element: saveBtn, id: 'save-tile-btn', type: 'header' },
@@ -723,17 +730,31 @@ export class TileEditorManager {
                 newBtn.addEventListener('click', saveHandler);
                 
                 // Add touch event support for mobile
+                let touchStarted = false;
+                
                 newBtn.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
+                    touchStarted = true;
                     newBtn.classList.add('touch-active');
-                }, { passive: false });
+                    console.log(`📱 ${type} save button touch started`);
+                }, { passive: true });
                 
                 newBtn.addEventListener('touchend', (e) => {
-                    e.preventDefault();
+                    if (touchStarted) {
+                        newBtn.classList.remove('touch-active');
+                        console.log(`📱 ${type} save button touch ended, triggering handler`);
+                        // Small delay to ensure touch feedback is visible
+                        setTimeout(() => {
+                            saveHandler();
+                        }, 50);
+                    }
+                    touchStarted = false;
+                }, { passive: true });
+                
+                // Also handle touch cancel
+                newBtn.addEventListener('touchcancel', (e) => {
                     newBtn.classList.remove('touch-active');
-                    // Trigger the save handler on touch end
-                    saveHandler();
-                }, { passive: false });
+                    touchStarted = false;
+                }, { passive: true });
                 
                 // Enable the save button
                 newBtn.disabled = false;
@@ -1066,8 +1087,15 @@ export class TileEditorManager {
      * Setup back button (both header and floating)
      */
     setupBackButton() {
+        console.log('🔧 Setting up back buttons...');
+        
         const backBtn = document.getElementById('back-to-grid-btn');
         const floatingBackBtn = document.getElementById('floating-back-btn');
+        
+        console.log('🔍 Back button elements found:', {
+            header: backBtn ? 'found' : 'not found',
+            floating: floatingBackBtn ? 'found' : 'not found'
+        });
         
         const buttons = [
             { element: backBtn, type: 'header' },
@@ -1090,17 +1118,31 @@ export class TileEditorManager {
             element.onclick = backHandler;
             
             // Add touch event support for mobile
+            let touchStarted = false;
+            
             element.addEventListener('touchstart', (e) => {
-                e.preventDefault();
+                touchStarted = true;
                 element.classList.add('touch-active');
-            }, { passive: false });
+                console.log(`📱 ${type} back button touch started`);
+            }, { passive: true });
             
             element.addEventListener('touchend', (e) => {
-                e.preventDefault();
+                if (touchStarted) {
+                    element.classList.remove('touch-active');
+                    console.log(`📱 ${type} back button touch ended, triggering handler`);
+                    // Small delay to ensure touch feedback is visible
+                    setTimeout(() => {
+                        backHandler();
+                    }, 50);
+                }
+                touchStarted = false;
+            }, { passive: true });
+            
+            // Also handle touch cancel
+            element.addEventListener('touchcancel', (e) => {
                 element.classList.remove('touch-active');
-                // Trigger the back handler on touch end
-                backHandler();
-            }, { passive: false });
+                touchStarted = false;
+            }, { passive: true });
             
             console.log(`✅ ${type} back button setup complete with touch support`);
         });

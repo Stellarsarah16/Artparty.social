@@ -2551,23 +2551,47 @@ form {
         display: flex;
         flex-wrap: nowrap;
         justify-content: space-between;
-        align-items: flex-start;
+        align-items: stretch;
         gap: var(--space-xs);
         max-width: 100%;
         margin: 0 auto;
         padding: 0;
+        min-height: 60px;
     }
     
     /* FIXED: Back button stays on left */
     .floating-action-left {
         flex: 0 0 auto;
         align-self: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     /* FIXED: Save button stays on right */
     .floating-action-right {
         flex: 0 0 auto;
         align-self: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Ensure buttons are properly sized on mobile */
+    .floating-action-left .btn,
+    .floating-action-right .btn {
+        padding: 6px 12px;
+        font-size: 14px;
+        white-space: nowrap;
+        /* Ensure touch events work properly */
+        pointer-events: auto;
+        touch-action: manipulation;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        /* Minimum touch target size */
+        min-height: 44px;
+        min-width: 60px;
     }
     
     /* FIXED: Middle section contains both tools and colors stacked */
