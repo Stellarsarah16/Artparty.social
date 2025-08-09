@@ -2818,3 +2818,60 @@ form {
         min-width: 0;
     }
 }
+
+@media (max-width: 768px) {
+    /* Prevent horizontal overflow in the floating panel */
+    .floating-tools-panel,
+    .floating-tools-panel .tools-row {
+        overflow-x: hidden;
+        max-width: 100vw;
+    }
+
+    /* Keep three-column layout but constrain the middle width */
+    .floating-tools-panel .tools-row {
+        display: grid;
+        grid-template-columns: minmax(64px, auto) 1fr minmax(64px, auto);
+    }
+
+    .floating-tools-middle {
+        min-width: 0;
+        max-width: calc(100vw - 160px); /* leave space for side buttons */
+    }
+
+    /* Allow tools and colors to wrap and fit */
+    .floating-tools-panel .tool-group {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .floating-tools-panel .color-palette { width: 100%; }
+
+    .floating-tools-panel .color-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(24px, 1fr));
+        gap: 4px;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Ensure editor header can stack and wrap without widening viewport */
+    .editor-header,
+    .editor-header-content { 
+        overflow-x: hidden;
+        width: 100%;
+    }
+
+    .editor-header-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-sm);
+    }
+
+    .editor-title h2 {
+        white-space: normal; /* override desktop nowrap */
+        word-break: break-word;
+    }
+}
