@@ -10,6 +10,7 @@ from .canvas import router as canvas_router
 from .tiles import router as tiles_router
 from .tile_locks import router as tile_locks_router
 from .websockets import router as websockets_router
+from .admin import router as admin_router
 
 api_router = APIRouter()
 
@@ -29,4 +30,7 @@ api_router.include_router(tiles_router, prefix="/tiles", tags=["tiles"])
 api_router.include_router(tile_locks_router, prefix="/tile-locks", tags=["tile-locks"])
 
 # Include WebSocket router
-api_router.include_router(websockets_router, prefix="/ws", tags=["websockets"]) 
+api_router.include_router(websockets_router, prefix="/ws", tags=["websockets"])
+
+# Include admin router
+api_router.include_router(admin_router, prefix="/admin", tags=["admin"]) 
