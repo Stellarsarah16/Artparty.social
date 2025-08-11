@@ -440,8 +440,8 @@ export class AdminPanelManager {
     }
     
     getAuthToken() {
-        // Get auth token from localStorage or wherever it's stored
-        return localStorage.getItem('authToken') || '';
+        // Use the same method as the main app
+        return window.CONFIG_UTILS ? window.CONFIG_UTILS.getAuthToken() : localStorage.getItem('artparty_social_token') || '';
     }
     
     showSuccess(message) {
