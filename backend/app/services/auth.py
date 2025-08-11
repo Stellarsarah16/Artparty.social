@@ -166,7 +166,9 @@ class AuthService:
                 "total_points": user.total_points,
                 "tiles_created": user.tiles_created,
                 "likes_received": user.likes_received,
-                "is_verified": user.is_verified
+                "is_verified": user.is_verified,
+                "is_admin": user.is_admin,
+                "is_superuser": user.is_superuser
             }
         }
 

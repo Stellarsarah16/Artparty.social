@@ -348,22 +348,11 @@ export class AuthManager {
             }
             
             // Show admin button for admin/superuser
-            console.log('🔍 Admin button check:', {
-                adminBtn: !!adminBtn,
-                currentUser: currentUser,
-                is_admin: currentUser?.is_admin,
-                is_superuser: currentUser?.is_superuser,
-                shouldShow: currentUser && (currentUser.is_admin || currentUser.is_superuser)
-            });
-            
             if (adminBtn && currentUser && (currentUser.is_admin || currentUser.is_superuser)) {
                 adminBtn.style.display = 'block';
                 console.log('✅ Admin button shown for admin user');
             } else if (adminBtn) {
                 adminBtn.style.display = 'none';
-                console.log('❌ Admin button hidden - user is not admin/superuser');
-            } else {
-                console.log('❌ Admin button element not found');
             }
         } else {
             if (loginBtn) loginBtn.style.display = 'block';
