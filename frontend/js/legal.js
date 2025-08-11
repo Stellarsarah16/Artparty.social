@@ -1,6 +1,6 @@
 /**
  * Legal Pages Manager
- * Copyright (c) 2025 StellarCollab. All rights reserved.
+ * Copyright (c) 2025 Artparty.social. All rights reserved.
  * 
  * Handles display of legal documents including Terms of Service,
  * Privacy Policy, DMCA Policy, and About page.
@@ -14,11 +14,11 @@ const LEGAL_CONTENT = {
             <h1>Terms of Service</h1>
             <p><strong>Last updated:</strong> January 2025</p>
             
-            <h2>1. Agreement to Terms</h2>
-            <p>By accessing and using StellarCollab ("the Service"), you accept and agree to be bound by the terms and provision of this agreement.</p>
-            
-            <h2>2. Description of Service</h2>
-            <p>StellarCollab is a collaborative pixel art creation platform that allows users to create, edit, and share digital artwork in a collaborative environment.</p>
+                         <h2>1. Agreement to Terms</h2>
+             <p>By accessing and using Artparty.social ("the Service"), you accept and agree to be bound by the terms and provision of this agreement.</p>
+             
+             <h2>2. Description of Service</h2>
+             <p>Artparty.social is a collaborative pixel art creation platform that allows users to create, edit, and share digital artwork in a collaborative environment.</p>
             
             <h2>3. User Accounts</h2>
             <p>To use certain features of the Service, you must register for an account. You are responsible for:</p>
@@ -41,8 +41,8 @@ const LEGAL_CONTENT = {
                 <li>Spam, harass, or abuse other users</li>
             </ul>
             
-            <h2>5. Intellectual Property</h2>
-            <p>The Service and its original content, features, and functionality are owned by StellarCollab and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.</p>
+                         <h2>5. Intellectual Property</h2>
+             <p>The Service and its original content, features, and functionality are owned by Artparty.social and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.</p>
             
             <h2>6. Privacy</h2>
             <p>Your privacy is important to us. Please review our Privacy Policy, which also governs your use of the Service.</p>
@@ -53,8 +53,8 @@ const LEGAL_CONTENT = {
             <h2>8. Disclaimer</h2>
             <p>The Service is provided on an "AS IS" and "AS AVAILABLE" basis. We make no warranties, expressed or implied, regarding the Service's operation or availability.</p>
             
-            <h2>9. Limitation of Liability</h2>
-            <p>In no event shall StellarCollab be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the Service.</p>
+                         <h2>9. Limitation of Liability</h2>
+             <p>In no event shall Artparty.social be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the Service.</p>
             
             <h2>10. Changes to Terms</h2>
             <p>We reserve the right to modify these terms at any time. We will notify users of significant changes via email or through the Service.</p>
@@ -175,14 +175,14 @@ const LEGAL_CONTENT = {
                 <li>A statement that the information is accurate and you are authorized to act</li>
             </ul>
             
-            <h2>3. DMCA Agent Contact Information</h2>
-            <p>Send DMCA notices to our designated agent:</p>
-            <p>
-                <strong>DMCA Agent</strong><br>
-                StellarCollab<br>
-                Email: <a href="mailto:dmca@artparty.social">dmca@artparty.social</a><br>
-                Subject Line: "DMCA Takedown Request"
-            </p>
+                         <h2>3. DMCA Agent Contact Information</h2>
+             <p>Send DMCA notices to our designated agent:</p>
+             <p>
+                 <strong>DMCA Agent</strong><br>
+                 Artparty.social<br>
+                 Email: <a href="mailto:dmca@artparty.social">dmca@artparty.social</a><br>
+                 Subject Line: "DMCA Takedown Request"
+             </p>
             
             <h2>4. Counter-Notification Process</h2>
             <p>If you believe your content was removed in error, you may file a counter-notification containing:</p>
@@ -213,13 +213,13 @@ const LEGAL_CONTENT = {
         `
     },
     
-    about: {
-        title: "About StellarCollab",
-        content: `
-            <h1>About StellarCollab</h1>
-            
-            <h2>Our Mission</h2>
-            <p>StellarCollab is a collaborative pixel art creation platform designed to bring artists together in a shared creative space. We believe in the power of community-driven art and the magic that happens when creative minds collaborate.</p>
+         about: {
+         title: "About Artparty.social",
+         content: `
+             <h1>About Artparty.social</h1>
+             
+             <h2>Our Mission</h2>
+             <p>Artparty.social is a collaborative pixel art creation platform designed to bring artists together in a shared creative space. We believe in the power of community-driven art and the magic that happens when creative minds collaborate.</p>
             
             <h2>What We Do</h2>
             <p>Our platform provides:</p>
@@ -234,8 +234,8 @@ const LEGAL_CONTENT = {
             <h2>Our Vision</h2>
             <p>We envision a world where creativity knows no boundaries, where artists from different backgrounds and skill levels can come together to create something beautiful and meaningful.</p>
             
-            <h2>Technology</h2>
-            <p>StellarCollab is built with modern web technologies:</p>
+                         <h2>Technology</h2>
+             <p>Artparty.social is built with modern web technologies:</p>
             <ul>
                 <li>Real-time collaboration using WebSocket technology</li>
                 <li>Responsive design for desktop and mobile devices</li>
@@ -252,8 +252,8 @@ const LEGAL_CONTENT = {
                 <li>Learning and growth are supported</li>
             </ul>
             
-            <h2>Open Source</h2>
-            <p>StellarCollab is committed to open source principles. Parts of our codebase are available for community contribution and learning.</p>
+                         <h2>Open Source</h2>
+             <p>Artparty.social is committed to open source principles. Parts of our codebase are available for community contribution and learning.</p>
             
             <h2>Contact Us</h2>
             <p>Have questions, suggestions, or just want to say hello?</p>
@@ -263,8 +263,8 @@ const LEGAL_CONTENT = {
                 <li>Business: <a href="mailto:business@artparty.social">business@artparty.social</a></li>
             </ul>
             
-            <h2>Copyright</h2>
-            <p>&copy; 2025 StellarCollab. All rights reserved. Made with ❤️ for the creative community.</p>
+                         <h2>Copyright</h2>
+             <p>&copy; 2025 Artparty.social. All rights reserved. Made with ❤️ for the creative community.</p>
         `
     }
 };

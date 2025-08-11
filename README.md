@@ -1,4 +1,4 @@
-# StellarCollab
+# Artparty.social
 
 **A Collaborative Pixel Art Creation Platform**
 
@@ -9,7 +9,7 @@
 
 ## 🎨 About
 
-StellarCollab is a real-time collaborative pixel art platform that brings artists together in shared creative spaces. Create, edit, and collaborate on pixel art projects with people from around the world.
+Artparty.social is a real-time collaborative pixel art platform that brings artists together in shared creative spaces. Create, edit, and collaborate on pixel art projects with people from around the world.
 
 ### ✨ Features
 
@@ -140,20 +140,20 @@ We welcome contributions from the community! Please see our [Contributing Guidel
 ## 📄 Legal
 
 ### Copyright
-Copyright (c) 2025 StellarCollab. All rights reserved.
+Copyright (c) 2025 Artparty.social. All rights reserved.
 
 ### License
 This project is proprietary software. See the [LICENSE](LICENSE) file for details.
 
 ### Terms of Service
-By using StellarCollab, you agree to our [Terms of Service](https://artparty.social/#terms).
+By using Artparty.social, you agree to our [Terms of Service](https://artparty.social/#terms).
 
 ### Privacy Policy
 Your privacy is important to us. Read our [Privacy Policy](https://artparty.social/#privacy).
 
 ### User Content
 - Users retain ownership of their original pixel art creations
-- By using the platform, users grant StellarCollab necessary licenses to provide the service
+- By using the platform, users grant Artparty.social necessary licenses to provide the service
 - Community guidelines apply to all user-generated content
 
 ## 📞 Support
@@ -202,4 +202,4 @@ Your privacy is important to us. Read our [Privacy Policy](https://artparty.soci
 
 **Made with ❤️ for the creative community**
 
-Copyright (c) 2025 StellarCollab. All rights reserved.
+Copyright (c) 2025 Artparty.social. All rights reserved.

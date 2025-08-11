@@ -1,8 +1,8 @@
 /**
- * StellarCollab - Main Application Entry Point
- * Copyright (c) 2025 StellarCollab. All rights reserved.
+ * Artparty.social - Main Application Entry Point
+ * Copyright (c) 2025 Artparty.social. All rights reserved.
  * 
- * This file is part of StellarCollab, a collaborative pixel art platform.
+ * This file is part of Artparty.social, a collaborative pixel art platform.
  * Unauthorized copying, modification, or distribution is prohibited.
  */
 

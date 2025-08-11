@@ -1,9 +1,9 @@
 /**
- * StellarCollab API Integration Layer
- * Copyright (c) 2025 StellarCollab. All rights reserved.
+ * Artparty.social API Integration Layer
+ * Copyright (c) 2025 Artparty.social. All rights reserved.
  * 
  * Handles all communication between frontend and backend services.
- * This file is part of StellarCollab's proprietary codebase.
+ * This file is part of Artparty.social's proprietary codebase.
  */
 
 class APIClient {

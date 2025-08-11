@@ -1,6 +1,6 @@
-# Contributing to StellarCollab
+# Contributing to Artparty.social
 
-Thank you for your interest in contributing to StellarCollab! We welcome contributions from the community and are excited to work with you.
+Thank you for your interest in contributing to Artparty.social! We welcome contributions from the community and are excited to work with you.
 
 ## 📋 Table of Contents
 
@@ -309,8 +309,8 @@ Need help getting started?
 - **Email**: developers@artparty.social
 - **Documentation**: Check our [wiki](https://github.com/stellarcollab/wiki)
 
-Thank you for contributing to StellarCollab! 🎨✨
+Thank you for contributing to Artparty.social! 🎨✨
 
 ---
 
-Copyright (c) 2025 StellarCollab. All rights reserved.
+Copyright (c) 2025 Artparty.social. All rights reserved.

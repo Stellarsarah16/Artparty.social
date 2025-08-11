@@ -1,8 +1,8 @@
 """
-StellarCollab Backend - Main FastAPI Application
-Copyright (c) 2025 StellarCollab. All rights reserved.
+Artparty.social Backend - Main FastAPI Application
+Copyright (c) 2025 Artparty.social. All rights reserved.
 
-This file is part of StellarCollab's backend services.
+This file is part of Artparty.social's backend services.
 Unauthorized copying, modification, or distribution is prohibited.
 """
 import uvicorn
