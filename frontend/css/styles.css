@@ -477,6 +477,53 @@ body {
     background: var(--bg-secondary);
 }
 
+/* Canvas Preview Styles */
+.canvas-preview-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-lg);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.canvas-preview {
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+}
+
+.preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(248, 250, 252, 0.9);
+    border-radius: var(--border-radius);
+}
+
+.preview-loading,
+.preview-empty,
+.preview-error {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.preview-empty {
+    color: var(--text-light);
+}
+
+.preview-error {
+    color: var(--error-color);
+}
+
 .canvas-stat {
     display: flex;
     align-items: center;

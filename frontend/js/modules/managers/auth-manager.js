@@ -101,8 +101,12 @@ export class AuthManager {
             }
             
             // Load canvases
+            console.log('🔍 Checking canvas list manager availability:', !!window.canvasListManager);
             if (window.canvasListManager) {
-                window.canvasListManager.loadCanvases();
+                console.log('🔄 Loading canvases after login...');
+                await window.canvasListManager.loadCanvases();
+            } else {
+                console.error('❌ Canvas list manager not available after login');
             }
             
             console.log('✅ Login successful');
@@ -151,8 +155,12 @@ export class AuthManager {
             }
             
             // Load canvases
+            console.log('🔍 Checking canvas list manager availability after registration:', !!window.canvasListManager);
             if (window.canvasListManager) {
-                window.canvasListManager.loadCanvases();
+                console.log('🔄 Loading canvases after registration...');
+                await window.canvasListManager.loadCanvases();
+            } else {
+                console.error('❌ Canvas list manager not available after registration');
             }
             
             console.log('✅ Registration successful');

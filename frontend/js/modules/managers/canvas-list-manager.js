@@ -94,6 +94,12 @@ export class CanvasListManager {
                 <h3>${canvas.name}</h3>
                 ${isOwner ? '<button class="canvas-settings-btn" title="Edit Canvas Settings"><i class="fas fa-cog"></i></button>' : ''}
             </div>
+            <div class="canvas-preview-container">
+                <canvas class="canvas-preview" width="120" height="120" data-canvas-id="${canvas.id}"></canvas>
+                <div class="preview-overlay">
+                    <span class="preview-loading">Loading preview...</span>
+                </div>
+            </div>
             <div class="canvas-card-body">
                 <div class="canvas-info">
                     <div class="info-item">
@@ -149,6 +155,9 @@ export class CanvasListManager {
 
         // Load user tile count for this canvas
         this.loadUserTileCountForCanvas(canvas.id, card);
+        
+        // Load canvas preview
+        this.loadCanvasPreview(canvas, card);
 
         return card;
     }
@@ -175,6 +184,103 @@ export class CanvasListManager {
                 tileCountElement.textContent = '0 your tiles';
             }
         }
+    }
+
+    /**
+     * Load and render canvas preview
+     */
+    async loadCanvasPreview(canvas, cardElement) {
+        try {
+            const previewCanvas = cardElement.querySelector('.canvas-preview');
+            const previewOverlay = cardElement.querySelector('.preview-overlay');
+            
+            if (!previewCanvas || !previewOverlay) {
+                console.warn('Preview canvas elements not found');
+                return;
+            }
+
+            // Get tiles for this canvas
+            const tiles = await this.tileApi.getForCanvas(canvas.id);
+            
+            if (!tiles || tiles.length === 0) {
+                // No tiles - show empty canvas
+                previewOverlay.innerHTML = '<span class="preview-empty">Empty canvas</span>';
+                previewOverlay.style.display = 'flex';
+                return;
+            }
+
+            // Render preview
+            this.renderCanvasPreview(previewCanvas, canvas, tiles);
+            
+            // Hide overlay
+            previewOverlay.style.display = 'none';
+            
+        } catch (error) {
+            console.warn('Failed to load canvas preview:', error);
+            const previewOverlay = cardElement.querySelector('.preview-overlay');
+            if (previewOverlay) {
+                previewOverlay.innerHTML = '<span class="preview-error">Preview unavailable</span>';
+                previewOverlay.style.display = 'flex';
+            }
+        }
+    }
+
+    /**
+     * Render canvas preview on a small canvas element
+     */
+    renderCanvasPreview(previewCanvas, canvas, tiles) {
+        const ctx = previewCanvas.getContext('2d');
+        const canvasWidth = previewCanvas.width;
+        const canvasHeight = previewCanvas.height;
+        
+        // Clear canvas
+        ctx.fillStyle = '#f0f0f0';
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        
+        if (!tiles || tiles.length === 0) {
+            return;
+        }
+
+        // Calculate scale to fit canvas in preview
+        const scaleX = canvasWidth / (canvas.width / canvas.tile_size);
+        const scaleY = canvasHeight / (canvas.height / canvas.tile_size);
+        const scale = Math.min(scaleX, scaleY);
+        const tileSize = Math.max(1, Math.floor(canvas.tile_size * scale));
+        
+        // Calculate offset to center the preview
+        const totalWidth = (canvas.width / canvas.tile_size) * tileSize;
+        const totalHeight = (canvas.height / canvas.tile_size) * tileSize;
+        const offsetX = (canvasWidth - totalWidth) / 2;
+        const offsetY = (canvasHeight - totalHeight) / 2;
+
+        // Render each tile
+        tiles.forEach(tile => {
+            if (!tile.pixel_data) return;
+            
+            const x = offsetX + tile.x * tileSize;
+            const y = offsetY + tile.y * tileSize;
+            
+            try {
+                // Parse pixel data
+                const pixelData = typeof tile.pixel_data === 'string' 
+                    ? JSON.parse(tile.pixel_data) 
+                    : tile.pixel_data;
+                
+                if (Array.isArray(pixelData) && pixelData.length > 0) {
+                    // Render simplified version - just use the dominant color or first pixel
+                    const firstRow = pixelData[0];
+                    if (Array.isArray(firstRow) && firstRow.length > 0) {
+                        const color = firstRow[0] || '#ffffff';
+                        ctx.fillStyle = color;
+                        ctx.fillRect(Math.floor(x), Math.floor(y), Math.ceil(tileSize), Math.ceil(tileSize));
+                    }
+                }
+            } catch (error) {
+                // Fallback to a default color if parsing fails
+                ctx.fillStyle = '#cccccc';
+                ctx.fillRect(Math.floor(x), Math.floor(y), Math.ceil(tileSize), Math.ceil(tileSize));
+            }
+        });
     }
 
     /**
