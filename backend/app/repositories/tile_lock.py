@@ -1,4 +1,4 @@
-"""
+fix """
 Tile lock repository for managing tile editing locks
 """
 from typing import Optional, List
@@ -141,17 +141,91 @@ class TileLockRepository(SQLAlchemyRepository[TileLock, dict, dict]):
         return False
     
     def cleanup_expired_locks(self, db: Session) -> int:
-        """Clean up expired locks"""
-        expired_count = db.query(TileLock).filter(
+        """Clean up expired locks with better performance"""
+        try:
+            # Count expired locks first
+            expired_count = db.query(TileLock).filter(
+                or_(
+                    TileLock.expires_at <= datetime.now(timezone.utc),
+                    TileLock.is_active == False
+                )
+            ).count()
+            
+            if expired_count > 0:
+                # Delete expired locks
+                db.query(TileLock).filter(
+                    or_(
+                        TileLock.expires_at <= datetime.now(timezone.utc),
+                        TileLock.is_active == False
+                    )
+                ).delete()
+                db.commit()
+                print(f"🧹 Cleaned up {expired_count} expired/inactive locks")
+            
+            return expired_count
+        except Exception as e:
+            print(f"❌ Error cleaning up locks: {type(e).__name__}: {str(e)}")
+            db.rollback()
+            return 0
+    
+    def force_release_lock(self, db: Session, tile_id: int) -> bool:
+        """Force release any lock on a tile (admin function)"""
+        try:
+            result = db.query(TileLock).filter(
+                and_(
+                    TileLock.tile_id == tile_id,
+                    TileLock.is_active == True
+                )
+            ).update({
+                'is_active': False,
+                'expires_at': datetime.now(timezone.utc)
+            })
+            db.commit()
+            print(f"🔓 Force released lock for tile {tile_id}")
+            return result > 0
+        except Exception as e:
+            print(f"❌ Error force releasing lock: {type(e).__name__}: {str(e)}")
+            db.rollback()
+            return False
+    
+    def get_active_locks(self, db: Session) -> List[TileLock]:
+        """Get all active locks (admin function)"""
+        return db.query(TileLock).filter(
+            and_(
+                TileLock.is_active == True,
+                TileLock.expires_at > datetime.now(timezone.utc)
+            )
+        ).all()
+    
+    def get_user_locks(self, db: Session, user_id: int) -> List[TileLock]:
+        """Get all active locks for a specific user"""
+        return db.query(TileLock).filter(
+            and_(
+                TileLock.user_id == user_id,
+                TileLock.is_active == True,
+                TileLock.expires_at > datetime.now(timezone.utc)
+            )
+        ).all()
+    
+    def get_lock_statistics(self, db: Session) -> dict:
+        """Get lock statistics for admin dashboard"""
+        total_locks = db.query(TileLock).count()
+        active_locks = db.query(TileLock).filter(
+            and_(
+                TileLock.is_active == True,
+                TileLock.expires_at > datetime.now(timezone.utc)
+            )
+        ).count()
+        expired_locks = db.query(TileLock).filter(
             TileLock.expires_at <= datetime.now(timezone.utc)
         ).count()
         
-        db.query(TileLock).filter(
-            TileLock.expires_at <= datetime.now(timezone.utc)
-        ).delete()
-        
-        db.commit()
-        return expired_count
+        return {
+            'total_locks': total_locks,
+            'active_locks': active_locks,
+            'expired_locks': expired_locks,
+            'cleanup_needed': expired_locks > 0
+        }
 
 
 # Create repository instance

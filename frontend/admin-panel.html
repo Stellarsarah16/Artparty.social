@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Artparty.Social</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>🔧 Admin Panel</h1>
+            <nav class="admin-nav">
+                <button id="admin-dashboard-tab" class="admin-tab active">Dashboard</button>
+                <button id="admin-users-tab" class="admin-tab">Users</button>
+                <button id="admin-locks-tab" class="admin-tab">Tile Locks</button>
+                <button id="admin-reports-tab" class="admin-tab">Reports</button>
+            </nav>
+        </header>
+        
+        <main class="admin-main">
+            <!-- Dashboard View -->
+            <div id="admin-dashboard-view" class="admin-view">
+                <!-- Dashboard content will be loaded here -->
+            </div>
+            
+            <!-- Users View -->
+            <div id="admin-users-view" class="admin-view" style="display: none;">
+                <!-- Users content will be loaded here -->
+            </div>
+            
+            <!-- Locks View -->
+            <div id="admin-locks-view" class="admin-view" style="display: none;">
+                <!-- Locks content will be loaded here -->
+            </div>
+            
+            <!-- Reports View -->
+            <div id="admin-reports-view" class="admin-view" style="display: none;">
+                <!-- Reports content will be loaded here -->
+            </div>
+        </main>
+    </div>
+    
+    <script src="js/modules/admin/admin-panel.js"></script>
+</body>
+</html>

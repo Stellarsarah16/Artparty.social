@@ -15,6 +15,8 @@ from ...schemas.admin import (
     AdminStats, AdminAction
 )
 from ...schemas.canvas import CanvasResponse
+from ...repositories.tile_lock import tile_lock_repository
+from ...models.tile_lock import TileLock
 
 router = APIRouter()
 security = HTTPBearer()
@@ -214,4 +216,74 @@ async def make_superuser(
     user.is_admin = True
     db.commit()
     
-    return {"message": f"User {user.username} is now a superuser"} 
+    return {"message": f"User {user.username} is now a superuser"}
+
+
+# ===== TILE LOCK MANAGEMENT =====
+
+@router.get("/locks")
+async def get_all_locks(
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Get all active locks (admin only)"""
+    return tile_lock_repository.get_active_locks(db)
+
+@router.get("/locks/statistics")
+async def get_lock_statistics(
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Get lock statistics (admin only)"""
+    return tile_lock_repository.get_lock_statistics(db)
+
+@router.delete("/locks/{tile_id}")
+async def force_release_lock(
+    tile_id: int,
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Force release a lock on a tile (admin only)"""
+    success = tile_lock_repository.force_release_lock(db, tile_id)
+    if success:
+        return {"message": f"Lock on tile {tile_id} has been force released"}
+    else:
+        raise HTTPException(status_code=404, detail="No active lock found for this tile")
+
+@router.post("/locks/cleanup")
+async def cleanup_all_expired_locks(
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Clean up all expired locks (admin only)"""
+    count = tile_lock_repository.cleanup_expired_locks(db)
+    return {"message": f"Cleaned up {count} expired locks"}
+
+# ===== SYSTEM REPORTS =====
+
+@router.get("/reports/system-overview")
+async def get_system_overview(
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Get system overview report (admin only)"""
+    # Get user statistics
+    user_stats = admin_service.get_user_stats(db)
+    
+    # Get lock statistics
+    lock_stats = tile_lock_repository.get_lock_statistics(db)
+    
+    return {
+        "users": {
+            "total": user_stats.total_users,
+            "active": user_stats.active_users,
+            "inactive": user_stats.total_users - user_stats.active_users
+        },
+        "locks": lock_stats,
+        "system_health": {
+            "status": "healthy" if lock_stats['cleanup_needed'] == False else "needs_cleanup",
+            "recommendations": [
+                "Run lock cleanup" if lock_stats['cleanup_needed'] else "System is clean"
+            ]
+        }
+    } 
