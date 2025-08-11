@@ -50,7 +50,7 @@ export class CanvasListManager {
     }
 
     /**
-     * Render canvas list with cards
+     * Render canvas list with cards and staggered loading
      */
     renderCanvasList(canvases) {
         if (!this.canvasListContainer) {
@@ -74,16 +74,58 @@ export class CanvasListManager {
             return;
         }
 
-        canvases.forEach(canvas => {
-            const cardElement = this.createCanvasCard(canvas);
+        // Create all cards first (without loading data)
+        const cardElements = canvases.map(canvas => this.createCanvasCard(canvas, false)); // false = don't load data yet
+        cardElements.forEach(cardElement => {
             this.canvasListContainer.appendChild(cardElement);
         });
+        
+        // Stagger the data loading to prevent server overload
+        this.staggeredLoadCanvasData(canvases, cardElements);
+    }
+
+    /**
+     * Load canvas data in a staggered manner to prevent server overload
+     */
+    async staggeredLoadCanvasData(canvases, cardElements) {
+        console.log('🔄 Starting staggered loading for', canvases.length, 'canvases');
+        
+        // Load data for each canvas with delays
+        for (let i = 0; i < canvases.length; i++) {
+            const canvas = canvases[i];
+            const cardElement = cardElements[i];
+            
+            try {
+                console.log(`🔄 Loading data for canvas ${i + 1}/${canvases.length}: ${canvas.name}`);
+                
+                // Load both user tile count and preview concurrently for this canvas
+                await Promise.all([
+                    this.loadUserTileCountForCanvas(canvas.id, cardElement),
+                    this.loadCanvasPreview(canvas, cardElement)
+                ]);
+                
+                console.log(`✅ Completed loading data for canvas: ${canvas.name}`);
+                
+                // Add a delay between canvases to prevent server overload
+                if (i < canvases.length - 1) {
+                    const delay = 300; // 300ms delay between each canvas
+                    console.log(`⏳ Waiting ${delay}ms before loading next canvas...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+                
+            } catch (error) {
+                console.warn(`⚠️ Failed to load data for canvas ${canvas.name}:`, error);
+                // Continue with next canvas even if this one fails
+            }
+        }
+        
+        console.log('✅ Staggered loading completed for all canvases');
     }
 
     /**
      * Create a canvas card element
      */
-    createCanvasCard(canvas) {
+    createCanvasCard(canvas, loadData = true) {
         const currentUser = appState.get('currentUser');
         const isOwner = currentUser && canvas.creator_id === currentUser.id;
         
@@ -153,74 +195,116 @@ export class CanvasListManager {
             });
         }
 
-        // Load user tile count for this canvas
-        this.loadUserTileCountForCanvas(canvas.id, card);
-        
-        // Load canvas preview
-        this.loadCanvasPreview(canvas, card);
+        // Conditionally load data to prevent server overload
+        if (loadData) {
+            // Load user tile count for this canvas
+            this.loadUserTileCountForCanvas(canvas.id, card);
+            
+            // Load canvas preview
+            this.loadCanvasPreview(canvas, card);
+        }
 
         return card;
     }
 
     /**
-     * Load user's tile count for a specific canvas
+     * Load user's tile count for a specific canvas with retry logic
      */
-    async loadUserTileCountForCanvas(canvasId, cardElement) {
-        try {
-            const currentUser = appState.get('currentUser');
-            if (!currentUser || !currentUser.id) {
-                return;
-            }
+    async loadUserTileCountForCanvas(canvasId, cardElement, retries = 3) {
+        const currentUser = appState.get('currentUser');
+        if (!currentUser || !currentUser.id) {
+            return;
+        }
 
-            const tileCount = await this.tileApi.getUserTileCount(currentUser.id, canvasId);
-            const tileCountElement = cardElement.querySelector('.user-tiles-count');
-            if (tileCountElement) {
-                tileCountElement.textContent = `${tileCount.tile_count} your tiles`;
-            }
-        } catch (error) {
-            console.warn('Failed to load user tile count for canvas:', canvasId, error);
-            const tileCountElement = cardElement.querySelector('.user-tiles-count');
-            if (tileCountElement) {
-                tileCountElement.textContent = '0 your tiles';
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                console.log(`📊 Loading user tile count for canvas ${canvasId} (attempt ${attempt}/${retries})`);
+                
+                const tileCount = await this.tileApi.getUserTileCount(currentUser.id, canvasId);
+                const tileCountElement = cardElement.querySelector('.user-tiles-count');
+                if (tileCountElement) {
+                    tileCountElement.textContent = `${tileCount.tile_count} your tiles`;
+                }
+                
+                console.log(`✅ Successfully loaded user tile count for canvas ${canvasId}`);
+                return; // Success - exit retry loop
+                
+            } catch (error) {
+                console.warn(`❌ User tile count attempt ${attempt}/${retries} failed for canvas ${canvasId}:`, {
+                    error: error.message,
+                    status: error.status
+                });
+                
+                if (attempt === retries) {
+                    // Final attempt failed
+                    console.error(`❌ All ${retries} user tile count attempts failed for canvas ${canvasId}`);
+                    const tileCountElement = cardElement.querySelector('.user-tiles-count');
+                    if (tileCountElement) {
+                        tileCountElement.textContent = '0 your tiles';
+                    }
+                } else {
+                    // Wait before retrying
+                    const delay = Math.min(500 * attempt, 2000);
+                    console.log(`⏳ Waiting ${delay}ms before retry...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
             }
         }
     }
 
     /**
-     * Load and render canvas preview
+     * Load and render canvas preview with retry logic
      */
-    async loadCanvasPreview(canvas, cardElement) {
-        try {
-            const previewCanvas = cardElement.querySelector('.canvas-preview');
-            const previewOverlay = cardElement.querySelector('.preview-overlay');
-            
-            if (!previewCanvas || !previewOverlay) {
-                console.warn('Preview canvas elements not found');
-                return;
-            }
+    async loadCanvasPreview(canvas, cardElement, retries = 3) {
+        const previewCanvas = cardElement.querySelector('.canvas-preview');
+        const previewOverlay = cardElement.querySelector('.preview-overlay');
+        
+        if (!previewCanvas || !previewOverlay) {
+            console.warn('Preview canvas elements not found');
+            return;
+        }
 
-            // Get tiles for this canvas
-            const tiles = await this.tileApi.getForCanvas(canvas.id);
-            
-            if (!tiles || tiles.length === 0) {
-                // No tiles - show empty canvas
-                previewOverlay.innerHTML = '<span class="preview-empty">Empty canvas</span>';
-                previewOverlay.style.display = 'flex';
-                return;
-            }
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                console.log(`🖼️ Loading preview for canvas ${canvas.name} (attempt ${attempt}/${retries})`);
 
-            // Render preview
-            this.renderCanvasPreview(previewCanvas, canvas, tiles);
+                // Get tiles for this canvas with retry
+                const tiles = await this.tileApi.getForCanvas(canvas.id);
             
-            // Hide overlay
-            previewOverlay.style.display = 'none';
-            
-        } catch (error) {
-            console.warn('Failed to load canvas preview:', error);
-            const previewOverlay = cardElement.querySelector('.preview-overlay');
-            if (previewOverlay) {
-                previewOverlay.innerHTML = '<span class="preview-error">Preview unavailable</span>';
-                previewOverlay.style.display = 'flex';
+                if (!tiles || tiles.length === 0) {
+                    // No tiles - show empty canvas
+                    previewOverlay.innerHTML = '<span class="preview-empty">Empty canvas</span>';
+                    previewOverlay.style.display = 'flex';
+                    return;
+                }
+
+                // Render preview
+                this.renderCanvasPreview(previewCanvas, canvas, tiles);
+                
+                // Hide overlay
+                previewOverlay.style.display = 'none';
+                
+                console.log(`✅ Successfully loaded preview for canvas ${canvas.name}`);
+                return; // Success - exit retry loop
+                
+            } catch (error) {
+                console.warn(`❌ Preview load attempt ${attempt}/${retries} failed for canvas ${canvas.name}:`, {
+                    error: error.message,
+                    status: error.status,
+                    canvasId: canvas.id
+                });
+                
+                if (attempt === retries) {
+                    // Final attempt failed
+                    console.error(`❌ All ${retries} preview load attempts failed for canvas ${canvas.name}`);
+                    previewOverlay.innerHTML = '<span class="preview-error">Preview unavailable</span>';
+                    previewOverlay.style.display = 'flex';
+                } else {
+                    // Wait before retrying (exponential backoff)
+                    const delay = Math.min(1000 * Math.pow(2, attempt - 1), 3000);
+                    console.log(`⏳ Waiting ${delay}ms before retry...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
             }
         }
     }
