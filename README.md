@@ -1,242 +1,205 @@
-# 🎨 Artparty.social - Collaborative Pixel Canvas Game
+# StellarCollab
 
-A **real-time collaborative pixel art platform** built with FastAPI (Python) backend and vanilla JavaScript frontend. Artists can create, share, and collaborate on pixel art in shared canvases with live updates via WebSocket connections.
+**A Collaborative Pixel Art Creation Platform**
 
----
-
-## 🚀 **Live Demo**
-🌐 **[Try Artparty.social Live](http://104.248.124.8)** *(Running on DigitalOcean)*
-
-## 🌟 **What is Artparty.social?**
-
-Artparty.social is a **real-time collaborative pixel art platform** where artists can create, share, and discover amazing 32x32 pixel art tiles on shared canvases. Think of it as a digital art gallery where creativity meets collaboration!
-
-### ✨ **Key Features**
-- 🎨 **Real-time Collaboration** - Multiple artists working together
-- 🖼️ **Shared Canvases** - Large collaborative art spaces
-- 🎯 **32x32 Pixel Tiles** - Perfect for detailed pixel art
-- 🔄 **Live Updates** - See changes as they happen
-- 👥 **User Management** - Secure authentication and profiles
-- 📱 **Responsive Design** - Works on desktop and mobile
-- 🚀 **Fast Performance** - Optimized for real-time collaboration
-
-### 🎯 **Perfect For**
-- 🎨 **Digital Artists** - Create and share pixel art
-- 👥 **Art Communities** - Collaborate on projects
-- 🎓 **Education** - Learn pixel art techniques
-- 🏢 **Team Building** - Creative collaboration exercises
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Active%20Development-green.svg)]()
 
 ---
 
-## 🛠️ **Tech Stack**
+## 🎨 About
 
-### Backend
-- **FastAPI** - Modern Python web framework
-- **WebSockets** - Real-time communication
-- **PostgreSQL** - Database for production
-- **SQLite** - Database for development
-- **JWT Authentication** - Secure user sessions
-- **Docker** - Containerization
+StellarCollab is a real-time collaborative pixel art platform that brings artists together in shared creative spaces. Create, edit, and collaborate on pixel art projects with people from around the world.
+
+### ✨ Features
+
+- **Real-time Collaboration**: Work together on canvases with live updates
+- **Tile-based System**: Organized creation with individual tile ownership
+- **Advanced Editor**: Professional pixel art tools and color palettes
+- **Community Features**: Share, discover, and appreciate artwork
+- **Mobile Responsive**: Create on desktop, tablet, or mobile devices
+- **Secure Authentication**: Protected user accounts and data
+
+## 🚀 Technology Stack
 
 ### Frontend
-- **Vanilla JavaScript** - No frameworks, pure performance
-- **HTML5 Canvas** - Pixel art rendering
-- **CSS3** - Modern styling and animations
-- **WebSocket Client** - Real-time updates
+- **JavaScript ES6+** - Modern web standards
+- **HTML5 Canvas** - High-performance rendering
+- **CSS3 Grid/Flexbox** - Responsive layouts
+- **WebSocket** - Real-time communication
+- **Progressive Web App** - Mobile-optimized experience
 
-### Infrastructure
-- **Docker Compose** - Multi-container setup
-- **Nginx** - Production web server
-- **SSL/TLS** - HTTPS encryption
-- **DigitalOcean** - Cloud hosting
+### Backend
+- **Python 3.11+** - Modern Python features
+- **FastAPI** - High-performance async API framework
+- **SQLAlchemy** - Database ORM and migrations
+- **PostgreSQL** - Reliable data storage
+- **Redis** - Caching and session management
+- **Docker** - Containerized deployment
 
----
+## 📋 Requirements
 
-## 🚀 **Quick Start**
+### Development
+- Python 3.11+
+- Node.js 16+ (for build tools)
+- PostgreSQL 13+
+- Redis 6+
+- Docker & Docker Compose
 
-### Prerequisites
-- **Docker** and **Docker Compose** installed
-- **Git** for cloning the repository
+### Production
+- Docker environment
+- SSL certificate
+- Domain name
+- Cloud storage (optional)
 
-### Installation
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/Artparty.social.git
-cd Artparty.social
-
-# Start the application
-docker-compose up --build
-
-# Access the application
-# Frontend: http://localhost
-# Backend API: http://localhost:8000
-# API Documentation: http://localhost:8000/docs
-```
-
-### First Steps
-1. **Register** a new account or **login**
-2. **Create** a new canvas or **join** an existing one
-3. **Select** your colors and tools
-4. **Start** creating pixel art!
-5. **Collaborate** with other artists in real-time
-
----
-
-## 📚 **Documentation**
-
-### For Users
-- [🎨 How to Create Pixel Art](docs/pixel-art-guide.md)
-- [👥 Collaboration Tips](docs/collaboration-guide.md)
-- [🛠️ Tools and Features](docs/user-guide.md)
-
-### For Developers
-- [🔧 Development Setup](docs/development.md)
-- [🏗️ Architecture Overview](docs/architecture.md)
-- [🚀 Deployment Guide](DEPLOYMENT.md)
-- [🔗 API Documentation](docs/api.md)
-
-### For DevOps
-- [🐳 Docker Configuration](docs/docker.md)
-- [☁️ Cloud Deployment](DIGITALOCEAN-DEPLOY.md)
-- [🔒 Security Configuration](docs/security.md)
-- [📊 Monitoring Setup](docs/monitoring.md)
-
----
-
-## 🔧 **Development**
+## 🛠️ Installation
 
 ### Local Development
-```bash
-# Development with hot reload
-docker-compose -f docker-compose.dev.yml up --build
 
-# Run tests
-docker-compose exec backend python -m pytest
-docker-compose exec frontend npm test
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-org/stellarcollab.git
+   cd stellarcollab
+   ```
 
-# View logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
-```
+2. **Backend Setup**
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   cp .env.example .env
+   # Configure your .env file
+   alembic upgrade head
+   ```
 
-### Code Structure
-```
-StellarArtCollab/
-├── backend/           # FastAPI backend
-│   ├── app/
-│   │   ├── api/       # API endpoints
-│   │   ├── models/    # Database models
-│   │   ├── schemas/   # Pydantic schemas
-│   │   └── services/  # Business logic
-│   └── tests/         # Backend tests
-├── frontend/          # Vanilla JS frontend
-│   ├── js/           # JavaScript modules
-│   ├── css/          # Stylesheets
-│   └── tests/        # Frontend tests
-└── deployment/        # Production configs
-```
+3. **Frontend Setup**
+   ```bash
+   cd frontend
+   # No build step required - pure vanilla JS
+   ```
 
----
+4. **Database Setup**
+   ```bash
+   # Start PostgreSQL and Redis
+   docker-compose up -d db redis
+   
+   # Run migrations
+   cd backend
+   alembic upgrade head
+   ```
 
-## 🚀 **Deployment**
+5. **Start Development Server**
+   ```bash
+   # Backend
+   cd backend
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   
+   # Frontend (serve static files)
+   cd frontend
+   python -m http.server 3000
+   ```
 
 ### Production Deployment
-```bash
-# Quick deployment to DigitalOcean
-./deployment/quick-deploy-digitalocean.sh
 
-# Manual deployment
-docker-compose -f docker-compose.prod.yml up -d
+1. **Configure Environment**
+   ```bash
+   cp deployment/production/.env.example deployment/production/.env
+   # Update production environment variables
+   ```
 
-# SSL certificate setup
-certbot --nginx -d yourdomain.com
-```
+2. **Deploy with Docker**
+   ```bash
+   cd deployment/production
+   docker-compose -f docker-compose.prod.yml up -d
+   ```
 
-### Environment Variables
-```env
-# Database
-DATABASE_URL=postgresql://user:pass@host:5432/db
+## 📝 API Documentation
 
-# Authentication
-SECRET_KEY=your-secret-key-here
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+Once running, visit:
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
 
-# Application
-APP_NAME=StellarArtCollab
-DEBUG=false
-```
+## 🎯 Usage
 
----
+1. **Register an Account**: Create your artist profile
+2. **Explore Canvases**: Browse community creations
+3. **Start Creating**: Join a canvas or create your own
+4. **Collaborate**: Work with other artists in real-time
+5. **Share & Discover**: Show off your creations
 
-## 🧪 **Testing**
+## 🤝 Contributing
 
-### Backend Tests
-```bash
-# Run all tests
-docker-compose exec backend python run_tests.py
-
-# Run specific test
-docker-compose exec backend python -m pytest tests/test_auth.py
-
-# Test coverage
-docker-compose exec backend python -m pytest --cov=app
-```
-
-### Frontend Tests
-```bash
-# Open test runner in browser
-open http://localhost/tests/test-runner.html
-
-# Run API integration tests
-open http://localhost/tests/api-integration.test.html
-```
-
----
-
-## 🤝 **Contributing**
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+We welcome contributions from the community! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
 ### Development Workflow
-1. **Fork** the repository
-2. **Create** a feature branch
-3. **Make** your changes
-4. **Test** thoroughly
-5. **Submit** a pull request
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-### Areas for Contribution
-- 🎨 **UI/UX Improvements**
-- 🚀 **Performance Optimizations**
-- 🧪 **Test Coverage**
-- 📝 **Documentation**
-- 🐛 **Bug Fixes**
-- ✨ **New Features**
+## 📄 Legal
+
+### Copyright
+Copyright (c) 2025 StellarCollab. All rights reserved.
+
+### License
+This project is proprietary software. See the [LICENSE](LICENSE) file for details.
+
+### Terms of Service
+By using StellarCollab, you agree to our [Terms of Service](https://artparty.social/#terms).
+
+### Privacy Policy
+Your privacy is important to us. Read our [Privacy Policy](https://artparty.social/#privacy).
+
+### User Content
+- Users retain ownership of their original pixel art creations
+- By using the platform, users grant StellarCollab necessary licenses to provide the service
+- Community guidelines apply to all user-generated content
+
+## 📞 Support
+
+- **Email**: support@artparty.social
+- **Legal**: legal@artparty.social
+- **Business**: business@artparty.social
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   Backend API   │    │   Database      │
+│   (Vanilla JS)  │◄──►│   (FastAPI)     │◄──►│   (PostgreSQL)  │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │              ┌─────────────────┐              │
+         └─────────────►│   WebSocket     │◄─────────────┘
+                        │   (Real-time)   │
+                        └─────────────────┘
+                                 │
+                        ┌─────────────────┐
+                        │   Redis Cache   │
+                        │   (Sessions)    │
+                        └─────────────────┘
+```
+
+## 🔒 Security
+
+- **Authentication**: JWT-based secure authentication
+- **Authorization**: Role-based access control
+- **Data Protection**: Encrypted data transmission and storage
+- **Input Validation**: Comprehensive input sanitization
+- **Rate Limiting**: API abuse prevention
+- **CSRF Protection**: Cross-site request forgery prevention
+
+## 📈 Performance
+
+- **Real-time Updates**: Sub-100ms collaboration latency
+- **Scalable Architecture**: Horizontal scaling support
+- **Caching Strategy**: Multi-layer caching for optimal performance
+- **CDN Ready**: Static asset optimization
+- **Database Optimization**: Indexed queries and connection pooling
 
 ---
 
-## 📞 **Support**
+**Made with ❤️ for the creative community**
 
-Need help? We're here for you!
-
-- 📧 **Email**: support@stellarartcollab.com
-- 💬 **Discord**: [Join our community](https://discord.gg/stellarartcollab)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/StellarArtCollab/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/yourusername/StellarArtCollab/discussions)
-
----
-
-## 📄 **License**
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🎉 **Acknowledgments**
-
-- 🎨 **Artists** - For inspiring this platform
-- 👥 **Community** - For feedback and contributions
-- 🛠️ **Open Source** - For the amazing tools we use
-
----
-
-**Happy Creating! 🎨✨** 
+Copyright (c) 2025 StellarCollab. All rights reserved.

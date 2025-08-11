@@ -480,6 +480,54 @@
 
     </main>
 
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="footer-brand">
+                    <h3>StellarCollab</h3>
+                    <p>Collaborative pixel art creation platform</p>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul class="footer-links">
+                    <li><a href="#" onclick="showLegalPage('terms')">Terms of Service</a></li>
+                    <li><a href="#" onclick="showLegalPage('privacy')">Privacy Policy</a></li>
+                    <li><a href="#" onclick="showLegalPage('dmca')">DMCA Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="mailto:support@artparty.social">Contact Support</a></li>
+                    <li><a href="#" onclick="showLegalPage('about')">About</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <div class="footer-copyright">
+                    <p>&copy; 2025 StellarCollab. All rights reserved.</p>
+                    <p>Made with ❤️ for creative communities</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Legal Pages Modal -->
+    <div class="modal" id="legal-modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h2 id="legal-modal-title">Legal Information</h2>
+                <button class="modal-close" onclick="hideLegalModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="legal-content">
+                    <!-- Legal content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modals -->
     
     <!-- Login Modal -->
@@ -830,6 +878,11 @@
         const authVerificationScript = document.createElement('script');
         authVerificationScript.src = 'js/auth-verification.js' + cacheBuster;
         document.head.appendChild(authVerificationScript);
+        
+        // Load legal pages script
+        const legalScript = document.createElement('script');
+        legalScript.src = 'js/legal.js' + cacheBuster;
+        document.head.appendChild(legalScript);
         
         // Load regular scripts first (synchronously)
         const loadScripts = async () => {

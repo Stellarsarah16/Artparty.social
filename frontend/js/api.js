@@ -1,6 +1,9 @@
 /**
- * API Integration Layer
- * Handles all communication between frontend and backend
+ * StellarCollab API Integration Layer
+ * Copyright (c) 2025 StellarCollab. All rights reserved.
+ * 
+ * Handles all communication between frontend and backend services.
+ * This file is part of StellarCollab's proprietary codebase.
  */
 
 class APIClient {

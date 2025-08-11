@@ -1,5 +1,9 @@
 """
-Main FastAPI application
+StellarCollab Backend - Main FastAPI Application
+Copyright (c) 2025 StellarCollab. All rights reserved.
+
+This file is part of StellarCollab's backend services.
+Unauthorized copying, modification, or distribution is prohibited.
 """
 import uvicorn
 from contextlib import asynccontextmanager
