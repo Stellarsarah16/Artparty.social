@@ -276,8 +276,15 @@ async def get_system_overview(
     return {
         "users": {
             "total": user_stats.total_users,
-            "active": user_stats.active_users,
-            "inactive": user_stats.total_users - user_stats.active_users
+            "active_today": user_stats.active_users_today,
+            "new_this_week": user_stats.new_users_this_week
+        },
+        "canvases": {
+            "total": user_stats.total_canvases,
+            "new_this_week": user_stats.new_canvases_this_week
+        },
+        "tiles": {
+            "total": user_stats.total_tiles
         },
         "locks": lock_stats,
         "system_health": {

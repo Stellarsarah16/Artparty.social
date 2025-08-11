@@ -155,7 +155,17 @@ export class AdminPanelManager {
                 <div class="stat-card">
                     <h3>Users</h3>
                     <div class="stat-number">${data.users.total}</div>
-                    <div class="stat-detail">${data.users.active} active, ${data.users.inactive} inactive</div>
+                    <div class="stat-detail">${data.users.active_today} active today, ${data.users.new_this_week} new this week</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Canvases</h3>
+                    <div class="stat-number">${data.canvases.total}</div>
+                    <div class="stat-detail">${data.canvases.new_this_week} new this week</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Tiles</h3>
+                    <div class="stat-number">${data.tiles.total}</div>
+                    <div class="stat-detail">Total tiles created</div>
                 </div>
                 <div class="stat-card">
                     <h3>Tile Locks</h3>
