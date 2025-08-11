@@ -95,7 +95,7 @@ export class CanvasListManager {
                 ${isOwner ? '<button class="canvas-settings-btn" title="Edit Canvas Settings"><i class="fas fa-cog"></i></button>' : ''}
             </div>
             <div class="canvas-preview-container">
-                <canvas class="canvas-preview" width="120" height="120" data-canvas-id="${canvas.id}"></canvas>
+                <canvas class="canvas-preview" width="128" height="128" data-canvas-id="${canvas.id}"></canvas>
                 <div class="preview-overlay">
                     <span class="preview-loading">Loading preview...</span>
                 </div>
@@ -226,61 +226,120 @@ export class CanvasListManager {
     }
 
     /**
-     * Render canvas preview on a small canvas element
+     * Render canvas preview on a small canvas element with detailed pixel rendering
      */
     renderCanvasPreview(previewCanvas, canvas, tiles) {
         const ctx = previewCanvas.getContext('2d');
-        const canvasWidth = previewCanvas.width;
-        const canvasHeight = previewCanvas.height;
+        const canvasWidth = previewCanvas.width; // 128
+        const canvasHeight = previewCanvas.height; // 128
         
-        // Clear canvas
-        ctx.fillStyle = '#f0f0f0';
+        // Clear canvas with a subtle background
+        ctx.fillStyle = '#f8fafc';
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
         
         if (!tiles || tiles.length === 0) {
             return;
         }
 
-        // Calculate scale to fit canvas in preview
-        const scaleX = canvasWidth / (canvas.width / canvas.tile_size);
-        const scaleY = canvasHeight / (canvas.height / canvas.tile_size);
-        const scale = Math.min(scaleX, scaleY);
-        const tileSize = Math.max(1, Math.floor(canvas.tile_size * scale));
+        // Calculate how many tiles we can show (target 4x4 tiles in 128x128 preview)
+        const targetTilesPerSide = 4;
+        const pixelsPerTile = Math.floor(canvasWidth / targetTilesPerSide); // 32 pixels per tile
         
         // Calculate offset to center the preview
-        const totalWidth = (canvas.width / canvas.tile_size) * tileSize;
-        const totalHeight = (canvas.height / canvas.tile_size) * tileSize;
-        const offsetX = (canvasWidth - totalWidth) / 2;
-        const offsetY = (canvasHeight - totalHeight) / 2;
+        const totalPreviewWidth = targetTilesPerSide * pixelsPerTile;
+        const totalPreviewHeight = targetTilesPerSide * pixelsPerTile;
+        const offsetX = (canvasWidth - totalPreviewWidth) / 2;
+        const offsetY = (canvasHeight - totalPreviewHeight) / 2;
 
-        // Render each tile
+        // Find the center area of the canvas to show in preview
+        const canvasTilesX = Math.floor(canvas.width / canvas.tile_size);
+        const canvasTilesY = Math.floor(canvas.height / canvas.tile_size);
+        const centerX = Math.floor(canvasTilesX / 2);
+        const centerY = Math.floor(canvasTilesY / 2);
+        
+        // Calculate the range of tiles to show (2x2 around center for 4x4 total)
+        const startX = Math.max(0, centerX - 2);
+        const endX = Math.min(canvasTilesX, startX + targetTilesPerSide);
+        const startY = Math.max(0, centerY - 2);
+        const endY = Math.min(canvasTilesY, startY + targetTilesPerSide);
+
+        // Create a map of tiles by position for quick lookup
+        const tileMap = new Map();
         tiles.forEach(tile => {
-            if (!tile.pixel_data) return;
-            
-            const x = offsetX + tile.x * tileSize;
-            const y = offsetY + tile.y * tileSize;
-            
-            try {
-                // Parse pixel data
-                const pixelData = typeof tile.pixel_data === 'string' 
-                    ? JSON.parse(tile.pixel_data) 
-                    : tile.pixel_data;
-                
-                if (Array.isArray(pixelData) && pixelData.length > 0) {
-                    // Render simplified version - just use the dominant color or first pixel
-                    const firstRow = pixelData[0];
-                    if (Array.isArray(firstRow) && firstRow.length > 0) {
-                        const color = firstRow[0] || '#ffffff';
-                        ctx.fillStyle = color;
-                        ctx.fillRect(Math.floor(x), Math.floor(y), Math.ceil(tileSize), Math.ceil(tileSize));
-                    }
-                }
-            } catch (error) {
-                // Fallback to a default color if parsing fails
-                ctx.fillStyle = '#cccccc';
-                ctx.fillRect(Math.floor(x), Math.floor(y), Math.ceil(tileSize), Math.ceil(tileSize));
-            }
+            tileMap.set(`${tile.x},${tile.y}`, tile);
         });
+
+        // Render each tile position in the preview area
+        for (let tileY = startY; tileY < endY; tileY++) {
+            for (let tileX = startX; tileX < endX; tileX++) {
+                const tile = tileMap.get(`${tileX},${tileY}`);
+                
+                // Calculate position in preview
+                const previewX = offsetX + (tileX - startX) * pixelsPerTile;
+                const previewY = offsetY + (tileY - startY) * pixelsPerTile;
+                
+                if (tile && tile.pixel_data) {
+                    // Render the actual tile pixel data
+                    this.renderTileInPreview(ctx, tile, previewX, previewY, pixelsPerTile);
+                } else {
+                    // Render empty tile background
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(previewX, previewY, pixelsPerTile, pixelsPerTile);
+                    
+                    // Add subtle border for empty tiles
+                    ctx.strokeStyle = '#e2e8f0';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(previewX + 0.5, previewY + 0.5, pixelsPerTile - 1, pixelsPerTile - 1);
+                }
+            }
+        }
+    }
+
+    /**
+     * Render a single tile's pixel data in the preview
+     */
+    renderTileInPreview(ctx, tile, x, y, tileSize) {
+        try {
+            // Parse pixel data
+            const pixelData = typeof tile.pixel_data === 'string' 
+                ? JSON.parse(tile.pixel_data) 
+                : tile.pixel_data;
+            
+            if (!Array.isArray(pixelData) || pixelData.length === 0) {
+                // Fallback to solid color
+                ctx.fillStyle = '#cccccc';
+                ctx.fillRect(x, y, tileSize, tileSize);
+                return;
+            }
+
+            // Calculate how many pixels to show per pixel data point
+            const originalTileSize = pixelData.length; // Assuming square tiles
+            const pixelsPerDataPoint = tileSize / originalTileSize;
+            
+            // Render each pixel in the tile
+            for (let row = 0; row < pixelData.length; row++) {
+                const pixelRow = pixelData[row];
+                if (!Array.isArray(pixelRow)) continue;
+                
+                for (let col = 0; col < pixelRow.length; col++) {
+                    const color = pixelRow[col];
+                    if (!color || color === 'transparent') continue;
+                    
+                    ctx.fillStyle = color;
+                    ctx.fillRect(
+                        x + col * pixelsPerDataPoint,
+                        y + row * pixelsPerDataPoint,
+                        Math.ceil(pixelsPerDataPoint),
+                        Math.ceil(pixelsPerDataPoint)
+                    );
+                }
+            }
+            
+        } catch (error) {
+            // Fallback to a default color if parsing fails
+            ctx.fillStyle = '#cccccc';
+            ctx.fillRect(x, y, tileSize, tileSize);
+        }
     }
 
     /**

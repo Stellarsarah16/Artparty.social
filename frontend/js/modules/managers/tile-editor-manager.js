@@ -13,6 +13,9 @@ export class TileEditorManager {
         this.currentLock = null;
         this.lockInterval = null;
         this.neighborTiles = {}; // Store neighbor tile data for color picking
+        
+        // Set up mobile-specific event listeners for lock cleanup
+        this.setupMobileLockCleanup();
     }
 
     /**
@@ -915,9 +918,17 @@ export class TileEditorManager {
             }
             
             // Release the lock after successful save
+            console.log('🔓 Starting lock release after successful save...');
             await this.releaseCurrentLock();
+            console.log('✅ Lock release completed, proceeding with navigation...');
             
-            // FIXED: Return to canvas viewer after successful save
+            // Detect if we're on mobile for additional delay
+            const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const navigationDelay = isMobile ? 1000 : 500; // Extra delay on mobile
+            
+            console.log(`🔄 Navigating back to viewer in ${navigationDelay}ms (mobile: ${isMobile})...`);
+            
+            // Return to canvas viewer after successful save
             setTimeout(() => {
                 if (window.navigationManager) {
                     window.navigationManager.showSection('viewer');
@@ -928,7 +939,8 @@ export class TileEditorManager {
                     if (editorSection) editorSection.classList.add('hidden');
                     if (viewerSection) viewerSection.classList.remove('hidden');
                 }
-            }, 500); // Small delay to show the success message
+                console.log('✅ Navigation to viewer completed');
+            }, navigationDelay);
             
         } catch (error) {
             console.error('❌ Failed to save tile:', error);
@@ -1407,23 +1419,72 @@ export class TileEditorManager {
     }
 
     /**
-     * Release current tile lock
+     * Release current tile lock with retry logic for mobile reliability
      */
-    async releaseCurrentLock() {
-        if (this.currentLock && window.API && window.API.tiles) {
-            try {
-                await window.API.tiles.releaseTileLock(this.currentLock.tileId);
-                console.log('🔓 Released tile lock');
-            } catch (error) {
-                console.warn('⚠️ Failed to release tile lock:', error);
-            }
+    async releaseCurrentLock(retries = 3) {
+        if (!this.currentLock || !window.API || !window.API.tiles) {
+            console.log('🔓 No lock to release or API not available');
+            this.currentLock = null;
+            return;
         }
-        
-        this.currentLock = null;
-        
-        if (this.lockInterval) {
-            clearInterval(this.lockInterval);
-            this.lockInterval = null;
+
+        const tileId = this.currentLock.tileId;
+        console.log(`🔓 Attempting to release tile lock for tile ${tileId}...`);
+
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                console.log(`🔓 Lock release attempt ${attempt}/${retries} for tile ${tileId}`);
+                
+                await window.API.tiles.releaseTileLock(tileId);
+                
+                console.log(`✅ Successfully released tile lock for tile ${tileId} on attempt ${attempt}`);
+                
+                // Clear local lock reference only after successful release
+                this.currentLock = null;
+                
+                // Clear lock refresh interval
+                if (this.lockInterval) {
+                    clearInterval(this.lockInterval);
+                    this.lockInterval = null;
+                }
+                
+                console.log('🧹 Lock cleanup completed successfully');
+                return; // Success - exit the retry loop
+                
+            } catch (error) {
+                console.error(`❌ Lock release attempt ${attempt}/${retries} failed:`, {
+                    tileId: tileId,
+                    attempt: attempt,
+                    error: error.message,
+                    status: error.status,
+                    isMobile: /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                });
+                
+                if (attempt === retries) {
+                    // Final attempt failed
+                    console.error(`❌ All ${retries} lock release attempts failed for tile ${tileId}`);
+                    
+                    // Show user-friendly error message
+                    if (window.UIManager) {
+                        window.UIManager.showToast(
+                            'Warning: Tile lock may not have been released properly. Please refresh the page if you encounter issues.',
+                            'warning'
+                        );
+                    }
+                    
+                    // Still clear local state to prevent further issues
+                    this.currentLock = null;
+                    if (this.lockInterval) {
+                        clearInterval(this.lockInterval);
+                        this.lockInterval = null;
+                    }
+                } else {
+                    // Wait before retrying (exponential backoff)
+                    const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+                    console.log(`⏳ Waiting ${delay}ms before retry...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
         }
     }
 
@@ -1586,5 +1647,53 @@ export class TileEditorManager {
         element.classList.add('touch-enabled');
         
         console.log(`✅ ${buttonType} button: unified touch events configured`);
+    }
+
+    /**
+     * Set up mobile-specific event listeners for lock cleanup
+     */
+    setupMobileLockCleanup() {
+        // Release locks when page visibility changes (mobile browsers often pause/suspend)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && this.currentLock) {
+                console.log('📱 Page became hidden with active lock, attempting cleanup...');
+                // Don't await this to avoid blocking the visibility change
+                this.releaseCurrentLock().catch(error => {
+                    console.warn('⚠️ Failed to release lock on visibility change:', error);
+                });
+            }
+        });
+
+        // Release locks when page is about to unload (mobile navigation)
+        window.addEventListener('beforeunload', () => {
+            if (this.currentLock) {
+                console.log('📱 Page unloading with active lock, attempting cleanup...');
+                // Use navigator.sendBeacon for more reliable mobile cleanup
+                if (navigator.sendBeacon && window.API && window.API.tiles) {
+                    try {
+                        const lockData = JSON.stringify({
+                            action: 'release_lock',
+                            tile_id: this.currentLock.tileId
+                        });
+                        navigator.sendBeacon('/api/v1/tile-locks/cleanup', lockData);
+                        console.log('📱 Sent beacon for lock cleanup');
+                    } catch (error) {
+                        console.warn('⚠️ Failed to send cleanup beacon:', error);
+                    }
+                }
+            }
+        });
+
+        // Handle mobile app state changes (iOS/Android)
+        window.addEventListener('pagehide', () => {
+            if (this.currentLock) {
+                console.log('📱 Page hiding with active lock, attempting cleanup...');
+                this.releaseCurrentLock().catch(error => {
+                    console.warn('⚠️ Failed to release lock on page hide:', error);
+                });
+            }
+        });
+
+        console.log('📱 Mobile lock cleanup listeners configured');
     }
 } 
