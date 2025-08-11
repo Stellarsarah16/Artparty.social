@@ -772,34 +772,8 @@ export class TileEditorManager {
                     await this.saveTile(tile.id);
                 };
                 
-                newBtn.addEventListener('click', saveHandler);
-                
-                // Add touch event support for mobile
-                let touchStarted = false;
-                
-                newBtn.addEventListener('touchstart', (e) => {
-                    touchStarted = true;
-                    newBtn.classList.add('touch-active');
-                    console.log(`📱 ${type} save button touch started`);
-                }, { passive: true });
-                
-                newBtn.addEventListener('touchend', (e) => {
-                    if (touchStarted) {
-                        newBtn.classList.remove('touch-active');
-                        console.log(`📱 ${type} save button touch ended, triggering handler`);
-                        // Small delay to ensure touch feedback is visible
-                        setTimeout(() => {
-                            saveHandler();
-                        }, 50);
-                    }
-                    touchStarted = false;
-                }, { passive: true });
-                
-                // Also handle touch cancel
-                newBtn.addEventListener('touchcancel', (e) => {
-                    newBtn.classList.remove('touch-active');
-                    touchStarted = false;
-                }, { passive: true });
+                // FIXED: Use unified touch event system
+                this.setupUnifiedTouchEvents(newBtn, saveHandler, type);
                 
                 // Enable the save button
                 newBtn.disabled = false;
@@ -811,7 +785,7 @@ export class TileEditorManager {
                 newBtn.style.backgroundColor = '#4CAF50';
                 newBtn.title = 'Save your changes to this tile';
                 
-                console.log(`✅ ${type} save button enabled for editable tile with touch support`);
+                console.log(`✅ ${type} save button enabled for editable tile with unified touch support`);
             } else {
                 // User cannot edit this tile
                 newBtn.disabled = true;
@@ -1159,37 +1133,10 @@ export class TileEditorManager {
         };
         
         buttons.forEach(({ element, type }) => {
-            // Use both onclick and touch events for better mobile compatibility
-            element.onclick = backHandler;
+            // FIXED: Use unified touch event system
+            this.setupUnifiedTouchEvents(element, backHandler, type);
             
-            // Add touch event support for mobile
-            let touchStarted = false;
-            
-            element.addEventListener('touchstart', (e) => {
-                touchStarted = true;
-                element.classList.add('touch-active');
-                console.log(`📱 ${type} back button touch started`);
-            }, { passive: true });
-            
-            element.addEventListener('touchend', (e) => {
-                if (touchStarted) {
-                    element.classList.remove('touch-active');
-                    console.log(`📱 ${type} back button touch ended, triggering handler`);
-                    // Small delay to ensure touch feedback is visible
-                    setTimeout(() => {
-                        backHandler();
-                    }, 50);
-                }
-                touchStarted = false;
-            }, { passive: true });
-            
-            // Also handle touch cancel
-            element.addEventListener('touchcancel', (e) => {
-                element.classList.remove('touch-active');
-                touchStarted = false;
-            }, { passive: true });
-            
-            console.log(`✅ ${type} back button setup complete with touch support`);
+            console.log(`✅ ${type} back button setup complete with unified touch support`);
         });
         
         if (buttons.length === 0) {
@@ -1503,5 +1450,128 @@ export class TileEditorManager {
         const isOwner = currentUser && tile.creator_id === currentUser.id;
         const isFreeMode = tile.canvas?.collaboration_mode === 'free';
         return isOwner || isFreeMode;
+    }
+
+    /**
+     * FIXED: Unified touch event system for better mobile compatibility
+     * This method handles both click and touch events in a unified way
+     * to prevent conflicts and ensure consistent behavior across devices
+     */
+    setupUnifiedTouchEvents(element, handler, buttonType) {
+        // State tracking for touch events
+        let touchStartTime = 0;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchMoved = false;
+        let touchEnded = false;
+        
+        // Prevent multiple rapid triggers
+        let isProcessing = false;
+        
+        // Unified handler that prevents conflicts
+        const unifiedHandler = async (event) => {
+            // Prevent multiple rapid triggers
+            if (isProcessing) {
+                console.log(`🔄 ${buttonType} button: preventing rapid trigger`);
+                return;
+            }
+            
+            isProcessing = true;
+            
+            try {
+                console.log(`🎯 ${buttonType} button: unified handler triggered`);
+                await handler();
+            } catch (error) {
+                console.error(`❌ ${buttonType} button: handler error:`, error);
+            } finally {
+                // Reset processing flag after a short delay
+                setTimeout(() => {
+                    isProcessing = false;
+                }, 100);
+            }
+        };
+        
+        // Mouse click events (for desktop)
+        element.addEventListener('click', (e) => {
+            // Only handle mouse clicks, not touch-triggered clicks
+            if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) {
+                console.log(`🖱️ ${buttonType} button: ignoring touch-triggered click`);
+                return;
+            }
+            
+            console.log(`🖱️ ${buttonType} button: mouse click detected`);
+            unifiedHandler(e);
+        });
+        
+        // Touch start event
+        element.addEventListener('touchstart', (e) => {
+            // Prevent default to avoid conflicts with click events
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            touchStartTime = Date.now();
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            touchMoved = false;
+            touchEnded = false;
+            
+            // Add visual feedback
+            element.classList.add('touch-active');
+            
+            console.log(`📱 ${buttonType} button: touch started at (${touchStartX}, ${touchStartY})`);
+        }, { passive: false });
+        
+        // Touch move event
+        element.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                const deltaX = Math.abs(touch.clientX - touchStartX);
+                const deltaY = Math.abs(touch.clientY - touchStartY);
+                
+                // Mark as moved if significant movement detected
+                if (deltaX > 10 || deltaY > 10) {
+                    touchMoved = true;
+                    console.log(`📱 ${buttonType} button: touch moved (${deltaX}, ${deltaY})`);
+                }
+            }
+        }, { passive: true });
+        
+        // Touch end event
+        element.addEventListener('touchend', (e) => {
+            // Prevent default to avoid conflicts
+            e.preventDefault();
+            
+            const touchDuration = Date.now() - touchStartTime;
+            touchEnded = true;
+            
+            // Remove visual feedback
+            element.classList.remove('touch-active');
+            
+            console.log(`📱 ${buttonType} button: touch ended, duration: ${touchDuration}ms, moved: ${touchMoved}`);
+            
+            // Only trigger if it's a valid tap (quick, minimal movement)
+            if (touchDuration < 500 && !touchMoved) {
+                console.log(`📱 ${buttonType} button: valid tap detected, triggering handler`);
+                
+                // Small delay for visual feedback
+                setTimeout(() => {
+                    unifiedHandler(e);
+                }, 50);
+            } else {
+                console.log(`📱 ${buttonType} button: invalid tap (too long or moved), ignoring`);
+            }
+        }, { passive: false });
+        
+        // Touch cancel event
+        element.addEventListener('touchcancel', (e) => {
+            element.classList.remove('touch-active');
+            touchEnded = true;
+            console.log(`📱 ${buttonType} button: touch cancelled`);
+        }, { passive: true });
+        
+        // Add CSS classes for better touch styling
+        element.classList.add('touch-enabled');
+        
+        console.log(`✅ ${buttonType} button: unified touch events configured`);
     }
 } 

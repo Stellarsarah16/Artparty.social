@@ -2611,15 +2611,74 @@ form {
         padding: 6px 12px;
         font-size: 14px;
         white-space: nowrap;
-        /* Ensure touch events work properly */
+        /* FIXED: Improved touch event handling */
         pointer-events: auto;
         touch-action: manipulation;
         -webkit-touch-callout: none;
         -webkit-user-select: none;
         user-select: none;
-        /* Minimum touch target size */
-        min-height: 44px;
-        min-width: 60px;
+        /* Minimum touch target size - increased for better touch */
+        min-height: 48px;
+        min-width: 64px;
+        /* FIXED: Better touch feedback */
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+        transition: all 0.15s ease;
+        /* FIXED: Prevent text selection on touch */
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+    
+    /* FIXED: Better touch feedback for buttons */
+    .floating-action-left .btn:active,
+    .floating-action-right .btn:active {
+        transform: scale(0.95);
+        transition: transform 0.1s ease;
+    }
+    
+    /* FIXED: Touch active state styling */
+    .floating-action-left .btn.touch-active,
+    .floating-action-right .btn.touch-active {
+        background-color: #45a049 !important;
+        transform: scale(0.95);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* FIXED: Touch-enabled button styling */
+    .btn.touch-enabled {
+        cursor: pointer;
+        /* Better touch feedback */
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+        /* Prevent text selection on touch */
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+    
+    /* FIXED: Touch feedback animations */
+    .btn.touch-enabled:active {
+        transform: scale(0.95);
+        transition: transform 0.1s ease;
+    }
+    
+    /* FIXED: Better touch target sizing for mobile */
+    @media (max-width: 768px) {
+        .floating-action-left .btn,
+        .floating-action-right .btn {
+            /* Ensure minimum touch target size on mobile */
+            min-height: 48px;
+            min-width: 64px;
+            /* Better padding for touch */
+            padding: 8px 16px;
+            /* Prevent text wrapping */
+            white-space: nowrap;
+            /* Better touch feedback */
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+        }
     }
     
     /* FIXED: Middle section contains both tools and colors stacked */
