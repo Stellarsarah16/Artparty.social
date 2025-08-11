@@ -146,7 +146,7 @@ class PixelEditor {
         // Touch events for mobile - optimized for performance
         this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
         this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
-        this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: true });
+        this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
         
         // Prevent context menu on right click
         this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());

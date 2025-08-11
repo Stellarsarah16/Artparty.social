@@ -186,7 +186,7 @@ class CanvasViewer {
         // Touch events for mobile - cannot be passive because we need preventDefault for touch handling
         this.canvas.addEventListener('touchstart', this.boundHandlers.touchStart, { passive: false });
         this.canvas.addEventListener('touchmove', this.boundHandlers.touchMove, { passive: false });
-        this.canvas.addEventListener('touchend', this.boundHandlers.touchEnd, { passive: true });
+        this.canvas.addEventListener('touchend', this.boundHandlers.touchEnd, { passive: false });
         
         // Touch gesture tracking
         this.touchState = {
