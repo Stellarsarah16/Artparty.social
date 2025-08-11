@@ -104,11 +104,24 @@ export class TileEditorManager {
                 console.log('🔒 Attempting to acquire tile lock...');
                 const lockResult = await window.API.tiles.acquireTileLock(tile.id);
                 console.log('✅ Tile lock acquired:', lockResult);
+                
+                // FIXED: Store the lock information for later release
+                this.currentLock = {
+                    tileId: tile.id,
+                    lockId: lockResult.lock_id,
+                    userId: window.CONFIG_UTILS ? window.CONFIG_UTILS.getUserData()?.id : null
+                };
+                
+                console.log('💾 Stored lock info:', this.currentLock);
+                
             } catch (lockError) {
                 console.error('❌ Failed to acquire tile lock:', lockError);
                 
+                // FIXED: Better error handling for 409 Conflict
                 let lockErrorMessage = 'Failed to acquire tile lock';
-                if (lockError.data && lockError.data.detail) {
+                if (lockError.status === 409) {
+                    lockErrorMessage = 'This tile is currently being edited by another user. Please try again later.';
+                } else if (lockError.data && lockError.data.detail) {
                     lockErrorMessage = lockError.data.detail;
                 } else if (lockError.message) {
                     lockErrorMessage = lockError.message;
