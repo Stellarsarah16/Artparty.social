@@ -9,6 +9,7 @@ import { ModalManager } from './modal-manager.js';
 import { TileEditorManager } from './tile-editor-manager.js';
 import { WebSocketManager } from './websocket-manager.js';
 import { AuthManager } from './auth-manager.js';
+import { AdminPanelManager } from '../admin/admin-panel.js';
 import { eventManager } from '../../utils/events.js';
 
 // Export all manager classes
@@ -18,7 +19,8 @@ export {
     ModalManager,
     TileEditorManager,
     WebSocketManager,
-    AuthManager
+    AuthManager,
+    AdminPanelManager
 };
 
 // Create and export manager instances
@@ -45,7 +47,8 @@ export const createManagers = () => {
         canvasViewer: new CanvasViewerManager(window.API.canvas, window.API.tiles, webSocketManager, eventManager),
         modal: new ModalManager(),
         tileEditor: new TileEditorManager(window.API.tiles, eventManager), // FIXED: Added eventManager
-        auth: new AuthManager(window.API.auth, eventManager)
+        auth: new AuthManager(window.API.auth, eventManager),
+        admin: new AdminPanelManager()
     };
     
     // Make managers available globally for debugging
@@ -55,6 +58,7 @@ export const createManagers = () => {
     window.tileEditorManager = managers.tileEditor;
     window.webSocketManager = managers.webSocket;
     window.authManager = managers.auth;
+    window.adminPanelManager = managers.admin;
     
     console.log('✅ All managers created successfully');
     return managers;

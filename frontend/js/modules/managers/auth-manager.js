@@ -332,10 +332,12 @@ export class AuthManager {
      */
     updateNavigation() {
         const isAuthenticated = appState.get('currentUser') !== null;
+        const currentUser = appState.get('currentUser');
         
         const loginBtn = document.getElementById('login-btn');
         const registerBtn = document.getElementById('register-btn');
         const userInfo = document.getElementById('user-info');
+        const adminBtn = document.getElementById('admin-btn');
         
         if (isAuthenticated) {
             if (loginBtn) loginBtn.style.display = 'none';
@@ -344,12 +346,23 @@ export class AuthManager {
                 userInfo.classList.remove('hidden');
                 userInfo.style.display = 'flex';
             }
+            
+            // Show admin button for admin/superuser
+            if (adminBtn && currentUser && (currentUser.is_admin || currentUser.is_superuser)) {
+                adminBtn.style.display = 'block';
+                console.log('✅ Admin button shown for admin user');
+            } else if (adminBtn) {
+                adminBtn.style.display = 'none';
+            }
         } else {
             if (loginBtn) loginBtn.style.display = 'block';
             if (registerBtn) registerBtn.style.display = 'block';
             if (userInfo) {
                 userInfo.classList.add('hidden');
                 userInfo.style.display = 'none';
+            }
+            if (adminBtn) {
+                adminBtn.style.display = 'none';
             }
         }
     }

@@ -14,6 +14,7 @@
     <link rel="apple-touch-icon" href="favicon.svg">
     
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -446,6 +447,34 @@
             </div>
             <div class="tile-grid" id="tile-grid">
                 <!-- Tile cards will be dynamically inserted here -->
+            </div>
+        </section>
+
+        <!-- Admin Panel -->
+        <section class="admin-section hidden" id="admin-section">
+            <div class="admin-container">
+                <div class="admin-header">
+                    <h1>🔧 Admin Panel</h1>
+                    <div class="admin-nav">
+                        <button id="admin-dashboard-tab" class="admin-tab active">Dashboard</button>
+                        <button id="admin-users-tab" class="admin-tab">Users</button>
+                        <button id="admin-locks-tab" class="admin-tab">Tile Locks</button>
+                    </div>
+                </div>
+                
+                <div class="admin-main">
+                    <div id="admin-dashboard-view" class="admin-view">
+                        <div class="admin-loading">Loading dashboard...</div>
+                    </div>
+                    
+                    <div id="admin-users-view" class="admin-view" style="display: none;">
+                        <div class="admin-loading">Loading users...</div>
+                    </div>
+                    
+                    <div id="admin-locks-view" class="admin-view" style="display: none;">
+                        <div class="admin-loading">Loading locks...</div>
+                    </div>
+                </div>
             </div>
         </section>
 

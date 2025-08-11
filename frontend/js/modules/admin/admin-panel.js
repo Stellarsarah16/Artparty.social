@@ -2,16 +2,23 @@
  * Admin Panel Manager
  * Provides CRUD operations for users and tile locks
  */
-class AdminPanelManager {
+export class AdminPanelManager {
     constructor() {
         this.currentView = 'dashboard';
-        this.init();
+        this.initialized = false;
     }
     
     init() {
+        if (this.initialized) {
+            console.log('🔧 Admin Panel already initialized, refreshing data...');
+            this.loadDashboard();
+            return;
+        }
+        
         console.log('🔧 Admin Panel Manager initialized');
         this.setupEventListeners();
         this.loadDashboard();
+        this.initialized = true;
     }
     
     setupEventListeners() {

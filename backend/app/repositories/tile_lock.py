@@ -1,4 +1,4 @@
-"""
+"
 Tile lock repository for managing tile editing locks
 """
 from typing import Optional, List

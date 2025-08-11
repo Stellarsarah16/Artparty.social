@@ -127,6 +127,13 @@ class NavigationManager {
             this.managers.auth.handleLogout();
         });
         
+        // Admin button click event
+        const adminBtn = document.getElementById('admin-btn');
+        adminBtn?.addEventListener('click', () => {
+            console.log('Admin button clicked');
+            this.showSection('admin');
+        });
+        
         // Close modal buttons
         this.elements.closeLoginModal?.addEventListener('click', () => {
             this.managers.modal.hideModal('login');
@@ -155,7 +162,8 @@ class NavigationManager {
             'canvas-section', 
             'viewer-section',
             'editor-section',
-            'gallery-section'
+            'gallery-section',
+            'admin-section'
         ];
         
         sections.forEach(section => {
@@ -182,6 +190,12 @@ class NavigationManager {
                         console.warn('Viewer resize after show failed:', e);
                     }
                 });
+            }
+            
+            // When showing the admin panel, initialize it
+            if (sectionName === 'admin' && this.managers.admin) {
+                console.log('🔧 Initializing admin panel...');
+                this.managers.admin.init();
             }
         } else {
             console.error(`❌ Section ${sectionName} not found`);
