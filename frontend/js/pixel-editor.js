@@ -52,7 +52,7 @@ class PixelEditor {
      * Initialize the pixel editor
      * @param {HTMLCanvasElement} canvas - Canvas element
      */
-    init(canvas) {
+    init(canvas, tileSize = null) {
         if (!canvas) {
             console.error('Canvas element not provided');
             return;
@@ -70,6 +70,10 @@ class PixelEditor {
         }
         
         this.canvas = canvas;
+        
+        // FIXED: Use provided tile size or default to 32
+        this.tileSize = tileSize || 32;
+        
         this.ctx = canvas.getContext('2d');
         
         // console.log('🎨 Canvas element:', canvas);

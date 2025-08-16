@@ -840,6 +840,13 @@ class CanvasViewer {
      */
     setCanvasData(canvasData) {
         this.canvasData = canvasData;
+        
+        // FIXED: Update tile size from canvas data
+        if (canvasData.tile_size) {
+            this.tileSize = canvasData.tile_size;
+            console.log(`🎨 Updated tile size to: ${this.tileSize} (from canvas: ${canvasData.tile_size})`);
+        }
+        
         this.centerView();
         this.requestRender();
     }
@@ -942,13 +949,26 @@ class CanvasViewer {
             const tileX = Math.floor(worldX / this.tileSize);
             const tileY = Math.floor(worldY / this.tileSize);
             
-            // Check if the position is within canvas bounds
+            // Check if the position is within canvas bounds (world coordinates)
             if (this.canvasData && (worldX < 0 || worldY < 0 || 
                 worldX >= this.canvasData.width || worldY >= this.canvasData.height)) {
                 if (isClick) {
                     console.log('🎯 Click outside canvas bounds - ignoring');
                 }
                 return null;
+            }
+
+            // NEW: Check if tile coordinates are within the valid grid range
+            if (this.canvasData) {
+                const maxTileX = Math.floor(this.canvasData.width / this.tileSize);
+                const maxTileY = Math.floor(this.canvasData.height / this.tileSize);
+                
+                if (tileX >= maxTileX || tileY >= maxTileY) {
+                    if (isClick) {
+                        console.log(`🎯 Click outside tile grid bounds - max position: (${maxTileX-1}, ${maxTileY-1}), clicked: (${tileX}, ${tileY})`);
+                    }
+                    return null;
+                }
             }
             
             // Only log during clicks in development mode
