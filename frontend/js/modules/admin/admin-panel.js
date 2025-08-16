@@ -708,80 +708,82 @@ export class AdminPanelManager {
     }
 
     renderCanvases(canvases) {
-        console.log(' Rendering canvases:', canvases);
+        console.log('🎨 Rendering canvases:', canvases);
         
-        // Add cleanup button above the table
         const canvasesView = document.getElementById('admin-canvases-view');
-        if (canvasesView) {
-            // Check if cleanup button already exists
-            if (!canvasesView.querySelector('.cleanup-inactive-canvases-btn')) {
-                const header = canvasesView.querySelector('.admin-header') || canvasesView.querySelector('h2');
-                if (header) {
-                    const cleanupBtn = document.createElement('button');
-                    cleanupBtn.className = 'btn btn-warning cleanup-inactive-canvases-btn';
-                    cleanupBtn.innerHTML = '🗑️ Cleanup Inactive Canvases';
-                    cleanupBtn.title = 'Remove all inactive canvases';
-                    cleanupBtn.onclick = () => adminPanelManager.cleanupInactiveCanvases();
-                    
-                    if (header.tagName === 'H2') {
-                        header.parentNode.insertBefore(cleanupBtn, header.nextSibling);
-                    } else {
-                        header.appendChild(cleanupBtn);
-                    }
-                }
-            }
-        }
-        
-        const tbody = document.getElementById('canvases-tbody');
-        
-        if (!tbody) {
-            console.error('❌ Canvases table body not found!');
+        if (!canvasesView) {
+            console.error('❌ Canvases view not found');
             return;
         }
         
-        if (!Array.isArray(canvases)) {
-            console.error('❌ Canvases data is not an array:', canvases);
-            return;
-        }
+        // FIXED: Always render the header with cleanup button
+        canvasesView.innerHTML = `
+            <div class="admin-header">
+                <h2>Canvas Management</h2>
+                <div class="admin-actions">
+                    <button class="btn btn-warning cleanup-inactive-canvases-btn" onclick="adminPanelManager.cleanupInactiveCanvases()">
+                        🗑️ Cleanup Inactive Canvases
+                    </button>
+                </div>
+            </div>
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Dimensions</th>
+                            <th>Tile Size</th>
+                            <th>Settings</th>
+                            <th>Status</th>
+                            <th>Max Tiles</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="canvases-tbody">
+                        ${Array.isArray(canvases) ? canvases.map(canvas => `
+                            <tr>
+                                <td>${canvas.id}</td>
+                                <td>${canvas.name || 'Unnamed'}</td>
+                                <td>${canvas.width || 0}×${canvas.height || 0}</td>
+                                <td>
+                                    <span class="badge badge-info">${canvas.tile_size || 64}×${canvas.tile_size || 64}</span>
+                                    <br><small>Grid: ${Math.floor((canvas.width || 1024)/(canvas.tile_size || 64))}×${Math.floor((canvas.height || 1024)/(canvas.tile_size || 64))}</small>
+                                </td>
+                                <td>
+                                    <span class="badge badge-secondary">${canvas.palette_type || 'classic'}</span>
+                                    <br><small>${canvas.collaboration_mode || 'free'}</small>
+                                </td>
+                                <td>
+                                    <span class="badge ${canvas.is_active ? 'badge-success' : 'badge-danger'}">
+                                        ${canvas.is_active ? 'Active' : 'Inactive'}
+                                    </span>
+                                </td>
+                                <td>${canvas.max_tiles_per_user || 10}</td>
+                                <td>${canvas.created_at ? new Date(canvas.created_at).toLocaleDateString() : 'Unknown'}</td>
+                                <td class="admin-actions">
+                                    <button class="btn-admin btn-view" onclick="adminPanelManager.viewCanvasDetails(${canvas.id})" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-admin btn-edit" onclick="adminPanelManager.editCanvas(${canvas.id})" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-admin btn-toggle" onclick="adminPanelManager.toggleCanvasStatus(${canvas.id})" title="Toggle Status">
+                                        <i class="fas fa-toggle-on"></i>
+                                    </button>
+                                    <button class="btn-admin btn-delete" onclick="adminPanelManager.deleteCanvas(${canvas.id})" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('') : '<tr><td colspan="9">No canvases found</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        `;
         
-        tbody.innerHTML = canvases.map(canvas => `
-            <tr>
-                <td>${canvas.id}</td>
-                <td>${canvas.name || 'Unnamed'}</td>
-                <td>${canvas.width || 0}×${canvas.height || 0}</td>
-                <td>
-                    <span class="badge badge-info">${canvas.tile_size || 64}×${canvas.tile_size || 64}</span>
-                    <br><small>Grid: ${Math.floor((canvas.width || 1024)/(canvas.tile_size || 64))}×${Math.floor((canvas.height || 1024)/(canvas.tile_size || 64))}</small>
-                </td>
-                <td>
-                    <span class="badge badge-secondary">${canvas.palette_type || 'classic'}</span>
-                    <br><small>${canvas.collaboration_mode || 'free'}</small>
-                </td>
-                <td>
-                    <span class="badge ${canvas.is_active ? 'badge-success' : 'badge-danger'}">
-                        ${canvas.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                </td>
-                <td>${canvas.max_tiles_per_user || 10}</td>
-                <td>${canvas.created_at ? new Date(canvas.created_at).toLocaleDateString() : 'Unknown'}</td>
-                <td class="admin-actions">
-                    <button class="btn-admin btn-view" onclick="adminPanelManager.viewCanvasDetails(${canvas.id})" title="View Details">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn-admin btn-edit" onclick="adminPanelManager.editCanvas(${canvas.id})" title="Edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-admin btn-toggle" onclick="adminPanelManager.toggleCanvasStatus(${canvas.id})" title="Toggle Status">
-                        <i class="fas fa-toggle-on"></i>
-                    </button>
-                    <button class="btn-admin btn-delete" onclick="adminPanelManager.deleteCanvas(${canvas.id})" title="Delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-        
-        console.log('✅ Canvas table updated with', canvases.length, 'canvases');
+        console.log('✅ Canvas table updated with', Array.isArray(canvases) ? canvases.length : 0, 'canvases');
     }
     
     // Action Methods
@@ -1054,6 +1056,7 @@ export class AdminPanelManager {
         try {
             console.log('🧹 Starting cleanup of inactive users...');
             
+            // FIXED: Use the correct API endpoint - this might not exist yet
             const response = await fetch('/api/v1/admin/users/cleanup-inactive', {
                 method: 'DELETE',
                 headers: {
@@ -1061,13 +1064,23 @@ export class AdminPanelManager {
                 }
             });
             
+            console.log('📡 Cleanup response status:', response.status);
+            
             if (response.ok) {
                 const result = await response.json();
                 this.showSuccess(`✅ Cleanup completed! ${result.deleted_count} inactive users removed.`);
                 this.refreshCurrentView();
             } else {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Failed to cleanup inactive users');
+                // FIXED: Better error handling for different status codes
+                if (response.status === 404) {
+                    throw new Error('Cleanup endpoint not implemented yet. Please contact an administrator.');
+                } else if (response.status === 422) {
+                    const errorData = await response.json();
+                    throw new Error(`Validation error: ${errorData.detail || 'Invalid request'}`);
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+                }
             }
         } catch (error) {
             console.error('❌ Error cleaning up inactive users:', error);
