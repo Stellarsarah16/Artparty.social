@@ -53,8 +53,10 @@ class TileService:
             )
         
         # Validate position is within canvas bounds
-        max_x = canvas.width // canvas.tile_size
-        max_y = canvas.height // canvas.tile_size
+        # Fixed code - handle non-square canvases properly:
+        max_x = (canvas.width + canvas.tile_size - 1) // canvas.tile_size
+        max_y = (canvas.height + canvas.tile_size - 1) // canvas.tile_size
+        
         if tile_create.x >= max_x or tile_create.y >= max_y:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

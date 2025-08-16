@@ -85,8 +85,15 @@ async def create_tile(
         }
         
     except HTTPException as e:
+        # Ensure we preserve the specific error message
+        print(f"🚨 HTTP Exception in create_tile: {e.status_code} - {e.detail}")
         raise e
     except Exception as e:
+        # Log the actual error for debugging
+        print(f"❌ Unexpected error in create_tile: {type(e).__name__}: {str(e)}")
+        import traceback
+        print(f"📋 Full traceback: {traceback.format_exc()}")
+        
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
