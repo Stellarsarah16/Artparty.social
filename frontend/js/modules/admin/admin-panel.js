@@ -153,6 +153,7 @@ export class AdminPanelManager {
     async loadCanvases() {
         try {
             console.log('🔄 Loading canvases...');
+            console.log('�� Auth token:', this.getAuthToken() ? 'Present' : 'Missing');
             
             const response = await fetch('/api/v1/admin/canvases', {
                 headers: {
@@ -161,6 +162,7 @@ export class AdminPanelManager {
             });
             
             console.log('📡 Canvas response status:', response.status);
+            console.log('📡 Canvas response headers:', response.headers);
             
             if (response.ok) {
                 const canvases = await response.json();
@@ -170,9 +172,13 @@ export class AdminPanelManager {
                 console.error('❌ Failed to load canvases:', response.status, response.statusText);
                 const errorText = await response.text();
                 console.error('❌ Error details:', errorText);
+                console.error('❌ Response URL:', response.url);
             }
         } catch (error) {
             console.error('❌ Error loading canvases:', error);
+            console.error('❌ Error name:', error.name);
+            console.error('❌ Error message:', error.message);
+            console.error('❌ Error stack:', error.stack);
             this.showError('Failed to load canvases');
         }
     }
@@ -587,6 +593,16 @@ export class AdminPanelManager {
     exportReport() {
         // Implement report export
         alert('Report export feature coming soon!');
+    }
+
+    getAuthToken() {
+        return localStorage.getItem('token');
+    }
+
+    showError(message) {
+        console.error('❌ Admin Panel Error:', message);
+        // Optional: Add user-friendly error display
+        // this.showToast(message, 'error');
     }
 }
 
