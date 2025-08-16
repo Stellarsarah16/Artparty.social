@@ -33,31 +33,48 @@ class AdminPanel {
     switchTab(tabName) {
         console.log('🔧 Switching to tab:', tabName);
         
+        // Remove active class from all tabs
         document.querySelectorAll('.admin-tab').forEach(tab => {
             tab.classList.remove('active');
         });
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
         
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
+        // Add active class to clicked tab
+        const activeTab = document.querySelector(`#admin-${tabName}-tab`);
+        if (activeTab) {
+            activeTab.classList.add('active');
+        }
+        
+        // Hide all tab content
+        document.querySelectorAll('.admin-view').forEach(view => {
+            view.style.display = 'none';
         });
-        document.getElementById(`${tabName}-tab`).classList.add('active');
+        
+        // Show the selected tab content
+        const activeView = document.getElementById(`admin-${tabName}-view`);
+        if (activeView) {
+            activeView.style.display = 'block';
+        }
         
         this.currentTab = tabName;
-        console.log(' Current tab set to:', tabName);
+        console.log('🔧 Current tab set to:', tabName);
         
+        // Load content for the selected tab
         switch(tabName) {
+            case 'dashboard':
+                console.log('🔧 Loading dashboard...');
+                this.loadStats();
+                break;
             case 'users':
                 console.log('🔧 Loading users...');
                 this.loadUsers();
                 break;
+            case 'locks':
+                console.log('🔧 Loading locks...');
+                this.loadActivity(); // or whatever method loads locks
+                break;
             case 'canvases':
                 console.log('🔧 Loading canvases...');
                 this.loadCanvases();
-                break;
-            case 'activity':
-                console.log('🔧 Loading activity...');
-                this.loadActivity();
                 break;
         }
     }
