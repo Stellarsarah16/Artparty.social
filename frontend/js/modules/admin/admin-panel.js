@@ -278,7 +278,11 @@ export class AdminPanelManager {
             console.log('🔄 Loading users from admin API...');
             console.log('🔍 Auth token:', this.getAuthToken() ? 'Present' : 'Missing');
             
-            const response = await fetch('/api/v1/admin/users', {
+            // FIXED: Use correct API endpoint with base URL
+            const apiUrl = this.buildAdminApiUrl('users');
+            console.log('🔧 Making request to:', apiUrl);
+            
+            const response = await fetch(apiUrl, {
                 headers: {
                     'Authorization': `Bearer ${this.getAuthToken()}`
                 }
@@ -321,7 +325,11 @@ export class AdminPanelManager {
             console.log('🔄 Loading locks from admin API...');
             console.log('🔍 Auth token:', this.getAuthToken() ? 'Present' : 'Missing');
             
-            const response = await fetch('/api/v1/admin/locks', {
+            // FIXED: Use correct API endpoint with base URL
+            const apiUrl = this.buildAdminApiUrl('locks');
+            console.log('🔧 API URL:', apiUrl);
+            
+            const response = await fetch(apiUrl, {
                 headers: {
                     'Authorization': `Bearer ${this.getAuthToken()}`
                 }
@@ -379,17 +387,21 @@ export class AdminPanelManager {
         }
         
         try {
-            console.log('🔄 Loading canvases...');
-            console.log('�� Auth token:', this.getAuthToken() ? 'Present' : 'Missing');
+            console.log('🔄 Loading canvases from admin API...');
+            console.log('🔍 Auth token:', this.getAuthToken() ? 'Present' : 'Missing');
             
-            const response = await fetch('/api/v1/admin/canvases', {
+            // FIXED: Use correct API endpoint with base URL
+            const apiUrl = this.buildAdminApiUrl('canvases');
+            console.log('🔧 API URL:', apiUrl);
+            
+            const response = await fetch(apiUrl, {
                 headers: {
                     'Authorization': `Bearer ${this.getAuthToken()}`
                 }
             });
             
-            console.log('📡 Canvas response status:', response.status);
-            console.log('📡 Canvas response headers:', response.headers);
+            console.log('📡 Canvases response status:', response.status);
+            console.log('📡 Canvases response headers:', response.headers);
             
             if (response.ok) {
                 const canvases = await response.json();
@@ -399,14 +411,12 @@ export class AdminPanelManager {
                 console.error('❌ Failed to load canvases:', response.status, response.statusText);
                 const errorText = await response.text();
                 console.error('❌ Error details:', errorText);
-                console.error('❌ Response URL:', response.url);
                 throw new Error(`Failed to load canvases: ${response.status} ${response.statusText}`);
             }
         } catch (error) {
             console.error('❌ Error loading canvases:', error);
             console.error('❌ Error name:', error.name);
             console.error('❌ Error message:', error.message);
-            console.error('❌ Error stack:', error.stack);
             this.showError(`Failed to load canvases: ${error.message}`);
             
             // Show a basic canvases view instead of hanging
@@ -1153,6 +1163,74 @@ export class AdminPanelManager {
         `;
         
         console.log('✅ Basic canvases view rendered');
+    }
+
+    /**
+     * Test admin API connectivity
+     */
+    async testAdminApiConnectivity() {
+        console.log('🧪 Testing admin API connectivity...');
+        
+        const endpoints = ['users', 'locks', 'canvases'];
+        
+        for (const endpoint of endpoints) {
+            try {
+                const apiUrl = this.buildAdminApiUrl(endpoint);
+                console.log(`🧪 Testing ${endpoint} endpoint: ${apiUrl}`);
+                
+                const response = await fetch(apiUrl, {
+                    method: 'HEAD', // Just check if endpoint exists
+                    headers: {
+                        'Authorization': `Bearer ${this.getAuthToken()}`
+                    }
+                });
+                
+                console.log(`🧪 ${endpoint} endpoint status: ${response.status}`);
+                
+                if (response.status === 401) {
+                    console.log(`🧪 ${endpoint} endpoint: Authentication required (expected)`);
+                } else if (response.status === 404) {
+                    console.log(`🧪 ${endpoint} endpoint: Not found (endpoint doesn't exist)`);
+                } else if (response.status === 200 || response.status === 403) {
+                    console.log(`🧪 ${endpoint} endpoint: Accessible (status: ${response.status})`);
+                } else {
+                    console.log(`🧪 ${endpoint} endpoint: Unexpected status: ${response.status}`);
+                }
+                
+            } catch (error) {
+                console.error(`🧪 ${endpoint} endpoint error:`, error);
+            }
+        }
+    }
+
+    /**
+     * Get the correct API base URL for admin endpoints
+     */
+    getApiBaseUrl() {
+        // Check for API_BASE in various locations
+        if (window.API_BASE) {
+            console.log('🔧 Found API_BASE:', window.API_BASE);
+            return window.API_BASE;
+        }
+        
+        if (window.CONFIG_UTILS && window.CONFIG_UTILS.API_BASE) {
+            console.log('🔧 Found CONFIG_UTILS.API_BASE:', window.CONFIG_UTILS.API_BASE);
+            return window.CONFIG_UTILS.API_BASE;
+        }
+        
+        // Default to relative URLs
+        console.log('🔧 No API_BASE found, using relative URLs');
+        return '';
+    }
+    
+    /**
+     * Build admin API URL with correct base
+     */
+    buildAdminApiUrl(endpoint) {
+        const baseUrl = this.getApiBaseUrl();
+        const fullUrl = baseUrl ? `${baseUrl}/api/v1/admin/${endpoint}` : `/api/v1/admin/${endpoint}`;
+        console.log(`🔧 Built admin API URL: ${fullUrl}`);
+        return fullUrl;
     }
 }
 
