@@ -1344,7 +1344,7 @@ export class AdminPanelManager {
         if (window.API_BASE) {
             console.log('🔧 Found API_BASE:', window.API_BASE);
             return window.API_BASE;
-        }sam
+        }
         
         if (window.CONFIG_UTILS && window.CONFIG_UTILS.API_BASE) {
             console.log('🔧 Found CONFIG_UTILS.API_BASE:', window.CONFIG_UTILS.API_BASE);
