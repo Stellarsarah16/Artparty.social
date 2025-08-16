@@ -993,6 +993,61 @@ class PixelEditor {
     }
     
     /**
+     * 🚨 CRITICAL FIX: Reset pixel editor to clean state
+     * This method ensures complete isolation between different tiles
+     */
+    reset() {
+        console.log('🧹 PixelEditor.reset() called - clearing all state...');
+        
+        try {
+            // Clear pixel data
+            this.pixelData = this.createEmptyPixelData();
+            
+            // Clear history
+            this.history = [];
+            this.historyIndex = -1;
+            
+            // Reset drawing state
+            this.drawingState = {
+                isDrawing: false,
+                button: null,
+                lastX: 0,
+                lastY: 0
+            };
+            
+            // Reset touch state
+            this.touchState = {
+                isTouching: false,
+                lastTouchX: 0,
+                lastTouchY: 0,
+                touchStartTime: 0,
+                hasMoved: false,
+                pressure: 1.0,
+                lastTapTime: 0,
+                lastTapX: 0,
+                lastTapY: 0,
+                doubleTapDelay: 300,
+                doubleTapDistance: 50
+            };
+            
+            // Clear canvas if available
+            if (this.canvas && this.ctx) {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            
+            // Reset tool and color to defaults
+            this.currentTool = 'paint';
+            this.currentColor = '#000000';
+            this.brushSize = 1;
+            
+            console.log('✅ PixelEditor state completely reset');
+            
+        } catch (error) {
+            console.error('❌ Error resetting PixelEditor:', error);
+        }
+    }
+    
+    /**
      * Redraw the entire canvas
      */
     redraw() {

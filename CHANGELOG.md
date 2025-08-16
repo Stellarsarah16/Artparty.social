@@ -1,5 +1,45 @@
 # Artparty.social Changelog
 
+## [2025-01-16] - [FIX] Critical Pixel Data Bleeding Bug Resolution
+
+### 🎯 **Issue/Feature:**
+- **Problem**: Pixel data from one tile was bleeding into other tiles, causing corrupted saves
+- **Impact**: Users could save pixel data from previous tiles when editing new tiles, leading to data corruption
+- **Scope**: Complete pixel editor state management overhaul to ensure tile data isolation
+
+### ✅ **Solution:**
+- **Files Modified**:
+  - `frontend/js/modules/managers/tile-editor-manager.js` - Added state clearing and validation
+  - `frontend/js/pixel-editor.js` - Added reset method for complete state isolation
+- **Key Changes**:
+  - Added `clearPixelEditorState()` method to clear all state before loading new tiles
+  - Added `PixelEditor.reset()` method for complete state isolation
+  - Added tile ID validation in `saveTile()` to prevent wrong tile saves
+  - Added pixel data integrity validation before saving
+  - Added comprehensive state clearing (pixel data, history, drawing state, touch state)
+
+### 🔧 **Technical Details:**
+- **Root Cause**: PixelEditor is a global singleton that maintained state between different tiles
+- **Implementation**: Complete state reset before loading each new tile
+- **Testing**: Added extensive validation and error checking
+
+### 📝 **Git References:**
+- **Commit Hash**: `pixel-data-bleeding-fix` - Critical fix for pixel data corruption
+- **Branch**: `main`
+- **Related Commits**: Admin panel fixes, tile size mismatch resolution
+
+### 🎉 **Result:**
+- **Before**: Pixel data could bleed between tiles, causing corrupted saves
+- **After**: Each tile starts with completely clean state, ensuring data isolation
+- **Benefits**: No more data corruption, reliable tile editing, proper state management
+
+### 🔗 **Related:**
+- **Issues**: Pixel data bleeding between tiles, corrupted tile saves
+- **Dependencies**: PixelEditor singleton, tile editor state management
+- **Documentation**: Enhanced error logging and validation
+
+---
+
 ## [2025-01-16] - [FIX] Admin Panel System Overhaul & Authentication Fixes
 
 ### 🎯 **Issue/Feature:**

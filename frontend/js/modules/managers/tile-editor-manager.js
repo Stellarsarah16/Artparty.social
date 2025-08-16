@@ -19,12 +19,16 @@ export class TileEditorManager {
     }
 
     /**
-     * Open tile editor
+     * Open tile editor for a specific tile
      */
     async openTileEditor(tile) {
         console.log('🎨 Opening tile editor for tile:', tile);
         
         try {
+            // 🚨 CRITICAL FIX: Clear pixel editor state before loading new tile
+            // This prevents pixel data bleeding between different tiles
+            this.clearPixelEditorState();
+            
             // For blank tiles (undefined id), we need to create them first
             if (!tile.id) {
                 console.log('🆕 Creating new tile for blank position...');
@@ -120,11 +124,9 @@ export class TileEditorManager {
             } catch (lockError) {
                 console.error('❌ Failed to acquire tile lock:', lockError);
                 
-                // FIXED: Better error handling for 409 Conflict
+                // Show user-friendly error message
                 let lockErrorMessage = 'Failed to acquire tile lock';
-                if (lockError.status === 409) {
-                    lockErrorMessage = 'This tile is currently being edited by another user. Please try again later.';
-                } else if (lockError.data && lockError.data.detail) {
+                if (lockError.data && lockError.data.detail) {
                     lockErrorMessage = lockError.data.detail;
                 } else if (lockError.message) {
                     lockErrorMessage = lockError.message;
@@ -132,21 +134,15 @@ export class TileEditorManager {
                 
                 window.UIManager.showToast(lockErrorMessage, 'error');
                 
-                // Don't open the editor - stay on viewer
-                console.log('🚫 Staying on viewer due to lock acquisition failure');
-                
-                // Throw error to prevent editor from opening
-                throw new Error(`Tile lock acquisition failed: ${lockErrorMessage}`);
+                // Re-throw the error so canvas-viewer-manager can handle navigation
+                throw lockError;
             }
             
-            // Store the current tile
+            // Store the current tile data
             this.currentTile = fullTileData;
             
-            // Initialize the tile editor
-            this.initializeTileEditor(fullTileData);
-            
-            // Load neighbor tiles
-            await this.loadNeighborTiles(fullTileData);
+            // Initialize the tile editor with the tile data
+            await this.initializeTileEditor(fullTileData);
             
             // NOTE: Editor section is now shown by canvas-viewer-manager.js
             // after this method completes successfully
@@ -804,8 +800,30 @@ export class TileEditorManager {
                 throw new Error('Pixel editor not available');
             }
             
+            // 🚨 CRITICAL FIX: Verify we're editing the correct tile
+            if (this.currentTile && this.currentTile.id && this.currentTile.id.toString() !== tileId.toString()) {
+                console.error('❌ TILE ID MISMATCH! Current tile ID:', this.currentTile.id, 'but trying to save tile ID:', tileId);
+                throw new Error('Tile ID mismatch - trying to save data for wrong tile');
+            }
+            
             const pixelData = window.PixelEditor.getPixelData();
             console.log('💾 Raw pixel data to save:', pixelData);
+            
+            // 🚨 CRITICAL FIX: Validate pixel data integrity
+            if (!pixelData || !Array.isArray(pixelData)) {
+                console.error('❌ Invalid pixel data - not an array:', pixelData);
+                throw new Error('Invalid pixel data - corrupted or missing');
+            }
+            
+            // Validate pixel data dimensions
+            const expectedSize = window.PixelEditor.tileSize || 32;
+            if (pixelData.length !== expectedSize || (pixelData[0] && pixelData[0].length !== expectedSize)) {
+                console.error('❌ Pixel data dimension mismatch - expected:', expectedSize, 'got:', {
+                    rows: pixelData.length,
+                    cols: pixelData[0] ? pixelData[0].length : 'undefined'
+                });
+                throw new Error(`Pixel data dimension mismatch - expected ${expectedSize}×${expectedSize}`);
+            }
             
             // Convert pixel data to JSON string if it's an array
             let pixelDataToSend = pixelData;
@@ -1618,6 +1636,95 @@ export class TileEditorManager {
         element.classList.add('touch-enabled');
         
         console.log(`✅ ${buttonType} button: unified touch events configured`);
+    }
+
+    /**
+     * 🚨 CRITICAL FIX: Clear pixel editor state to prevent data bleeding
+     * This method ensures that each tile starts with a clean slate
+     */
+    clearPixelEditorState() {
+        console.log('🧹 Clearing pixel editor state to prevent data bleeding...');
+        
+        if (window.PixelEditor) {
+            try {
+                // Use the new reset method for complete state clearing
+                if (typeof window.PixelEditor.reset === 'function') {
+                    window.PixelEditor.reset();
+                    console.log('✅ PixelEditor.reset() called successfully');
+                } else {
+                    // Fallback to manual clearing if reset method doesn't exist
+                    console.warn('⚠️ PixelEditor.reset() not available, using manual clearing');
+                    
+                    // Clear the pixel data array
+                    if (window.PixelEditor.pixelData) {
+                        // Create a completely fresh empty pixel data array
+                        const tileSize = window.PixelEditor.tileSize || 32;
+                        const emptyData = [];
+                        
+                        for (let y = 0; y < tileSize; y++) {
+                            const row = [];
+                            for (let x = 0; x < tileSize; x++) {
+                                row.push([0, 0, 0, 0]); // Transparent black
+                            }
+                            emptyData.push(row);
+                        }
+                        
+                        // Replace the pixel data completely
+                        window.PixelEditor.pixelData = emptyData;
+                        console.log('✅ Pixel data array cleared and reset');
+                    }
+                    
+                    // Clear any history/undo stacks
+                    if (window.PixelEditor.history) {
+                        window.PixelEditor.history = [];
+                        window.PixelEditor.historyIndex = -1;
+                        console.log('✅ History/undo stacks cleared');
+                    }
+                    
+                    // Clear the canvas if it exists
+                    if (window.PixelEditor.canvas && window.PixelEditor.ctx) {
+                        window.PixelEditor.ctx.clearRect(0, 0, window.PixelEditor.canvas.width, window.PixelEditor.canvas.height);
+                        console.log('✅ Canvas cleared');
+                    }
+                    
+                    // Reset drawing state
+                    if (window.PixelEditor.drawingState) {
+                        window.PixelEditor.drawingState.isDrawing = false;
+                        window.PixelEditor.drawingState.button = null;
+                        window.PixelEditor.drawingState.lastX = 0;
+                        window.PixelEditor.drawingState.lastY = 0;
+                        console.log('✅ Drawing state reset');
+                    }
+                    
+                    // Reset touch state
+                    if (window.PixelEditor.touchState) {
+                        window.PixelEditor.touchState.isTouching = false;
+                        window.PixelEditor.touchState.lastTouchX = 0;
+                        window.PixelEditor.touchState.lastTouchY = 0;
+                        window.PixelEditor.touchState.touchStartTime = 0;
+                        window.PixelEditor.touchState.hasMoved = false;
+                        window.PixelEditor.touchState.pressure = 1.0;
+                        window.PixelEditor.touchState.lastTapTime = 0;
+                        window.PixelEditor.touchState.lastTapX = 0;
+                        window.PixelEditor.touchState.lastTapY = 0;
+                        console.log('✅ Touch state reset');
+                    }
+                    
+                    console.log('✅ Pixel editor state manually cleared');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error clearing pixel editor state:', error);
+                // Don't throw - we want to continue even if cleanup fails
+            }
+        } else {
+            console.warn('⚠️ PixelEditor not available for state clearing');
+        }
+        
+        // Also clear our local state
+        this.undoStack = [];
+        this.redoStack = [];
+        console.log('✅ Local undo/redo stacks cleared');
     }
 
     /**

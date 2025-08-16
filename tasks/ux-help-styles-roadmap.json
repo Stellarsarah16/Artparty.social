@@ -18,10 +18,16 @@
     "dependencies": ["admin-panel-canvas-management"]
   },
   {
+    "id": "fix-pixel-data-bleeding",
+    "content": "Fix critical pixel data bleeding bug where pixel data from one tile could corrupt other tiles",
+    "status": "completed",
+    "dependencies": ["admin-panel-documentation"]
+  },
+  {
     "id": "fix-tile-size-mismatch",
     "content": "Fix tile size mismatch between frontend and backend causing coordinate calculation errors",
     "status": "pending",
-    "dependencies": ["admin-panel-canvas-management"]
+    "dependencies": ["fix-pixel-data-bleeding"]
   },
   {
     "id": "implement-flexible-tile-editor",
@@ -30,15 +36,15 @@
     "dependencies": ["fix-tile-size-mismatch"]
   },
   {
-    "id": "cleanup-stylesheets",
-    "content": "Refactor and clean up stylesheets for better maintainability",
+    "id": "update-database-tile-sizes",
+    "content": "Update database to set all existing canvases to tile_size: 32 to match actual tile data",
     "status": "pending",
-    "dependencies": ["implement-flexible-tile-editor"]
+    "dependencies": ["fix-tile-size-mismatch"]
   },
   {
-    "id": "enhance-ux-help-content",
-    "content": "Improve user experience and help content for better usability",
+    "id": "test-tile-editing-flow",
+    "content": "Test complete tile editing flow to ensure no more pixel data corruption or coordinate errors",
     "status": "pending",
-    "dependencies": ["cleanup-stylesheets"]
+    "dependencies": ["implement-flexible-tile-editor", "update-database-tile-sizes"]
   }
 ]
