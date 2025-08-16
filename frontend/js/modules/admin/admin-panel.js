@@ -74,10 +74,16 @@ export class AdminPanelManager {
         try {
             console.log('🔄 Loading dashboard...');
             console.log('🔍 Auth token available:', this.getAuthToken() ? 'Yes' : 'No');
+            console.log('🔍 Auth token value:', this.getAuthToken() ? 'Present' : 'Missing');
             
             // Add timeout to prevent hanging
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            const timeoutId = setTimeout(() => {
+                console.log('⏰ Dashboard request timeout reached, aborting...');
+                controller.abort();
+            }, 5000); // 5 second timeout for faster testing
+            
+            console.log('📡 Making fetch request to /api/v1/admin/reports/system-overview...');
             
             const response = await fetch('/api/v1/admin/reports/system-overview', {
                 headers: {
@@ -87,8 +93,7 @@ export class AdminPanelManager {
             });
             
             clearTimeout(timeoutId);
-            
-            console.log('📡 Dashboard response status:', response.status);
+            console.log('📡 Dashboard response received, status:', response.status);
             
             if (response.ok) {
                 const data = await response.json();
@@ -102,10 +107,17 @@ export class AdminPanelManager {
             }
         } catch (error) {
             console.error('❌ Error loading dashboard:', error);
+            console.error('❌ Error name:', error.name);
+            console.error('❌ Error message:', error.message);
             if (error.name === 'AbortError') {
+                console.log('⏰ Request was aborted due to timeout');
                 this.showError('Dashboard request timed out. Please try again.');
+                // Show a basic dashboard view instead of hanging
+                this.renderBasicDashboard();
             } else {
                 this.showError('Failed to load dashboard data');
+                // Show a basic dashboard view instead of hanging
+                this.renderBasicDashboard();
             }
         }
     }
@@ -245,6 +257,36 @@ export class AdminPanelManager {
         
         // Re-attach event listeners
         this.setupEventListeners();
+    }
+    
+    renderBasicDashboard() {
+        const dashboard = document.getElementById('admin-dashboard-view');
+        if (!dashboard) return;
+        
+        console.log('🔄 Rendering basic dashboard due to API failure...');
+        
+        dashboard.innerHTML = `
+            <div class="admin-stats-grid">
+                <div class="stat-card">
+                    <h3>⚠️ Dashboard Unavailable</h3>
+                    <div class="stat-number">--</div>
+                    <div class="stat-detail">API request failed or timed out</div>
+                </div>
+                <div class="stat-card">
+                    <h3>🔄 Quick Actions</h3>
+                    <div class="stat-number">--</div>
+                    <div class="stat-detail">Use tabs above to access features</div>
+                </div>
+            </div>
+            <div class="admin-actions">
+                <button onclick="adminPanelManager.loadUsers()" class="btn btn-primary">Load Users</button>
+                <button onclick="adminPanelManager.loadCanvases()" class="btn btn-primary">Load Canvases</button>
+                <button onclick="adminPanelManager.loadLocks()" class="btn btn-primary">Load Locks</button>
+                <button onclick="adminPanelManager.loadDashboard()" class="btn btn-warning">Retry Dashboard</button>
+            </div>
+        `;
+        
+        console.log('✅ Basic dashboard rendered');
     }
     
     renderUsers(users) {
