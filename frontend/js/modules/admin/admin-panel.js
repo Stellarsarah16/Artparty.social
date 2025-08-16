@@ -275,21 +275,36 @@ export class AdminPanelManager {
         this._usersLoading = true;
         
         try {
+            console.log('🔄 Loading users from admin API...');
+            console.log('🔍 Auth token:', this.getAuthToken() ? 'Present' : 'Missing');
+            
             const response = await fetch('/api/v1/admin/users', {
                 headers: {
                     'Authorization': `Bearer ${this.getAuthToken()}`
                 }
             });
             
+            console.log('📡 Users response status:', response.status);
+            console.log('📡 Users response headers:', response.headers);
+            
             if (response.ok) {
                 const users = await response.json();
+                console.log('👥 Loaded users from admin API:', users);
                 this.renderUsers(users);
             } else {
-                throw new Error('Failed to load users');
+                console.error('❌ Failed to load users:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('❌ Error details:', errorText);
+                throw new Error(`Failed to load users: ${response.status} ${response.statusText}`);
             }
         } catch (error) {
             console.error('❌ Error loading users:', error);
-            this.showError('Failed to load users');
+            console.error('❌ Error name:', error.name);
+            console.error('❌ Error message:', error.message);
+            this.showError(`Failed to load users: ${error.message}`);
+            
+            // Show a basic users view instead of hanging
+            this.renderBasicUsers();
         } finally {
             this._usersLoading = false;
         }
@@ -303,21 +318,36 @@ export class AdminPanelManager {
         }
         
         try {
+            console.log('🔄 Loading locks from admin API...');
+            console.log('🔍 Auth token:', this.getAuthToken() ? 'Present' : 'Missing');
+            
             const response = await fetch('/api/v1/admin/locks', {
                 headers: {
                     'Authorization': `Bearer ${this.getAuthToken()}`
                 }
             });
             
+            console.log('📡 Locks response status:', response.status);
+            console.log('📡 Locks response headers:', response.headers);
+            
             if (response.ok) {
                 const locks = await response.json();
+                console.log('🔒 Loaded locks from admin API:', locks);
                 this.renderLocks(locks);
             } else {
-                throw new Error('Failed to load locks');
+                console.error('❌ Failed to load locks:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('❌ Error details:', errorText);
+                throw new Error(`Failed to load locks: ${response.status} ${response.statusText}`);
             }
         } catch (error) {
             console.error('❌ Error loading locks:', error);
-            this.showError('Failed to load locks');
+            console.error('❌ Error name:', error.name);
+            console.error('❌ Error message:', error.message);
+            this.showError(`Failed to load locks: ${error.message}`);
+            
+            // Show a basic locks view instead of hanging
+            this.renderBasicLocks();
         }
     }
     
@@ -370,13 +400,17 @@ export class AdminPanelManager {
                 const errorText = await response.text();
                 console.error('❌ Error details:', errorText);
                 console.error('❌ Response URL:', response.url);
+                throw new Error(`Failed to load canvases: ${response.status} ${response.statusText}`);
             }
         } catch (error) {
             console.error('❌ Error loading canvases:', error);
             console.error('❌ Error name:', error.name);
             console.error('❌ Error message:', error.message);
             console.error('❌ Error stack:', error.stack);
-            this.showError('Failed to load canvases');
+            this.showError(`Failed to load canvases: ${error.message}`);
+            
+            // Show a basic canvases view instead of hanging
+            this.renderBasicCanvases();
         }
     }
     
@@ -1044,6 +1078,81 @@ export class AdminPanelManager {
             console.error('❌ Error cleaning up inactive canvases:', error);
             this.showError(`Failed to cleanup inactive canvases: ${error.message}`);
         }
+    }
+    
+    /**
+     * Render basic users view when API fails
+     */
+    renderBasicUsers() {
+        const usersView = document.getElementById('admin-users-view');
+        if (!usersView) return;
+        
+        console.log('🔄 Rendering basic users view due to API failure...');
+        
+        usersView.innerHTML = `
+            <div class="admin-header">
+                <h2>⚠️ Users Unavailable</h2>
+                <div class="admin-actions">
+                    <button class="btn btn-primary" onclick="adminPanelManager.loadUsers()">Retry Load Users</button>
+                </div>
+            </div>
+            <div class="admin-error-message">
+                <p>❌ Failed to load users from API. Please check your connection and try again.</p>
+                <p><strong>Error:</strong> API request failed or timed out</p>
+            </div>
+        `;
+        
+        console.log('✅ Basic users view rendered');
+    }
+    
+    /**
+     * Render basic locks view when API fails
+     */
+    renderBasicLocks() {
+        const locksView = document.getElementById('admin-locks-view');
+        if (!locksView) return;
+        
+        console.log('🔄 Rendering basic locks view due to API failure...');
+        
+        locksView.innerHTML = `
+            <div class="admin-header">
+                <h2>⚠️ Tile Locks Unavailable</h2>
+                <div class="admin-actions">
+                    <button class="btn btn-primary" onclick="adminPanelManager.loadLocks()">Retry Load Locks</button>
+                </div>
+            </div>
+            <div class="admin-error-message">
+                <p>❌ Failed to load tile locks from API. Please check your connection and try again.</p>
+                <p><strong>Error:</strong> API request failed or timed out</p>
+            </div>
+        `;
+        
+        console.log('✅ Basic locks view rendered');
+    }
+    
+    /**
+     * Render basic canvases view when API fails
+     */
+    renderBasicCanvases() {
+        const canvasesView = document.getElementById('admin-canvases-view');
+        if (!canvasesView) return;
+        
+        console.log('🔄 Rendering basic canvases view due to API failure...');
+        
+        canvasesView.innerHTML = `
+            <div class="admin-header">
+                <h2>⚠️ Canvases Unavailable</h2>
+                <div class="admin-actions">
+                    <button class="btn btn-primary" onclick="adminPanelManager.loadCanvases()">Retry Load Canvases</button>
+                </div>
+            </div>
+            <div class="admin-error-message">
+                <p>❌ Failed to load canvases from API. Please check your connection and try again.</p>
+                <p><strong>Error:</strong> API request failed or timed out</p>
+            </div>
+        `;
+        
+        console.log('✅ Basic canvases view rendered');
     }
 }
 

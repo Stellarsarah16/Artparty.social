@@ -1289,7 +1289,6 @@ export class TileEditorManager {
      */
     drawNeighborTile(canvas, neighbor) {
         const ctx = canvas.getContext('2d');
-        const gridSize = 16; // 512px / 32 tiles = 16px per tile
         
         // Clear canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1310,14 +1309,39 @@ export class TileEditorManager {
                 pixelData = neighbor.pixel_data;
             }
             
-            // Draw pixels
+            // FIXED: Calculate dynamic grid size based on actual pixel data
             if (pixelData && Array.isArray(pixelData)) {
-                for (let y = 0; y < pixelData.length; y++) {
-                    for (let x = 0; x < pixelData[y].length; x++) {
-                        const color = pixelData[y][x];
-                        if (color && color !== 'white') {
-                            ctx.fillStyle = color;
-                            ctx.fillRect(x * gridSize, y * gridSize, gridSize, gridSize);
+                const tileSize = pixelData.length; // Number of rows (e.g., 32, 64, 128)
+                const pixelSize = canvas.width / tileSize; // Dynamic pixel size
+                
+                console.log(`🎨 Drawing neighbor tile: ${tileSize}x${tileSize}, pixelSize: ${pixelSize}, canvas width: ${canvas.width}`);
+                
+                for (let y = 0; y < tileSize; y++) {
+                    for (let x = 0; x < tileSize; x++) {
+                        const color = pixelData[y] && pixelData[y][x];
+                        
+                        // FIXED: Handle different color formats properly
+                        if (color) {
+                            let fillColor = color;
+                            
+                            // Handle RGBA array format
+                            if (Array.isArray(color) && color.length >= 3) {
+                                const [r, g, b, a = 255] = color;
+                                fillColor = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+                            }
+                            // Handle hex color
+                            else if (typeof color === 'string' && color.startsWith('#')) {
+                                fillColor = color;
+                            }
+                            // Handle named colors
+                            else if (typeof color === 'string' && color !== 'transparent' && color !== 'white') {
+                                fillColor = color;
+                            }
+                            
+                            if (fillColor && fillColor !== 'transparent') {
+                                ctx.fillStyle = fillColor;
+                                ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+                            }
                         }
                     }
                 }

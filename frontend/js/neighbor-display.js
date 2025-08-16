@@ -253,23 +253,45 @@
                 return;
             }
             
-            // Draw pixels - calculate tile size from canvas dimensions
-            const tileSize = Math.sqrt(pixelData.length); // Assume square tiles
+            // FIXED: Calculate tile size from pixel data structure, not total length
+            const tileSize = pixelData.length; // Number of rows (e.g., 32, 64, 128)
             const pixelSize = canvas.width / tileSize;
             let pixelCount = 0;
+            
+            console.log(`🎨 Drawing neighbor tile: ${tileSize}x${tileSize}, pixelSize: ${pixelSize}, canvas width: ${canvas.width}`);
             
             for (let y = 0; y < tileSize; y++) {
                 for (let x = 0; x < tileSize; x++) {
                     const color = pixelData[y] && pixelData[y][x];
-                    if (color && color !== 'transparent') {
-                        ctx.fillStyle = color;
-                        ctx.fillRect(
-                            x * pixelSize,
-                            y * pixelSize,
-                            pixelSize,
-                            pixelSize
-                        );
-                        pixelCount++;
+                    
+                    // FIXED: Handle different color formats properly
+                    if (color) {
+                        let fillColor = color;
+                        
+                        // Handle RGBA array format
+                        if (Array.isArray(color) && color.length >= 3) {
+                            const [r, g, b, a = 255] = color;
+                            fillColor = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+                        }
+                        // Handle hex color
+                        else if (typeof color === 'string' && color.startsWith('#')) {
+                            fillColor = color;
+                        }
+                        // Handle named colors
+                        else if (typeof color === 'string' && color !== 'transparent' && color !== 'white') {
+                            fillColor = color;
+                        }
+                        
+                        if (fillColor && fillColor !== 'transparent') {
+                            ctx.fillStyle = fillColor;
+                            ctx.fillRect(
+                                x * pixelSize,
+                                y * pixelSize,
+                                pixelSize,
+                                pixelSize
+                            );
+                            pixelCount++;
+                        }
                     }
                 }
             }
