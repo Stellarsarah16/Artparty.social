@@ -183,13 +183,32 @@ export class AuthManager {
             description: formData.get('description'),
             width: parseInt(formData.get('width')),
             height: parseInt(formData.get('height')),
-            palette_type: formData.get('palette_type')
+            palette_type: formData.get('palette_type'),
+            tile_size: parseInt(formData.get('tile_size'))  // Make sure this is included
         };
+
+        // 🚨 DEBUG: Log the exact data being sent
+        console.log('🔍 Canvas data being sent:', canvasData);
+        console.log('🔍 Form values:', {
+            name: formData.get('name'),
+            description: formData.get('description'),
+            width: formData.get('width'),
+            height: formData.get('height'),
+            palette_type: formData.get('palette_type'),
+            tile_size: formData.get('tile_size')
+        });
+        console.log('🔍 Parsed values:', {
+            name: canvasData.name,
+            description: canvasData.description,
+            width: canvasData.width,
+            height: canvasData.height,
+            palette_type: canvasData.palette_type,
+            tile_size: canvasData.tile_size
+        });
 
         try {
             console.log('🔄 Creating canvas...');
             
-            // FIXED: Use the correct method name 'create' not 'createCanvas'
             const response = await window.API.canvas.create(canvasData);
             
             // Hide modal
@@ -206,6 +225,17 @@ export class AuthManager {
             
         } catch (error) {
             console.error('❌ Canvas creation failed:', error);
+            
+            // 🚨 DEBUG: Log the full error response
+            if (error.response) {
+                try {
+                    const errorData = await error.response.text();
+                    console.error('🔍 Full error response:', errorData);
+                } catch (e) {
+                    console.error('🔍 Could not read error response:', e);
+                }
+            }
+            
             this.showCreateCanvasError('Failed to create canvas. Please try again.');
         }
     }
