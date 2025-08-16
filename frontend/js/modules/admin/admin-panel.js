@@ -26,6 +26,7 @@ export class AdminPanelManager {
         document.getElementById('admin-dashboard-tab')?.addEventListener('click', () => this.showView('dashboard'));
         document.getElementById('admin-users-tab')?.addEventListener('click', () => this.showView('users'));
         document.getElementById('admin-locks-tab')?.addEventListener('click', () => this.showView('locks'));
+        document.getElementById('admin-canvases-tab')?.addEventListener('click', () => this.showView('canvases'));
         document.getElementById('admin-reports-tab')?.addEventListener('click', () => this.showView('reports'));
         
         // Action buttons
@@ -54,6 +55,9 @@ export class AdminPanelManager {
                     break;
                 case 'locks':
                     await this.loadLocks();
+                    break;
+                case 'canvases':
+                    await this.loadCanvases();
                     break;
                 case 'reports':
                     await this.loadReports();
@@ -143,6 +147,33 @@ export class AdminPanelManager {
         } catch (error) {
             console.error('❌ Error loading reports:', error);
             this.showError('Failed to load reports');
+        }
+    }
+
+    async loadCanvases() {
+        try {
+            console.log('🔄 Loading canvases...');
+            
+            const response = await fetch('/api/v1/admin/canvases', {
+                headers: {
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                }
+            });
+            
+            console.log('📡 Canvas response status:', response.status);
+            
+            if (response.ok) {
+                const canvases = await response.json();
+                console.log('🎨 Loaded canvases from admin API:', canvases);
+                this.renderCanvases(canvases);
+            } else {
+                console.error('❌ Failed to load canvases:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('❌ Error details:', errorText);
+            }
+        } catch (error) {
+            console.error('❌ Error loading canvases:', error);
+            this.showError('Failed to load canvases');
         }
     }
     
@@ -344,6 +375,60 @@ export class AdminPanelManager {
             </div>
         `;
     }
+
+    renderCanvases(canvases) {
+        console.log(' Rendering canvases:', canvases);
+        const tbody = document.getElementById('canvases-tbody');
+        
+        if (!tbody) {
+            console.error('❌ Canvases table body not found!');
+            return;
+        }
+        
+        if (!Array.isArray(canvases)) {
+            console.error('❌ Canvases data is not an array:', canvases);
+            return;
+        }
+        
+        tbody.innerHTML = canvases.map(canvas => `
+            <tr>
+                <td>${canvas.id}</td>
+                <td>${canvas.name || 'Unnamed'}</td>
+                <td>${canvas.width || 0}×${canvas.height || 0}</td>
+                <td>
+                    <span class="badge badge-info">${canvas.tile_size || 64}×${canvas.tile_size || 64}</span>
+                    <br><small>Grid: ${Math.floor((canvas.width || 1024)/(canvas.tile_size || 64))}×${Math.floor((canvas.height || 1024)/(canvas.tile_size || 64))}</small>
+                </td>
+                <td>
+                    <span class="badge badge-secondary">${canvas.palette_type || 'classic'}</span>
+                    <br><small>${canvas.collaboration_mode || 'free'}</small>
+                </td>
+                <td>
+                    <span class="badge ${canvas.is_active ? 'badge-success' : 'badge-danger'}">
+                        ${canvas.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+                <td>${canvas.max_tiles_per_user || 10}</td>
+                <td>${canvas.created_at ? new Date(canvas.created_at).toLocaleDateString() : 'Unknown'}</td>
+                <td class="admin-actions">
+                    <button class="btn-admin btn-view" onclick="adminPanelManager.viewCanvasDetails(${canvas.id})" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-admin btn-edit" onclick="adminPanelManager.editCanvas(${canvas.id})" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-admin btn-toggle" onclick="adminPanelManager.toggleCanvasStatus(${canvas.id})" title="Toggle Status">
+                        <i class="fas fa-toggle-on"></i>
+                    </button>
+                    <button class="btn-admin btn-delete" onclick="adminPanelManager.deleteCanvas(${canvas.id})" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        
+        console.log('✅ Canvas table updated with', canvases.length, 'canvases');
+    }
     
     // Action Methods
     
@@ -442,34 +527,61 @@ export class AdminPanelManager {
             this.showError('Failed to delete user');
         }
     }
-    
-    // Utility Methods
-    
-    refreshCurrentView() {
-        this.showView(this.currentView);
+
+    async toggleCanvasStatus(canvasId) {
+        try {
+            const response = await fetch(`/api/v1/admin/canvases/${canvasId}/toggle-status`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                this.showSuccess(result.message);
+                this.refreshCurrentView();
+            } else {
+                throw new Error('Failed to toggle canvas status');
+            }
+        } catch (error) {
+            console.error('❌ Error toggling canvas status:', error);
+            this.showError('Failed to toggle canvas status');
+        }
     }
-    
-    getAuthToken() {
-        // Use the same method as the main app
-        return window.CONFIG_UTILS ? window.CONFIG_UTILS.getAuthToken() : localStorage.getItem('artparty_social_token') || '';
+
+    async deleteCanvas(canvasId) {
+        if (!confirm(`Are you sure you want to delete canvas ${canvasId}? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/v1/admin/canvases/${canvasId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                this.showSuccess(result.message);
+                this.refreshCurrentView();
+            } else {
+                throw new Error('Failed to delete canvas');
+            }
+        } catch (error) {
+            console.error('❌ Error deleting canvas:', error);
+            this.showError('Failed to delete canvas');
+        }
     }
-    
-    showSuccess(message) {
-        window.UIManager?.showToast(message, 'success') || alert(message);
+
+    viewCanvasDetails(canvasId) {
+        alert(`View canvas details for canvas ID: ${canvasId}`);
     }
-    
-    showError(message) {
-        window.UIManager?.showToast(message, 'error') || alert(message);
-    }
-    
-    createUser() {
-        // Implement user creation modal
-        alert('User creation feature coming soon!');
-    }
-    
-    editUser(userId) {
-        // Implement user editing modal
-        alert(`Edit user ${userId} feature coming soon!`);
+
+    editCanvas(canvasId) {
+        alert(`Edit canvas ${canvasId} feature coming soon!`);
     }
     
     exportReport() {
