@@ -197,6 +197,16 @@ export class TileEditorManager {
     initializeTileEditor(tile) {
         console.log('🎨 Initializing tile editor with tile:', tile);
         
+        // Debug: Check if canvas element exists
+        const canvasElement = document.getElementById('pixel-editor-canvas');
+        console.log('🔍 Canvas element found:', canvasElement);
+        
+        if (!canvasElement) {
+            console.error('❌ Pixel editor canvas element not found!');
+            console.log('🔍 Available canvas elements:', document.querySelectorAll('canvas'));
+            return;
+        }
+        
         // Get canvas data to determine tile size
         if (window.API && window.API.canvas) {
             window.API.canvas.get(tile.canvas_id).then(canvasData => {
@@ -208,7 +218,8 @@ export class TileEditorManager {
                 
                 // Initialize pixel editor with correct tile size
                 if (window.PixelEditor) {
-                    window.PixelEditor.init(document.getElementById('pixel-editor-canvas'), tileSize);
+                    console.log(' Initializing PixelEditor with canvas:', canvasElement, 'and tile size:', tileSize);
+                    window.PixelEditor.init(canvasElement, tileSize);
                     
                     // Load existing pixel data if tile exists
                     if (tile.pixel_data) {
@@ -220,6 +231,8 @@ export class TileEditorManager {
                             console.warn('⚠️ Could not parse pixel data, using empty canvas');
                         }
                     }
+                } else {
+                    console.error('❌ PixelEditor not available!');
                 }
                 
                 // Update tile info display
@@ -229,9 +242,11 @@ export class TileEditorManager {
                 console.error('❌ Failed to get canvas data:', error);
                 // Fallback to default tile size
                 if (window.PixelEditor) {
-                    window.PixelEditor.init(document.getElementById('pixel-editor-canvas'), 64);
+                    window.PixelEditor.init(canvasElement, 64);
                 }
             });
+        } else {
+            console.error('❌ Canvas API not available!');
         }
         
         // Setup save button

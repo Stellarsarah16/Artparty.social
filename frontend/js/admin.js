@@ -138,43 +138,63 @@ class AdminPanel {
     
     async loadCanvases() {
         try {
+            console.log('🔄 Loading canvases...');
             const response = await fetch(`${API_BASE}/api/v1/admin/canvases`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             });
             
+            console.log('📡 Canvas response status:', response.status);
+            
             if (response.ok) {
                 const canvases = await response.json();
+                console.log(' Loaded canvases:', canvases);
                 this.displayCanvases(canvases);
+            } else {
+                console.error('❌ Failed to load canvases:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('❌ Error details:', errorText);
             }
         } catch (error) {
-            console.error('Failed to load canvases:', error);
+            console.error('❌ Error loading canvases:', error);
         }
     }
     
     displayCanvases(canvases) {
+        console.log('🎨 Displaying canvases:', canvases);
         const tbody = document.getElementById('canvases-tbody');
+        
+        if (!tbody) {
+            console.error('❌ Canvases table body not found!');
+            return;
+        }
+        
+        if (!Array.isArray(canvases)) {
+            console.error('❌ Canvases data is not an array:', canvases);
+            return;
+        }
+        
         tbody.innerHTML = canvases.map(canvas => `
             <tr>
                 <td>${canvas.id}</td>
-                <td>${canvas.name}</td>
-                <td>${canvas.width}×${canvas.height}</td>
+                <td>${canvas.name || 'Unnamed'}</td>
+                <td>${canvas.width || 0}×${canvas.height || 0}</td>
                 <td>
-                    <span class="badge badge-info">${canvas.tile_size}×${canvas.tile_size}</span>
-                    <br><small>Grid: ${Math.floor(canvas.width/canvas.tile_size)}×${Math.floor(canvas.height/canvas.tile_size)}</small>
+                    <span class="badge badge-info">${canvas.tile_size || 64}×${canvas.tile_size || 64}</span>
+                    <br><small>Grid: ${Math.floor((canvas.width || 1024)/(canvas.tile_size || 64))}×${Math.floor((canvas.height || 1024)/(canvas.tile_size || 64))}</small>
                 </td>
                 <td>
-                    <span class="badge badge-secondary">${canvas.palette_type}</span>
-                    <br><small>${canvas.collaboration_mode}</small>
+                    <span class="badge badge-secondary">${canvas.palette_type || 'classic'}</span>
+                    <br><small>${canvas.collaboration_mode || 'free'}</small>
                 </td>
                 <td>
                     <span class="badge ${canvas.is_active ? 'badge-success' : 'badge-danger'}">
                         ${canvas.is_active ? 'Active' : 'Inactive'}
                     </span>
                 </td>
-                <td>${canvas.max_tiles_per_user}</td>
-                <td>${new Date(canvas.created_at).toLocaleDateString()}</td>
+                <td>${canvas.max_tiles_per_user || 10}</td>
+                <td>${canvas.created_at ? new Date(canvas.created_at).toLocaleDateString() : 'Unknown'}</td>
                 <td class="admin-actions">
                     <button class="btn-admin btn-view" onclick="adminPanel.viewCanvasDetails(${canvas.id})" title="View Details">
                         <i class="fas fa-eye"></i>
@@ -191,6 +211,8 @@ class AdminPanel {
                 </td>
             </tr>
         `).join('');
+        
+        console.log('✅ Canvas table updated with', canvases.length, 'canvases');
     }
     
     async loadActivity() {
