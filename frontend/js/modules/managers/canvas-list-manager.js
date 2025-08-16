@@ -137,7 +137,8 @@ export class CanvasListManager {
                 ${isOwner ? '<button class="canvas-settings-btn" title="Edit Canvas Settings"><i class="fas fa-cog"></i></button>' : ''}
             </div>
             <div class="canvas-preview-container">
-                <canvas class="canvas-preview" width="128" height="128" data-canvas-id="${canvas.id}"></canvas>
+                <!-- FIXED: Changed to landscape 2:3 ratio (192x128) for better tile visibility -->
+                <canvas class="canvas-preview" width="192" height="128" data-canvas-id="${canvas.id}"></canvas>
                 <div class="preview-overlay">
                     <span class="preview-loading">Loading preview...</span>
                 </div>
@@ -310,11 +311,11 @@ export class CanvasListManager {
     }
 
     /**
-     * Render canvas preview on a small canvas element with detailed pixel rendering
+     * Render canvas preview on a landscape canvas element with smart tile scaling
      */
     renderCanvasPreview(previewCanvas, canvas, tiles) {
         const ctx = previewCanvas.getContext('2d');
-        const canvasWidth = previewCanvas.width; // 128
+        const canvasWidth = previewCanvas.width; // 192
         const canvasHeight = previewCanvas.height; // 128
         
         // Clear canvas with a subtle background
@@ -325,26 +326,41 @@ export class CanvasListManager {
             return;
         }
 
-        // Calculate how many tiles we can show (target 4x4 tiles in 128x128 preview)
-        const targetTilesPerSide = 4;
-        const pixelsPerTile = Math.floor(canvasWidth / targetTilesPerSide); // 32 pixels per tile
+        // FIXED: Calculate optimal tile display based on canvas tile size
+        const tileSize = canvas.tile_size; // 32, 64, or 128
+        const canvasTilesX = Math.floor(canvas.width / tileSize); // Total tiles across
+        const canvasTilesY = Math.floor(canvas.height / tileSize); // Total tiles down
         
-        // Calculate offset to center the preview
-        const totalPreviewWidth = targetTilesPerSide * pixelsPerTile;
-        const totalPreviewHeight = targetTilesPerSide * pixelsPerTile;
+        // FIXED: Smart preview calculation - show more tiles for smaller tile sizes
+        let targetTilesPerSide;
+        if (tileSize <= 32) {
+            targetTilesPerSide = 6; // Show 6x6 for 32x32 tiles
+        } else if (tileSize <= 64) {
+            targetTilesPerSide = 4; // Show 4x4 for 64x64 tiles
+        } else {
+            targetTilesPerSide = 3; // Show 3x3 for 128x128 tiles
+        }
+        
+        // FIXED: Calculate tile size in preview to fit within canvas bounds
+        const maxTilePreviewSize = Math.min(
+            Math.floor(canvasWidth / targetTilesPerSide),
+            Math.floor(canvasHeight / targetTilesPerSide)
+        );
+        
+        // FIXED: Calculate offset to center the preview area
+        const totalPreviewWidth = targetTilesPerSide * maxTilePreviewSize;
+        const totalPreviewHeight = targetTilesPerSide * maxTilePreviewSize;
         const offsetX = (canvasWidth - totalPreviewWidth) / 2;
         const offsetY = (canvasHeight - totalPreviewHeight) / 2;
 
         // Find the center area of the canvas to show in preview
-        const canvasTilesX = Math.floor(canvas.width / canvas.tile_size);
-        const canvasTilesY = Math.floor(canvas.height / canvas.tile_size);
         const centerX = Math.floor(canvasTilesX / 2);
         const centerY = Math.floor(canvasTilesY / 2);
         
-        // Calculate the range of tiles to show (2x2 around center for 4x4 total)
-        const startX = Math.max(0, centerX - 2);
+        // Calculate the range of tiles to show around center
+        const startX = Math.max(0, centerX - Math.floor(targetTilesPerSide / 2));
         const endX = Math.min(canvasTilesX, startX + targetTilesPerSide);
-        const startY = Math.max(0, centerY - 2);
+        const startY = Math.max(0, centerY - Math.floor(targetTilesPerSide / 2));
         const endY = Math.min(canvasTilesY, startY + targetTilesPerSide);
 
         // Create a map of tiles by position for quick lookup
@@ -359,28 +375,28 @@ export class CanvasListManager {
                 const tile = tileMap.get(`${tileX},${tileY}`);
                 
                 // Calculate position in preview
-                const previewX = offsetX + (tileX - startX) * pixelsPerTile;
-                const previewY = offsetY + (tileY - startY) * pixelsPerTile;
+                const previewX = offsetX + (tileX - startX) * maxTilePreviewSize;
+                const previewY = offsetY + (tileY - startY) * maxTilePreviewSize;
                 
                 if (tile && tile.pixel_data) {
                     // Render the actual tile pixel data
-                    this.renderTileInPreview(ctx, tile, previewX, previewY, pixelsPerTile);
+                    this.renderTileInPreview(ctx, tile, previewX, previewY, maxTilePreviewSize);
                 } else {
                     // Render empty tile background
                     ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(previewX, previewY, pixelsPerTile, pixelsPerTile);
+                    ctx.fillRect(previewX, previewY, maxTilePreviewSize, maxTilePreviewSize);
                     
                     // Add subtle border for empty tiles
                     ctx.strokeStyle = '#e2e8f0';
                     ctx.lineWidth = 1;
-                    ctx.strokeRect(previewX + 0.5, previewY + 0.5, pixelsPerTile - 1, pixelsPerTile - 1);
+                    ctx.strokeRect(previewX + 0.5, previewY + 0.5, maxTilePreviewSize - 1, maxTilePreviewSize - 1);
                 }
             }
         }
     }
 
     /**
-     * Render a single tile's pixel data in the preview
+     * Render a single tile's pixel data in the preview with proper scaling
      */
     renderTileInPreview(ctx, tile, x, y, tileSize) {
         try {
@@ -396,26 +412,26 @@ export class CanvasListManager {
                 return;
             }
 
-            // FIXED: Calculate pixel size more accurately to prevent rendering artifacts
-            const originalTileSize = pixelData.length; // Assuming square tiles
+            // FIXED: Calculate pixel size to fit tile data perfectly within preview space
+            const originalTileSize = pixelData.length; // Actual tile size (32, 64, 128)
             const pixelsPerDataPoint = tileSize / originalTileSize;
             
-            // FIXED: Use integer pixel sizes to prevent fractional rendering issues
+            // FIXED: Ensure we don't have fractional pixels that cause overlap
             const pixelWidth = Math.max(1, Math.floor(pixelsPerDataPoint));
             const pixelHeight = Math.max(1, Math.floor(pixelsPerDataPoint));
             
-            // FIXED: Calculate offset to center the tile content
+            // FIXED: Calculate total rendered size and center it within the preview tile
             const totalRenderedWidth = originalTileSize * pixelWidth;
             const totalRenderedHeight = originalTileSize * pixelHeight;
             const offsetX = x + (tileSize - totalRenderedWidth) / 2;
             const offsetY = y + (tileSize - totalRenderedHeight) / 2;
             
             // Render each pixel in the tile
-            for (let row = 0; row < pixelData.length; row++) {
+            for (let row = 0; row < originalTileSize; row++) {
                 const pixelRow = pixelData[row];
                 if (!Array.isArray(pixelRow)) continue;
                 
-                for (let col = 0; col < pixelRow.length; col++) {
+                for (let col = 0; col < originalTileSize; col++) {
                     const color = pixelRow[col];
                     if (!color || color === 'transparent') continue;
                     
