@@ -396,9 +396,19 @@ export class CanvasListManager {
                 return;
             }
 
-            // Calculate how many pixels to show per pixel data point
+            // FIXED: Calculate pixel size more accurately to prevent rendering artifacts
             const originalTileSize = pixelData.length; // Assuming square tiles
             const pixelsPerDataPoint = tileSize / originalTileSize;
+            
+            // FIXED: Use integer pixel sizes to prevent fractional rendering issues
+            const pixelWidth = Math.max(1, Math.floor(pixelsPerDataPoint));
+            const pixelHeight = Math.max(1, Math.floor(pixelsPerDataPoint));
+            
+            // FIXED: Calculate offset to center the tile content
+            const totalRenderedWidth = originalTileSize * pixelWidth;
+            const totalRenderedHeight = originalTileSize * pixelHeight;
+            const offsetX = x + (tileSize - totalRenderedWidth) / 2;
+            const offsetY = y + (tileSize - totalRenderedHeight) / 2;
             
             // Render each pixel in the tile
             for (let row = 0; row < pixelData.length; row++) {
@@ -409,17 +419,31 @@ export class CanvasListManager {
                     const color = pixelRow[col];
                     if (!color || color === 'transparent') continue;
                     
-                    ctx.fillStyle = color;
-                    ctx.fillRect(
-                        x + col * pixelsPerDataPoint,
-                        y + row * pixelsPerDataPoint,
-                        Math.ceil(pixelsPerDataPoint),
-                        Math.ceil(pixelsPerDataPoint)
-                    );
+                    // FIXED: Handle different color formats properly
+                    let fillColor = color;
+                    if (Array.isArray(color) && color.length >= 3) {
+                        const [r, g, b, a = 255] = color;
+                        fillColor = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+                    } else if (typeof color === 'string' && color.startsWith('#')) {
+                        fillColor = color;
+                    } else if (typeof color === 'string' && color !== 'transparent' && color !== 'white') {
+                        fillColor = color;
+                    }
+                    
+                    if (fillColor && fillColor !== 'transparent') {
+                        ctx.fillStyle = fillColor;
+                        ctx.fillRect(
+                            offsetX + col * pixelWidth,
+                            offsetY + row * pixelHeight,
+                            pixelWidth,
+                            pixelHeight
+                        );
+                    }
                 }
             }
             
         } catch (error) {
+            console.error('❌ Error rendering tile preview:', error);
             // Fallback to a default color if parsing fails
             ctx.fillStyle = '#cccccc';
             ctx.fillRect(x, y, tileSize, tileSize);

@@ -205,6 +205,15 @@ class NavigationManager {
                     }
                 }, 100);
             }
+            
+            // FIXED: Load canvases when showing canvas section
+            if (sectionName === 'canvas' && this.managers.canvasList) {
+                console.log('🔄 Loading canvases for canvas section...');
+                // Use setTimeout to ensure DOM is ready
+                setTimeout(() => {
+                    this.managers.canvasList.loadCanvases();
+                }, 100);
+            }
         } else {
             console.error(`❌ Section ${sectionName} not found`);
         }
