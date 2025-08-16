@@ -60,10 +60,9 @@ export const createManagers = () => {
     window.authManager = managers.auth;
     window.adminPanelManager = managers.admin;
     
-    // Initialize the admin panel manager
-    if (window.adminPanelManager && window.adminPanelManager.init) {
-        window.adminPanelManager.init();
-    }
+    // Don't auto-initialize admin panel - wait for user authentication
+    // The admin panel will be initialized when the user navigates to it
+    console.log('⚠️ Admin panel not auto-initialized - waiting for authentication');
     
     console.log('✅ All managers created successfully');
     return managers;

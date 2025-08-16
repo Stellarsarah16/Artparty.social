@@ -17,7 +17,16 @@ export class AdminPanelManager {
         
         console.log('🔧 Admin Panel Manager initialized');
         this.setupEventListeners();
-        this.loadDashboard();
+        
+        // Only load dashboard if user is authenticated
+        if (this.isUserAuthenticated()) {
+            console.log('🔐 User authenticated, loading dashboard...');
+            this.loadDashboard();
+        } else {
+            console.log('🔐 User not authenticated, showing login prompt...');
+            this.renderLoginPrompt();
+        }
+        
         this.initialized = true;
     }
     
@@ -32,10 +41,24 @@ export class AdminPanelManager {
         // Action buttons
         document.getElementById('cleanup-locks-btn')?.addEventListener('click', () => this.cleanupExpiredLocks());
         document.getElementById('refresh-data-btn')?.addEventListener('click', () => this.refreshCurrentView());
+        
+        // Listen for authentication changes
+        if (window.appState) {
+            window.appState.on('userLogin', () => {
+                console.log('🔐 User logged in, refreshing admin panel...');
+                this.refreshAfterLogin();
+            });
+        }
     }
     
     async showView(viewName) {
         this.currentView = viewName;
+        
+        // Initialize if not already done
+        if (!this.initialized) {
+            console.log('🔧 Admin panel not initialized, initializing now...');
+            this.init();
+        }
         
         // Hide all views
         document.querySelectorAll('.admin-view').forEach(view => view.style.display = 'none');
@@ -123,6 +146,12 @@ export class AdminPanelManager {
     }
     
     async loadUsers() {
+        if (!this.isUserAuthenticated()) {
+            console.log('❌ User not authenticated, cannot load users');
+            this.showError('Please log in to access admin features');
+            return;
+        }
+        
         try {
             const response = await fetch('/api/v1/admin/users', {
                 headers: {
@@ -143,6 +172,12 @@ export class AdminPanelManager {
     }
     
     async loadLocks() {
+        if (!this.isUserAuthenticated()) {
+            console.log('❌ User not authenticated, cannot load locks');
+            this.showError('Please log in to access admin features');
+            return;
+        }
+        
         try {
             const response = await fetch('/api/v1/admin/locks', {
                 headers: {
@@ -183,6 +218,12 @@ export class AdminPanelManager {
     }
 
     async loadCanvases() {
+        if (!this.isUserAuthenticated()) {
+            console.log('❌ User not authenticated, cannot load canvases');
+            this.showError('Please log in to access admin features');
+            return;
+        }
+        
         try {
             console.log('🔄 Loading canvases...');
             console.log('�� Auth token:', this.getAuthToken() ? 'Present' : 'Missing');
@@ -287,6 +328,35 @@ export class AdminPanelManager {
         `;
         
         console.log('✅ Basic dashboard rendered');
+    }
+    
+    renderLoginPrompt() {
+        const dashboard = document.getElementById('admin-dashboard-view');
+        if (!dashboard) return;
+        
+        console.log('🔐 Rendering login prompt...');
+        
+        dashboard.innerHTML = `
+            <div class="admin-stats-grid">
+                <div class="stat-card">
+                    <h3>🔐 Authentication Required</h3>
+                    <div class="stat-number">--</div>
+                    <div class="stat-detail">Please log in to access admin features</div>
+                </div>
+                <div class="stat-card">
+                    <h3>🔄 Quick Actions</h3>
+                    <div class="stat-number">--</div>
+                    <div class="stat-detail">Use tabs above to access features</div>
+                </div>
+            </div>
+            <div class="admin-actions">
+                <button onclick="adminPanelManager.checkAuthentication()" class="btn btn-primary">Check Authentication</button>
+                <button onclick="adminPanelManager.loadUsers()" class="btn btn-secondary">Try Load Users</button>
+                <button onclick="adminPanelManager.loadCanvases()" class="btn btn-secondary">Try Load Canvases</button>
+            </div>
+        `;
+        
+        console.log('✅ Login prompt rendered');
     }
     
     renderUsers(users) {
@@ -529,6 +599,12 @@ export class AdminPanelManager {
     // Action Methods
     
     async cleanupExpiredLocks() {
+        if (!this.isUserAuthenticated()) {
+            console.log('❌ User not authenticated, cannot cleanup locks');
+            this.showError('Please log in to access admin features');
+            return;
+        }
+        
         try {
             const response = await fetch('/api/v1/admin/locks/cleanup', {
                 method: 'POST',
@@ -685,6 +761,11 @@ export class AdminPanelManager {
         alert('Report export feature coming soon!');
     }
 
+    isUserAuthenticated() {
+        const token = this.getAuthToken();
+        return !!token && token !== 'null' && token !== 'undefined';
+    }
+    
     getAuthToken() {
         // Debug logging to see what authentication sources are available
         console.log('🔍 Debugging getAuthToken:');
@@ -722,6 +803,31 @@ export class AdminPanelManager {
         // Optional: Add user-friendly error display
         // this.showToast(message, 'error');
     }
+    
+    checkAuthentication() {
+        console.log('🔍 Checking authentication status...');
+        if (this.isUserAuthenticated()) {
+            console.log('✅ User is now authenticated, loading dashboard...');
+            this.loadDashboard();
+        } else {
+            console.log('❌ User still not authenticated');
+            this.showError('Please log in to access admin features');
+        }
+    }
+    
+    refreshAfterLogin() {
+        console.log('🔄 Refreshing admin panel after login...');
+        if (this.isUserAuthenticated()) {
+            // If we're on the dashboard view, reload it
+            if (this.currentView === 'dashboard') {
+                this.loadDashboard();
+            }
+            // Otherwise, just refresh the current view
+            else {
+                this.refreshCurrentView();
+            }
+        }
+    }
 
     // Add missing methods that the admin panel needs
     refreshCurrentView() {
@@ -747,6 +853,12 @@ export class AdminPanelManager {
     // Cleanup Methods
     
     async cleanupInactiveUsers() {
+        if (!this.isUserAuthenticated()) {
+            console.log('❌ User not authenticated, cannot cleanup users');
+            this.showError('Please log in to access admin features');
+            return;
+        }
+        
         if (!confirm('⚠️ WARNING: This will permanently delete ALL inactive users!\n\nThis action cannot be undone. Are you sure you want to continue?')) {
             return;
         }
@@ -776,6 +888,12 @@ export class AdminPanelManager {
     }
 
     async cleanupInactiveCanvases() {
+        if (!this.isUserAuthenticated()) {
+            console.log('❌ User not authenticated, cannot cleanup canvases');
+            this.showError('Please log in to access admin features');
+            return;
+        }
+        
         if (!confirm('⚠️ WARNING: This will permanently delete ALL inactive canvases!\n\nThis action cannot be undone. Are you sure you want to continue?')) {
             return;
         }
