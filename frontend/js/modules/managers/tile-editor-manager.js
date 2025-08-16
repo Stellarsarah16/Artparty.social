@@ -260,6 +260,9 @@ export class TileEditorManager {
         // Load neighbor tiles
         this.loadNeighborTiles(tile);
         
+        // 🚨 CRITICAL FIX: Initialize color palette (was missing after refactoring)
+        this.initializeColorPalette(tile);
+        
         console.log('✅ Tile editor initialization complete');
     }
 
