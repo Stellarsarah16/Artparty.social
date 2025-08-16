@@ -77,6 +77,27 @@ async def get_all_users(
     return users
 
 
+# MOVE THESE CLEANUP ENDPOINTS TO THE TOP, BEFORE THE PARAMETERIZED ROUTES
+
+@router.delete("/users/cleanup-inactive")
+async def cleanup_inactive_users(
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Cleanup all inactive users (admin only)"""
+    try:
+        deleted_count = admin_service.cleanup_inactive_users(db)
+        return {
+            "message": f"Cleanup completed successfully",
+            "deleted_count": deleted_count,
+            "action": "cleanup_inactive_users"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to cleanup inactive users: {str(e)}"
+        )
+
 @router.get("/users/{user_id}", response_model=AdminUserResponse)
 async def get_user_details(
     user_id: int,
@@ -124,26 +145,6 @@ async def delete_user(
             detail="User not found"
         )
     return {"message": "User deleted successfully"}
-
-
-@router.delete("/users/cleanup-inactive")
-async def cleanup_inactive_users(
-    current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
-):
-    """Cleanup all inactive users (admin only)"""
-    try:
-        deleted_count = admin_service.cleanup_inactive_users(db)
-        return {
-            "message": f"Cleanup completed successfully",
-            "deleted_count": deleted_count,
-            "action": "cleanup_inactive_users"
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to cleanup inactive users: {str(e)}"
-        )
 
 
 @router.get("/canvases", response_model=List[CanvasResponse])
