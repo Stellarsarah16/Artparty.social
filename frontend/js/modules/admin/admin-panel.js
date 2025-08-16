@@ -72,21 +72,41 @@ export class AdminPanelManager {
     
     async loadDashboard() {
         try {
+            console.log('🔄 Loading dashboard...');
+            console.log('🔍 Auth token available:', this.getAuthToken() ? 'Yes' : 'No');
+            
+            // Add timeout to prevent hanging
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            
             const response = await fetch('/api/v1/admin/reports/system-overview', {
                 headers: {
                     'Authorization': `Bearer ${this.getAuthToken()}`
-                }
+                },
+                signal: controller.signal
             });
+            
+            clearTimeout(timeoutId);
+            
+            console.log('📡 Dashboard response status:', response.status);
             
             if (response.ok) {
                 const data = await response.json();
+                console.log('📊 Dashboard data loaded:', data);
                 this.renderDashboard(data);
             } else {
-                throw new Error('Failed to load dashboard data');
+                console.error('❌ Dashboard response not ok:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('❌ Error details:', errorText);
+                throw new Error(`Failed to load dashboard data: ${response.status} ${response.statusText}`);
             }
         } catch (error) {
             console.error('❌ Error loading dashboard:', error);
-            this.showError('Failed to load dashboard data');
+            if (error.name === 'AbortError') {
+                this.showError('Dashboard request timed out. Please try again.');
+            } else {
+                this.showError('Failed to load dashboard data');
+            }
         }
     }
     
