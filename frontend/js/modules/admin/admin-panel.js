@@ -232,10 +232,10 @@ export class AdminPanelManager {
         if (!usersView) return;
         
         usersView.innerHTML = `
-            <div class="admin-header">
-                <h2>User Management</h2>
-                <button class="btn btn-primary" onclick="adminPanel.createUser()">Create User</button>
-            </div>
+                            <div class="admin-header">
+                    <h2>User Management</h2>
+                    <button class="btn btn-primary" onclick="adminPanelManager.createUser()">Create User</button>
+                </div>
             <div class="admin-table-container">
                 <table class="admin-table">
                     <thead>
@@ -261,11 +261,11 @@ export class AdminPanelManager {
                                 </td>
                                 <td>${new Date(user.created_at).toLocaleDateString()}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-secondary" onclick="adminPanel.editUser(${user.id})">Edit</button>
-                                    <button class="btn btn-sm btn-warning" onclick="adminPanel.toggleUserStatus(${user.id})">
+                                    <button class="btn btn-sm btn-secondary" onclick="adminPanelManager.editUser(${user.id})">Edit</button>
+                                    <button class="btn btn-sm btn-warning" onclick="adminPanelManager.toggleUserStatus(${user.id})">
                                         ${user.is_active ? 'Deactivate' : 'Activate'}
                                     </button>
-                                    <button class="btn btn-sm btn-danger" onclick="adminPanel.deleteUser(${user.id})">Delete</button>
+                                    <button class="btn btn-sm btn-danger" onclick="adminPanelManager.deleteUser(${user.id})">Delete</button>
                                 </td>
                             </tr>
                         `).join('')}
@@ -280,10 +280,10 @@ export class AdminPanelManager {
         if (!locksView) return;
         
         locksView.innerHTML = `
-            <div class="admin-header">
-                <h2>Tile Lock Management</h2>
-                <button class="btn btn-warning" onclick="adminPanel.cleanupExpiredLocks()">Cleanup Expired</button>
-            </div>
+                            <div class="admin-header">
+                    <h2>Tile Lock Management</h2>
+                    <button class="btn btn-warning" onclick="adminPanelManager.cleanupExpiredLocks()">Cleanup Expired</button>
+                </div>
             <div class="admin-table-container">
                 <table class="admin-table">
                     <thead>
@@ -309,7 +309,7 @@ export class AdminPanelManager {
                                     </span>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-danger" onclick="adminPanel.forceReleaseLock(${lock.tile_id})">
+                                    <button class="btn btn-sm btn-danger" onclick="adminPanelManager.forceReleaseLock(${lock.tile_id})">
                                         Force Release
                                     </button>
                                 </td>
@@ -326,10 +326,10 @@ export class AdminPanelManager {
         if (!reportsView) return;
         
         reportsView.innerHTML = `
-            <div class="admin-header">
-                <h2>System Reports</h2>
-                <button class="btn btn-primary" onclick="adminPanel.exportReport()">Export Report</button>
-            </div>
+                            <div class="admin-header">
+                    <h2>System Reports</h2>
+                    <button class="btn btn-primary" onclick="adminPanelManager.exportReport()">Export Report</button>
+                </div>
             <div class="report-sections">
                 <div class="report-section">
                     <h3>User Statistics</h3>
@@ -604,7 +604,28 @@ export class AdminPanelManager {
         // Optional: Add user-friendly error display
         // this.showToast(message, 'error');
     }
+
+    // Add missing methods that the admin panel needs
+    refreshCurrentView() {
+        this.showView(this.currentView);
+    }
+
+    showSuccess(message) {
+        // Simple success display for now
+        console.log('✅ Success:', message);
+        alert(message); // Replace with better UI later
+    }
+
+    createUser() {
+        // Implement user creation modal
+        alert('User creation feature coming soon!');
+    }
+
+    editUser(userId) {
+        // Implement user editing modal
+        alert(`Edit user ${userId} feature coming soon!`);
+    }
 }
 
-// Create global instance
-window.adminPanel = new AdminPanelManager();
+// Remove duplicate instance - use only adminPanelManager from managers system
+// window.adminPanel = new AdminPanelManager();
