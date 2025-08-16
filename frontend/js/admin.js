@@ -1,25 +1,38 @@
 class AdminPanel {
     constructor() {
+        console.log('🔧 AdminPanel constructor called');
         this.currentTab = 'users';
         this.init();
     }
     
     async init() {
+        console.log('🔧 AdminPanel init() called');
         this.setupTabs();
+        
+        // Debug the HTML structure
+        this.debugHTMLStructure();
+        
         await this.loadStats();
         await this.loadUsers();
+        console.log('🔧 AdminPanel initialization complete');
     }
     
     setupTabs() {
+        console.log('🔧 Setting up admin tabs...');
         const tabs = document.querySelectorAll('.admin-tab');
+        console.log('🔧 Found admin tabs:', tabs.length);
+        
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
+                console.log(' Tab clicked:', tab.dataset.tab);
                 this.switchTab(tab.dataset.tab);
             });
         });
     }
     
     switchTab(tabName) {
+        console.log('🔧 Switching to tab:', tabName);
+        
         document.querySelectorAll('.admin-tab').forEach(tab => {
             tab.classList.remove('active');
         });
@@ -31,15 +44,19 @@ class AdminPanel {
         document.getElementById(`${tabName}-tab`).classList.add('active');
         
         this.currentTab = tabName;
+        console.log(' Current tab set to:', tabName);
         
         switch(tabName) {
             case 'users':
+                console.log('🔧 Loading users...');
                 this.loadUsers();
                 break;
             case 'canvases':
+                console.log('🔧 Loading canvases...');
                 this.loadCanvases();
                 break;
             case 'activity':
+                console.log('🔧 Loading activity...');
                 this.loadActivity();
                 break;
         }
@@ -425,6 +442,37 @@ class AdminPanel {
         `;
         
         document.body.appendChild(modal);
+    }
+
+    // Add this method to debug the HTML structure
+    debugHTMLStructure() {
+        console.log('🔍 Debugging admin panel HTML structure...');
+        
+        // Check if admin section exists
+        const adminSection = document.getElementById('admin-section');
+        console.log('🔍 Admin section found:', !!adminSection);
+        
+        // Check for admin tabs
+        const adminTabs = document.querySelectorAll('.admin-tab');
+        console.log('🔍 Admin tabs found:', adminTabs.length);
+        adminTabs.forEach(tab => {
+            console.log('  - Tab:', tab.textContent, 'data-tab:', tab.dataset.tab);
+        });
+        
+        // Check for tab content areas
+        const tabContents = document.querySelectorAll('.tab-content');
+        console.log('🔍 Tab content areas found:', tabContents.length);
+        tabContents.forEach(content => {
+            console.log('  - Content area:', content.id);
+        });
+        
+        // Check for canvases table
+        const canvasesTable = document.getElementById('canvases-tbody');
+        console.log('🔍 Canvases table body found:', !!canvasesTable);
+        
+        // Check for users table
+        const usersTable = document.getElementById('users-tbody');
+        console.log('🔍 Users table body found:', !!usersTable);
     }
 }
 

@@ -197,8 +197,8 @@ export class TileEditorManager {
     initializeTileEditor(tile) {
         console.log('🎨 Initializing tile editor with tile:', tile);
         
-        // Debug: Check if canvas element exists
-        const canvasElement = document.getElementById('pixel-editor-canvas');
+        // FIXED: Use the correct canvas element ID
+        const canvasElement = document.getElementById('pixel-canvas');
         console.log('🔍 Canvas element found:', canvasElement);
         
         if (!canvasElement) {
