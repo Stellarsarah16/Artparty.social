@@ -39,12 +39,24 @@ export class AdminPanelManager {
             appStateType: typeof window.appState
         });
         
-        // Navigation tabs
-        document.getElementById('admin-dashboard-tab')?.addEventListener('click', () => this.showView('dashboard'));
-        document.getElementById('admin-users-tab')?.addEventListener('click', () => this.showView('users'));
-        document.getElementById('admin-locks-tab')?.addEventListener('click', () => this.showView('locks'));
-        document.getElementById('admin-canvases-tab')?.addEventListener('click', () => this.showView('canvases'));
-        document.getElementById('admin-reports-tab')?.addEventListener('click', () => this.showView('reports'));
+        // FIXED: Use EventManager for tab navigation instead of direct DOM listeners
+        if (window.eventManager && typeof window.eventManager.on === 'function') {
+            console.log('🔧 Setting up EventManager-based tab navigation...');
+            
+            // Listen for tab click events
+            window.eventManager.on('adminTabClick', (tabName) => {
+                console.log('🔧 Admin tab clicked via EventManager:', tabName);
+                this.showView(tabName);
+            });
+            
+            // Set up tab click handlers that emit events
+            this.setupTabClickHandlers();
+            
+        } else {
+            console.warn('⚠️ EventManager not available, falling back to direct DOM listeners');
+            // Fallback to direct DOM listeners if EventManager not available
+            this.setupDirectTabListeners();
+        }
         
         // Action buttons
         document.getElementById('cleanup-locks-btn')?.addEventListener('click', () => this.cleanupExpiredLocks());
@@ -83,6 +95,49 @@ export class AdminPanelManager {
         } catch (error) {
             console.error('❌ Error setting up authentication event listeners:', error);
         }
+    }
+    
+    /**
+     * Set up tab click handlers that emit events to EventManager
+     */
+    setupTabClickHandlers() {
+        console.log('🔧 Setting up tab click handlers with EventManager...');
+        
+        // Set up each tab to emit events instead of direct calls
+        const tabs = [
+            { id: 'admin-dashboard-tab', name: 'dashboard' },
+            { id: 'admin-users-tab', name: 'users' },
+            { id: 'admin-locks-tab', name: 'locks' },
+            { id: 'admin-canvases-tab', name: 'canvases' },
+            { id: 'admin-reports-tab', name: 'reports' }
+        ];
+        
+        tabs.forEach(tab => {
+            const element = document.getElementById(tab.id);
+            if (element) {
+                element.addEventListener('click', () => {
+                    console.log(`🔧 Tab ${tab.name} clicked, emitting adminTabClick event`);
+                    window.eventManager.emit('adminTabClick', tab.name);
+                });
+                console.log(`✅ Set up EventManager handler for ${tab.name} tab`);
+            } else {
+                console.warn(`⚠️ Tab element not found: ${tab.id}`);
+            }
+        });
+    }
+    
+    /**
+     * Fallback method for direct DOM listeners if EventManager not available
+     */
+    setupDirectTabListeners() {
+        console.log('🔧 Setting up fallback direct DOM listeners...');
+        
+        // Navigation tabs
+        document.getElementById('admin-dashboard-tab')?.addEventListener('click', () => this.showView('dashboard'));
+        document.getElementById('admin-users-tab')?.addEventListener('click', () => this.showView('users'));
+        document.getElementById('admin-locks-tab')?.addEventListener('click', () => this.showView('locks'));
+        document.getElementById('admin-canvases-tab')?.addEventListener('click', () => this.showView('canvases'));
+        document.getElementById('admin-reports-tab')?.addEventListener('click', () => this.showView('reports'));
     }
     
     async showView(viewName) {

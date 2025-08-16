@@ -12,7 +12,7 @@ class CanvasViewer {
         // Canvas data
         this.canvasData = null;
         this.tiles = new Map();
-        this.tileSize = 64;
+        this.tileSize = null; // FIXED: Don't hardcode tile size, get it from canvas data
         
         // Viewport
         this.viewportX = 0;
@@ -839,12 +839,27 @@ class CanvasViewer {
      * @param {Object} canvasData - Canvas configuration
      */
     setCanvasData(canvasData) {
+        console.log('🎨 Setting canvas data:', {
+            id: canvasData.id,
+            name: canvasData.name,
+            tile_size: canvasData.tile_size,
+            width: canvasData.width,
+            height: canvasData.height
+        });
+        
         this.canvasData = canvasData;
         
         // FIXED: Update tile size from canvas data
         if (canvasData.tile_size) {
+            const oldTileSize = this.tileSize;
             this.tileSize = canvasData.tile_size;
-            console.log(`🎨 Updated tile size to: ${this.tileSize} (from canvas: ${canvasData.tile_size})`);
+            console.log(`🎨 Updated tile size: ${oldTileSize} → ${this.tileSize} (from canvas: ${canvasData.tile_size})`);
+            
+            // Clear tile cache when tile size changes
+            this.clearVisibleTilesCache();
+        } else {
+            console.warn('⚠️ No tile_size in canvas data, using default');
+            this.tileSize = 32; // Default fallback
         }
         
         this.centerView();
@@ -935,6 +950,12 @@ class CanvasViewer {
      */
     getTileAtPosition(screenX, screenY, isClick = false) {
         if (!this.canvas) return null;
+        
+        // FIXED: Validate tileSize is set before calculating tile position
+        if (!this.tileSize) {
+            console.error('❌ Cannot get tile at position: tileSize not set');
+            return null;
+        }
         
         try {
             const rect = this.canvas.getBoundingClientRect();
@@ -1168,6 +1189,12 @@ class CanvasViewer {
      * @returns {Array} Array of visible tiles
      */
     getVisibleTiles() {
+        // FIXED: Validate tileSize is set before calculating visible tiles
+        if (!this.tileSize) {
+            console.error('❌ Cannot get visible tiles: tileSize not set');
+            return [];
+        }
+        
         // Cache key based on viewport and zoom
         const cacheKey = `${Math.floor(this.viewportX)},${Math.floor(this.viewportY)},${this.zoom.toFixed(2)}`;
         
@@ -1265,6 +1292,12 @@ class CanvasViewer {
     drawEmptyTileIndicators() {
         if (!this.canvasData || this.zoom < 0.5) return; // Only show at reasonable zoom levels
         
+        // FIXED: Validate tileSize is set before drawing empty tile indicators
+        if (!this.tileSize) {
+            console.error('❌ Cannot draw empty tile indicators: tileSize not set');
+            return;
+        }
+        
         const maxTilesX = Math.floor(this.canvasData.width / this.tileSize);
         const maxTilesY = Math.floor(this.canvasData.height / this.tileSize);
         
@@ -1328,6 +1361,12 @@ class CanvasViewer {
     drawGrid() {
         if (!this.canvasData) return;
         
+        // FIXED: Validate tileSize is set before drawing grid
+        if (!this.tileSize) {
+            console.error('❌ Cannot draw grid: tileSize not set');
+            return;
+        }
+        
         // Only draw grid within canvas boundaries
         const maxTilesX = Math.floor(this.canvasData.width / this.tileSize);
         const maxTilesY = Math.floor(this.canvasData.height / this.tileSize);
@@ -1383,6 +1422,12 @@ class CanvasViewer {
      */
     drawTile(tile) {
         if (!tile.pixel_data) return;
+        
+        // FIXED: Validate tileSize is set before drawing
+        if (!this.tileSize) {
+            console.error('❌ Cannot draw tile: tileSize not set. Canvas data may not be loaded yet.');
+            return;
+        }
         
         const x = tile.x * this.tileSize;
         const y = tile.y * this.tileSize;
