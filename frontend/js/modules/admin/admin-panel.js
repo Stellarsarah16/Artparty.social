@@ -147,6 +147,18 @@ export class AdminPanelManager {
         if (!this.initialized) {
             console.log('🔧 Admin panel not initialized, initializing now...');
             this.init();
+            
+            // FIXED: Wait for initialization to complete before proceeding
+            let attempts = 0;
+            while (!this.initialized && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 10));
+                attempts++;
+            }
+            
+            if (!this.initialized) {
+                console.error('❌ Admin panel failed to initialize');
+                return;
+            }
         }
         
         // Hide all views

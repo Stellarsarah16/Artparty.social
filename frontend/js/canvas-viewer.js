@@ -1443,18 +1443,44 @@ class CanvasViewer {
             const pixelSize = this.tileSize / tileSize; // Divide canvas tile size by actual tile size
             
             console.log(`🎨 Drawing tile: ${tileSize}x${tileSize}, pixelSize: ${pixelSize}, canvas tileSize: ${this.tileSize}`);
+            console.log(`🎨 Pixel data sample:`, {
+                firstRow: pixelData[0]?.slice(0, 3),
+                firstPixel: pixelData[0]?.[0],
+                firstPixelType: typeof pixelData[0]?.[0],
+                firstPixelIsArray: Array.isArray(pixelData[0]?.[0])
+            });
             
             for (let py = 0; py < tileSize; py++) {
                 for (let px = 0; px < tileSize; px++) {
                     const color = pixelData[py] && pixelData[py][px];
-                    if (color && color !== 'transparent') {
-                        this.ctx.fillStyle = color;
-                        this.ctx.fillRect(
-                            x + (px * pixelSize),
-                            y + (py * pixelSize),
-                            pixelSize,
-                            pixelSize
-                        );
+                    
+                    // FIXED: Handle different color formats properly
+                    if (color) {
+                        let fillStyle = null;
+                        
+                        if (Array.isArray(color) && color.length === 4) {
+                            // RGBA array format: [R, G, B, A]
+                            const [r, g, b, a] = color;
+                            if (a > 0) { // Only draw non-transparent pixels
+                                fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+                            }
+                        } else if (typeof color === 'string') {
+                            // String color format (legacy support)
+                            if (color !== 'transparent' && color !== 'white') {
+                                fillStyle = color;
+                            }
+                        }
+                        
+                        // Draw the pixel if we have a valid color
+                        if (fillStyle) {
+                            this.ctx.fillStyle = fillStyle;
+                            this.ctx.fillRect(
+                                x + (px * pixelSize),
+                                y + (py * pixelSize),
+                                pixelSize,
+                                pixelSize
+                            );
+                        }
                     }
                 }
             }

@@ -196,6 +196,14 @@ class NavigationManager {
             if (sectionName === 'admin' && this.managers.admin) {
                 console.log('🔧 Initializing admin panel...');
                 this.managers.admin.init();
+                
+                // FIXED: Ensure admin panel is ready before showing
+                setTimeout(() => {
+                    if (this.managers.admin.initialized) {
+                        console.log('✅ Admin panel ready, showing dashboard...');
+                        this.managers.admin.showView('dashboard');
+                    }
+                }, 100);
             }
         } else {
             console.error(`❌ Section ${sectionName} not found`);
