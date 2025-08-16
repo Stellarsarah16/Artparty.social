@@ -232,10 +232,15 @@ export class AdminPanelManager {
         if (!usersView) return;
         
         usersView.innerHTML = `
-                            <div class="admin-header">
-                    <h2>User Management</h2>
+            <div class="admin-header">
+                <h2>User Management</h2>
+                <div class="admin-actions">
                     <button class="btn btn-primary" onclick="adminPanelManager.createUser()">Create User</button>
+                    <button class="btn btn-warning" onclick="adminPanelManager.cleanupInactiveUsers()" title="Remove all inactive users">
+                        🗑️ Cleanup Inactive Users
+                    </button>
                 </div>
+            </div>
             <div class="admin-table-container">
                 <table class="admin-table">
                     <thead>
@@ -384,6 +389,29 @@ export class AdminPanelManager {
 
     renderCanvases(canvases) {
         console.log(' Rendering canvases:', canvases);
+        
+        // Add cleanup button above the table
+        const canvasesView = document.getElementById('admin-canvases-view');
+        if (canvasesView) {
+            // Check if cleanup button already exists
+            if (!canvasesView.querySelector('.cleanup-inactive-canvases-btn')) {
+                const header = canvasesView.querySelector('.admin-header') || canvasesView.querySelector('h2');
+                if (header) {
+                    const cleanupBtn = document.createElement('button');
+                    cleanupBtn.className = 'btn btn-warning cleanup-inactive-canvases-btn';
+                    cleanupBtn.innerHTML = '🗑️ Cleanup Inactive Canvases';
+                    cleanupBtn.title = 'Remove all inactive canvases';
+                    cleanupBtn.onclick = () => adminPanelManager.cleanupInactiveCanvases();
+                    
+                    if (header.tagName === 'H2') {
+                        header.parentNode.insertBefore(cleanupBtn, header.nextSibling);
+                    } else {
+                        header.appendChild(cleanupBtn);
+                    }
+                }
+            }
+        }
+        
         const tbody = document.getElementById('canvases-tbody');
         
         if (!tbody) {
@@ -652,6 +680,66 @@ export class AdminPanelManager {
     editUser(userId) {
         // Implement user editing modal
         alert(`Edit user ${userId} feature coming soon!`);
+    }
+
+    // Cleanup Methods
+    
+    async cleanupInactiveUsers() {
+        if (!confirm('⚠️ WARNING: This will permanently delete ALL inactive users!\n\nThis action cannot be undone. Are you sure you want to continue?')) {
+            return;
+        }
+        
+        try {
+            console.log('🧹 Starting cleanup of inactive users...');
+            
+            const response = await fetch('/api/v1/admin/users/cleanup-inactive', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                this.showSuccess(`✅ Cleanup completed! ${result.deleted_count} inactive users removed.`);
+                this.refreshCurrentView();
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to cleanup inactive users');
+            }
+        } catch (error) {
+            console.error('❌ Error cleaning up inactive users:', error);
+            this.showError(`Failed to cleanup inactive users: ${error.message}`);
+        }
+    }
+
+    async cleanupInactiveCanvases() {
+        if (!confirm('⚠️ WARNING: This will permanently delete ALL inactive canvases!\n\nThis action cannot be undone. Are you sure you want to continue?')) {
+            return;
+        }
+        
+        try {
+            console.log('🧹 Starting cleanup of inactive canvases...');
+            
+            const response = await fetch('/api/v1/admin/canvases/cleanup-inactive', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                }
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                this.showSuccess(`✅ Cleanup completed! ${result.deleted_count} inactive canvases removed.`);
+                this.refreshCurrentView();
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to cleanup inactive canvases');
+            }
+        } catch (error) {
+            console.error('❌ Error cleaning up inactive canvases:', error);
+            this.showError(`Failed to cleanup inactive canvases: ${error.message}`);
+        }
     }
 }
 

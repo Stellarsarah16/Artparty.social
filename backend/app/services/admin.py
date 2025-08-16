@@ -129,6 +129,44 @@ class AdminService:
         canvas.is_active = False
         db.commit()
         return True
+
+    @staticmethod
+    def cleanup_inactive_users(db: Session) -> int:
+        """Remove all inactive users permanently"""
+        try:
+            # Get count of inactive users before deletion
+            inactive_count = db.query(User).filter(User.is_active == False).count()
+            
+            # Delete inactive users
+            db.query(User).filter(User.is_active == False).delete()
+            db.commit()
+            
+            print(f"🧹 Cleaned up {inactive_count} inactive users")
+            return inactive_count
+            
+        except Exception as e:
+            db.rollback()
+            print(f"❌ Error cleaning up inactive users: {e}")
+            raise e
+
+    @staticmethod
+    def cleanup_inactive_canvases(db: Session) -> int:
+        """Remove all inactive canvases permanently"""
+        try:
+            # Get count of inactive canvases before deletion
+            inactive_count = db.query(Canvas).filter(Canvas.is_active == False).count()
+            
+            # Delete inactive canvases (this will cascade to related tiles)
+            db.query(Canvas).filter(Canvas.is_active == False).delete()
+            db.commit()
+            
+            print(f"🧹 Cleaned up {inactive_count} inactive canvases")
+            return inactive_count
+            
+        except Exception as e:
+            db.rollback()
+            print(f"❌ Error cleaning up inactive canvases: {e}")
+            raise e
     
     @staticmethod
     def get_recent_activity(db: Session, limit: int = 20) -> List[Dict[str, Any]]:
