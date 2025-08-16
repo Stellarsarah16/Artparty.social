@@ -497,5 +497,5 @@ class AdminPanel {
     }
 }
 
-// Initialize admin panel
-const adminPanel = new AdminPanel(); 
+// REMOVED: Duplicate AdminPanel instance - use only adminPanelManager from managers system
+// const adminPanel = new AdminPanel(); 

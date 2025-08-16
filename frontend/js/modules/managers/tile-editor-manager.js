@@ -1174,6 +1174,14 @@ export class TileEditorManager {
                 return;
             }
             
+            // Get canvas data to determine tile size
+            const canvasData = await window.API.canvas.get(currentTile.canvas_id);
+            console.log('🔧 Canvas data for neighbor tiles:', {
+                canvasId: currentTile.canvas_id,
+                tileSize: canvasData.tile_size,
+                canvasName: canvasData.name
+            });
+            
             // Debug API service
             console.log('🔍 API service available:', !!this.apiService);
             console.log('🔍 API service methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.apiService)));
@@ -1194,11 +1202,11 @@ export class TileEditorManager {
                 return;
             }
             
-            // Find neighbor tiles (8 directions)
-            const neighbors = this.findNeighborTiles(currentTile, allTiles);
+            // Find neighbor tiles (8 directions) with correct tile size
+            const neighbors = this.findNeighborTiles(currentTile, allTiles, canvasData.tile_size);
             
-            // Display neighbor tiles
-            this.displayNeighborTiles(neighbors);
+            // Display neighbor tiles with correct tile size
+            this.displayNeighborTiles(neighbors, canvasData.tile_size);
             
             console.log('✅ Neighbor tiles loaded:', Object.keys(neighbors).length);
             
@@ -1210,8 +1218,20 @@ export class TileEditorManager {
     /**
      * Find neighbor tiles in all 8 directions
      */
-    findNeighborTiles(currentTile, allTiles) {
+    findNeighborTiles(currentTile, allTiles, tileSize) {
         const neighbors = {};
+        
+        // Use provided tile size or fallback to current tile's tile_size
+        const actualTileSize = tileSize || currentTile.tile_size || 32;
+        const gridSize = 1024 / actualTileSize;
+        
+        console.log('🔧 Finding neighbors with:', {
+            currentTileId: currentTile.id,
+            currentTileX: currentTile.x,
+            currentTileY: currentTile.y,
+            tileSize: actualTileSize,
+            gridSize: gridSize
+        });
         
         // Define all 8 neighbor positions
         const neighborPositions = [
@@ -1229,15 +1249,20 @@ export class TileEditorManager {
             const neighborX = currentTile.x + dx;
             const neighborY = currentTile.y + dy;
             
-            const neighbor = allTiles.find(tile => 
-                tile.x === neighborX && tile.y === neighborY
-            );
-            
-            if (neighbor) {
-                neighbors[key] = neighbor;
-                console.log(`✅ Found ${key} neighbor at (${neighborX}, ${neighborY})`);
+            // Check boundaries based on grid size
+            if (neighborX >= 0 && neighborX < gridSize && neighborY >= 0 && neighborY < gridSize) {
+                const neighbor = allTiles.find(tile => 
+                    tile.x === neighborX && tile.y === neighborY
+                );
+                
+                if (neighbor) {
+                    neighbors[key] = neighbor;
+                    console.log(`✅ Found ${key} neighbor at (${neighborX}, ${neighborY})`);
+                } else {
+                    console.log(`❌ No ${key} neighbor at (${neighborX}, ${neighborY})`);
+                }
             } else {
-                console.log(`❌ No ${key} neighbor at (${neighborX}, ${neighborY})`);
+                console.log(`❌ ${key} neighbor position (${neighborX}, ${neighborY}) out of bounds`);
             }
         });
         
@@ -1247,7 +1272,7 @@ export class TileEditorManager {
     /**
      * Display neighbor tiles on the neighbor canvases
      */
-    displayNeighborTiles(neighbors) {
+    displayNeighborTiles(neighbors, tileSize) {
         const neighborPositions = [
             'top', 'top-right', 'right', 'bottom-right',
             'bottom', 'bottom-left', 'left', 'top-left'
@@ -1263,7 +1288,7 @@ export class TileEditorManager {
                 if (neighbor) {
                     // Remove empty class and draw the neighbor
                     cell.classList.remove('empty');
-                    this.drawNeighborTile(canvas, neighbor);
+                    this.drawNeighborTile(canvas, neighbor, tileSize);
                     
                     // Store neighbor data for color picking
                     this.neighborTiles[position] = neighbor;
@@ -1287,7 +1312,7 @@ export class TileEditorManager {
     /**
      * Draw a neighbor tile on its canvas
      */
-    drawNeighborTile(canvas, neighbor) {
+    drawNeighborTile(canvas, neighbor, tileSize) {
         const ctx = canvas.getContext('2d');
         
         // Clear canvas
@@ -1309,15 +1334,15 @@ export class TileEditorManager {
                 pixelData = neighbor.pixel_data;
             }
             
-            // FIXED: Calculate dynamic grid size based on actual pixel data
+            // FIXED: Use provided tile size or calculate from pixel data
+            const actualTileSize = tileSize || (pixelData && Array.isArray(pixelData) ? pixelData.length : 32);
+            const pixelSize = canvas.width / actualTileSize;
+            
+            console.log(`🎨 Drawing neighbor tile: ${actualTileSize}x${actualTileSize}, pixelSize: ${pixelSize}, canvas width: ${canvas.width}`);
+            
             if (pixelData && Array.isArray(pixelData)) {
-                const tileSize = pixelData.length; // Number of rows (e.g., 32, 64, 128)
-                const pixelSize = canvas.width / tileSize; // Dynamic pixel size
-                
-                console.log(`🎨 Drawing neighbor tile: ${tileSize}x${tileSize}, pixelSize: ${pixelSize}, canvas width: ${canvas.width}`);
-                
-                for (let y = 0; y < tileSize; y++) {
-                    for (let x = 0; x < tileSize; x++) {
+                for (let y = 0; y < actualTileSize; y++) {
+                    for (let x = 0; x < actualTileSize; x++) {
                         const color = pixelData[y] && pixelData[y][x];
                         
                         // FIXED: Handle different color formats properly

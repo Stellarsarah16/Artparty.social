@@ -1438,7 +1438,7 @@ class CanvasViewer {
                 ? JSON.parse(tile.pixel_data) 
                 : tile.pixel_data;
             
-        // Draw each pixel - calculate tile size from pixel data correctly
+            // FIXED: Calculate tile size from pixel data structure correctly
             const tileSize = pixelData.length; // Number of rows (e.g., 32 for 32x32 tile)
             const pixelSize = this.tileSize / tileSize; // Divide canvas tile size by actual tile size
             
@@ -1453,48 +1453,29 @@ class CanvasViewer {
             for (let py = 0; py < tileSize; py++) {
                 for (let px = 0; px < tileSize; px++) {
                     const color = pixelData[py] && pixelData[py][px];
-                    
-                    // FIXED: Handle different color formats properly
                     if (color) {
-                        let fillStyle = null;
+                        let fillColor = color;
                         
-                        if (Array.isArray(color) && color.length === 4) {
-                            // RGBA array format: [R, G, B, A]
-                            const [r, g, b, a] = color;
-                            if (a > 0) { // Only draw non-transparent pixels
-                                fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
-                            }
-                        } else if (typeof color === 'string') {
-                            // String color format (legacy support)
-                            if (color !== 'transparent' && color !== 'white') {
-                                fillStyle = color;
-                            }
+                        // FIXED: Handle RGBA array format [R,G,B,A] properly
+                        if (Array.isArray(color) && color.length >= 3) {
+                            const [r, g, b, a = 255] = color;
+                            fillColor = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+                        } else if (typeof color === 'string' && color.startsWith('#')) {
+                            fillColor = color;
+                        } else if (typeof color === 'string' && color !== 'transparent' && color !== 'white') {
+                            fillColor = color;
                         }
                         
-                        // Draw the pixel if we have a valid color
-                        if (fillStyle) {
-                            this.ctx.fillStyle = fillStyle;
-                            this.ctx.fillRect(
-                                x + (px * pixelSize),
-                                y + (py * pixelSize),
-                                pixelSize,
-                                pixelSize
-                            );
+                        if (fillColor && fillColor !== 'transparent') {
+                            this.ctx.fillStyle = fillColor;
+                            this.ctx.fillRect(x + (px * pixelSize), y + (py * pixelSize), pixelSize, pixelSize);
                         }
                     }
                 }
             }
         } catch (error) {
-            console.error('Error drawing tile:', error);
-            
-            // Draw placeholder
-            this.ctx.fillStyle = '#f0f0f0';
-            this.ctx.fillRect(x, y, this.tileSize, this.tileSize);
-            
-            this.ctx.fillStyle = '#999';
-            this.ctx.font = '12px Arial';
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText('Error', x + this.tileSize/2, y + this.tileSize/2);
+            console.error('❌ Error drawing tile:', error);
+            console.error('❌ Tile data:', tile);
         }
     }
     

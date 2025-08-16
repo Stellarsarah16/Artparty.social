@@ -470,13 +470,43 @@
                     
                     <div id="admin-users-view" class="admin-view" style="display: none;">
                         <div class="admin-loading">Loading users...</div>
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                    <th>Role</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-tbody">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
                     </div>
                     
                     <div id="admin-locks-view" class="admin-view" style="display: none;">
                         <div class="admin-loading">Loading locks...</div>
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Tile ID</th>
+                                    <th>User ID</th>
+                                    <th>Locked At</th>
+                                    <th>Expires At</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="locks-tbody">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
                     </div>
 
-                    <!-- In the admin-canvases-view section -->
                     <div id="admin-canvases-view" class="admin-view" style="display: none;">
                         <div class="admin-loading">Loading canvases...</div>
                         <table class="admin-table">
