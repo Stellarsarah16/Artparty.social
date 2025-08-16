@@ -147,6 +147,27 @@ async def delete_user(
     return {"message": "User deleted successfully"}
 
 
+# MOVE THIS CLEANUP ENDPOINT TO THE TOP, BEFORE THE PARAMETERIZED ROUTES
+@router.delete("/canvases/cleanup-inactive")
+async def cleanup_inactive_canvases(
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Cleanup all inactive canvases (admin only)"""
+    try:
+        deleted_count = admin_service.cleanup_inactive_canvases(db)
+        return {
+            "message": f"Cleanup completed successfully",
+            "deleted_count": deleted_count,
+            "action": "cleanup_inactive_canvases"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to cleanup inactive canvases: {str(e)}"
+        )
+
+
 @router.get("/canvases", response_model=List[CanvasResponse])
 async def get_all_canvases(
     skip: int = 0,
@@ -206,26 +227,6 @@ async def delete_canvas(
             detail="Canvas not found"
         )
     return {"message": "Canvas deleted successfully"}
-
-
-@router.delete("/canvases/cleanup-inactive")
-async def cleanup_inactive_canvases(
-    current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
-):
-    """Cleanup all inactive canvases (admin only)"""
-    try:
-        deleted_count = admin_service.cleanup_inactive_canvases(db)
-        return {
-            "message": f"Cleanup completed successfully",
-            "deleted_count": deleted_count,
-            "action": "cleanup_inactive_canvases"
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to cleanup inactive canvases: {str(e)}"
-        )
 
 
 @router.get("/activity")
