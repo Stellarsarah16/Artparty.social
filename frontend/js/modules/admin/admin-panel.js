@@ -1056,9 +1056,8 @@ export class AdminPanelManager {
         try {
             console.log('🧹 Starting cleanup of inactive users...');
             
-            // FIXED: Use the correct endpoint structure for bulk cleanup
-            // The backend expects a different endpoint for bulk operations
-            const response = await fetch('/api/v1/admin/users/bulk-cleanup-inactive', {
+            // FIXED: Use the correct endpoint that actually exists in the backend
+            const response = await fetch('/api/v1/admin/users/cleanup-inactive', {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${this.getAuthToken()}`
@@ -1080,26 +1079,7 @@ export class AdminPanelManager {
                     console.log('📡 Error response data:', errorData);
                     
                     if (response.status === 404) {
-                        // Try alternative endpoint names
-                        errorMessage = 'Bulk cleanup endpoint not found. Trying alternative endpoint...';
-                        console.log('🔄 Attempting alternative cleanup endpoint...');
-                        
-                        // Try the original endpoint as fallback
-                        const fallbackResponse = await fetch('/api/v1/admin/users/cleanup-inactive', {
-                            method: 'DELETE',
-                            headers: {
-                                'Authorization': `Bearer ${this.getAuthToken()}`
-                            }
-                        });
-                        
-                        if (fallbackResponse.ok) {
-                            const fallbackResult = await fallbackResponse.json();
-                            this.showSuccess(`✅ Cleanup completed! ${fallbackResult.deleted_count} inactive users removed.`);
-                            this.refreshCurrentView();
-                            return;
-                        } else {
-                            errorMessage = 'All cleanup endpoints failed. Please contact an administrator.';
-                        }
+                        errorMessage = 'Cleanup endpoint not found. Please contact an administrator.';
                     } else if (response.status === 422) {
                         // Handle validation errors more gracefully
                         if (errorData.detail) {
@@ -1147,8 +1127,8 @@ export class AdminPanelManager {
         try {
             console.log('🧹 Starting cleanup of inactive canvases...');
             
-            // FIXED: Use the correct endpoint structure for bulk cleanup
-            const response = await fetch('/api/v1/admin/canvases/bulk-cleanup-inactive', {
+            // FIXED: Use the correct endpoint that actually exists in the backend
+            const response = await fetch('/api/v1/admin/canvases/cleanup-inactive', {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${this.getAuthToken()}`
@@ -1170,26 +1150,7 @@ export class AdminPanelManager {
                     console.log('📡 Error response data:', errorData);
                     
                     if (response.status === 404) {
-                        // Try alternative endpoint names
-                        errorMessage = 'Bulk cleanup endpoint not found. Trying alternative endpoint...';
-                        console.log('🔄 Attempting alternative cleanup endpoint...');
-                        
-                        // Try the original endpoint as fallback
-                        const fallbackResponse = await fetch('/api/v1/admin/canvases/cleanup-inactive', {
-                            method: 'DELETE',
-                            headers: {
-                                'Authorization': `Bearer ${this.getAuthToken()}`
-                            }
-                        });
-                        
-                        if (fallbackResponse.ok) {
-                            const fallbackResult = await fallbackResponse.json();
-                            this.showSuccess(`✅ Cleanup completed! ${fallbackResult.deleted_count} inactive canvases removed.`);
-                            this.refreshCurrentView();
-                            return;
-                        } else {
-                            errorMessage = 'All cleanup endpoints failed. Please contact an administrator.';
-                        }
+                        errorMessage = 'Cleanup endpoint not found. Please contact an administrator.';
                     } else if (response.status === 422) {
                         // Handle validation errors more gracefully
                         if (errorData.detail) {
