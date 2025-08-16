@@ -159,21 +159,33 @@ class AdminPanel {
             <tr>
                 <td>${canvas.id}</td>
                 <td>${canvas.name}</td>
-                <td>${canvas.width}x${canvas.height}</td>
+                <td>${canvas.width}×${canvas.height}</td>
+                <td>
+                    <span class="badge badge-info">${canvas.tile_size}×${canvas.tile_size}</span>
+                    <br><small>Grid: ${Math.floor(canvas.width/canvas.tile_size)}×${Math.floor(canvas.height/canvas.tile_size)}</small>
+                </td>
+                <td>
+                    <span class="badge badge-secondary">${canvas.palette_type}</span>
+                    <br><small>${canvas.collaboration_mode}</small>
+                </td>
                 <td>
                     <span class="badge ${canvas.is_active ? 'badge-success' : 'badge-danger'}">
                         ${canvas.is_active ? 'Active' : 'Inactive'}
                     </span>
                 </td>
+                <td>${canvas.max_tiles_per_user}</td>
                 <td>${new Date(canvas.created_at).toLocaleDateString()}</td>
                 <td class="admin-actions">
-                    <button class="btn-admin btn-edit" onclick="adminPanel.editCanvas(${canvas.id})">
+                    <button class="btn-admin btn-view" onclick="adminPanel.viewCanvasDetails(${canvas.id})" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-admin btn-edit" onclick="adminPanel.editCanvas(${canvas.id})" title="Edit">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-admin btn-toggle" onclick="adminPanel.toggleCanvasStatus(${canvas.id})">
+                    <button class="btn-admin btn-toggle" onclick="adminPanel.toggleCanvasStatus(${canvas.id})" title="Toggle Status">
                         <i class="fas fa-toggle-on"></i>
                     </button>
-                    <button class="btn-admin btn-delete" onclick="adminPanel.deleteCanvas(${canvas.id})">
+                    <button class="btn-admin btn-delete" onclick="adminPanel.deleteCanvas(${canvas.id})" title="Delete">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -299,6 +311,98 @@ class AdminPanel {
         } catch (error) {
             console.error('Failed to delete canvas:', error);
         }
+    }
+
+    async viewCanvasDetails(canvasId) {
+        try {
+            const response = await fetch(`${API_BASE}/api/v1/admin/canvases/${canvasId}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            
+            if (response.ok) {
+                const canvas = await response.json();
+                this.showCanvasDetailsModal(canvas);
+            }
+        } catch (error) {
+            console.error('Failed to load canvas details:', error);
+        }
+    }
+
+    showCanvasDetailsModal(canvas) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content admin-modal">
+                <div class="modal-header">
+                    <h2>Canvas Details: ${canvas.name}</h2>
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="canvas-details-grid">
+                        <div class="detail-section">
+                            <h3>📐 Dimensions & Layout</h3>
+                            <div class="detail-item">
+                                <strong>Canvas Size:</strong> ${canvas.width} × ${canvas.height} pixels
+                            </div>
+                            <div class="detail-item">
+                                <strong>Tile Size:</strong> ${canvas.tile_size} × ${canvas.tile_size} pixels
+                            </div>
+                            <div class="detail-item">
+                                <strong>Grid Layout:</strong> ${Math.floor(canvas.width/canvas.tile_size)} × ${Math.floor(canvas.height/canvas.tile_size)} tiles
+                            </div>
+                            <div class="detail-item">
+                                <strong>Total Tile Positions:</strong> ${Math.floor(canvas.width/canvas.tile_size) * Math.floor(canvas.height/canvas.tile_size)}
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3>🎨 Appearance & Settings</h3>
+                            <div class="detail-item">
+                                <strong>Color Palette:</strong> <span class="badge badge-secondary">${canvas.palette_type}</span>
+                            </div>
+                            <div class="detail-item">
+                                <strong>Collaboration Mode:</strong> <span class="badge badge-info">${canvas.collaboration_mode}</span>
+                            </div>
+                            <div class="detail-item">
+                                <strong>Max Tiles Per User:</strong> ${canvas.max_tiles_per_user}
+                            </div>
+                            <div class="detail-item">
+                                <strong>Auto-save Interval:</strong> ${canvas.auto_save_interval}s
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3>📊 Statistics</h3>
+                            <div class="detail-item">
+                                <strong>Status:</strong> 
+                                <span class="badge ${canvas.is_active ? 'badge-success' : 'badge-danger'}">
+                                    ${canvas.is_active ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <strong>Public:</strong> 
+                                <span class="badge ${canvas.is_public ? 'badge-success' : 'badge-warning'}">
+                                    ${canvas.is_public ? 'Yes' : 'No'}
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <strong>Moderated:</strong> 
+                                <span class="badge ${canvas.is_moderated ? 'badge-warning' : 'badge-secondary'}">
+                                    ${canvas.is_moderated ? 'Yes' : 'No'}
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <strong>Created:</strong> ${new Date(canvas.created_at).toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
     }
 }
 

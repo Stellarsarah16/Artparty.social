@@ -35,7 +35,8 @@ class CanvasCreate(BaseModel):
     
     @validator('tile_size')
     def validate_tile_size(cls, v):
-        valid_sizes = [32, 64, 128, 256, 512]
+        # Updated: Removed 256 and 512, kept only reasonable sizes
+        valid_sizes = [32, 64, 128]
         if v not in valid_sizes:
             raise ValueError(f'Tile size must be one of: {", ".join(map(str, valid_sizes))}')
         return v

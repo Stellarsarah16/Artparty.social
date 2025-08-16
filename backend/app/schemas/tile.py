@@ -29,9 +29,7 @@ class TileCreate(BaseModel):
             if not isinstance(data, list):
                 raise ValueError('Pixel data must be an array')
             
-            # Get the expected tile size from the canvas
-            # For now, we'll accept any reasonable size (16, 24, 32, 64, 128)
-            # The actual validation should happen in the service layer with canvas context
+            # Updated: Removed 256 and 512, kept only reasonable sizes
             expected_sizes = [16, 24, 32, 64, 128]
             rows = len(data)
             
@@ -69,9 +67,7 @@ class TileUpdate(BaseModel):
                 if not isinstance(data, list):
                     raise ValueError('Pixel data must be an array')
                 
-                # Get the expected tile size from the canvas
-                # For now, we'll accept any reasonable size (16, 24, 32, 64, 128)
-                # The actual validation should happen in the service layer with canvas context
+                # Updated: Removed 256 and 512, kept only reasonable sizes
                 expected_sizes = [16, 24, 32, 64, 128]
                 rows = len(data)
                 

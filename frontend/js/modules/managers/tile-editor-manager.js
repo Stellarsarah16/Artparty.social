@@ -197,85 +197,41 @@ export class TileEditorManager {
     initializeTileEditor(tile) {
         console.log('🎨 Initializing tile editor with tile:', tile);
         
-        // Update tile info
-        this.updateTileInfo(tile);
-        
-        // Initialize color palette
-        this.initializeColorPalette(tile);
-        
-        // Initialize pixel editor
-        if (window.PixelEditor) {
-            console.log('✅ Pixel editor available, initializing...');
-            
-            // Get the canvas element
-            const canvas = document.getElementById('pixel-canvas');
-            if (canvas) {
-                // Initialize the pixel editor with the canvas
-                window.PixelEditor.init(canvas);
+        // Get canvas data to determine tile size
+        if (window.API && window.API.canvas) {
+            window.API.canvas.get(tile.canvas_id).then(canvasData => {
+                console.log('🎨 Canvas data for tile editor:', canvasData);
                 
-                // FIXED: Always clear the pixel editor first to prevent data bleeding
-                window.PixelEditor.clearPixelData();
-                console.log('🧹 Cleared pixel editor to prevent data bleeding');
+                // FIXED: Pass the correct tile size to pixel editor
+                const tileSize = canvasData.tile_size || 64;
+                console.log(`🎨 Using tile size: ${tileSize}×${tileSize}`);
                 
-                // Load the tile's pixel data (only if it exists and is not empty)
-                if (tile.pixel_data && tile.pixel_data !== '[]' && tile.pixel_data !== 'null') {
-                    console.log('🎨 Loading pixel data:', typeof tile.pixel_data, 'length:', tile.pixel_data.length);
+                // Initialize pixel editor with correct tile size
+                if (window.PixelEditor) {
+                    window.PixelEditor.init(document.getElementById('pixel-editor-canvas'), tileSize);
                     
-                    // Check if it's a JSON string that needs to be parsed
-                    if (typeof tile.pixel_data === 'string') {
+                    // Load existing pixel data if tile exists
+                    if (tile.pixel_data) {
                         try {
-                            const parsedData = JSON.parse(tile.pixel_data);
-                            
-                            // FIXED: Check if parsed data is actually empty
-                            if (parsedData && Array.isArray(parsedData) && parsedData.length > 0) {
-                                // Check if the data contains any non-white pixels
-                                const hasNonWhitePixels = parsedData.some(row => 
-                                    row && Array.isArray(row) && row.some(pixel => pixel && pixel !== 'white')
-                                );
-                                
-                                if (hasNonWhitePixels) {
-                                    window.PixelEditor.loadPixelData(parsedData);
-                                    console.log('✅ Pixel data loaded from JSON string');
-                                } else {
-                                    console.log('✅ Parsed data contains only white pixels, keeping empty canvas');
-                                }
-                            } else {
-                                console.log('✅ Parsed data is empty, keeping empty canvas');
-                            }
+                            const pixelData = JSON.parse(tile.pixel_data);
+                            window.PixelEditor.loadPixelData(pixelData);
+                            console.log('✅ Loaded existing pixel data');
                         } catch (error) {
-                            console.error('❌ Failed to parse pixel data JSON:', error);
-                            console.log('✅ Starting with empty canvas due to parsing error');
-                        }
-                    } else {
-                        // Assume it's already an array
-                        if (Array.isArray(tile.pixel_data) && tile.pixel_data.length > 0) {
-                            // Check if the data contains any non-white pixels
-                            const hasNonWhitePixels = tile.pixel_data.some(row => 
-                                row && Array.isArray(row) && row.some(pixel => pixel && pixel !== 'white')
-                            );
-                            
-                            if (hasNonWhitePixels) {
-                                window.PixelEditor.loadPixelData(tile.pixel_data);
-                                console.log('✅ Pixel data loaded from array');
-                            } else {
-                                console.log('✅ Array data contains only white pixels, keeping empty canvas');
-                            }
-                        } else {
-                            console.log('✅ Array data is empty, keeping empty canvas');
+                            console.warn('⚠️ Could not parse pixel data, using empty canvas');
                         }
                     }
-                } else {
-                    console.log('✅ No pixel data found, starting with empty canvas');
                 }
                 
-                // FIXED: Force a redraw to ensure the canvas is properly updated
-                window.PixelEditor.redraw();
+                // Update tile info display
+                this.updateTileInfo(tile);
                 
-            } else {
-                console.error('❌ Pixel canvas element not found');
-            }
-        } else {
-            console.warn('⚠️ Pixel editor not available');
+            }).catch(error => {
+                console.error('❌ Failed to get canvas data:', error);
+                // Fallback to default tile size
+                if (window.PixelEditor) {
+                    window.PixelEditor.init(document.getElementById('pixel-editor-canvas'), 64);
+                }
+            });
         }
         
         // Setup save button
