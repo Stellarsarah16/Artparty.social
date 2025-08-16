@@ -1056,7 +1056,9 @@ export class AdminPanelManager {
         try {
             console.log('🧹 Starting cleanup of inactive users...');
             
-            const response = await fetch('/api/v1/admin/users/cleanup-inactive', {
+            // FIXED: Use the correct endpoint structure for bulk cleanup
+            // The backend expects a different endpoint for bulk operations
+            const response = await fetch('/api/v1/admin/users/bulk-cleanup-inactive', {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${this.getAuthToken()}`
@@ -1078,26 +1080,40 @@ export class AdminPanelManager {
                     console.log('📡 Error response data:', errorData);
                     
                     if (response.status === 404) {
-                        errorMessage = 'Cleanup endpoint not implemented yet. Please contact an administrator.';
+                        // Try alternative endpoint names
+                        errorMessage = 'Bulk cleanup endpoint not found. Trying alternative endpoint...';
+                        console.log('🔄 Attempting alternative cleanup endpoint...');
+                        
+                        // Try the original endpoint as fallback
+                        const fallbackResponse = await fetch('/api/v1/admin/users/cleanup-inactive', {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${this.getAuthToken()}`
+                            }
+                        });
+                        
+                        if (fallbackResponse.ok) {
+                            const fallbackResult = await fallbackResponse.json();
+                            this.showSuccess(`✅ Cleanup completed! ${fallbackResult.deleted_count} inactive users removed.`);
+                            this.refreshCurrentView();
+                            return;
+                        } else {
+                            errorMessage = 'All cleanup endpoints failed. Please contact an administrator.';
+                        }
                     } else if (response.status === 422) {
                         // Handle validation errors more gracefully
                         if (errorData.detail) {
-                            if (typeof errorData.detail === 'object') {
-                                // If detail is an object, try to extract meaningful information
-                                if (errorData.detail.message) {
-                                    errorMessage = `Validation error: ${errorData.detail.message}`;
-                                } else if (errorData.detail.error) {
-                                    errorMessage = `Validation error: ${errorData.detail.error}`;
-                                } else {
-                                    errorMessage = `Validation error: ${JSON.stringify(errorData.detail)}`;
-                                }
+                            if (Array.isArray(errorData.detail)) {
+                                // If detail is an array of validation errors
+                                const errorMessages = errorData.detail.map(err => err.msg).join(', ');
+                                errorMessage = `Validation errors: ${errorMessages}`;
+                            } else if (typeof errorData.detail === 'object') {
+                                errorMessage = `Validation error: ${JSON.stringify(errorData.detail)}`;
                             } else {
                                 errorMessage = `Validation error: ${errorData.detail}`;
                             }
                         } else if (errorData.message) {
                             errorMessage = errorData.message;
-                        } else if (errorData.error) {
-                            errorMessage = errorData.error;
                         } else {
                             errorMessage = `HTTP ${response.status}: ${response.statusText}`;
                         }
@@ -1131,20 +1147,75 @@ export class AdminPanelManager {
         try {
             console.log('🧹 Starting cleanup of inactive canvases...');
             
-            const response = await fetch('/api/v1/admin/canvases/cleanup-inactive', {
+            // FIXED: Use the correct endpoint structure for bulk cleanup
+            const response = await fetch('/api/v1/admin/canvases/bulk-cleanup-inactive', {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${this.getAuthToken()}`
                 }
             });
             
+            console.log('📡 Cleanup response status:', response.status);
+            
             if (response.ok) {
                 const result = await response.json();
                 this.showSuccess(`✅ Cleanup completed! ${result.deleted_count} inactive canvases removed.`);
                 this.refreshCurrentView();
             } else {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Failed to cleanup inactive canvases');
+                // FIXED: Better error handling for different status codes
+                let errorMessage = 'Unknown error';
+                
+                try {
+                    const errorData = await response.json();
+                    console.log('📡 Error response data:', errorData);
+                    
+                    if (response.status === 404) {
+                        // Try alternative endpoint names
+                        errorMessage = 'Bulk cleanup endpoint not found. Trying alternative endpoint...';
+                        console.log('🔄 Attempting alternative cleanup endpoint...');
+                        
+                        // Try the original endpoint as fallback
+                        const fallbackResponse = await fetch('/api/v1/admin/canvases/cleanup-inactive', {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${this.getAuthToken()}`
+                            }
+                        });
+                        
+                        if (fallbackResponse.ok) {
+                            const fallbackResult = await fallbackResponse.json();
+                            this.showSuccess(`✅ Cleanup completed! ${fallbackResult.deleted_count} inactive canvases removed.`);
+                            this.refreshCurrentView();
+                            return;
+                        } else {
+                            errorMessage = 'All cleanup endpoints failed. Please contact an administrator.';
+                        }
+                    } else if (response.status === 422) {
+                        // Handle validation errors more gracefully
+                        if (errorData.detail) {
+                            if (Array.isArray(errorData.detail)) {
+                                // If detail is an array of validation errors
+                                const errorMessages = errorData.detail.map(err => err.msg).join(', ');
+                                errorMessage = `Validation errors: ${errorMessages}`;
+                            } else if (typeof errorData.detail === 'object') {
+                                errorMessage = `Validation error: ${JSON.stringify(errorData.detail)}`;
+                            } else {
+                                errorMessage = `Validation error: ${errorData.detail}`;
+                            }
+                        } else if (errorData.message) {
+                            errorMessage = errorData.message;
+                        } else {
+                            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                        }
+                    } else {
+                        errorMessage = errorData.detail || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+                    }
+                } catch (parseError) {
+                    console.error('❌ Failed to parse error response:', parseError);
+                    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                }
+                
+                throw new Error(errorMessage);
             }
         } catch (error) {
             console.error('❌ Error cleaning up inactive canvases:', error);
@@ -1273,7 +1344,7 @@ export class AdminPanelManager {
         if (window.API_BASE) {
             console.log('🔧 Found API_BASE:', window.API_BASE);
             return window.API_BASE;
-        }
+        }sam
         
         if (window.CONFIG_UTILS && window.CONFIG_UTILS.API_BASE) {
             console.log('🔧 Found CONFIG_UTILS.API_BASE:', window.CONFIG_UTILS.API_BASE);
