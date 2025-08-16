@@ -143,7 +143,8 @@ export class AdminPanelManager {
     async showView(viewName) {
         console.log('🔧 showView called with:', viewName);
         
-        this.currentView = viewName;
+        // Store the previous view before updating
+        const previousView = this.currentView;
         
         // Initialize if not already done
         if (!this.initialized) {
@@ -172,8 +173,8 @@ export class AdminPanelManager {
             console.log('🔧 Target view found:', targetView.id);
             targetView.style.display = 'block';
             
-            // Only load data if we're not already on this view or if it's the first time
-            if (this.currentView !== viewName || !this.initialized) {
+            // FIXED: Check if we're switching to a different view or if it's the first time
+            if (previousView !== viewName || !this.initialized) {
                 console.log('🔧 Loading data for view:', viewName);
                 
                 // Load data for the view
@@ -202,6 +203,9 @@ export class AdminPanelManager {
             } else {
                 console.log('🔧 Skipping data load - already on this view and initialized');
             }
+            
+            // Update current view AFTER loading data
+            this.currentView = viewName;
         } else {
             console.error('❌ Target view not found:', `admin-${viewName}-view`);
         }
