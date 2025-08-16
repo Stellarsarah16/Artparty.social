@@ -141,6 +141,8 @@ export class AdminPanelManager {
     }
     
     async showView(viewName) {
+        console.log('🔧 showView called with:', viewName);
+        
         this.currentView = viewName;
         
         // Initialize if not already done
@@ -167,29 +169,41 @@ export class AdminPanelManager {
         // Show selected view
         const targetView = document.getElementById(`admin-${viewName}-view`);
         if (targetView) {
+            console.log('🔧 Target view found:', targetView.id);
             targetView.style.display = 'block';
             
             // Only load data if we're not already on this view or if it's the first time
             if (this.currentView !== viewName || !this.initialized) {
+                console.log('🔧 Loading data for view:', viewName);
+                
                 // Load data for the view
                 switch (viewName) {
                     case 'dashboard':
+                        console.log('🔧 Case: dashboard');
                         await this.loadDashboard();
                         break;
                     case 'users':
+                        console.log('🔧 Case: users');
                         await this.loadUsers();
                         break;
                     case 'locks':
+                        console.log('🔧 Case: locks');
                         await this.loadLocks();
                         break;
                     case 'canvases':
+                        console.log('🔧 Case: canvases - calling loadCanvases()');
                         await this.loadCanvases();
                         break;
                     case 'reports':
+                        console.log('🔧 Case: reports');
                         await this.loadReports();
                         break;
                 }
+            } else {
+                console.log('🔧 Skipping data load - already on this view and initialized');
             }
+        } else {
+            console.error('❌ Target view not found:', `admin-${viewName}-view`);
         }
         
         // Update active tab
@@ -380,6 +394,8 @@ export class AdminPanelManager {
     }
 
     async loadCanvases() {
+        console.log('🔧 loadCanvases() method called!');
+        
         if (!this.isUserAuthenticated()) {
             console.log('❌ User not authenticated, cannot load canvases');
             this.showError('Please log in to access admin features');
