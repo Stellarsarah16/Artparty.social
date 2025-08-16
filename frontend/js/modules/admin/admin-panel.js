@@ -11,7 +11,7 @@ export class AdminPanelManager {
     init() {
         if (this.initialized) {
             console.log('🔧 Admin Panel already initialized, refreshing data...');
-            this.loadDashboard();
+            // Don't reload dashboard if already initialized, just return
             return;
         }
         
@@ -68,23 +68,26 @@ export class AdminPanelManager {
         if (targetView) {
             targetView.style.display = 'block';
             
-            // Load data for the view
-            switch (viewName) {
-                case 'dashboard':
-                    await this.loadDashboard();
-                    break;
-                case 'users':
-                    await this.loadUsers();
-                    break;
-                case 'locks':
-                    await this.loadLocks();
-                    break;
-                case 'canvases':
-                    await this.loadCanvases();
-                    break;
-                case 'reports':
-                    await this.loadReports();
-                    break;
+            // Only load data if we're not already on this view or if it's the first time
+            if (this.currentView !== viewName || !this.initialized) {
+                // Load data for the view
+                switch (viewName) {
+                    case 'dashboard':
+                        await this.loadDashboard();
+                        break;
+                    case 'users':
+                        await this.loadUsers();
+                        break;
+                    case 'locks':
+                        await this.loadLocks();
+                        break;
+                    case 'canvases':
+                        await this.loadCanvases();
+                        break;
+                    case 'reports':
+                        await this.loadReports();
+                        break;
+                }
             }
         }
         
@@ -94,6 +97,14 @@ export class AdminPanelManager {
     }
     
     async loadDashboard() {
+        // Prevent multiple simultaneous dashboard loads
+        if (this._dashboardLoading) {
+            console.log('⏳ Dashboard already loading, skipping duplicate request...');
+            return;
+        }
+        
+        this._dashboardLoading = true;
+        
         try {
             console.log('🔄 Loading dashboard...');
             console.log('🔍 Auth token available:', this.getAuthToken() ? 'Yes' : 'No');
@@ -142,15 +153,25 @@ export class AdminPanelManager {
                 // Show a basic dashboard view instead of hanging
                 this.renderBasicDashboard();
             }
+        } finally {
+            this._dashboardLoading = false;
         }
     }
     
     async loadUsers() {
+        // Prevent multiple simultaneous loads
+        if (this._usersLoading) {
+            console.log('⏳ Users already loading, skipping duplicate request...');
+            return;
+        }
+        
         if (!this.isUserAuthenticated()) {
             console.log('❌ User not authenticated, cannot load users');
             this.showError('Please log in to access admin features');
             return;
         }
+        
+        this._usersLoading = true;
         
         try {
             const response = await fetch('/api/v1/admin/users', {
@@ -168,6 +189,8 @@ export class AdminPanelManager {
         } catch (error) {
             console.error('❌ Error loading users:', error);
             this.showError('Failed to load users');
+        } finally {
+            this._usersLoading = false;
         }
     }
     

@@ -388,19 +388,43 @@ class NavigationManager {
 
 // Create and export singleton instance
 let navigationManager = null;
+let initializationPromise = null;
 
 // Initialize navigation manager asynchronously
 const initializeNavigationManager = async () => {
-    if (!navigationManager) {
-        navigationManager = new NavigationManager();
-        // Wait for the async initialization to complete
-        await navigationManager.waitForAPIAndInitialize();
-        
-        // Make navigation manager available globally for debugging
-        window.navigationManager = navigationManager;
-        console.log('✅ Navigation manager fully initialized and available globally');
+    // If already initializing, wait for that to complete
+    if (initializationPromise) {
+        console.log('⏳ Navigation manager already initializing, waiting...');
+        return await initializationPromise;
     }
-    return navigationManager;
+    
+    // If already initialized, return the instance
+    if (navigationManager) {
+        console.log('✅ Navigation manager already initialized, returning existing instance');
+        return navigationManager;
+    }
+    
+    // Start initialization
+    console.log('🚀 Starting navigation manager initialization...');
+    initializationPromise = (async () => {
+        try {
+            navigationManager = new NavigationManager();
+            // Wait for the async initialization to complete
+            await navigationManager.waitForAPIAndInitialize();
+            
+            // Make navigation manager available globally for debugging
+            window.navigationManager = navigationManager;
+            console.log('✅ Navigation manager fully initialized and available globally');
+            return navigationManager;
+        } catch (error) {
+            console.error('❌ Navigation manager initialization failed:', error);
+            // Reset promise so we can retry
+            initializationPromise = null;
+            throw error;
+        }
+    })();
+    
+    return await initializationPromise;
 };
 
 // Start initialization immediately
