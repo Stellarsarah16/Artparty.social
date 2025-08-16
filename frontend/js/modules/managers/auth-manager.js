@@ -189,8 +189,8 @@ export class AuthManager {
         try {
             console.log('🔄 Creating canvas...');
             
-            // FIXED: Use the correct canvas API service
-            const response = await window.API.canvas.createCanvas(canvasData);
+            // FIXED: Use the correct method name 'create' not 'createCanvas'
+            const response = await window.API.canvas.create(canvasData);
             
             // Hide modal
             if (window.modalManager) {
