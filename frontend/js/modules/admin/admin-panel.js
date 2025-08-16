@@ -1056,7 +1056,6 @@ export class AdminPanelManager {
         try {
             console.log('🧹 Starting cleanup of inactive users...');
             
-            // FIXED: Use the correct API endpoint - this might not exist yet
             const response = await fetch('/api/v1/admin/users/cleanup-inactive', {
                 method: 'DELETE',
                 headers: {
@@ -1072,15 +1071,45 @@ export class AdminPanelManager {
                 this.refreshCurrentView();
             } else {
                 // FIXED: Better error handling for different status codes
-                if (response.status === 404) {
-                    throw new Error('Cleanup endpoint not implemented yet. Please contact an administrator.');
-                } else if (response.status === 422) {
+                let errorMessage = 'Unknown error';
+                
+                try {
                     const errorData = await response.json();
-                    throw new Error(`Validation error: ${errorData.detail || 'Invalid request'}`);
-                } else {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+                    console.log('📡 Error response data:', errorData);
+                    
+                    if (response.status === 404) {
+                        errorMessage = 'Cleanup endpoint not implemented yet. Please contact an administrator.';
+                    } else if (response.status === 422) {
+                        // Handle validation errors more gracefully
+                        if (errorData.detail) {
+                            if (typeof errorData.detail === 'object') {
+                                // If detail is an object, try to extract meaningful information
+                                if (errorData.detail.message) {
+                                    errorMessage = `Validation error: ${errorData.detail.message}`;
+                                } else if (errorData.detail.error) {
+                                    errorMessage = `Validation error: ${errorData.detail.error}`;
+                                } else {
+                                    errorMessage = `Validation error: ${JSON.stringify(errorData.detail)}`;
+                                }
+                            } else {
+                                errorMessage = `Validation error: ${errorData.detail}`;
+                            }
+                        } else if (errorData.message) {
+                            errorMessage = errorData.message;
+                        } else if (errorData.error) {
+                            errorMessage = errorData.error;
+                        } else {
+                            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                        }
+                    } else {
+                        errorMessage = errorData.detail || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+                    }
+                } catch (parseError) {
+                    console.error('❌ Failed to parse error response:', parseError);
+                    errorMessage = `HTTP ${response.status}: ${response.statusText}`;
                 }
+                
+                throw new Error(errorMessage);
             }
         } catch (error) {
             console.error('❌ Error cleaning up inactive users:', error);
