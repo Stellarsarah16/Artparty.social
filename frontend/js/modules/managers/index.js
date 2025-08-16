@@ -60,6 +60,11 @@ export const createManagers = () => {
     window.authManager = managers.auth;
     window.adminPanelManager = managers.admin;
     
+    // Initialize the admin panel manager
+    if (window.adminPanelManager && window.adminPanelManager.init) {
+        window.adminPanelManager.init();
+    }
+    
     console.log('✅ All managers created successfully');
     return managers;
 }; 

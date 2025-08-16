@@ -596,7 +596,35 @@ export class AdminPanelManager {
     }
 
     getAuthToken() {
-        return localStorage.getItem('token');
+        // Debug logging to see what authentication sources are available
+        console.log('🔍 Debugging getAuthToken:');
+        console.log('  - CONFIG_UTILS available:', !!window.CONFIG_UTILS);
+        console.log('  - CONFIG_UTILS.getAuthToken available:', !!(window.CONFIG_UTILS && window.CONFIG_UTILS.getAuthToken));
+        console.log('  - appState available:', !!window.appState);
+        console.log('  - appState.get available:', !!(window.appState && window.appState.get));
+        
+        // Use the standard authentication method that the rest of the app uses
+        if (window.CONFIG_UTILS && window.CONFIG_UTILS.getAuthToken) {
+            const token = window.CONFIG_UTILS.getAuthToken();
+            console.log('  - CONFIG_UTILS.getAuthToken() result:', token ? 'Present' : 'Missing');
+            return token;
+        }
+        
+        // Fallback to appState if CONFIG_UTILS is not available
+        if (window.appState && window.appState.get) {
+            const token = window.appState.get('authToken');
+            console.log('  - appState.get("authToken") result:', token ? 'Present' : 'Missing');
+            return token;
+        }
+        
+        // Final fallback to localStorage if neither is available
+        const localStorageToken = localStorage.getItem('token') || 
+                                localStorage.getItem('authToken') || 
+                                localStorage.getItem('access_token') ||
+                                sessionStorage.getItem('token') ||
+                                null;
+        console.log('  - localStorage fallback result:', localStorageToken ? 'Present' : 'Missing');
+        return localStorageToken;
     }
 
     showError(message) {
