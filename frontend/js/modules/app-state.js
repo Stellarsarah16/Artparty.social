@@ -94,6 +94,11 @@ class AppState {
             isAuthenticated: true,
             currentUser: user
         });
+        
+        // Emit userLogin event if event manager is available
+        if (window.eventManager && window.eventManager.emit) {
+            window.eventManager.emit('userLogin', user);
+        }
     }
     
     setUnauthenticated() {
@@ -104,6 +109,11 @@ class AppState {
             websocket: null,
             onlineUsers: []
         });
+        
+        // Emit userLogout event if event manager is available
+        if (window.eventManager && window.eventManager.emit) {
+            window.eventManager.emit('userLogout');
+        }
     }
     
     /**

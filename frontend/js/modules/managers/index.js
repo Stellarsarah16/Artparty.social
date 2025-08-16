@@ -39,6 +39,9 @@ export const createManagers = () => {
     });
     
     // Create managers in dependency order
+    // Initialize event manager
+    eventManager.init();
+    
     const webSocketManager = new WebSocketManager(eventManager);
     
     const managers = {
@@ -59,6 +62,9 @@ export const createManagers = () => {
     window.webSocketManager = managers.webSocket;
     window.authManager = managers.auth;
     window.adminPanelManager = managers.admin;
+    
+    // Make event manager available globally
+    window.eventManager = eventManager;
     
     // Don't auto-initialize admin panel - wait for user authentication
     // The admin panel will be initialized when the user navigates to it

@@ -31,6 +31,14 @@ export class AdminPanelManager {
     }
     
     setupEventListeners() {
+        console.log('🔧 Setting up admin panel event listeners...');
+        console.log('🔍 Available global objects:', {
+            eventManager: !!window.eventManager,
+            appState: !!window.appState,
+            eventManagerType: typeof window.eventManager,
+            appStateType: typeof window.appState
+        });
+        
         // Navigation tabs
         document.getElementById('admin-dashboard-tab')?.addEventListener('click', () => this.showView('dashboard'));
         document.getElementById('admin-users-tab')?.addEventListener('click', () => this.showView('users'));
@@ -43,11 +51,37 @@ export class AdminPanelManager {
         document.getElementById('refresh-data-btn')?.addEventListener('click', () => this.refreshCurrentView());
         
         // Listen for authentication changes
-        if (window.appState) {
-            window.appState.on('userLogin', () => {
-                console.log('🔐 User logged in, refreshing admin panel...');
-                this.refreshAfterLogin();
-            });
+        try {
+            if (window.eventManager && typeof window.eventManager.on === 'function') {
+                console.log('🔧 Setting up event manager listeners...');
+                window.eventManager.on('userLogin', () => {
+                    console.log('🔐 User logged in, refreshing admin panel...');
+                    this.refreshAfterLogin();
+                });
+                
+                window.eventManager.on('userLogout', () => {
+                    console.log('🔐 User logged out, showing login prompt...');
+                    this.renderLoginPrompt();
+                });
+                console.log('✅ Event manager listeners set up successfully');
+            } else if (window.appState && window.appState.subscribe) {
+                // Fallback to appState subscription system
+                console.log('🔧 Setting up appState subscription listeners...');
+                window.appState.subscribe('currentUser', (newUser, oldUser) => {
+                    if (newUser && !oldUser) {
+                        console.log('🔐 User logged in, refreshing admin panel...');
+                        this.refreshAfterLogin();
+                    } else if (!newUser && oldUser) {
+                        console.log('🔐 User logged out, showing login prompt...');
+                        this.renderLoginPrompt();
+                    }
+                });
+                console.log('✅ AppState subscription listeners set up successfully');
+            } else {
+                console.warn('⚠️ No event system available for authentication changes');
+            }
+        } catch (error) {
+            console.error('❌ Error setting up authentication event listeners:', error);
         }
     }
     
