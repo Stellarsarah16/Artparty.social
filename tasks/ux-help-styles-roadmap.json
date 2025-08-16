@@ -1,50 +1,92 @@
 [
   {
     "id": "admin-panel-fixes",
-    "content": "Fix admin panel authentication and duplicate instance issues",
+    "content": "Fix admin panel authentication and initialization issues",
     "status": "completed",
     "dependencies": []
   },
   {
     "id": "admin-panel-canvas-management",
-    "content": "Add canvas management tab to admin panel for monitoring tile sizes and grid layouts",
+    "content": "Add canvas management functionality to admin panel",
     "status": "completed",
     "dependencies": ["admin-panel-fixes"]
   },
   {
     "id": "admin-panel-documentation",
-    "content": "Create comprehensive reference documentation for admin panel implementation",
+    "content": "Create comprehensive documentation for admin panel implementation",
     "status": "completed",
     "dependencies": ["admin-panel-canvas-management"]
   },
   {
     "id": "fix-pixel-data-bleeding",
-    "content": "Fix critical pixel data bleeding bug where pixel data from one tile could corrupt other tiles",
+    "content": "Fix pixel data bleeding between tiles in editor",
     "status": "completed",
-    "dependencies": ["admin-panel-documentation"]
+    "dependencies": []
   },
   {
     "id": "fix-tile-size-mismatch",
-    "content": "Fix tile size mismatch between frontend and backend causing coordinate calculation errors",
-    "status": "pending",
+    "content": "Fix tile size mismatch between canvas and editor",
+    "status": "completed",
     "dependencies": ["fix-pixel-data-bleeding"]
   },
   {
     "id": "implement-flexible-tile-editor",
-    "content": "Make tile editor flexible enough to work with different tile sizes (32, 64, 128)",
-    "status": "pending",
+    "content": "Make tile editor flexible to work with different tile sizes",
+    "status": "completed",
     "dependencies": ["fix-tile-size-mismatch"]
   },
   {
     "id": "update-database-tile-sizes",
-    "content": "Update database to set all existing canvases to tile_size: 32 to match actual tile data",
+    "content": "Update database to set all canvas tile sizes to 32",
     "status": "pending",
-    "dependencies": ["fix-tile-size-mismatch"]
+    "dependencies": ["implement-flexible-tile-editor"]
   },
   {
     "id": "test-tile-editing-flow",
-    "content": "Test complete tile editing flow to ensure no more pixel data corruption or coordinate errors",
+    "content": "Test complete tile editing flow with different tile sizes",
     "status": "pending",
-    "dependencies": ["implement-flexible-tile-editor", "update-database-tile-sizes"]
+    "dependencies": ["update-database-tile-sizes"]
+  },
+  {
+    "id": "document-event-system",
+    "content": "Create comprehensive documentation for the EventManager implementation and event system architecture",
+    "status": "completed",
+    "dependencies": []
+  },
+  {
+    "id": "create-architecture-guide",
+    "content": "Create a master architecture guide that explains how all systems work together",
+    "status": "completed",
+    "dependencies": ["document-event-system"]
+  },
+  {
+    "id": "establish-doc-process",
+    "content": "Establish a systematic process for maintaining and updating documentation",
+    "status": "completed",
+    "dependencies": ["create-architecture-guide"]
+  },
+  {
+    "id": "audit-existing-docs",
+    "content": "Audit and refactor existing documentation to follow the new structure",
+    "status": "pending",
+    "dependencies": ["establish-doc-process"]
+  },
+  {
+    "id": "create-documentation-enforcement",
+    "content": "Create cursor rule to enforce documentation usage and architectural patterns",
+    "status": "completed",
+    "dependencies": ["establish-doc-process"]
+  },
+  {
+    "id": "integrate-docs-into-rules",
+    "content": "Integrate new documentation references into existing cursor rules",
+    "status": "completed",
+    "dependencies": ["create-documentation-enforcement"]
+  },
+  {
+    "id": "create-tile-canvas-documentation",
+    "content": "Create comprehensive documentation explaining how the tile and canvas system works",
+    "status": "completed",
+    "dependencies": ["integrate-docs-into-rules"]
   }
 ]

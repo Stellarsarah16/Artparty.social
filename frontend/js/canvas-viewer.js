@@ -1393,9 +1393,11 @@ class CanvasViewer {
                 ? JSON.parse(tile.pixel_data) 
                 : tile.pixel_data;
             
-        // Draw each pixel - calculate tile size from pixel data
-            const tileSize = Math.sqrt(pixelData.length); // Assume square tiles
-            const pixelSize = this.tileSize / tileSize;
+        // Draw each pixel - calculate tile size from pixel data correctly
+            const tileSize = pixelData.length; // Number of rows (e.g., 32 for 32x32 tile)
+            const pixelSize = this.tileSize / tileSize; // Divide canvas tile size by actual tile size
+            
+            console.log(`🎨 Drawing tile: ${tileSize}x${tileSize}, pixelSize: ${pixelSize}, canvas tileSize: ${this.tileSize}`);
             
             for (let py = 0; py < tileSize; py++) {
                 for (let px = 0; px < tileSize; px++) {
