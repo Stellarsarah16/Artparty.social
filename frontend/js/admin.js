@@ -74,6 +74,8 @@ class AdminPanel {
                 break;
             case 'canvases':
                 console.log('🔧 Loading canvases...');
+                console.log('🔧 API_BASE:', API_BASE);
+                console.log('🔧 Token available:', !!localStorage.getItem('token'));
                 this.loadCanvases();
                 break;
         }
@@ -173,6 +175,8 @@ class AdminPanel {
     async loadCanvases() {
         try {
             console.log('🔄 Loading canvases...');
+            
+            // FIXED: Use the admin API endpoint, not the regular canvas API
             const response = await fetch(`${API_BASE}/api/v1/admin/canvases`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -183,7 +187,7 @@ class AdminPanel {
             
             if (response.ok) {
                 const canvases = await response.json();
-                console.log(' Loaded canvases:', canvases);
+                console.log('🎨 Loaded canvases from admin API:', canvases);
                 this.displayCanvases(canvases);
             } else {
                 console.error('❌ Failed to load canvases:', response.status, response.statusText);
