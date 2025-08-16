@@ -363,8 +363,4 @@ class AuthManager {
             submitButton.innerHTML = submitButton.getAttribute('data-original-text') || 'Submit';
         }
     }
-}
-
-// Create and export singleton instance
-const authManager = new AuthManager();
-export default authManager; 
+} 
