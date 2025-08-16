@@ -253,12 +253,13 @@
                 return;
             }
             
-            // Draw pixels
-            const pixelSize = canvas.width / 32; // 32x32 tile scaled to 512x512 canvas (16px per pixel)
+            // Draw pixels - calculate tile size from canvas dimensions
+            const tileSize = Math.sqrt(pixelData.length); // Assume square tiles
+            const pixelSize = canvas.width / tileSize;
             let pixelCount = 0;
             
-            for (let y = 0; y < 32; y++) {
-                for (let x = 0; x < 32; x++) {
+            for (let y = 0; y < tileSize; y++) {
+                for (let x = 0; x < tileSize; x++) {
                     const color = pixelData[y] && pixelData[y][x];
                     if (color && color !== 'transparent') {
                         ctx.fillStyle = color;

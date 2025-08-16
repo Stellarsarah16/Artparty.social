@@ -1,5 +1,49 @@
 # Artparty.social Changelog
 
+## [2025-01-16] - [FIX] Tile Size Flexibility & Pixel Editor Compatibility
+
+### 🎯 **Issue/Feature:**
+- **Problem**: Pixel editor hardcoded to 32x32 tiles, causing display and save issues with 64x64 and 128x128 canvases
+- **Impact**: Users with larger tile size canvases saw incorrect editor dimensions and black pixel corruption
+- **Scope**: Complete pixel editor overhaul to support variable tile sizes (32, 64, 128) with proper grid calculations
+
+### ✅ **Solution:**
+- **Files Modified**:
+  - `frontend/js/pixel-editor.js` - Complete tile size flexibility implementation
+  - `frontend/js/neighbor-display.js` - Dynamic tile size calculation
+  - `frontend/js/canvas-viewer.js` - Dynamic tile size rendering
+  - `frontend/js/modules/managers/tile-editor-manager.js` - Enhanced tile size handling
+- **Key Changes**:
+  - Removed hardcoded 32x32 assumptions throughout pixel editor
+  - Implemented dynamic grid size calculation: `APP_CONFIG.PIXEL_EDITOR.CANVAS_SIZE / tileSize`
+  - Updated pixel data creation to use actual tile size instead of hardcoded 32
+  - Fixed transparent pixel handling (RGBA arrays instead of 'white' strings)
+  - Enhanced validation to check pixel data dimensions match expected tile size
+  - Updated neighbor display and canvas viewer to calculate tile sizes dynamically
+- **Approach**: Systematic removal of hardcoded tile size references and implementation of dynamic sizing
+
+### 🔧 **Technical Details:**
+- **Root Cause**: Multiple hardcoded 32x32 references throughout pixel editor and related components
+- **Implementation**: Dynamic tile size calculation with fallback to 32, proper grid scaling, and RGBA pixel format
+- **Testing**: Verified editor works correctly with 32x32, 64x64, and 128x128 tile sizes
+- **Architecture**: Pixel editor now receives tile size from canvas data and calculates all dimensions dynamically
+
+### 📝 **Git References:**
+- **Commit Hash**: `tile-size-flexibility-2025-01-16` - Complete tile size flexibility implementation
+- **Related Commits**: Pixel data bleeding fixes, admin panel canvas management
+
+### 🎉 **Result:**
+- **Before**: Pixel editor only worked with 32x32 tiles, showed black pixels for larger tiles
+- **After**: Pixel editor dynamically adapts to any tile size (32, 64, 128) with correct grid and pixel handling
+- **Benefits**: Users can now edit tiles of any size correctly, no more black pixel corruption, proper grid display
+
+### 🔗 **Related:**
+- **Issues**: Tile size mismatch, black pixel corruption, hardcoded 32x32 assumptions
+- **Dependencies**: Canvas tile size configuration, pixel data format, grid calculation
+- **Documentation**: Enhanced error logging and validation for tile size mismatches
+
+---
+
 ## [2025-01-16] - [FIX] Critical Pixel Data Bleeding Bug Resolution
 
 ### 🎯 **Issue/Feature:**

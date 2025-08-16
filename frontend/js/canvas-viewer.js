@@ -1393,11 +1393,12 @@ class CanvasViewer {
                 ? JSON.parse(tile.pixel_data) 
                 : tile.pixel_data;
             
-            // Draw each pixel
-            const pixelSize = this.tileSize / 32; // 32x32 pixel grid
+        // Draw each pixel - calculate tile size from pixel data
+            const tileSize = Math.sqrt(pixelData.length); // Assume square tiles
+            const pixelSize = this.tileSize / tileSize;
             
-            for (let py = 0; py < 32; py++) {
-                for (let px = 0; px < 32; px++) {
+            for (let py = 0; py < tileSize; py++) {
+                for (let px = 0; px < tileSize; px++) {
                     const color = pixelData[py] && pixelData[py][px];
                     if (color && color !== 'transparent') {
                         this.ctx.fillStyle = color;

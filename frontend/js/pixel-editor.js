@@ -1,5 +1,5 @@
 /**
- * Pixel Art Editor for 32x32 tiles
+ * Pixel Art Editor for NxN tiles
  * Handles drawing, tools, and canvas operations
  */
 
@@ -11,9 +11,9 @@ class PixelEditor {
         this.currentColor = '#000000';
         this.brushSize = 1;
         this.zoom = 1;
-        this.gridSize = 16; // 32x32 pixels displayed in 512x512 canvas = 16px per pixel
-        this.tileSize = 32;
-        this.pixelData = this.createEmptyPixelData();
+        this.gridSize = 16; // Will be calculated based on tile size
+        this.tileSize = 32; // Default, will be updated in init()
+        this.pixelData = []; // Don't create pixel data until tile size is known
         this.history = [];
         this.historyIndex = -1;
         this.maxHistorySize = 50;
@@ -74,11 +74,16 @@ class PixelEditor {
         // FIXED: Use provided tile size or default to 32
         this.tileSize = tileSize || 32;
         
+        // Calculate grid size based on tile size and canvas size
+        this.gridSize = APP_CONFIG.PIXEL_EDITOR.CANVAS_SIZE / this.tileSize;
+        
         this.ctx = canvas.getContext('2d');
         
         // console.log('🎨 Canvas element:', canvas);
         // console.log('🎨 Canvas context:', this.ctx);
-        // console.log('🎨 Canvas size:', canvas.width, 'x', canvas.height);same
+        // console.log('🎨 Canvas size:', canvas.width, 'x', canvas.height);
+        // console.log('🎨 Tile size:', this.tileSize, 'x', this.tileSize);
+        // console.log('🎨 Grid size:', this.gridSize);
         
         // Set canvas size
         this.canvas.width = APP_CONFIG.PIXEL_EDITOR.CANVAS_SIZE;
@@ -92,6 +97,9 @@ class PixelEditor {
         this.ctx.webkitImageSmoothingEnabled = false;
         this.ctx.mozImageSmoothingEnabled = false;
         this.ctx.msImageSmoothingEnabled = false;
+        
+        // Create empty pixel data with correct tile size
+        this.pixelData = this.createEmptyPixelData();
         
         // Set up event listeners
         this.setupEventListeners();
@@ -121,14 +129,14 @@ class PixelEditor {
     
     /**
      * Create empty pixel data array
-     * @returns {Array} 32x32 array of white pixels
+     * @returns {Array} NxN array of transparent pixels
      */
     createEmptyPixelData() {
         const data = [];
         for (let y = 0; y < this.tileSize; y++) {
             data[y] = [];
             for (let x = 0; x < this.tileSize; x++) {
-                data[y][x] = 'white';
+                data[y][x] = [0, 0, 0, 0]; // Transparent (RGBA: 0,0,0,0)
             }
         }
         return data;
@@ -937,7 +945,7 @@ class PixelEditor {
     
     /**
      * Load pixel data into editor
-     * @param {Array} data - 32x32 pixel data array
+     * @param {Array} data - NxN pixel data array
      */
     loadPixelData(data) {
         // console.log('🎨 loadPixelData called with:', data);
@@ -947,6 +955,14 @@ class PixelEditor {
         if (!data || data.length !== this.tileSize) {
             console.error('Invalid pixel data - expected length:', this.tileSize, 'got:', data ? data.length : 'null');
             return;
+        }
+        
+        // Validate that each row has the correct length
+        for (let y = 0; y < data.length; y++) {
+            if (!data[y] || data[y].length !== this.tileSize) {
+                console.error(`Invalid pixel data at row ${y} - expected length: ${this.tileSize}, got: ${data[y] ? data[y].length : 'null'}`);
+                return;
+            }
         }
         
         this.pixelData = data;
@@ -965,7 +981,7 @@ class PixelEditor {
     
     /**
      * Get current pixel data
-     * @returns {Array} 32x32 pixel data array
+     * @returns {Array} NxN pixel data array
      */
     getPixelData() {
         return this.pixelData;
@@ -1072,15 +1088,22 @@ class PixelEditor {
             for (let x = 0; x < this.tileSize; x++) {
                 const color = this.pixelData[y] && this.pixelData[y][x];
                 totalPixels++;
-                if (color && color !== 'white') {
-                    // console.log(`🎨 Drawing pixel at (${x}, ${y}) with color: ${color}`);
-                    this.ctx.fillStyle = color;
-                    this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
-                    pixelCount++;
-                } else if (color === 'white') {
-                    // Draw white pixels
-                    this.ctx.fillStyle = 'white';
-                    this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
+                
+                if (color && Array.isArray(color) && color.length === 4) {
+                    // Handle RGBA array format
+                    const [r, g, b, a] = color;
+                    if (a > 0) { // Only draw non-transparent pixels
+                        this.ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+                        this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
+                        pixelCount++;
+                    }
+                } else if (color && typeof color === 'string') {
+                    // Handle string color format (legacy support)
+                    if (color !== 'white' && color !== 'transparent') {
+                        this.ctx.fillStyle = color;
+                        this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
+                        pixelCount++;
+                    }
                 }
             }
         }
