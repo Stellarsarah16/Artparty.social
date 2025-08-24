@@ -58,12 +58,36 @@ export class CanvasViewportManager {
     }
     
     /**
+     * CRITICAL FIX: Set canvas element reference
+     * @param {HTMLCanvasElement} canvas - Canvas element
+     */
+    setCanvas(canvas) {
+        this.canvas = canvas;
+        console.log('🔧 CanvasViewportManager canvas element set:', canvas);
+    }
+    
+    /**
+     * CRITICAL FIX: Set canvas data for proper viewport clamping
+     * @param {Object} canvasData - Canvas data with width/height
+     */
+    setCanvasData(canvasData) {
+        this.canvasData = canvasData;
+        console.log('🔧 CanvasViewportManager canvas data set:', canvasData);
+        
+        // Re-clamp viewport with new canvas data
+        this.clampViewport();
+    }
+    
+    /**
      * EXACT SAME pan logic as canvas viewer
      * Updates viewport position based on screen-space deltas
      * @param {number} deltaX - Screen-space X delta (pixels)
      * @param {number} deltaY - Screen-space Y delta (pixels)
      */
     pan(deltaX, deltaY) {
+        const oldX = this.viewportX;
+        const oldY = this.viewportY;
+        
         // EXACT SAME logic: convert screen delta to world space and update viewport
         this.viewportX -= deltaX / this.zoom;
         this.viewportY -= deltaY / this.zoom;
@@ -100,6 +124,82 @@ export class CanvasViewportManager {
             // Notify of viewport change
             this.notifyViewportChange();
         }
+    }
+    
+    /**
+     * Center view on canvas
+     */
+    centerView() {
+        if (!this.canvasData || !this.canvas) {
+            console.warn('⚠️ Cannot center view - missing canvas data or element');
+            return;
+        }
+        
+        console.log('🔧 Centering view on canvas');
+        
+        // Calculate center position - EXACT SAME formula as original
+        const canvasWidth = this.canvasData.width || 1024;
+        const canvasHeight = this.canvasData.height || 1024;
+        
+        // Center the canvas in the viewport - EXACT SAME as original
+        this.viewportX = (canvasWidth - (this.canvas.width / this.zoom)) / 2;
+        this.viewportY = (canvasHeight - (this.canvas.height / this.zoom)) / 2;
+        
+        // Clamp and notify
+        this.clampViewport();
+        this.notifyViewportChange();
+    }
+    
+    /**
+     * Reset view to default
+     */
+    resetView() {
+        console.log('🔧 Resetting view to default');
+        
+        this.viewportX = 0;
+        this.viewportY = 0;
+        this.zoom = 1;
+        
+        // Center if canvas data is available
+        if (this.canvasData && this.canvas) {
+            this.centerView();
+        } else {
+            this.clampViewport();
+            this.notifyViewportChange();
+        }
+    }
+    
+    /**
+     * Reset zoom to 1.0
+     */
+    resetZoom() {
+        console.log('🔧 Resetting zoom to 1.0');
+        
+        this.zoom = 1;
+        this.clampViewport();
+        this.notifyViewportChange();
+    }
+    
+    /**
+     * Emergency reset for error recovery
+     */
+    emergencyReset() {
+        console.log('🚨 Emergency reset in CanvasViewportManager');
+        
+        // Reset all viewport properties
+        this.viewportX = 0;
+        this.viewportY = 0;
+        this.zoom = 1;
+        this.minZoom = 0.1;
+        this.maxZoom = 10;
+        
+        // Clear canvas data
+        this.canvasData = null;
+        
+        // Notify change
+        this.notifyViewportChange();
+        
+        console.log('✅ CanvasViewportManager emergency reset complete');
     }
     
     /**
@@ -151,13 +251,69 @@ export class CanvasViewportManager {
     }
     
     /**
-     * EXACT SAME viewport clamping as canvas viewer
-     * Clamp viewport to reasonable bounds to prevent performance issues
+     * CRITICAL FIX: Enhanced viewport clamping to keep canvas always visible
+     * Prevents dragging canvas completely offscreen while allowing reasonable bounds
      */
     clampViewport() {
-        const maxBound = 100000; // EXACT SAME value as canvas viewer
+        // Keep the old extreme bounds check for performance
+        const maxBound = 100000;
+        const originalX = this.viewportX;
+        const originalY = this.viewportY;
+        
         this.viewportX = Math.max(-maxBound, Math.min(maxBound, this.viewportX));
         this.viewportY = Math.max(-maxBound, Math.min(maxBound, this.viewportY));
+        
+        // CRITICAL FIX: Keep canvas always visible
+        if (this.canvas && this.canvasData) {
+            const rect = this.canvas.getBoundingClientRect();
+            const viewportWidth = rect.width / this.zoom;
+            const viewportHeight = rect.height / this.zoom;
+            
+            // CRITICAL FIX: Handle case where viewport is larger than canvas (zoomed out)
+            const minOverlapPixels = 100;
+            const minOverlapPercent = 0.2;
+            const minVisibleWidth = Math.min(minOverlapPixels, this.canvasData.width * minOverlapPercent);
+            const minVisibleHeight = Math.min(minOverlapPixels, this.canvasData.height * minOverlapPercent);
+            
+            let minViewportX, maxViewportX, minViewportY, maxViewportY;
+            
+            if (viewportWidth >= this.canvasData.width) {
+                // Viewport is wider than canvas - center the canvas horizontally
+                const centerOffset = (viewportWidth - this.canvasData.width) / 2;
+                minViewportX = -centerOffset;
+                maxViewportX = -centerOffset;
+            } else {
+                // Viewport is narrower than canvas - normal clamping
+                maxViewportX = this.canvasData.width - minVisibleWidth;
+                minViewportX = -(viewportWidth - minVisibleWidth);
+            }
+            
+            if (viewportHeight >= this.canvasData.height) {
+                // Viewport is taller than canvas - center the canvas vertically
+                const centerOffset = (viewportHeight - this.canvasData.height) / 2;
+                minViewportY = -centerOffset;
+                maxViewportY = -centerOffset;
+            } else {
+                // Viewport is shorter than canvas - normal clamping
+                maxViewportY = this.canvasData.height - minVisibleHeight;
+                minViewportY = -(viewportHeight - minVisibleHeight);
+            }
+            
+            // Apply the clamping
+            const clampedX = Math.max(minViewportX, Math.min(maxViewportX, this.viewportX));
+            const clampedY = Math.max(minViewportY, Math.min(maxViewportY, this.viewportY));
+            
+            // CRITICAL: Always apply clamped values
+            const wasChanged = (Math.abs(clampedX - this.viewportX) > 0.001 || Math.abs(clampedY - this.viewportY) > 0.001);
+            
+            this.viewportX = clampedX;
+            this.viewportY = clampedY;
+            
+            // Only log when actually clamped
+            if (wasChanged) {
+                console.log(`🔒 Viewport clamped: (${originalX.toFixed(1)}, ${originalY.toFixed(1)}) → (${this.viewportX.toFixed(1)}, ${this.viewportY.toFixed(1)})`);
+            }
+        }
     }
     
     /**
@@ -234,29 +390,54 @@ export class CanvasViewportManager {
     }
     
     /**
-     * Zoom in by fixed factor
+     * CRITICAL FIX: Zoom in by fixed factor, centered on viewport middle
      */
     zoomIn() {
         if (!this.canvas) return;
         
-        const rect = this.canvas.getBoundingClientRect();
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        
-        this.zoomToward(1.2, centerX, centerY);
+        this.zoomCentered(1.2);
     }
     
     /**
-     * Zoom out by fixed factor
+     * CRITICAL FIX: Zoom out by fixed factor, centered on viewport middle
      */
     zoomOut() {
         if (!this.canvas) return;
         
-        const rect = this.canvas.getBoundingClientRect();
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
+        this.zoomCentered(0.8);
+    }
+    
+    /**
+     * CRITICAL FIX: Zoom centered on viewport middle (not mouse position)
+     * @param {number} factor - Zoom factor (e.g., 1.2 for zoom in, 0.8 for zoom out)
+     */
+    zoomCentered(factor) {
+        if (!this.canvas) return;
         
-        this.zoomToward(0.8, centerX, centerY);
+        const newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoom * factor));
+        
+        if (newZoom !== this.zoom) {
+            const rect = this.canvas.getBoundingClientRect();
+            
+            // Calculate the center of the current viewport in world coordinates
+            const currentViewportCenterX = this.viewportX + (rect.width / 2) / this.zoom;
+            const currentViewportCenterY = this.viewportY + (rect.height / 2) / this.zoom;
+            
+            // Update zoom
+            this.zoom = newZoom;
+            
+            // Adjust viewport to keep the same world center point in the middle of the screen
+            this.viewportX = currentViewportCenterX - (rect.width / 2) / this.zoom;
+            this.viewportY = currentViewportCenterY - (rect.height / 2) / this.zoom;
+            
+            // Clamp to keep canvas visible
+            this.clampViewport();
+            
+            // Notify of viewport change
+            this.notifyViewportChange();
+            
+            console.log(`🔍 Centered zoom: ${factor}x → zoom: ${this.zoom.toFixed(2)}, center: (${currentViewportCenterX.toFixed(1)}, ${currentViewportCenterY.toFixed(1)})`);
+        }
     }
     
     /**
@@ -265,6 +446,7 @@ export class CanvasViewportManager {
     notifyViewportChange() {
         const now = Date.now();
         if (now - this.lastViewportChangeTime < this.viewportChangeThrottle) {
+            console.log('🔄 Viewport change throttled');
             return; // Throttle viewport change notifications
         }
         this.lastViewportChangeTime = now;
@@ -326,6 +508,31 @@ export class CanvasViewportManager {
             top: this.viewportY,
             bottom: this.viewportY + (rect.height / this.zoom)
         };
+    }
+    
+    /**
+     * DEBUG: Manual test function for clamping
+     */
+    testClamping() {
+        console.log('🧪 TESTING VIEWPORT CLAMPING');
+        console.log('============================');
+        console.log('Canvas element:', this.canvas);
+        console.log('Canvas data:', this.canvasData);
+        console.log('Current viewport:', this.getViewport());
+        
+        if (this.canvas && this.canvasData) {
+            const rect = this.canvas.getBoundingClientRect();
+            console.log('Canvas rect:', rect);
+            console.log('Zoom:', this.zoom);
+            console.log('Viewport size in world units:', {
+                width: rect.width / this.zoom,
+                height: rect.height / this.zoom
+            });
+        }
+        
+        // Force a clamp
+        this.clampViewport();
+        console.log('After clamp:', this.getViewport());
     }
     
     /**

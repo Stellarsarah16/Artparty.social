@@ -34,8 +34,15 @@ class NavigationManager {
         
         console.log('✅ API available, initializing managers...');
         
-        // Initialize all specialized managers
-        this.managers = createManagers();
+        try {
+            // Initialize all specialized managers
+            console.log('🔧 About to create managers...');
+            this.managers = createManagers();
+            console.log('✅ Managers created successfully:', this.managers);
+        } catch (error) {
+            console.error('❌ Failed to create managers:', error);
+            throw error;
+        }
         
         // Initialize DOM elements
         this.elements = this.initializeElements();
@@ -362,17 +369,23 @@ class NavigationManager {
             
             // Always load tiles for the canvas (they're not included in canvas data)
             console.log('🔄 Loading tiles for canvas...');
+            let tiles = [];
             try {
-                const tiles = await this.managers.canvasList.tileApi.getForCanvas(canvas.id);
+                tiles = await this.managers.canvasList.tileApi.getForCanvas(canvas.id);
                 if (tiles && tiles.length > 0) {
                     console.log(`📦 Loaded ${tiles.length} tiles for canvas`);
                     window.CanvasViewer.loadTiles(tiles);
                 } else {
                     console.log('📦 No tiles found for this canvas');
+                    tiles = [];
                 }
             } catch (error) {
                 console.error('❌ Failed to load tiles for canvas:', error);
+                tiles = [];
             }
+            
+            // Update canvas stats - FIX ISSUE 1 DATA POPULATION
+            this.updateCanvasStats(canvas, tiles);
             
             // Show viewer section
             console.log('🔄 Attempting to show viewer section...');
@@ -427,6 +440,40 @@ class NavigationManager {
     }
     
     /**
+     * Update canvas stats display
+     */
+    updateCanvasStats(canvas, tiles) {
+        try {
+            console.log('🔧 Updating canvas stats...');
+            
+            // Get current user
+            const currentUser = window.appState ? window.appState.get('currentUser') : null;
+            const currentUserId = currentUser ? currentUser.id : null;
+            
+            // Calculate stats
+            const totalTiles = tiles.length;
+            const userTiles = currentUserId ? tiles.filter(tile => tile.creator_id === currentUserId).length : 0;
+            
+            // For now, set active users to 1 (current user) - could be enhanced with WebSocket data
+            const activeUsers = currentUser ? 1 : 0;
+            
+            // Update DOM elements
+            const totalTilesEl = document.getElementById('viewer-total-tiles');
+            const activeUsersEl = document.getElementById('viewer-active-users');  
+            const userTilesEl = document.getElementById('viewer-user-tiles');
+            
+            if (totalTilesEl) totalTilesEl.textContent = totalTiles;
+            if (activeUsersEl) activeUsersEl.textContent = activeUsers;
+            if (userTilesEl) userTilesEl.textContent = userTiles;
+            
+            console.log('✅ Canvas stats updated:', { totalTiles, activeUsers, userTiles });
+            
+        } catch (error) {
+            console.error('❌ Failed to update canvas stats:', error);
+        }
+    }
+    
+    /**
      * Refresh current canvas
      */
     async refreshCurrentCanvas() {
@@ -446,7 +493,14 @@ class NavigationManager {
                     window.CanvasViewer.loadTiles(tiles);
                 }
                 
-                console.log('✅ Canvas refreshed successfully');
+                // Update canvas stats
+                this.updateCanvasStats(canvasData, tiles || []);
+                
+                // Center and reset view after refresh - FIX ISSUE 1
+                window.CanvasViewer.resetZoom();
+                window.CanvasViewer.centerView();
+                
+                console.log('✅ Canvas refreshed and centered successfully');
             } else {
                 console.warn('⚠️ No current canvas to refresh');
             }
@@ -516,6 +570,17 @@ class NavigationManager {
             
             // Call the original showSection method
             originalShowSection(sectionName);
+            
+            // Special handling when returning to viewer - FIX ISSUE 2
+            if (sectionName === 'viewer' && window.CanvasViewer && window.CanvasViewer.canvasData) {
+                console.log('🔄 Returning to viewer - centering and refreshing view');
+                
+                // Small delay to ensure viewer section is visible
+                setTimeout(() => {
+                    // Refresh tiles and center view
+                    this.refreshCurrentCanvas();
+                }, 100);
+            }
             
             // Update browser history
             window.history.pushState({ section: sectionName }, '', `#${sectionName}`);
@@ -857,12 +922,18 @@ const initializeNavigationManager = async () => {
     console.log('🚀 Starting navigation manager initialization...');
     initializationPromise = (async () => {
         try {
+            console.log('🔧 Creating NavigationManager instance...');
             navigationManager = new NavigationManager();
+            console.log('✅ NavigationManager instance created');
+            
             // Wait for the async initialization to complete
+            console.log('🔧 Waiting for API and initialization...');
             await navigationManager.waitForAPIAndInitialize();
+            console.log('✅ NavigationManager initialization complete');
             
             // Make navigation manager available globally for debugging
             window.navigationManager = navigationManager;
+            console.log('✅ NavigationManager available globally as window.navigationManager');
             
             // SAFETY: Make diagnostic functions available globally
             window.diagnoseDebugButton = () => navigationManager.diagnoseDebugButton();

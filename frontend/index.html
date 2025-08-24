@@ -157,35 +157,17 @@
             <!-- Modern Stats Bar -->
             <div class="canvas-stats-bar">
                 <div class="stats-container">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-th"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="viewer-total-tiles">0</div>
-                            <div class="stat-label">Total Tiles</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="viewer-active-users">0</div>
-                            <div class="stat-label">Active Users</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-paintbrush"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-value" id="viewer-user-tiles">0</div>
-                            <div class="stat-label">Your Tiles</div>
-                        </div>
-                    </div>
+                  <div class="stat-card">
+                    <i class="fas fa-th"></i> <span id="viewer-total-tiles">0</span> Tiles
+                  </div>
+                  <div class="stat-card">
+                    <i class="fas fa-users"></i> <span id="viewer-active-users">0</span> Users
+                  </div>
+                  <div class="stat-card">
+                    <i class="fas fa-paintbrush"></i> <span id="viewer-user-tiles">0</span> Yours
+                  </div>
                 </div>
-            </div>
+              </div>
 
             <div class="viewer-header">
                 <div class="viewer-title">
@@ -921,7 +903,9 @@
             'js/ui.js',
             'js/form-validation.js',
             'js/neighbor-display.js',
-            'js/test-viewport-manager.js'
+            'js/test-viewport-manager.js',
+            'js/test-canvas-renderer.js',
+            'js/test-canvas-interaction.js'
         ];
         
         const modules = [

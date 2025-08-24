@@ -46,20 +46,50 @@ export class TileEditorManager {
                 
                 console.log('📝 Creating tile with data:', createData);
                 
-                const newTile = await this.apiService.create(createData);
-                console.log('✅ Tile created successfully:', newTile);
+                try {
+                    const newTile = await this.apiService.create(createData);
+                    console.log('✅ Tile created successfully:', newTile);
+                    
+                    // Extract tile data from response (backend returns {message: "...", tile: {...}})
+                    const tileData = newTile.tile || newTile;
+                    console.log('📋 Extracted tile data:', tileData);
+                    
+                    // Update the tile object with the new data
+                    tile.id = tileData.id;
+                    tile.creator_id = tileData.creator_id;
+                    tile.created_at = tileData.created_at;
+                    tile.updated_at = tileData.updated_at;
+                    
+                } catch (createError) {
+                    // Handle 409 Conflict - tile already exists (this is expected for existing tiles)
+                    if (createError.status === 409) {
+                        console.log('✅ Tile already exists on server (expected), fetching existing tile...');
+                        
+                        // Fetch the existing tile from the server
+                        try {
+                            const existingTiles = await this.apiService.getForCanvas(tile.canvas_id);
+                            const existingTile = existingTiles.find(t => t.x === tile.x && t.y === tile.y);
+                            
+                            if (existingTile) {
+                                console.log('🎯 Successfully recovered existing tile:', existingTile);
+                                // Update tile with existing data
+                                Object.assign(tile, existingTile);
+                                console.log('✅ Conflict resolved - tile editor will open with existing tile data');
+                            } else {
+                                console.error('❌ Could not find existing tile after 409 conflict');
+                                throw createError;
+                            }
+                        } catch (fetchError) {
+                            console.error('❌ Failed to fetch existing tile:', fetchError);
+                            throw createError;
+                        }
+                    } else {
+                        // Re-throw other errors
+                        throw createError;
+                    }
+                }
                 
-                // Extract tile data from response (backend returns {message: "...", tile: {...}})
-                const tileData = newTile.tile || newTile;
-                console.log('📋 Extracted tile data:', tileData);
-                
-                // Update the tile object with the new ID
-                tile.id = tileData.id;
-                tile.creator_id = tileData.creator_id;
-                tile.created_at = tileData.created_at;
-                tile.updated_at = tileData.updated_at;
-                
-                console.log('🔄 Updated tile object with new data:', tile);
+                console.log('🔄 Updated tile object with data:', tile);
             }
             
             // Fetch full tile details including creator information

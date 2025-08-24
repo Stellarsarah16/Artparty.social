@@ -408,24 +408,73 @@ main {
     gap: var(--space-lg);
 }
 
+/* Remove background from canvas cards - keep container only */
 .canvas-card {
-    background: var(--bg-primary);
+    background: transparent !important; /* Remove card background */
     border-radius: var(--border-radius-lg);
     overflow: hidden;
-    box-shadow: var(--shadow-md);
-    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    box-shadow: none !important; /* Remove shadow for cleaner look */
+    transition: transform var(--transition-fast);
     cursor: pointer;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
 }
 
 .canvas-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px); /* Reduced hover lift */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important; /* Subtle hover shadow */
 }
 
+/* Also make card sections transparent */
 .canvas-card-header {
     padding: var(--space-lg);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent !important;
+}
+
+.canvas-card-body {
+    padding: var(--space-lg);
+    background: transparent !important;
+}
+
+.canvas-card-footer {
+    padding: var(--space-lg);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent !important;
+}
+
+.canvas-card-stats {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--space-md) var(--space-lg);
+    background: transparent !important; /* Remove stats background */
+    font-size: var(--font-size-sm);
+}
+
+.canvas-card-body .canvas-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.canvas-card-body .info-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.canvas-card-body .info-item i {
+    color: var(--primary-color);
+    width: 16px;
+}
+
+.user-tiles-info {
+    padding: var(--space-sm) 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: var(--space-md);
+    background: transparent !important;
 }
 
 .canvas-card-title {
@@ -439,6 +488,14 @@ main {
     font-size: var(--font-size-sm);
     margin-bottom: var(--space-md);
     line-height: 1.4;
+}
+
+.canvas-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
 }
 
 .canvas-card-stats {
@@ -492,8 +549,8 @@ main {
     justify-content: center;
     align-items: center;
     padding: var(--space-lg);
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
+    background: transparent !important; /* Remove preview background */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .canvas-preview {
@@ -1864,75 +1921,120 @@ form {
     padding-top: 0;
 }
 
-/* Modern Canvas Stats Bar */
+/* ----------- Modern Canvas Stats Bar ---------------*/
+
 .canvas-stats-bar {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 1rem 0;
-    margin-bottom: 1rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 0 0 12px 12px;
+    background: linear-gradient(135deg, #054973 0%, #6c0263 100%);
+    padding: 0.25rem 0;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+    border-radius: 0 0 8px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .stats-container {
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
     display: flex;
     justify-content: center;
-    gap: 2rem;
+    align-items: center;
+    gap: 0.8rem;
     padding: 0 1rem;
+    flex-wrap: wrap;
 }
 
-.stat-card {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 1rem 1.5rem;
-    min-width: 140px;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+/* Make this more specific to override admin.css */
+.canvas-stats-bar .stat-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgba(0, 0, 0, 0.1) !important; /* Override admin gradient */
+    border-radius: 4px !important; /* Override admin 15px */
+    padding: 0.25rem 0.6rem !important; /* Override admin 25px */
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    text-align: left !important; /* Override admin center alignment */
+    box-shadow: none !important; /* Override admin shadow */
 }
 
-.stat-card:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+/* Also make child selectors more specific */
+.canvas-stats-bar .stat-card i {
+    font-size: 0.9rem !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
-.stat-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    color: white;
-    font-size: 1.2rem;
+.canvas-stats-bar .stat-card span {
+    font-weight: 600 !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
-.stat-content {
-    display: flex;
-    flex-direction: column;
-    color: white;
+/* Force all children to be inline with higher specificity */
+.canvas-stats-bar .stat-card * {
+    display: inline-block !important;
+    vertical-align: middle !important;
+    line-height: 1 !important;
 }
 
-.stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    line-height: 1;
-    margin-bottom: 0.25rem;
+/* Override any conflicting styles with higher specificity */
+.canvas-stats-bar .stat-card > i,
+.canvas-stats-bar .stat-card > span {
+    float: none !important;
+    clear: none !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
-.stat-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    opacity: 0.9;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .canvas-stats-bar {
+        padding: 0.2rem 0;
+    }
+    
+    .stats-container {
+        gap: 0.5rem;
+        padding: 0 0.5rem;
+    }
+    
+    .canvas-stats-bar .stat-card {
+        font-size: 0.75rem !important;
+        padding: 0.2rem 0.5rem !important;
+        gap: 0.3rem;
+    }
 }
+
+@media (max-width: 480px) {
+    .stats-container {
+        gap: 0.4rem;
+        padding: 0 0.25rem;
+    }
+    
+    .canvas-stats-bar .stat-card {
+        font-size: 0.7rem !important;
+        padding: 0.15rem 0.4rem !important;
+        min-width: auto;
+        gap: 0.25rem;
+    }
+    
+    .canvas-stats-bar .stat-card i {
+        font-size: 0.8rem !important;
+    }
+}
+
+/* ----------- END STATS BAR ---------------*/
 
 /* FIXED: Tile ownership indicators */
 .tile-owned {

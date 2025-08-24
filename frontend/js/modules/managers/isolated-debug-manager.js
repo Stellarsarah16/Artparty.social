@@ -158,7 +158,7 @@ export class IsolatedDebugManager {
             
             // Ensure container has relative positioning
             if (window.getComputedStyle(container).position === 'static') {
-                container.style.position = 'relative';
+            container.style.position = 'relative';
             }
             
             // Add overlay to container
@@ -242,7 +242,7 @@ export class IsolatedDebugManager {
             this.updateInterval = null;
         }
         
-        this.clearOverlay();
+            this.clearOverlay();
     }
     
     /**
@@ -319,10 +319,10 @@ export class IsolatedDebugManager {
         for (let i = 0; i <= tilesX; i++) {
             const x = ((startTileX + i) * tileSize - offsetX) * zoom;
             if (x >= 0 && x <= canvas.width) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, canvas.height);
-                ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.stroke();
             }
         }
         
@@ -330,11 +330,11 @@ export class IsolatedDebugManager {
         for (let i = 0; i <= tilesY; i++) {
             const y = ((startTileY + i) * tileSize - offsetY) * zoom;
             if (y >= 0 && y <= canvas.height) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
-            }
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
+        }
         }
     }
     
@@ -424,7 +424,9 @@ export class IsolatedDebugManager {
             
             if (this.hoveredTile.id) {
                 html += `<div><span style="color: #888;">ID:</span> ${this.hoveredTile.id}</div>`;
-                html += `<div><span style="color: #888;">Owner:</span> ${this.hoveredTile.username || 'Unknown'}</div>`;
+                // FIX ISSUE 2: Use correct field names for tile owner
+                const ownerName = this.hoveredTile.creator_username || this.hoveredTile.username || this.hoveredTile.owner_name || 'Unknown';
+                html += `<div><span style="color: #888;">Owner:</span> ${ownerName}</div>`;
             } else {
                 html += `<div><span style="color: #888;">Status:</span> Empty</div>`;
             }
