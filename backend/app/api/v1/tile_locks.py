@@ -4,15 +4,19 @@ Tile lock management endpoints
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from typing import Dict, Any
+from typing import List, Optional
+import logging
 
 from ...core.database import get_db
-from ...services.authentication import authentication_service
+from ...services.auth import auth_service
 from ...services.tile import tile_service
 from ...models.user import User
+from ...models.tile_lock import TileLock
+from ...schemas.tile_lock import TileLockResponse, TileLockCreate, TileLockUpdate
 
 router = APIRouter()
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
 
 @router.options("/{tile_id}")
@@ -21,19 +25,19 @@ async def tile_lock_options(tile_id: int):
     return {"message": "OK"}
 
 
-async def get_current_user_dependency(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+def get_current_user(
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ) -> User:
     """Dependency to get current authenticated user"""
     token = credentials.credentials
-    return authentication_service.get_current_user(db, token)
+    return auth_service.get_current_user(db, token)
 
 
-@router.post("/{tile_id}/lock", response_model=Dict[str, Any])
+@router.post("/{tile_id}/lock", response_model=TileLockResponse)
 async def acquire_tile_lock(
     tile_id: int,
-    current_user: User = Depends(get_current_user_dependency),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Acquire a lock for editing a tile"""
@@ -56,10 +60,10 @@ async def acquire_tile_lock(
         )
 
 
-@router.delete("/{tile_id}/lock", response_model=Dict[str, str])
+@router.delete("/{tile_id}/lock")
 async def release_tile_lock(
     tile_id: int,
-    current_user: User = Depends(get_current_user_dependency),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Release a lock for a tile"""
@@ -76,10 +80,10 @@ async def release_tile_lock(
         )
 
 
-@router.put("/{tile_id}/lock", response_model=Dict[str, str])
+@router.put("/{tile_id}/lock")
 async def extend_tile_lock(
     tile_id: int,
-    current_user: User = Depends(get_current_user_dependency),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Extend a lock for a tile"""
@@ -96,10 +100,10 @@ async def extend_tile_lock(
         )
 
 
-@router.get("/{tile_id}/lock", response_model=Dict[str, Any])
+@router.get("/{tile_id}/lock", response_model=TileLockResponse)
 async def get_tile_lock_status(
     tile_id: int,
-    current_user: User = Depends(get_current_user_dependency),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get the lock status for a tile"""

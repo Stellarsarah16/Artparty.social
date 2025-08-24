@@ -145,6 +145,20 @@ class AuthService:
         
         return user
     
+    def is_user_admin(self, user: User) -> bool:
+        """Check if user has admin privileges"""
+        return user.is_admin or user.is_superuser
+    
+    def get_current_user_with_admin_check(self, db: Session, token: str) -> User:
+        """Get current user and verify admin status"""
+        user = self.get_current_user(db, token)
+        if not self.is_user_admin(user):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin privileges required"
+            )
+        return user
+    
     def create_token_response(self, user: User) -> dict:
         """Create a complete token response with user data"""
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)

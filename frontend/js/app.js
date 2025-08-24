@@ -32,8 +32,8 @@ class ArtPartySocial {
             // Check initial authentication state
             await this.checkInitialAuthState();
             
-            // Set up event listeners
-            this.setupEventListeners();
+            // Set up event listeners (moved to navigation manager)
+            // this.setupEventListeners();
             
             this.initialized = true;
             console.log('✅ ArtPartySocial ready!');

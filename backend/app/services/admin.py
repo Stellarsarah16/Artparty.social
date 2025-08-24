@@ -134,14 +134,36 @@ class AdminService:
     def cleanup_inactive_users(db: Session) -> int:
         """Remove all inactive users permanently"""
         try:
-            # Get count of inactive users before deletion
-            inactive_count = db.query(User).filter(User.is_active == False).count()
+            from ..models.verification import VerificationToken
             
-            # Delete inactive users
+            # Get inactive users
+            inactive_users = db.query(User).filter(User.is_active == False).all()
+            inactive_count = len(inactive_users)
+            
+            if inactive_count == 0:
+                print("🧹 No inactive users to clean up")
+                return 0
+            
+            print(f"🧹 Found {inactive_count} inactive users to clean up")
+            
+            # Delete related records first to handle foreign key constraints
+            for user in inactive_users:
+                # Delete verification tokens for this user
+                db.query(VerificationToken).filter(VerificationToken.user_id == user.id).delete()
+                print(f"🧹 Deleted verification tokens for user {user.id}")
+                
+                # Delete likes given by this user
+                db.query(Like).filter(Like.user_id == user.id).delete()
+                print(f"🧹 Deleted likes given by user {user.id}")
+                
+                # Note: Tiles created by the user will be handled by cascade or should be handled separately
+                # depending on your business logic
+            
+            # Now delete the inactive users
             db.query(User).filter(User.is_active == False).delete()
             db.commit()
             
-            print(f"🧹 Cleaned up {inactive_count} inactive users")
+            print(f"🧹 Successfully cleaned up {inactive_count} inactive users")
             return inactive_count
             
         except Exception as e:

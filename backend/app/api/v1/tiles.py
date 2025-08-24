@@ -1,23 +1,25 @@
 """
 Tiles management endpoints - Refactored with service layer
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any, Optional
+from typing import List, Optional, Dict, Any
+import logging
 
 from ...core.database import get_db
 from ...core.websocket import connection_manager
-from ...services.authentication import authentication_service
+from ...services.auth import auth_service
 from ...services.tile import tile_service
 from ...services.user import user_service
 from ...models.user import User
-from ...models.tile import Tile
 from ...models.canvas import Canvas
-from ...schemas.tile import TileCreate, TileUpdate, TileResponse, TileWithCreator
+from ...schemas.tile import TileResponse, TileUpdate, TileCreate, TileWithCreator
+from ...schemas.user import UserResponse
 
 router = APIRouter()
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
 
 @router.options("/")
@@ -38,20 +40,20 @@ async def tile_like_options(tile_id: int):
     return {"message": "OK"}
 
 
-async def get_current_user_dependency(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+def get_current_user(
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ) -> User:
     """Dependency to get current authenticated user"""
     token = credentials.credentials
-    return authentication_service.get_current_user(db, token)
+    return auth_service.get_current_user(db, token)
 
 
 @router.post("/", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED)
 @router.post("", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED)
 async def create_tile(
     tile_create: TileCreate,
-    current_user: User = Depends(get_current_user_dependency),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Create a new tile (paint on canvas) - handles both with and without trailing slash"""
@@ -138,7 +140,7 @@ async def get_tile_details(
 async def update_tile(
     tile_id: int,
     tile_update: TileUpdate,
-    current_user: User = Depends(get_current_user_dependency),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Update tile (only owner can update)"""
@@ -190,7 +192,7 @@ async def update_tile(
 @router.delete("/{tile_id}", response_model=Dict[str, str])
 async def delete_tile(
     tile_id: int,
-    current_user: User = Depends(get_current_user_dependency),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Delete tile (only owner can delete)"""
@@ -290,7 +292,7 @@ async def get_user_tiles(
 @router.post("/{tile_id}/like", response_model=Dict[str, Any])
 async def like_tile(
     tile_id: int,
-    current_user: User = Depends(get_current_user_dependency),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Like a tile"""
@@ -330,7 +332,7 @@ async def like_tile(
 @router.delete("/{tile_id}/like", response_model=Dict[str, str])
 async def unlike_tile(
     tile_id: int,
-    current_user: User = Depends(get_current_user_dependency),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Unlike a tile"""
@@ -368,7 +370,7 @@ async def unlike_tile(
 async def get_user_tile_count(
     user_id: int,
     canvas_id: Optional[int] = None,
-    current_user: User = Depends(get_current_user_dependency),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get tile count for a user (optionally filtered by canvas)"""

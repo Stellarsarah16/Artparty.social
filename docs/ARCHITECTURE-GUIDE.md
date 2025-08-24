@@ -494,3 +494,29 @@ alembic upgrade head
 - **State Updates**: Use setState, emit events
 
 This architecture guide should be updated whenever the system architecture changes or new patterns emerge.
+
+## 🚨 **Current Development Status**
+
+### **Canvas Viewer Refactoring (January 2024)**
+**Status**: 🔄 **IN PROGRESS** - Major refactoring in progress with known issues
+
+**What's Working**:
+- ✅ SOLID architecture successfully implemented
+- ✅ Manager pattern properly applied
+- ✅ Event-driven communication working
+- ✅ Basic canvas loading and navigation functional
+
+**Critical Issues**:
+- ❌ **Coordinate System Broken** - Tile detection coordinates misaligned
+- ❌ **Viewport Positioning** - Complex calculations causing rendering issues
+- ❌ **Debug Overlay** - Not functional due to underlying coordinate problems
+
+**Next Steps**:
+1. Fix coordinate system using proven logic from original implementation
+2. Test tile interaction and editor opening
+3. Verify debug overlay functionality
+4. Complete performance optimization
+
+**Fallback Plan**: If issues persist, port entire coordinate logic from working original system
+
+**Documentation**: See `docs/refactoring/CANVAS-VIEWER-REFACTORING.md` for detailed troubleshooting

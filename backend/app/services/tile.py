@@ -146,10 +146,12 @@ class TileService:
                 lock = self.tile_lock_repository.acquire_lock(db, tile_id, current_user.id, minutes)
                 if lock:
                     return {
-                        "lock_id": lock.id,
+                        "id": lock.id,
                         "tile_id": lock.tile_id,
-                        "expires_at": lock.expires_at.isoformat(),
-                        "message": "Tile lock acquired successfully"
+                        "user_id": lock.user_id,
+                        "locked_at": lock.locked_at,
+                        "expires_at": lock.expires_at,
+                        "is_active": lock.is_active
                     }
                 else:
                     # Check if tile is locked by someone else

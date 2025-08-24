@@ -1027,4 +1027,87 @@ form.loading input {
 
 .step-dot.completed {
     background: #28a745;
+}
+
+/* Debug Overlay Styles */
+.debug-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 1000;
+    border: 1px solid rgba(255, 0, 0, 0.5);
+    background: transparent;
+}
+
+.debug-overlay canvas {
+    display: block;
+}
+
+/* Debug button active state */
+#toggle-debug-btn.btn-primary {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+#toggle-debug-btn.btn-primary:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+/* Ensure debug button is visible */
+#toggle-debug-btn {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+}
+
+/* CRITICAL FIX: Prevent FontAwesome icons from intercepting button clicks */
+.btn i,
+.btn .fas,
+.btn .far,
+.btn .fab {
+    pointer-events: none;
+}
+
+/* Additional safety for all button icons */
+button i,
+button .fas,
+button .far,
+button .fab {
+    pointer-events: none;
+}
+
+/* Debug info panels */
+.debug-info-panel {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1001;
+}
+
+.debug-info-panel.top-left {
+    top: 10px;
+    left: 10px;
+}
+
+.debug-info-panel.top-right {
+    top: 10px;
+    right: 10px;
+}
+
+.debug-info-panel.bottom-left {
+    bottom: 10px;
+    left: 10px;
+}
+
+.debug-info-panel.bottom-right {
+    bottom: 10px;
+    right: 10px;
 } 

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coordinate System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f0f0f0;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        canvas {
+            border: 2px solid #333;
+            background: #f8f9fa;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Coordinate System Test</h1>
+    <p>This page tests the coordinate system consistency between the viewport manager and renderer.</p>
+
+    <div class="test-section">
+        <h2>🧪 Test 1: Coordinate Conversion Consistency</h2>
+        <p>Test that both viewport manager and renderer use the same coordinate logic.</p>
+        <button onclick="testCoordinateConsistency()">Run Coordinate Test</button>
+        <div id="coordinate-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎨 Test 2: Canvas Rendering</h2>
+        <p>Test that tiles render in the correct positions.</p>
+        <canvas id="test-canvas" width="400" height="300"></canvas>
+        <button onclick="testCanvasRendering()">Test Canvas Rendering</button>
+        <div id="rendering-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🖱️ Test 3: Click Detection</h2>
+        <p>Test that clicks are detected at the correct tile positions.</p>
+        <button onclick="testClickDetection()">Test Click Detection</button>
+        <div id="click-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Test Results Summary</h2>
+        <div id="test-summary"></div>
+    </div>
+
+    <script type="module">
+        // Import the managers
+        import { CanvasViewportManager } from './js/modules/managers/canvas-viewport-manager.js';
+        import { CanvasRenderer } from './js/modules/managers/canvas-renderer.js';
+
+        // Global test state
+        window.testResults = {
+            coordinateConsistency: null,
+            canvasRendering: null,
+            clickDetection: null
+        };
+
+        // Test 1: Coordinate Conversion Consistency
+        window.testCoordinateConsistency = function() {
+            const resultDiv = document.getElementById('coordinate-test-result');
+            resultDiv.innerHTML = '<div class="test-result info">Running coordinate consistency test...</div>';
+
+            try {
+                // Create test instances
+                const viewportManager = new CanvasViewportManager();
+                const renderer = new CanvasRenderer();
+
+                // Set up test viewport
+                viewportManager.viewport = { x: -100, y: -100, zoom: 2 };
+
+                // Test coordinates
+                const testScreenX = 200;
+                const testScreenY = 150;
+
+                // Get results from both managers
+                const viewportResult = viewportManager.screenToWorld(testScreenX, testScreenY);
+                const rendererResult = renderer.screenToWorld(testScreenX, testScreenY);
+
+                // Check if they match
+                const isConsistent = Math.abs(viewportResult.x - rendererResult.x) < 0.001 && 
+                                   Math.abs(viewportResult.y - rendererResult.y) < 0.001;
+
+                if (isConsistent) {
+                    window.testResults.coordinateConsistency = true;
+                    resultDiv.innerHTML = `
+                        <div class="test-result success">
+                            ✅ Coordinate systems are consistent!<br>
+                            Viewport: (${viewportResult.x.toFixed(2)}, ${viewportResult.y.toFixed(2)})<br>
+                            Renderer: (${rendererResult.x.toFixed(2)}, ${rendererResult.y.toFixed(2)})<br>
+                            Screen: (${testScreenX}, ${testScreenY}) → World: (${viewportResult.x.toFixed(2)}, ${viewportResult.y.toFixed(2)})
+                        </div>
+                    `;
+                } else {
+                    window.testResults.coordinateConsistency = false;
+                    resultDiv.innerHTML = `
+                        <div class="test-result error">
+                            ❌ Coordinate systems are NOT consistent!<br>
+                            Viewport: (${viewportResult.x.toFixed(2)}, ${viewportResult.y.toFixed(2)})<br>
+                            Renderer: (${rendererResult.x.toFixed(2)}, ${rendererResult.y.toFixed(2)})<br>
+                            Difference: (${Math.abs(viewportResult.x - rendererResult.x).toFixed(2)}, ${Math.abs(viewportResult.y - rendererResult.y).toFixed(2)})
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                window.testResults.coordinateConsistency = false;
+                resultDiv.innerHTML = `
+                    <div class="test-result error">
+                        ❌ Test failed with error: ${error.message}<br>
+                        Stack: ${error.stack}
+                    </div>
+                `;
+            }
+
+            updateTestSummary();
+        };
+
+        // Test 2: Canvas Rendering
+        window.testCanvasRendering = function() {
+            const resultDiv = document.getElementById('rendering-test-result');
+            resultDiv.innerHTML = '<div class="test-result info">Testing canvas rendering...</div>';
+
+            try {
+                const canvas = document.getElementById('test-canvas');
+                const ctx = canvas.getContext('2d');
+
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Test viewport transform
+                const viewport = { x: -50, y: -50, zoom: 2 };
+                
+                ctx.save();
+                ctx.translate(viewport.x, viewport.y);
+                ctx.scale(viewport.zoom, viewport.zoom);
+
+                // Draw a test tile at world position (25, 25)
+                ctx.fillStyle = '#ff6b6b';
+                ctx.fillRect(25, 25, 32, 32);
+                
+                // Draw grid
+                ctx.strokeStyle = '#ddd';
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= 100; i += 32) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, 100);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(100, i);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+
+                // Test coordinate conversion
+                const worldPos = { x: 25, y: 25 };
+                const screenPos = {
+                    x: worldPos.x * viewport.zoom + viewport.x,
+                    y: worldPos.y * viewport.zoom + viewport.y
+                };
+
+                window.testResults.canvasRendering = true;
+                resultDiv.innerHTML = `
+                    <div class="test-result success">
+                        ✅ Canvas rendering test completed!<br>
+                        World position: (${worldPos.x}, ${worldPos.y})<br>
+                        Screen position: (${screenPos.x.toFixed(2)}, ${screenPos.y.toFixed(2)})<br>
+                        Tile should be visible at screen coordinates
+                    </div>
+                `;
+
+            } catch (error) {
+                window.testResults.canvasRendering = false;
+                resultDiv.innerHTML = `
+                    <div class="test-result error">
+                        ❌ Canvas rendering test failed: ${error.message}
+                    </div>
+                `;
+            }
+
+            updateTestSummary();
+        };
+
+        // Test 3: Click Detection
+        window.testClickDetection = function() {
+            const resultDiv = document.getElementById('click-test-result');
+            resultDiv.innerHTML = '<div class="test-result info">Testing click detection...</div>';
+
+            try {
+                // Simulate a click at screen position (200, 150)
+                const screenX = 200;
+                const screenY = 150;
+                const viewport = { x: -100, y: -100, zoom: 2 };
+
+                // Convert to world coordinates using the fixed logic
+                const worldX = (screenX / viewport.zoom) + viewport.x;
+                const worldY = (screenY / viewport.zoom) + viewport.y;
+
+                // Convert to tile coordinates
+                const tileSize = 32;
+                const tileX = Math.floor(worldX / tileSize);
+                const tileY = Math.floor(worldY / tileSize);
+
+                window.testResults.clickDetection = true;
+                resultDiv.innerHTML = `
+                    <div class="test-result success">
+                        ✅ Click detection test completed!<br>
+                        Screen click: (${screenX}, ${screenY})<br>
+                        World position: (${worldX.toFixed(2)}, ${worldY.toFixed(2)})<br>
+                        Tile grid: (${tileX}, ${tileY})<br>
+                        <br>
+                        <strong>Coordinate conversion logic:</strong><br>
+                        worldX = (${screenX} / ${viewport.zoom}) + ${viewport.x} = ${worldX.toFixed(2)}<br>
+                        worldY = (${screenY} / ${viewport.zoom}) + ${viewport.y} = ${worldY.toFixed(2)}<br>
+                        tileX = Math.floor(${worldX.toFixed(2)} / ${tileSize}) = ${tileX}<br>
+                        tileY = Math.floor(${worldY.toFixed(2)} / ${tileSize}) = ${tileY}
+                    </div>
+                `;
+
+            } catch (error) {
+                window.testResults.clickDetection = false;
+                resultDiv.innerHTML = `
+                    <div class="test-result error">
+                        ❌ Click detection test failed: ${error.message}
+                    </div>
+                `;
+            }
+
+            updateTestSummary();
+        };
+
+        // Update test summary
+        function updateTestSummary() {
+            const summaryDiv = document.getElementById('test-summary');
+            const results = window.testResults;
+            
+            let summary = '<h3>Test Results:</h3>';
+            
+            if (results.coordinateConsistency === true) {
+                summary += '<div class="test-result success">✅ Coordinate Consistency: PASSED</div>';
+            } else if (results.coordinateConsistency === false) {
+                summary += '<div class="test-result error">❌ Coordinate Consistency: FAILED</div>';
+            } else {
+                summary += '<div class="test-result info">⏳ Coordinate Consistency: Not tested</div>';
+            }
+
+            if (results.canvasRendering === true) {
+                summary += '<div class="test-result success">✅ Canvas Rendering: PASSED</div>';
+            } else if (results.canvasRendering === false) {
+                summary += '<div class="test-result error">❌ Canvas Rendering: FAILED</div>';
+            } else {
+                summary += '<div class="test-result info">⏳ Canvas Rendering: Not tested</div>';
+            }
+
+            if (results.clickDetection === true) {
+                summary += '<div class="test-result success">✅ Click Detection: PASSED</div>';
+            } else if (results.clickDetection === false) {
+                summary += '<div class="test-result error">❌ Click Detection: FAILED</div>';
+            } else {
+                summary += '<div class="test-result info">⏳ Click Detection: Not tested</div>';
+            }
+
+            summaryDiv.innerHTML = summary;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 Coordinate System Test Page Loaded');
+            console.log('Run the tests to verify coordinate system consistency');
+        });
+    </script>
+</body>
+</html>

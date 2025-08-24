@@ -1,0 +1,68 @@
+[
+  {
+    "id": "backup-broken-system",
+    "content": "Create comprehensive backup of current broken refactored system",
+    "status": "completed",
+    "dependencies": []
+  },
+  {
+    "id": "restore-working-system",
+    "content": "Restore original working canvas-viewer.js and test basic functionality",
+    "status": "completed",
+    "dependencies": ["backup-broken-system"]
+  },
+  {
+    "id": "clean-legacy-interference",
+    "content": "Remove legacy wrapper and clean up any interfering code",
+    "status": "completed",
+    "dependencies": ["restore-working-system"]
+  },
+  {
+    "id": "test-basic-functionality",
+    "content": "Verify canvas loading, tile clicking, and navigation work correctly",
+    "status": "completed",
+    "dependencies": ["clean-legacy-interference"]
+  },
+  {
+    "id": "extract-debug-manager",
+    "content": "Extract debug overlay functionality into focused CanvasDebugManager",
+    "status": "completed",
+    "dependencies": ["test-basic-functionality"]
+  },
+  {
+    "id": "extract-viewport-manager",
+    "content": "Extract viewport logic into focused manager with proven coordinate logic",
+    "status": "pending",
+    "dependencies": ["extract-debug-manager"]
+  },
+  {
+    "id": "extract-rendering-logic",
+    "content": "Extract rendering methods into focused manager with proven tile rendering",
+    "status": "pending",
+    "dependencies": ["extract-viewport-manager"]
+  },
+  {
+    "id": "extract-interaction-logic",
+    "content": "Extract interaction methods into focused manager with proven event handling",
+    "status": "pending",
+    "dependencies": ["extract-rendering-logic"]
+  },
+  {
+    "id": "integrate-managers",
+    "content": "Integrate all managers with proven logic and test complete system",
+    "status": "pending",
+    "dependencies": ["extract-interaction-logic"]
+  },
+  {
+    "id": "performance-validation",
+    "content": "Validate performance matches or exceeds original system",
+    "status": "pending",
+    "dependencies": ["integrate-managers"]
+  },
+  {
+    "id": "document-new-architecture",
+    "content": "Document new clean architecture for future development",
+    "status": "pending",
+    "dependencies": ["performance-validation"]
+  }
+]

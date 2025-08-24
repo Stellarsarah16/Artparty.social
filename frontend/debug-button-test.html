@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Button Test</title>
+    <style>
+        body { padding: 20px; font-family: Arial, sans-serif; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; margin: 5px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Button Connection Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Button Existence</h2>
+        <button id="toggle-debug-btn">Toggle Debug (Test Button)</button>
+        <div id="button-status" class="log">Checking...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Manager Existence</h2>
+        <div id="manager-status" class="log">Checking...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Connection Test</h2>
+        <button onclick="testConnection()">Test Debug Manager Connection</button>
+        <div id="connection-status" class="log">Ready to test...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 4: Live Log</h2>
+        <div id="live-log" class="log">Click the debug button above to see logs...</div>
+    </div>
+
+    <script type="module">
+        // Import the managers
+        import { createManagers } from './js/modules/managers/index.js';
+        
+        console.log('🔧 Starting debug button test...');
+        
+        // Initialize managers
+        const managers = await createManagers();
+        console.log('✅ Managers created:', managers);
+        
+        // Make debug manager globally available
+        window.debugManager = managers.debug;
+        console.log('✅ Debug manager set globally:', window.debugManager);
+        
+        // Test 1: Button existence
+        const button = document.getElementById('toggle-debug-btn');
+        const buttonStatus = document.getElementById('button-status');
+        if (button) {
+            buttonStatus.innerHTML = '✅ Button found: ' + button.outerHTML;
+        } else {
+            buttonStatus.innerHTML = '❌ Button not found!';
+        }
+        
+        // Test 2: Manager existence
+        const managerStatus = document.getElementById('manager-status');
+        if (window.debugManager) {
+            managerStatus.innerHTML = '✅ Debug manager found: ' + window.debugManager.constructor.name;
+        } else {
+            managerStatus.innerHTML = '❌ Debug manager not found!';
+        }
+        
+        // Test 3: Connection test function
+        window.testConnection = function() {
+            const connectionStatus = document.getElementById('connection-status');
+            const liveLog = document.getElementById('live-log');
+            
+            try {
+                if (!window.debugManager) {
+                    throw new Error('Debug manager not available');
+                }
+                
+                liveLog.innerHTML += '🔧 Testing getDebugState()...\n';
+                const state = window.debugManager.getDebugState();
+                liveLog.innerHTML += '✅ Current state: ' + JSON.stringify(state) + '\n';
+                
+                liveLog.innerHTML += '🔧 Testing setEnabled(true)...\n';
+                window.debugManager.setEnabled(true);
+                liveLog.innerHTML += '✅ setEnabled(true) called\n';
+                
+                setTimeout(() => {
+                    liveLog.innerHTML += '🔧 Testing setEnabled(false)...\n';
+                    window.debugManager.setEnabled(false);
+                    liveLog.innerHTML += '✅ setEnabled(false) called\n';
+                }, 2000);
+                
+                connectionStatus.innerHTML = '✅ Connection test passed!';
+            } catch (error) {
+                connectionStatus.innerHTML = '❌ Connection test failed: ' + error.message;
+                liveLog.innerHTML += '❌ Error: ' + error.message + '\n';
+            }
+        };
+        
+        // Test 4: Add click listener to debug button
+        if (button && window.debugManager) {
+            button.addEventListener('click', (event) => {
+                const liveLog = document.getElementById('live-log');
+                liveLog.innerHTML += '\n🔍 Button clicked!\n';
+                
+                try {
+                    const currentState = window.debugManager.getDebugState();
+                    const newEnabled = !currentState.enabled;
+                    
+                    liveLog.innerHTML += `🔍 Current: ${currentState.enabled}, New: ${newEnabled}\n`;
+                    window.debugManager.setEnabled(newEnabled);
+                    liveLog.innerHTML += '✅ setEnabled called successfully\n';
+                } catch (error) {
+                    liveLog.innerHTML += '❌ Error: ' + error.message + '\n';
+                }
+            });
+            
+            console.log('✅ Debug button click listener added');
+        }
+        
+        console.log('✅ Debug button test setup complete');
+    </script>
+</body>
+</html>
+

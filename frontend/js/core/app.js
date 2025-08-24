@@ -146,8 +146,8 @@ class StellarArtCollabApp {
         // Setup keyboard shortcuts
         this.setupKeyboardShortcuts();
         
-        // Setup event listeners
-        this.setupEventListeners();
+        // Setup event listeners (moved to navigation manager)
+        // this.setupEventListeners();
         
         // Setup mobile touch interactions
         this.setupMobileTouchInteractions();

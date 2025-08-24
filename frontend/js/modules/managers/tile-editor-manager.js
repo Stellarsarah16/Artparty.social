@@ -144,8 +144,15 @@ export class TileEditorManager {
             // Initialize the tile editor with the tile data
             await this.initializeTileEditor(fullTileData);
             
-            // NOTE: Editor section is now shown by canvas-viewer-manager.js
-            // after this method completes successfully
+            // Show the editor section
+            if (window.navigationManager) {
+                console.log('🔄 Showing editor section...');
+                window.navigationManager.showSection('editor');
+                console.log('✅ Editor section shown');
+            } else {
+                console.warn('⚠️ Navigation manager not available, cannot show editor section');
+            }
+            
             console.log('✅ Tile editor initialized successfully');
             
         } catch (error) {
@@ -171,7 +178,16 @@ export class TileEditorManager {
      * @returns {Array} 2D array of transparent pixels
      */
     createEmptyPixelData() {
-        const tileSize = 64; // Default tile size
+        // Get tile size from current canvas data
+        let tileSize = 32; // Default fallback
+        
+        if (window.CanvasViewer && window.CanvasViewer.canvasData) {
+            tileSize = window.CanvasViewer.canvasData.tile_size || 32;
+            console.log(`🎨 Using tile size from canvas: ${tileSize}`);
+        } else {
+            console.warn('⚠️ No canvas data available, using default tile size: 32');
+        }
+        
         const emptyPixelData = [];
         
         for (let y = 0; y < tileSize; y++) {
@@ -182,6 +198,8 @@ export class TileEditorManager {
             }
             emptyPixelData.push(row);
         }
+        
+        console.log(`📐 Created empty pixel data: ${tileSize}x${tileSize} (${emptyPixelData.length} rows)`);
         
         // Return as JSON string since backend expects pixel_data to be a JSON string
         return JSON.stringify(emptyPixelData);
@@ -308,10 +326,10 @@ export class TileEditorManager {
             const currentCanvas = window.appState.get('currentCanvas');
             paletteType = currentCanvas.palette_type || 'classic';
             console.log('🎨 Using palette type from currentCanvas:', paletteType);
-        } else if (window.canvasViewerManager && window.canvasViewerManager.currentCanvas) {
-            const currentCanvas = window.canvasViewerManager.currentCanvas;
+        } else if (window.CanvasViewer && window.CanvasViewer.canvasData) {
+            const currentCanvas = window.CanvasViewer.canvasData;
             paletteType = currentCanvas.palette_type || 'classic';
-            console.log('🎨 Using palette type from canvasViewerManager.currentCanvas:', paletteType);
+            console.log('🎨 Using palette type from CanvasViewer.canvasData:', paletteType);
         } else {
             console.warn('⚠️ Could not determine palette type, using classic as default');
         }
@@ -1167,6 +1185,7 @@ export class TileEditorManager {
     async loadNeighborTiles(currentTile) {
         try {
             console.log('🔍 Loading neighbor tiles for tile:', currentTile.x, currentTile.y);
+            console.log('🔍 Current tile data:', currentTile);
             
             // Validate that we have a canvas_id
             if (!currentTile.canvas_id) {
@@ -1197,6 +1216,12 @@ export class TileEditorManager {
                 return;
             }
             
+            console.log('🔍 All tiles loaded for canvas:', {
+                tileCount: allTiles ? allTiles.length : 'undefined',
+                tiles: allTiles ? allTiles.slice(0, 3) : 'undefined', // Show first 3 tiles
+                hasPixelData: allTiles ? allTiles.map(t => !!t.pixel_data) : 'undefined'
+            });
+            
             if (!allTiles || !Array.isArray(allTiles)) {
                 console.warn('⚠️ No tiles found for canvas');
                 return;
@@ -1204,6 +1229,25 @@ export class TileEditorManager {
             
             // Find neighbor tiles (8 directions) with correct tile size
             const neighbors = this.findNeighborTiles(currentTile, allTiles, canvasData.tile_size);
+            
+            console.log('🔍 Neighbor tiles found:', {
+                neighborCount: Object.keys(neighbors).length,
+                neighbors: neighbors,
+                neighborPositions: Object.keys(neighbors).map(pos => ({
+                    position: pos,
+                    hasTile: !!neighbors[pos],
+                    hasPixelData: neighbors[pos] ? !!neighbors[pos].pixel_data : false,
+                    tileData: neighbors[pos] ? {
+                        id: neighbors[pos].id,
+                        x: neighbors[pos].x,
+                        y: neighbors[pos].y,
+                        pixel_data_length: neighbors[pos].pixel_data ? 
+                            (typeof neighbors[pos].pixel_data === 'string' ? 
+                                neighbors[pos].pixel_data.length : 
+                                neighbors[pos].pixel_data.length) : 'none'
+                    } : null
+                }))
+            });
             
             // Display neighbor tiles with correct tile size
             this.displayNeighborTiles(neighbors, canvasData.tile_size);
@@ -1230,7 +1274,9 @@ export class TileEditorManager {
             currentTileX: currentTile.x,
             currentTileY: currentTile.y,
             tileSize: actualTileSize,
-            gridSize: gridSize
+            gridSize: gridSize,
+            totalTilesAvailable: allTiles.length,
+            tilePositions: allTiles.map(t => ({ x: t.x, y: t.y, id: t.id }))
         });
         
         // Define all 8 neighbor positions
@@ -1249,6 +1295,8 @@ export class TileEditorManager {
             const neighborX = currentTile.x + dx;
             const neighborY = currentTile.y + dy;
             
+            console.log(`🔍 Checking ${key} neighbor at (${neighborX}, ${neighborY})`);
+            
             // Check boundaries based on grid size
             if (neighborX >= 0 && neighborX < gridSize && neighborY >= 0 && neighborY < gridSize) {
                 const neighbor = allTiles.find(tile => 
@@ -1257,13 +1305,28 @@ export class TileEditorManager {
                 
                 if (neighbor) {
                     neighbors[key] = neighbor;
-                    console.log(`✅ Found ${key} neighbor at (${neighborX}, ${neighborY})`);
+                    console.log(`✅ Found ${key} neighbor at (${neighborX}, ${neighborY}):`, {
+                        id: neighbor.id,
+                        hasPixelData: !!neighbor.pixel_data,
+                        pixelDataType: neighbor.pixel_data ? typeof neighbor.pixel_data : 'none'
+                    });
                 } else {
-                    console.log(`❌ No ${key} neighbor at (${neighborX}, ${neighborY})`);
+                    console.log(`❌ No ${key} neighbor at (${neighborX}, ${neighborY}) - position is empty`);
                 }
             } else {
-                console.log(`❌ ${key} neighbor position (${neighborX}, ${neighborY}) out of bounds`);
+                console.log(`❌ ${key} neighbor position (${neighborX}, ${neighborY}) out of bounds (grid: 0-${gridSize-1})`);
             }
+        });
+        
+        console.log('🔍 Final neighbor results:', {
+            totalFound: Object.keys(neighbors).length,
+            foundPositions: Object.keys(neighbors),
+            neighborDetails: Object.entries(neighbors).map(([pos, tile]) => ({
+                position: pos,
+                tileId: tile.id,
+                coordinates: `(${tile.x}, ${tile.y})`,
+                hasPixelData: !!tile.pixel_data
+            }))
         });
         
         return neighbors;
@@ -1273,6 +1336,8 @@ export class TileEditorManager {
      * Display neighbor tiles on the neighbor canvases
      */
     displayNeighborTiles(neighbors, tileSize) {
+        console.log('🔧 displayNeighborTiles called with:', { neighbors, tileSize });
+        
         const neighborPositions = [
             'top', 'top-right', 'right', 'bottom-right',
             'bottom', 'bottom-left', 'left', 'top-left'
@@ -1284,10 +1349,19 @@ export class TileEditorManager {
             const canvas = document.getElementById(canvasId);
             const cell = document.getElementById(`neighbor-${position}`);
             
+            console.log(`🔧 Processing ${position} neighbor:`, {
+                hasNeighbor: !!neighbor,
+                neighborData: neighbor,
+                canvasId,
+                hasCanvas: !!canvas,
+                hasCell: !!cell
+            });
+            
             if (canvas && cell) {
                 if (neighbor) {
                     // Remove empty class and draw the neighbor
                     cell.classList.remove('empty');
+                    console.log(`🎨 Drawing ${position} neighbor tile:`, neighbor);
                     this.drawNeighborTile(canvas, neighbor, tileSize);
                     
                     // Store neighbor data for color picking
@@ -1300,11 +1374,10 @@ export class TileEditorManager {
                     // Add empty class and clear canvas
                     cell.classList.add('empty');
                     this.clearNeighborCanvas(canvas);
-                    
-                    // Remove neighbor data and click handler
-                    delete this.neighborTiles[position];
-                    this.removeNeighborCanvasClickHandler(canvas);
+                    this.neighborTiles[position] = null;
                 }
+            } else {
+                console.warn(`⚠️ Missing canvas or cell for ${position} neighbor:`, { canvas, cell });
             }
         });
     }
@@ -1313,6 +1386,13 @@ export class TileEditorManager {
      * Draw a neighbor tile on its canvas
      */
     drawNeighborTile(canvas, neighbor, tileSize) {
+        console.log(`🎨 drawNeighborTile called for:`, { neighbor, tileSize });
+        console.log(`🎨 Canvas element:`, {
+            width: canvas.width,
+            height: canvas.height,
+            hasContext: !!canvas.getContext('2d')
+        });
+        
         const ctx = canvas.getContext('2d');
         
         // Clear canvas
@@ -1320,18 +1400,26 @@ export class TileEditorManager {
         
         // Load and draw pixel data
         if (neighbor.pixel_data) {
+            console.log(`🎨 Neighbor has pixel_data:`, neighbor.pixel_data);
+            console.log(`🎨 Pixel data type:`, typeof neighbor.pixel_data);
+            console.log(`🎨 Pixel data length:`, neighbor.pixel_data.length);
+            
             let pixelData;
             
             // Parse pixel data if it's a string
             if (typeof neighbor.pixel_data === 'string') {
                 try {
                     pixelData = JSON.parse(neighbor.pixel_data);
+                    console.log(`🎨 Parsed string pixel data:`, pixelData);
+                    console.log(`🎨 Parsed data type:`, typeof pixelData);
+                    console.log(`🎨 Parsed data length:`, pixelData ? pixelData.length : 'undefined');
                 } catch (error) {
                     console.error('❌ Failed to parse neighbor pixel data:', error);
                     return;
                 }
             } else {
                 pixelData = neighbor.pixel_data;
+                console.log(`🎨 Using direct pixel data:`, pixelData);
             }
             
             // FIXED: Use provided tile size or calculate from pixel data
@@ -1341,6 +1429,12 @@ export class TileEditorManager {
             console.log(`🎨 Drawing neighbor tile: ${actualTileSize}x${actualTileSize}, pixelSize: ${pixelSize}, canvas width: ${canvas.width}`);
             
             if (pixelData && Array.isArray(pixelData)) {
+                console.log(`🎨 Pixel data is array, length: ${pixelData.length}`);
+                console.log(`🎨 First row sample:`, pixelData[0] ? pixelData[0].slice(0, 5) : 'undefined');
+                
+                let pixelsDrawn = 0;
+                let transparentPixels = 0;
+                
                 for (let y = 0; y < actualTileSize; y++) {
                     for (let x = 0; x < actualTileSize; x++) {
                         const color = pixelData[y] && pixelData[y][x];
@@ -1353,24 +1447,48 @@ export class TileEditorManager {
                             if (Array.isArray(color) && color.length >= 3) {
                                 const [r, g, b, a = 255] = color;
                                 fillColor = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+                                if (a > 0) pixelsDrawn++;
+                                else transparentPixels++;
                             }
                             // Handle hex color
                             else if (typeof color === 'string' && color.startsWith('#')) {
                                 fillColor = color;
+                                pixelsDrawn++;
                             }
                             // Handle named colors
                             else if (typeof color === 'string' && color !== 'transparent' && color !== 'white') {
                                 fillColor = color;
+                                pixelsDrawn++;
                             }
                             
                             if (fillColor && fillColor !== 'transparent') {
                                 ctx.fillStyle = fillColor;
                                 ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
                             }
+                        } else {
+                            transparentPixels++;
                         }
                     }
                 }
+                
+                console.log(`🎨 Drawing completed:`, {
+                    pixelsDrawn,
+                    transparentPixels,
+                    totalPixels: actualTileSize * actualTileSize
+                });
+                
+            } else {
+                console.warn(`⚠️ Pixel data is not an array:`, pixelData);
             }
+        } else {
+            console.warn(`⚠️ Neighbor tile has no pixel_data:`, neighbor);
+            console.log(`⚠️ Neighbor tile structure:`, {
+                id: neighbor.id,
+                x: neighbor.x,
+                y: neighbor.y,
+                hasPixelData: !!neighbor.pixel_data,
+                keys: Object.keys(neighbor)
+            });
         }
     }
     

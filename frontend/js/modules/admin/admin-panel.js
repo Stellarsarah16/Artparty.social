@@ -11,23 +11,27 @@ export class AdminPanelManager {
     init() {
         if (this.initialized) {
             console.log('🔧 Admin Panel already initialized, refreshing data...');
-            // Don't reload dashboard if already initialized, just return
             return;
         }
         
-        console.log('🔧 Admin Panel Manager initialized');
-        this.setupEventListeners();
+        console.log('🔧 Admin Panel Manager initialization started...');
         
-        // Only load dashboard if user is authenticated
-        if (this.isUserAuthenticated()) {
-            console.log('🔐 User authenticated, loading dashboard...');
-            this.loadDashboard();
-        } else {
-            console.log('🔐 User not authenticated, showing login prompt...');
-            this.renderLoginPrompt();
+        try {
+            this.setupEventListeners();
+            
+            // Defer authentication check to allow for proper initialization
+            setTimeout(() => {
+                this.checkAuthenticationAndLoad();
+            }, 200);
+            
+            this.initialized = true;
+            console.log('✅ Admin Panel Manager initialization completed');
+            
+        } catch (error) {
+            console.error('❌ Admin Panel Manager initialization failed:', error);
+            this.initialized = false;
+            throw error; // Re-throw to let the caller know initialization failed
         }
-        
-        this.initialized = true;
     }
     
     setupEventListeners() {
@@ -58,16 +62,15 @@ export class AdminPanelManager {
             this.setupDirectTabListeners();
         }
         
-        // Action buttons
-        document.getElementById('cleanup-locks-btn')?.addEventListener('click', () => this.cleanupExpiredLocks());
-        document.getElementById('refresh-data-btn')?.addEventListener('click', () => this.refreshCurrentView());
+        // FIXED: Don't attach action button listeners here - they're attached after rendering
+        // Action buttons are handled by individual render methods
         
         // Listen for authentication changes
         try {
             if (window.eventManager && typeof window.eventManager.on === 'function') {
                 console.log('🔧 Setting up event manager listeners...');
-                window.eventManager.on('userLogin', () => {
-                    console.log('🔐 User logged in, refreshing admin panel...');
+                window.eventManager.on('userLogin', (userData) => {
+                    console.log('🔐 User logged in, refreshing admin panel...', userData);
                     this.refreshAfterLogin();
                 });
                 
@@ -75,6 +78,25 @@ export class AdminPanelManager {
                     console.log('🔐 User logged out, showing login prompt...');
                     this.renderLoginPrompt();
                 });
+                
+                // Listen for authentication state changes
+                window.eventManager.on('authStateChanged', (userData) => {
+                    console.log('🔐 Auth state changed, checking admin panel...', userData);
+                    this.checkAuthenticationAndLoad();
+                });
+                
+                // Listen for admin panel ready event
+                window.eventManager.on('adminPanelReady', (userData) => {
+                    console.log('🔧 Admin panel ready event received:', userData);
+                    this.refreshAfterLogin();
+                });
+                
+                // Listen for admin panel init failed event
+                window.eventManager.on('adminPanelInitFailed', (data) => {
+                    console.log('❌ Admin panel init failed event received:', data);
+                    this.renderInitFailedMessage(data);
+                });
+                
                 console.log('✅ Event manager listeners set up successfully');
             } else if (window.appState && window.appState.subscribe) {
                 // Fallback to appState subscription system
@@ -86,6 +108,9 @@ export class AdminPanelManager {
                     } else if (!newUser && oldUser) {
                         console.log('🔐 User logged out, showing login prompt...');
                         this.renderLoginPrompt();
+                    } else if (newUser && oldUser) {
+                        console.log('🔐 User data updated, checking admin panel...');
+                        this.checkAuthenticationAndLoad();
                     }
                 });
                 console.log('✅ AppState subscription listeners set up successfully');
@@ -236,9 +261,11 @@ export class AdminPanelManager {
                 controller.abort();
             }, 5000); // 5 second timeout for faster testing
             
-            console.log('📡 Making fetch request to /api/v1/admin/reports/system-overview...');
+            // FIXED: Use buildAdminApiUrl instead of hardcoded URL
+            const apiUrl = this.buildAdminApiUrl('reports/system-overview');
+            console.log('📡 Making fetch request to:', apiUrl);
             
-            const response = await fetch('/api/v1/admin/reports/system-overview', {
+            const response = await fetch(apiUrl, {
                 headers: {
                     'Authorization': `Bearer ${this.getAuthToken()}`
                 },
@@ -444,12 +471,21 @@ export class AdminPanelManager {
         }
     }
     
-    renderDashboard(data) {
-        const dashboard = document.getElementById('admin-dashboard-view');
-        if (!dashboard) return;
-        
-        dashboard.innerHTML = `
-            <div class="admin-stats-grid">
+         renderDashboard(data) {
+         const dashboard = document.getElementById('admin-dashboard-view');
+         if (!dashboard) return;
+         
+         dashboard.innerHTML = `
+             <div class="admin-header">
+                 <h2>Admin Dashboard</h2>
+                 <div class="admin-actions">
+                     <button class="btn btn-secondary" onclick="adminPanelManager.goBackToMainApp()">
+                         <i class="fas fa-arrow-left"></i> Back to App
+                     </button>
+                     <button id="refresh-data-btn" class="btn btn-primary">Refresh Data</button>
+                 </div>
+             </div>
+             <div class="admin-stats-grid">
                 <div class="stat-card">
                     <h3>Users</h3>
                     <div class="stat-number">${data.users.total}</div>
@@ -478,14 +514,42 @@ export class AdminPanelManager {
                     <div class="stat-detail">${data.system_health.recommendations.join(', ')}</div>
                 </div>
             </div>
-            <div class="admin-actions">
-                <button id="cleanup-locks-btn" class="btn btn-warning">Cleanup Expired Locks</button>
-                <button id="refresh-data-btn" class="btn btn-primary">Refresh Data</button>
-            </div>
+                         <div class="admin-actions">
+                 <button id="cleanup-locks-btn" class="btn btn-warning">Cleanup Expired Locks</button>
+             </div>
         `;
         
-        // Re-attach event listeners
-        this.setupEventListeners();
+        // FIXED: Attach event listeners to the newly rendered buttons
+        this.attachDashboardEventListeners();
+    }
+
+    /**
+     * Attach event listeners specifically to dashboard buttons
+     */
+    attachDashboardEventListeners() {
+        console.log('🔧 Attaching dashboard event listeners...');
+        
+        // Refresh data button
+        const refreshBtn = document.getElementById('refresh-data-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                console.log('🔄 Refresh button clicked, reloading dashboard...');
+                this.loadDashboard();
+            });
+            console.log('✅ Refresh button listener attached');
+        }
+        
+        // Cleanup locks button
+        const cleanupBtn = document.getElementById('cleanup-locks-btn');
+        if (cleanupBtn) {
+            cleanupBtn.addEventListener('click', () => {
+                console.log('🧹 Cleanup button clicked...');
+                this.cleanupExpiredLocks();
+            });
+            console.log('✅ Cleanup button listener attached');
+        }
+        
+        console.log('✅ Dashboard event listeners attached');
     }
     
     renderBasicDashboard() {
@@ -508,10 +572,10 @@ export class AdminPanelManager {
                 </div>
             </div>
             <div class="admin-actions">
-                <button onclick="adminPanelManager.loadUsers()" class="btn btn-primary">Load Users</button>
-                <button onclick="adminPanelManager.loadCanvases()" class="btn btn-primary">Load Canvases</button>
-                <button onclick="adminPanelManager.loadLocks()" class="btn btn-primary">Load Locks</button>
-                <button onclick="adminPanelManager.loadDashboard()" class="btn btn-warning">Retry Dashboard</button>
+                <button class="btn btn-primary" onclick="adminPanelManager.loadUsers()">Load Users</button>
+                <button class="btn btn-primary" onclick="adminPanelManager.loadCanvases()">Load Canvases</button>
+                <button class="btn btn-primary" onclick="adminPanelManager.loadLocks()">Load Locks</button>
+                <button class="btn btn-warning" onclick="adminPanelManager.loadDashboard()">Retry Dashboard</button>
             </div>
         `;
         
@@ -547,20 +611,23 @@ export class AdminPanelManager {
         console.log('✅ Login prompt rendered');
     }
     
-    renderUsers(users) {
-        const usersView = document.getElementById('admin-users-view');
-        if (!usersView) return;
-        
-        usersView.innerHTML = `
-            <div class="admin-header">
-                <h2>User Management</h2>
-                <div class="admin-actions">
-                    <button class="btn btn-primary" onclick="adminPanelManager.createUser()">Create User</button>
-                    <button class="btn btn-warning" onclick="adminPanelManager.cleanupInactiveUsers()" title="Remove all inactive users">
-                        🗑️ Cleanup Inactive Users
-                    </button>
-                </div>
-            </div>
+         renderUsers(users) {
+         const usersView = document.getElementById('admin-users-view');
+         if (!usersView) return;
+         
+         usersView.innerHTML = `
+             <div class="admin-header">
+                 <h2>User Management</h2>
+                 <div class="admin-actions">
+                     <button class="btn btn-secondary" onclick="adminPanelManager.goBackToMainApp()">
+                         <i class="fas fa-arrow-left"></i> Back to App
+                     </button>
+                     <button class="btn btn-primary" onclick="adminPanelManager.createUser()">Create User</button>
+                     <button class="btn btn-warning" onclick="adminPanelManager.cleanupInactiveUsers()" title="Remove all inactive users">
+                         🗑️ Cleanup Inactive Users
+                     </button>
+                 </div>
+             </div>
             <div class="admin-table-container">
                 <table class="admin-table">
                     <thead>
@@ -598,17 +665,37 @@ export class AdminPanelManager {
                 </table>
             </div>
         `;
-    }
-    
-    renderLocks(locks) {
-        const locksView = document.getElementById('admin-locks-view');
-        if (!locksView) return;
         
-        locksView.innerHTML = `
-                            <div class="admin-header">
-                    <h2>Tile Lock Management</h2>
-                    <button class="btn btn-warning" onclick="adminPanelManager.cleanupExpiredLocks()">Cleanup Expired</button>
-                </div>
+        // FIXED: Attach event listeners to user action buttons
+        this.attachUserEventListeners();
+    }
+
+    /**
+     * Attach event listeners to user action buttons
+     */
+    attachUserEventListeners() {
+        console.log('🔧 Attaching user event listeners...');
+        
+        // Add any specific user view event listeners here if needed
+        // Most user actions use onclick handlers, so this is mainly for future extensibility
+        
+        console.log('✅ User event listeners attached');
+    }
+
+         renderLocks(locks) {
+         const locksView = document.getElementById('admin-locks-view');
+         if (!locksView) return;
+         
+         locksView.innerHTML = `
+             <div class="admin-header">
+                 <h2>Tile Lock Management</h2>
+                 <div class="admin-actions">
+                     <button class="btn btn-secondary" onclick="adminPanelManager.goBackToMainApp()">
+                         <i class="fas fa-arrow-left"></i> Back to App
+                     </button>
+                     <button class="btn btn-warning" onclick="adminPanelManager.cleanupExpiredLocks()">Cleanup Expired</button>
+                 </div>
+             </div>
             <div class="admin-table-container">
                 <table class="admin-table">
                     <thead>
@@ -644,17 +731,37 @@ export class AdminPanelManager {
                 </table>
             </div>
         `;
-    }
-    
-    renderReports(data) {
-        const reportsView = document.getElementById('admin-reports-view');
-        if (!reportsView) return;
         
-        reportsView.innerHTML = `
-                            <div class="admin-header">
-                    <h2>System Reports</h2>
-                    <button class="btn btn-primary" onclick="adminPanelManager.exportReport()">Export Report</button>
-                </div>
+        // FIXED: Attach event listeners to lock action buttons
+        this.attachLockEventListeners();
+    }
+
+    /**
+     * Attach event listeners to lock action buttons
+     */
+    attachLockEventListeners() {
+        console.log('🔧 Attaching lock event listeners...');
+        
+        // Add any specific lock view event listeners here if needed
+        // Most lock actions use onclick handlers, so this is mainly for future extensibility
+        
+        console.log('✅ Lock event listeners attached');
+    }
+
+         renderReports(data) {
+         const reportsView = document.getElementById('admin-reports-view');
+         if (!reportsView) return;
+         
+         reportsView.innerHTML = `
+             <div class="admin-header">
+                 <h2>System Reports</h2>
+                 <div class="admin-actions">
+                     <button class="btn btn-secondary" onclick="adminPanelManager.goBackToMainApp()">
+                         <i class="fas fa-arrow-left"></i> Back to App
+                     </button>
+                     <button class="btn btn-primary" onclick="adminPanelManager.exportReport()">Export Report</button>
+                 </div>
+             </div>
             <div class="report-sections">
                 <div class="report-section">
                     <h3>User Statistics</h3>
@@ -716,16 +823,19 @@ export class AdminPanelManager {
             return;
         }
         
-        // FIXED: Always render the header with cleanup button
-        canvasesView.innerHTML = `
-            <div class="admin-header">
-                <h2>Canvas Management</h2>
-                <div class="admin-actions">
-                    <button class="btn btn-warning cleanup-inactive-canvases-btn" onclick="adminPanelManager.cleanupInactiveCanvases()">
-                        🗑️ Cleanup Inactive Canvases
-                    </button>
-                </div>
-            </div>
+                 // FIXED: Always render the header with cleanup button
+         canvasesView.innerHTML = `
+             <div class="admin-header">
+                 <h2>Canvas Management</h2>
+                 <div class="admin-actions">
+                     <button class="btn btn-secondary" onclick="adminPanelManager.goBackToMainApp()">
+                         <i class="fas fa-arrow-left"></i> Back to App
+                     </button>
+                     <button class="btn btn-warning cleanup-inactive-canvases-btn" onclick="adminPanelManager.cleanupInactiveCanvases()">
+                         🗑️ Cleanup Inactive Canvases
+                     </button>
+                 </div>
+             </div>
             <div class="admin-table-container">
                 <table class="admin-table">
                     <thead>
@@ -783,25 +893,44 @@ export class AdminPanelManager {
             </div>
         `;
         
+        // FIXED: Attach event listeners to canvas action buttons
+        this.attachCanvasEventListeners();
+        
         console.log('✅ Canvas table updated with', Array.isArray(canvases) ? canvases.length : 0, 'canvases');
+    }
+
+    /**
+     * Attach event listeners to canvas action buttons
+     */
+    attachCanvasEventListeners() {
+        console.log('🔧 Attaching canvas event listeners...');
+        
+        // Add any specific canvas view event listeners here if needed
+        // Most canvas actions use onclick handlers, so this is mainly for future extensibility
+        
+        console.log('✅ Canvas event listeners attached');
     }
     
     // Action Methods
     
-    async cleanupExpiredLocks() {
-        if (!this.isUserAuthenticated()) {
-            console.log('❌ User not authenticated, cannot cleanup locks');
-            this.showError('Please log in to access admin features');
-            return;
-        }
-        
-        try {
-            const response = await fetch('/api/v1/admin/locks/cleanup', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                }
-            });
+         async cleanupExpiredLocks() {
+         if (!this.isUserAuthenticated()) {
+             console.log('❌ User not authenticated, cannot cleanup locks');
+             this.showError('Please log in to access admin features');
+             return;
+         }
+         
+         try {
+             // FIXED: Use buildAdminApiUrl instead of hardcoded URL
+             const apiUrl = this.buildAdminApiUrl('locks/cleanup');
+             console.log('🧹 Making cleanup request to:', apiUrl);
+             
+             const response = await fetch(apiUrl, {
+                 method: 'POST',
+                 headers: {
+                     'Authorization': `Bearer ${this.getAuthToken()}`
+                 }
+             });
             
             if (response.ok) {
                 const result = await response.json();
@@ -816,18 +945,22 @@ export class AdminPanelManager {
         }
     }
     
-    async forceReleaseLock(tileId) {
-        if (!confirm(`Are you sure you want to force release the lock on tile ${tileId}?`)) {
-            return;
-        }
-        
-        try {
-            const response = await fetch(`/api/v1/admin/locks/${tileId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                }
-            });
+         async forceReleaseLock(tileId) {
+         if (!confirm(`Are you sure you want to force release the lock on tile ${tileId}?`)) {
+             return;
+         }
+         
+         try {
+             // FIXED: Use buildAdminApiUrl instead of hardcoded URL
+             const apiUrl = this.buildAdminApiUrl(`locks/${tileId}`);
+             console.log('🔓 Making force release request to:', apiUrl);
+             
+             const response = await fetch(apiUrl, {
+                 method: 'DELETE',
+                 headers: {
+                     'Authorization': `Bearer ${this.getAuthToken()}`
+                 }
+             });
             
             if (response.ok) {
                 const result = await response.json();
@@ -842,14 +975,18 @@ export class AdminPanelManager {
         }
     }
     
-    async toggleUserStatus(userId) {
-        try {
-            const response = await fetch(`/api/v1/admin/users/${userId}/toggle-status`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                }
-            });
+         async toggleUserStatus(userId) {
+         try {
+             // FIXED: Use buildAdminApiUrl instead of hardcoded URL
+             const apiUrl = this.buildAdminApiUrl(`users/${userId}/toggle-status`);
+             console.log('🔄 Making toggle status request to:', apiUrl);
+             
+             const response = await fetch(apiUrl, {
+                 method: 'POST',
+                 headers: {
+                     'Authorization': `Bearer ${this.getAuthToken()}`
+                 }
+             });
             
             if (response.ok) {
                 const result = await response.json();
@@ -864,18 +1001,22 @@ export class AdminPanelManager {
         }
     }
     
-    async deleteUser(userId) {
-        if (!confirm(`Are you sure you want to delete user ${userId}? This action cannot be undone.`)) {
-            return;
-        }
-        
-        try {
-            const response = await fetch(`/api/v1/admin/users/${userId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                }
-            });
+         async deleteUser(userId) {
+         if (!confirm(`Are you sure you want to delete user ${userId}? This action cannot be undone.`)) {
+             return;
+         }
+         
+         try {
+             // FIXED: Use buildAdminApiUrl instead of hardcoded URL
+             const apiUrl = this.buildAdminApiUrl(`users/${userId}`);
+             console.log('🗑️ Making delete user request to:', apiUrl);
+             
+             const response = await fetch(apiUrl, {
+                 method: 'DELETE',
+                 headers: {
+                     'Authorization': `Bearer ${this.getAuthToken()}`
+                 }
+             });
             
             if (response.ok) {
                 const result = await response.json();
@@ -890,14 +1031,18 @@ export class AdminPanelManager {
         }
     }
 
-    async toggleCanvasStatus(canvasId) {
-        try {
-            const response = await fetch(`/api/v1/admin/canvases/${canvasId}/toggle-status`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                }
-            });
+         async toggleCanvasStatus(canvasId) {
+         try {
+             // FIXED: Use buildAdminApiUrl instead of hardcoded URL
+             const apiUrl = this.buildAdminApiUrl(`canvases/${canvasId}/toggle-status`);
+             console.log('🔄 Making toggle canvas status request to:', apiUrl);
+             
+             const response = await fetch(apiUrl, {
+                 method: 'POST',
+                 headers: {
+                     'Authorization': `Bearer ${this.getAuthToken()}`
+                 }
+             });
 
             if (response.ok) {
                 const result = await response.json();
@@ -912,18 +1057,22 @@ export class AdminPanelManager {
         }
     }
 
-    async deleteCanvas(canvasId) {
-        if (!confirm(`Are you sure you want to delete canvas ${canvasId}? This action cannot be undone.`)) {
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/v1/admin/canvases/${canvasId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                }
-            });
+         async deleteCanvas(canvasId) {
+         if (!confirm(`Are you sure you want to delete canvas ${canvasId}? This action cannot be undone.`)) {
+             return;
+         }
+ 
+         try {
+             // FIXED: Use buildAdminApiUrl instead of hardcoded URL
+             const apiUrl = this.buildAdminApiUrl(`canvases/${canvasId}`);
+             console.log('🗑️ Making delete canvas request to:', apiUrl);
+             
+             const response = await fetch(apiUrl, {
+                 method: 'DELETE',
+                 headers: {
+                     'Authorization': `Bearer ${this.getAuthToken()}`
+                 }
+             });
 
             if (response.ok) {
                 const result = await response.json();
@@ -953,7 +1102,45 @@ export class AdminPanelManager {
 
     isUserAuthenticated() {
         const token = this.getAuthToken();
-        return !!token && token !== 'null' && token !== 'undefined';
+        const userData = this.getUserData();
+        
+        // More robust authentication check
+        if (!token || !userData) {
+            console.log('❌ No token or user data found');
+            return false;
+        }
+        
+        // Check if user has admin privileges
+        if (!userData.is_admin && !userData.is_superuser) {
+            console.log('❌ User does not have admin privileges');
+            return false;
+        }
+        
+        console.log('✅ User authenticated and has admin privileges');
+        return true;
+    }
+    
+    getUserData() {
+        // Try multiple sources for user data
+        if (window.CONFIG_UTILS && window.CONFIG_UTILS.getUserData) {
+            return window.CONFIG_UTILS.getUserData();
+        }
+        
+        if (window.appState && window.appState.get) {
+            return window.appState.get('currentUser');
+        }
+        
+        // Fallback to localStorage
+        try {
+            const userData = localStorage.getItem('userData') || 
+                            localStorage.getItem('user') ||
+                            sessionStorage.getItem('userData') ||
+                            sessionStorage.getItem('user');
+            return userData ? JSON.parse(userData) : null;
+        } catch (error) {
+            console.error('Error parsing user data:', error);
+            return null;
+        }
     }
     
     getAuthToken() {
@@ -1056,13 +1243,16 @@ export class AdminPanelManager {
         try {
             console.log('🧹 Starting cleanup of inactive users...');
             
-            // FIXED: Use the correct endpoint that actually exists in the backend
-            const response = await fetch('/api/v1/admin/users/cleanup-inactive', {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                }
-            });
+                         // FIXED: Use buildAdminApiUrl instead of hardcoded URL
+             const apiUrl = this.buildAdminApiUrl('users/cleanup-inactive');
+             console.log('🧹 Making cleanup inactive users request to:', apiUrl);
+             
+             const response = await fetch(apiUrl, {
+                 method: 'DELETE',
+                 headers: {
+                     'Authorization': `Bearer ${this.getAuthToken()}`
+                 }
+             });
             
             console.log('📡 Cleanup response status:', response.status);
             
@@ -1127,13 +1317,16 @@ export class AdminPanelManager {
         try {
             console.log('🧹 Starting cleanup of inactive canvases...');
             
-            // FIXED: Use the correct endpoint that actually exists in the backend
-            const response = await fetch('/api/v1/admin/canvases/cleanup-inactive', {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                }
-            });
+                         // FIXED: Use buildAdminApiUrl instead of hardcoded URL
+             const apiUrl = this.buildAdminApiUrl('canvases/cleanup-inactive');
+             console.log('🧹 Making cleanup inactive canvases request to:', apiUrl);
+             
+             const response = await fetch(apiUrl, {
+                 method: 'DELETE',
+                 headers: {
+                     'Authorization': `Bearer ${this.getAuthToken()}`
+                 }
+             });
             
             console.log('📡 Cleanup response status:', response.status);
             
@@ -1312,6 +1505,22 @@ export class AdminPanelManager {
             return window.CONFIG_UTILS.API_BASE;
         }
         
+        // FIXED: Check for API_CONFIG.BASE_URL (the correct location)
+        if (window.API_CONFIG && window.API_CONFIG.BASE_URL) {
+            console.log('🔧 Found API_CONFIG.BASE_URL:', window.API_CONFIG.BASE_URL);
+            return window.API_CONFIG.BASE_URL;
+        }
+        
+        // FIXED: Use CONFIG_UTILS.getApiUrl for proper URL construction
+        if (window.CONFIG_UTILS && window.CONFIG_UTILS.getApiUrl) {
+            console.log('🔧 Using CONFIG_UTILS.getApiUrl for base URL construction');
+            // Extract base URL from a test call
+            const testUrl = window.CONFIG_UTILS.getApiUrl('/api/v1/test');
+            const baseUrl = testUrl.replace('/api/v1/test', '');
+            console.log('🔧 Extracted base URL from CONFIG_UTILS:', baseUrl);
+            return baseUrl;
+        }
+        
         // Default to relative URLs
         console.log('🔧 No API_BASE found, using relative URLs');
         return '';
@@ -1326,6 +1535,93 @@ export class AdminPanelManager {
         console.log(`🔧 Built admin API URL: ${fullUrl}`);
         return fullUrl;
     }
+
+    /**
+     * Render initialization failed message with retry options
+     */
+    renderInitFailedMessage(data) {
+        const adminSection = document.getElementById('admin-section');
+        if (!adminSection) return;
+        
+        const errorHtml = `
+            <div class="admin-error-container">
+                <div class="admin-error-message">
+                    <h3>⚠️ Admin Panel Initialization Failed</h3>
+                    <p>Failed to initialize admin panel after ${data.attempts} attempts.</p>
+                    <p><strong>Error:</strong> ${data.error}</p>
+                    <div class="admin-error-actions">
+                        <button class="btn btn-primary" onclick="forceRetryAdminPanelInit()">
+                            <i class="fas fa-redo"></i> Retry Initialization
+                        </button>
+                        <button class="btn btn-secondary" onclick="debugAdminStatus()">
+                            <i class="fas fa-bug"></i> Debug Status
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        adminSection.innerHTML = errorHtml;
+    }
+
+         /**
+      * Go back to the main application
+      */
+     goBackToMainApp() {
+         console.log('🔙 Going back to main app (canvas list)...');
+         
+         // Preferred: use NavigationManager to switch sections
+         try {
+             if (window.navigationManager && typeof window.navigationManager.showSection === 'function') {
+                 window.navigationManager.showSection('canvas');
+                 if (window.eventManager) {
+                     window.eventManager.emit('adminPanelClosed');
+                 }
+                 console.log('✅ Switched via NavigationManager.showSection("canvas")');
+                 return;
+             }
+         } catch (err) {
+             console.warn('⚠️ NavigationManager route failed, falling back:', err);
+         }
+         
+         // Fallback 1: emit navigate event
+         if (window.eventManager) {
+             window.eventManager.emit('navigateToSection', 'canvas');
+             window.eventManager.emit('adminPanelClosed');
+             console.log('✅ Emitted navigateToSection("canvas")');
+             return;
+         }
+         
+         // Fallback 2: direct DOM toggling
+         const adminSection = document.getElementById('admin-section');
+         if (adminSection) {
+             adminSection.classList.add('hidden');
+         }
+         const canvasSection = document.getElementById('canvas-section');
+         if (canvasSection) {
+             canvasSection.classList.remove('hidden');
+         }
+         console.log('✅ Fallback DOM toggle to canvas-section applied');
+     }
+     
+     /**
+      * Check authentication and load appropriate view
+      */
+     checkAuthenticationAndLoad() {
+         console.log('🔍 Checking authentication and loading appropriate view...');
+         
+         if (this.isUserAuthenticated()) {
+             console.log('✅ User is authenticated, loading dashboard...');
+             this.showView('dashboard');
+         } else {
+             console.log('❌ User not authenticated, showing login prompt...');
+             this.renderLoginPrompt();
+         }
+     }
+
+    /**
+     * Add missing methods that the admin panel needs
+     */
 }
 
 // Remove duplicate instance - use only adminPanelManager from managers system

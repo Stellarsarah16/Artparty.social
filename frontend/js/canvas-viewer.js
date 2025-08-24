@@ -131,6 +131,9 @@ class CanvasViewer {
         // Setup event listeners
         this.setupEventListeners();
         
+        // CRITICAL FIX: Setup tile update listeners
+        this.setupTileUpdateListeners();
+        
         // Initial render
         this.requestRender();
         
@@ -220,6 +223,54 @@ class CanvasViewer {
         // Window events for cleanup
         window.addEventListener('blur', this.boundHandlers.windowBlur, { passive: true });
         window.addEventListener('focus', this.boundHandlers.windowFocus, { passive: true });
+    }
+    
+    /**
+     * CRITICAL FIX: Setup tile update listeners for real-time updates
+     */
+    setupTileUpdateListeners() {
+        // Listen for tile creation/update events from tile editor
+        if (window.eventManager) {
+            console.log('🔧 Setting up tile update listeners...');
+            
+            window.eventManager.on('tileCreated', (tile) => {
+                console.log('🆕 Tile created event received:', tile);
+                this.handleTileUpdate(tile);
+            });
+            
+            window.eventManager.on('tileUpdated', (tile) => {
+                console.log('🔄 Tile updated event received:', tile);
+                this.handleTileUpdate(tile);
+            });
+            
+            console.log('✅ Tile update listeners setup complete');
+        } else {
+            console.warn('⚠️ Event manager not available - tile updates will not be real-time');
+        }
+    }
+    
+    /**
+     * CRITICAL FIX: Handle tile update from events
+     * @param {Object} tile - Updated tile data
+     */
+    handleTileUpdate(tile) {
+        if (!tile || !tile.id) {
+            console.warn('⚠️ Invalid tile data for update:', tile);
+            return;
+        }
+        
+        console.log(`🔄 Updating tile ${tile.id} in canvas viewer`);
+        
+        // Update the tile in our tiles Map
+        this.tiles.set(tile.id, tile);
+        
+        // Clear visible tiles cache to force re-render
+        this.clearVisibleTilesCache();
+        
+        // Request immediate render to show the update
+        this.requestRender();
+        
+        console.log(`✅ Tile ${tile.id} updated in canvas viewer`);
     }
     
     /**
@@ -839,6 +890,17 @@ class CanvasViewer {
      * @param {Object} canvasData - Canvas configuration
      */
     setCanvasData(canvasData) {
+        // Validate canvas data
+        if (!canvasData || typeof canvasData !== 'object') {
+            console.error('❌ Invalid canvas data provided:', canvasData);
+            return;
+        }
+        
+        if (!canvasData.width || !canvasData.height) {
+            console.error('❌ Canvas data missing required dimensions:', canvasData);
+            return;
+        }
+        
         console.log('🎨 Setting canvas data:', {
             id: canvasData.id,
             name: canvasData.name,
@@ -862,7 +924,13 @@ class CanvasViewer {
             this.tileSize = 32; // Default fallback
         }
         
-        this.centerView();
+        // Only center view if we have valid canvas data
+        if (this.canvasData && this.canvasData.width && this.canvasData.height) {
+            this.centerView();
+        } else {
+            console.warn('⚠️ Cannot center view - invalid canvas data');
+        }
+        
         this.requestRender();
     }
     
@@ -928,7 +996,7 @@ class CanvasViewer {
         }
         
         console.log('📦 Loading tiles:', tiles.length);
-        console.log('📦 Tile data:', tiles);
+        console.log('📦 Tile data sample:', tiles.slice(0, 2));
         
         tiles.forEach(tile => {
             this.tiles.set(tile.id, tile);
@@ -938,7 +1006,26 @@ class CanvasViewer {
         this.requestRender();
         
         console.log(`✅ Loaded ${tiles.length} tiles. Total tiles: ${this.tiles.size}`);
-        console.log('📦 All tiles in map:', Array.from(this.tiles.values()).map(t => ({ id: t.id, x: t.x, y: t.y })));
+        console.log('📦 All tiles in map:', Array.from(this.tiles.values()).map(t => ({ 
+            id: t.id, 
+            x: t.x, 
+            y: t.y, 
+            hasPixelData: !!t.pixel_data,
+            pixelDataType: typeof t.pixel_data,
+            pixelDataLength: t.pixel_data ? (Array.isArray(t.pixel_data) ? t.pixel_data.length : 'string') : 'none'
+        })));
+        
+        // Debug: Check if tiles are visible
+        if (this.canvasData) {
+            console.log('🎯 Canvas data for tile positioning:', {
+                width: this.canvasData.width,
+                height: this.canvasData.height,
+                tileSize: this.tileSize,
+                viewportX: this.viewportX,
+                viewportY: this.viewportY,
+                zoom: this.zoom
+            });
+        }
     }
     
     /**
@@ -1211,6 +1298,18 @@ class CanvasViewer {
         const endX = Math.ceil((this.viewportX + (this.canvas.width / this.zoom)) / this.tileSize);
         const endY = Math.ceil((this.viewportY + (this.canvas.height / this.zoom)) / this.tileSize);
         
+        // Debug viewport calculation
+        console.log('🎯 Viewport calculation:', {
+            viewportX: this.viewportX,
+            viewportY: this.viewportY,
+            canvasWidth: this.canvas.width,
+            canvasHeight: this.canvas.height,
+            zoom: this.zoom,
+            tileSize: this.tileSize,
+            startX, startY, endX, endY,
+            totalTiles: this.tiles.size
+        });
+        
         // Early exit if viewport is too large
         const viewportTileCount = (endX - startX) * (endY - startY);
         if (viewportTileCount > maxTiles) {
@@ -1227,6 +1326,8 @@ class CanvasViewer {
                 tileCount++;
             }
         }
+        
+        console.log(`🎯 Found ${visibleTiles.length} visible tiles out of ${this.tiles.size} total tiles`);
         
         // Cache the result
         this.visibleTilesCache = visibleTiles;
@@ -1608,10 +1709,39 @@ class CanvasViewer {
      * Center view on canvas
      */
     centerView() {
-        if (!this.canvasData) return;
+        if (!this.canvasData) {
+            console.warn('⚠️ Cannot center view: no canvas data');
+            return;
+        }
+        
+        if (!this.canvasData.width || !this.canvasData.height) {
+            console.warn('⚠️ Cannot center view: canvas data missing dimensions');
+            return;
+        }
+        
+        if (!this.canvas) {
+            console.warn('⚠️ Cannot center view: canvas element not available');
+            return;
+        }
+        
+        // Ensure canvas has valid dimensions
+        if (!this.canvas.width || !this.canvas.height) {
+            console.warn('⚠️ Cannot center view: canvas element has no dimensions');
+            return;
+        }
         
         this.viewportX = (this.canvasData.width - (this.canvas.width / this.zoom)) / 2;
         this.viewportY = (this.canvasData.height - (this.canvas.height / this.zoom)) / 2;
+        
+        console.log('🎯 Centered view:', {
+            viewportX: this.viewportX,
+            viewportY: this.viewportY,
+            canvasWidth: this.canvasData.width,
+            canvasHeight: this.canvasData.height,
+            displayWidth: this.canvas.width,
+            displayHeight: this.canvas.height,
+            zoom: this.zoom
+        });
         
         this.requestRender();
     }
@@ -2144,6 +2274,13 @@ class CanvasViewer {
         if (window.CONFIG_UTILS) {
             window.CONFIG_UTILS.safeLog('🧹 Event listeners removed');
         }
+    }
+    
+    /**
+     * Check if the canvas viewer is properly initialized
+     */
+    isInitialized() {
+        return !!(this.canvas && this.ctx && this.canvas.width && this.canvas.height);
     }
     
     /**

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            position: relative;
+            width: 400px;
+            height: 300px;
+            border: 2px solid #ccc;
+            margin: 20px 0;
+        }
+        .canvas {
+            width: 100%;
+            height: 100%;
+            background: #f0f0f0;
+        }
+        .debug-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 1000;
+            border: 2px solid red;
+            display: none;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug System Test</h1>
+    
+    <button id="debug-btn" class="btn btn-secondary">Toggle Debug</button>
+    
+    <div class="container" id="canvas-container">
+        <canvas id="main-canvas" class="canvas" width="400" height="300"></canvas>
+    </div>
+    
+    <div id="console-output"></div>
+
+    <script>
+        class SimpleDebugManager {
+            constructor() {
+                this.isEnabled = false;
+                this.overlayCanvas = null;
+                this.overlayCtx = null;
+                this.callCount = 0;
+                
+                this.createOverlay();
+                this.setupButton();
+            }
+            
+            log(message) {
+                console.log(message);
+                const output = document.getElementById('console-output');
+                output.innerHTML += `<div>${message}</div>`;
+            }
+            
+            createOverlay() {
+                this.log('Creating debug overlay...');
+                
+                // Remove existing overlays
+                const existing = document.querySelectorAll('.debug-overlay');
+                existing.forEach(el => el.remove());
+                this.log(`Removed ${existing.length} existing overlays`);
+                
+                // Create new overlay
+                this.overlayCanvas = document.createElement('canvas');
+                this.overlayCanvas.className = 'debug-overlay';
+                this.overlayCanvas.width = 400;
+                this.overlayCanvas.height = 300;
+                this.overlayCanvas.style.display = 'none';
+                
+                // Attach to container
+                const container = document.getElementById('canvas-container');
+                container.appendChild(this.overlayCanvas);
+                this.overlayCtx = this.overlayCanvas.getContext('2d');
+                
+                this.log('Overlay created and attached');
+            }
+            
+            setupButton() {
+                const btn = document.getElementById('debug-btn');
+                btn.addEventListener('click', () => {
+                    this.log('Button clicked!');
+                    this.toggle();
+                });
+                this.log('Button event listener added');
+            }
+            
+            toggle() {
+                this.callCount++;
+                this.log(`Toggle called (count: ${this.callCount})`);
+                
+                this.isEnabled = !this.isEnabled;
+                this.log(`Debug enabled: ${this.isEnabled}`);
+                
+                if (this.overlayCanvas) {
+                    this.overlayCanvas.style.display = this.isEnabled ? 'block' : 'none';
+                    this.log(`Overlay display: ${this.overlayCanvas.style.display}`);
+                }
+                
+                if (this.isEnabled) {
+                    this.renderGrid();
+                } else {
+                    this.clearGrid();
+                }
+                
+                // Update button
+                const btn = document.getElementById('debug-btn');
+                if (this.isEnabled) {
+                    btn.classList.add('btn-primary');
+                    btn.classList.remove('btn-secondary');
+                } else {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-secondary');
+                }
+            }
+            
+            renderGrid() {
+                this.callCount++;
+                this.log(`Rendering grid (count: ${this.callCount})`);
+                
+                if (!this.overlayCtx) {
+                    this.log('No overlay context!');
+                    return;
+                }
+                
+                const ctx = this.overlayCtx;
+                const canvas = this.overlayCanvas;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw grid
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 1;
+                
+                // Vertical lines
+                for (let x = 0; x <= canvas.width; x += 32) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+                
+                // Horizontal lines
+                for (let y = 0; y <= canvas.height; y += 32) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+                
+                this.log('Grid rendered');
+            }
+            
+            clearGrid() {
+                this.log('Clearing grid');
+                if (this.overlayCtx) {
+                    this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
+                }
+            }
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            window.debugManager = new SimpleDebugManager();
+        });
+    </script>
+</body>
+</html>
+
+

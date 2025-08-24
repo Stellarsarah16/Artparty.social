@@ -632,7 +632,7 @@ class PixelEditor {
     }
     
     /**
-     * Flood fill algorithm
+     * CRITICAL FIX: Flood fill algorithm with proper color comparison
      * @param {number} x - X coordinate
      * @param {number} y - Y coordinate
      * @param {string} newColor - New color to fill
@@ -641,10 +641,20 @@ class PixelEditor {
         if (x < 0 || x >= this.tileSize || y < 0 || y >= this.tileSize) return;
         
         const originalColor = this.pixelData[y][x];
-        if (originalColor === newColor) return;
+        
+        // CRITICAL FIX: Convert colors to comparable format
+        const normalizedOriginal = this.normalizeColor(originalColor);
+        const normalizedNew = this.normalizeColor(newColor);
+        
+        if (normalizedOriginal === normalizedNew) return;
+        
+        console.log(`🪣 Flood fill starting at (${x}, ${y})`);
+        console.log(`🪣 Original color:`, originalColor, `→ normalized:`, normalizedOriginal);
+        console.log(`🪣 New color:`, newColor, `→ normalized:`, normalizedNew);
         
         const stack = [[x, y]];
         const visited = new Set();
+        let fillCount = 0;
         
         while (stack.length > 0) {
             const [currentX, currentY] = stack.pop();
@@ -656,9 +666,13 @@ class PixelEditor {
             if (currentX < 0 || currentX >= this.tileSize || 
                 currentY < 0 || currentY >= this.tileSize) continue;
             
-            if (this.pixelData[currentY][currentX] !== originalColor) continue;
+            const currentColor = this.pixelData[currentY][currentX];
+            const normalizedCurrent = this.normalizeColor(currentColor);
+            
+            if (normalizedCurrent !== normalizedOriginal) continue;
             
             this.drawPixel(currentX, currentY, newColor);
+            fillCount++;
             
             // Add neighboring pixels to stack
             stack.push([currentX + 1, currentY]);
@@ -666,6 +680,30 @@ class PixelEditor {
             stack.push([currentX, currentY + 1]);
             stack.push([currentX, currentY - 1]);
         }
+        
+        console.log(`🪣 Flood fill completed: ${fillCount} pixels filled`);
+    }
+    
+    /**
+     * CRITICAL FIX: Normalize color to string for comparison
+     * @param {*} color - Color in any format (RGBA array, hex string, etc.)
+     * @returns {string} Normalized color string
+     */
+    normalizeColor(color) {
+        if (!color) return 'transparent';
+        
+        if (Array.isArray(color)) {
+            const [r, g, b, a = 255] = color;
+            if (a === 0) return 'transparent';
+            return `rgba(${r},${g},${b},${a})`;
+        }
+        
+        if (typeof color === 'string') {
+            if (color === 'transparent' || color === '') return 'transparent';
+            return color;
+        }
+        
+        return 'transparent';
     }
     
     /**

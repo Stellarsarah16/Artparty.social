@@ -199,46 +199,8 @@ export class CanvasListManager {
                 } else {
                     console.error('❌ Navigation manager not found, falling back to direct canvas viewer');
                     // Fallback to direct call if navigation manager isn't available
-                    if (window.CanvasViewer) {
-                        console.log('🔄 Loading tiles for canvas in fallback mode...');
-                        
-                        // Initialize CanvasViewer if not already initialized
-                        if (!window.CanvasViewer.isInitialized()) {
-                            console.log('🔄 Initializing CanvasViewer with canvas element...');
-                            const canvasElement = document.getElementById('canvas-viewer');
-                            if (canvasElement) {
-                                window.CanvasViewer.init(canvasElement);
-                                console.log('✅ CanvasViewer initialized');
-                            } else {
-                                console.error('❌ Canvas viewer element not found');
-                                return;
-                            }
-                        }
-                        
-                        // Set up tile click callback to open tile editor
-                        if (window.CanvasViewer && window.tileEditorManager) {
-                            console.log('🔄 Setting up tile click callback in fallback mode...');
-                            window.CanvasViewer.onTileClick = (tile) => {
-                                console.log('🎯 Tile clicked, opening tile editor:', tile);
-                                window.tileEditorManager.openTileEditor(tile);
-                            };
-                            console.log('✅ Tile click callback configured in fallback mode');
-                        }
-                        
-                        // Set canvas data first
-                        window.CanvasViewer.setCanvasData(canvasData);
-                        
-                        // Load tiles for this canvas
-                        this.tileApi.getForCanvas(canvasData.id).then(tiles => {
-                            if (tiles && tiles.length > 0) {
-                                console.log(`📦 Loaded ${tiles.length} tiles for canvas`);
-                                window.CanvasViewer.loadTiles(tiles);
-                            } else {
-                                console.log('📦 No tiles found for canvas');
-                            }
-                        }).catch(error => {
-                            console.error('❌ Failed to load tiles for canvas:', error);
-                        });
+                    if (window.canvasViewerManager) {
+                        window.canvasViewerManager.openCanvas(canvasData);
                     }
                 }
             });
