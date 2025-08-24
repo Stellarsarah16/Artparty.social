@@ -384,8 +384,9 @@ class NavigationManager {
                 tiles = [];
             }
             
-            // Update canvas stats - FIX ISSUE 1 DATA POPULATION
+            // Update canvas stats and title - FIX ISSUE DATA POPULATION
             this.updateCanvasStats(canvas, tiles);
+            this.updateCanvasTitle(canvas);
             
             // Show viewer section
             console.log('🔄 Attempting to show viewer section...');
@@ -474,6 +475,42 @@ class NavigationManager {
     }
     
     /**
+     * Update canvas title and header info
+     */
+    updateCanvasTitle(canvas) {
+        try {
+            console.log('🔧 Updating canvas title...');
+            
+            // Update canvas title
+            const titleElement = document.getElementById('viewer-canvas-title');
+            if (titleElement && canvas.name) {
+                titleElement.textContent = canvas.name;
+                console.log('✅ Updated canvas title:', canvas.name);
+            } else {
+                console.warn('⚠️ Canvas title element not found or no canvas name');
+            }
+            
+            // Update canvas dimensions
+            const dimensionsElement = document.getElementById('viewer-canvas-dimensions');
+            if (dimensionsElement && canvas.width && canvas.height) {
+                dimensionsElement.textContent = `${canvas.width}×${canvas.height}`;
+                console.log('✅ Updated canvas dimensions:', `${canvas.width}×${canvas.height}`);
+            }
+            
+            // Update users online (placeholder for now - can be enhanced with WebSocket data)
+            const usersElement = document.getElementById('viewer-canvas-users');
+            if (usersElement) {
+                const userCount = canvas.user_count || 1; // Default to 1 (current user)
+                usersElement.textContent = `${userCount} user${userCount !== 1 ? 's' : ''} online`;
+                console.log('✅ Updated users online:', userCount);
+            }
+            
+        } catch (error) {
+            console.error('❌ Failed to update canvas title:', error);
+        }
+    }
+    
+    /**
      * Refresh current canvas
      */
     async refreshCurrentCanvas() {
@@ -493,8 +530,9 @@ class NavigationManager {
                     window.CanvasViewer.loadTiles(tiles);
                 }
                 
-                // Update canvas stats
+                // Update canvas stats and title
                 this.updateCanvasStats(canvasData, tiles || []);
+                this.updateCanvasTitle(canvasData);
                 
                 // Center and reset view after refresh - FIX ISSUE 1
                 window.CanvasViewer.resetZoom();
