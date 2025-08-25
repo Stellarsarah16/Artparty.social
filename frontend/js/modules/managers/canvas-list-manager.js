@@ -25,11 +25,38 @@ export class CanvasListManager {
     }
 
     /**
+     * Add this method to check backend readiness
+     */
+    async checkBackendReadiness() {
+        try {
+            const response = await fetch('/ready');
+            if (response.ok) {
+                const data = await response.json();
+                return data.status === 'ready';
+            }
+            return false;
+        } catch (error) {
+            console.warn('⚠️ Backend readiness check failed:', error);
+            return false;
+        }
+    }
+
+    /**
      * Load and display all canvases
      */
     async loadCanvases() {
         try {
             console.log('🔄 Loading canvases...');
+            
+            // ✅ Check backend readiness first
+            const isReady = await this.checkBackendReadiness();
+            if (!isReady) {
+                console.log('⏳ Backend not ready, waiting...');
+                // Wait and retry
+                setTimeout(() => this.loadCanvases(), 2000);
+                return;
+            }
+            
             console.log('🔧 this.canvasApi:', this.canvasApi);
             console.log('🔧 this.canvasApi.list:', this.canvasApi?.list);
             console.log('🔧 typeof this.canvasApi.list:', typeof this.canvasApi?.list);
@@ -84,43 +111,33 @@ export class CanvasListManager {
         this.staggeredLoadCanvasData(canvases, cardElements);
     }
 
-    /**
-     * Load canvas data in a staggered manner to prevent server overload
-     */
-    async staggeredLoadCanvasData(canvases, cardElements) {
-        console.log('🔄 Starting staggered loading for', canvases.length, 'canvases');
-        
-        // Load data for each canvas with delays
-        for (let i = 0; i < canvases.length; i++) {
-            const canvas = canvases[i];
-            const cardElement = cardElements[i];
-            
+// Update the staggeredLoadCanvasData method
+async staggeredLoadCanvasData(canvases) {
+    try {
+        for (const canvas of canvases) {
             try {
-                console.log(`🔄 Loading data for canvas ${i + 1}/${canvases.length}: ${canvas.name}`);
+                // Add delay between requests to avoid overwhelming backend
+                await new Promise(resolve => setTimeout(resolve, 100));
                 
-                // Load both user tile count and preview concurrently for this canvas
-                await Promise.all([
-                    this.loadUserTileCountForCanvas(canvas.id, cardElement),
-                    this.loadCanvasPreview(canvas, cardElement)
-                ]);
+                // Load user tile count
+                await this.loadUserTileCountForCanvas(canvas.id);
                 
-                console.log(`✅ Completed loading data for canvas: ${canvas.name}`);
+                // Add another delay
+                await new Promise(resolve => setTimeout(resolve, 100));
                 
-                // Add a delay between canvases to prevent server overload
-                if (i < canvases.length - 1) {
-                    const delay = 300; // 300ms delay between each canvas
-                    console.log(`⏳ Waiting ${delay}ms before loading next canvas...`);
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
+                // Load canvas preview
+                await this.loadCanvasPreview(canvas);
                 
             } catch (error) {
-                console.warn(`⚠️ Failed to load data for canvas ${canvas.name}:`, error);
-                // Continue with next canvas even if this one fails
+                console.warn(`⚠️ Failed to load data for canvas ${canvas.id}:`, error);
+                // Continue with other canvases instead of failing completely
+                continue;
             }
         }
-        
-        console.log('✅ Staggered loading completed for all canvases');
+    } catch (error) {
+        console.error('❌ Error in staggered data loading:', error);
     }
+}
 
     /**
      * Create a canvas card element

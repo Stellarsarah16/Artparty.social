@@ -618,7 +618,11 @@ class TileAPI {
     
     async getCanvasTiles(canvasId, params = {}) {
         const url = API_CONFIG.ENDPOINTS.CANVAS_TILES.replace('{id}', canvasId);
-        return await this.client.get(url, { params });
+        
+        // Add retry logic for 503 errors
+        return await this.client.executeWithRetry(async () => {
+            return await this.client.get(url, { params });
+        });
     }
     
     async getTileAtPosition(canvasId, x, y) {
@@ -669,7 +673,11 @@ class TileAPI {
     async getUserTileCount(userId, canvasId = null) {
         const url = API_CONFIG.ENDPOINTS.USER_TILES.replace('{id}', userId) + '/count';
         const params = canvasId ? { canvas_id: canvasId } : {};
-        return await this.client.get(url, { params });
+        
+        // Add retry logic for 503 errors
+        return await this.client.executeWithRetry(async () => {
+            return await this.client.get(url, { params });
+        });
     }
     
     // Tile lock methods
