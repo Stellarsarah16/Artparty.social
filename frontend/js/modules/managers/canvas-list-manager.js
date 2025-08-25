@@ -271,6 +271,10 @@ async staggeredLoadCanvasData(canvases) {
 
         // Conditionally load data to prevent server overload
         if (loadData) {
+            console.log(`🔍 Creating canvas card for canvas ${canvas.id}, card element:`, card);
+            console.log(`🔍 Card element type:`, typeof card);
+            console.log(`🔍 Card element querySelector available:`, typeof card?.querySelector === 'function');
+            
             // Load user tile count for this canvas
             this.loadUserTileCountForCanvas(canvas.id, card);
             
@@ -287,6 +291,13 @@ async staggeredLoadCanvasData(canvases) {
     async loadUserTileCountForCanvas(canvasId, cardElement, retries = 3) {
         const currentUser = appState.get('currentUser');
         if (!currentUser || !currentUser.id) {
+            console.warn('❌ No current user found, skipping user tile count load');
+            return;
+        }
+
+        // Defensive check for cardElement
+        if (!cardElement) {
+            console.error('❌ Card element is undefined, cannot load user tile count for canvas', canvasId);
             return;
         }
 
@@ -295,9 +306,18 @@ async staggeredLoadCanvasData(canvases) {
                 console.log(`📊 Loading user tile count for canvas ${canvasId} (attempt ${attempt}/${retries})`);
                 
                 const tileCount = await this.tileApi.getUserTileCount(currentUser.id, canvasId);
+                
+                // Defensive check before using querySelector
+                if (!cardElement || typeof cardElement.querySelector !== 'function') {
+                    console.error('❌ Card element is invalid or querySelector not available for canvas', canvasId);
+                    return;
+                }
+                
                 const tileCountElement = cardElement.querySelector('.user-tiles-count');
                 if (tileCountElement) {
                     tileCountElement.textContent = `${tileCount.tile_count} your tiles`;
+                } else {
+                    console.warn(`⚠️ User tiles count element not found for canvas ${canvasId}`);
                 }
                 
                 console.log(`✅ Successfully loaded user tile count for canvas ${canvasId}`);
@@ -312,9 +332,13 @@ async staggeredLoadCanvasData(canvases) {
                 if (attempt === retries) {
                     // Final attempt failed
                     console.error(`❌ All ${retries} user tile count attempts failed for canvas ${canvasId}`);
-                    const tileCountElement = cardElement.querySelector('.user-tiles-count');
-                    if (tileCountElement) {
-                        tileCountElement.textContent = '0 your tiles';
+                    
+                    // Defensive check before using querySelector
+                    if (cardElement && typeof cardElement.querySelector === 'function') {
+                        const tileCountElement = cardElement.querySelector('.user-tiles-count');
+                        if (tileCountElement) {
+                            tileCountElement.textContent = '0 your tiles';
+                        }
                     }
                 } else {
                     // Wait before retrying
@@ -330,11 +354,23 @@ async staggeredLoadCanvasData(canvases) {
      * Load and render canvas preview with retry logic
      */
     async loadCanvasPreview(canvas, cardElement, retries = 3) {
+        // Defensive check for cardElement
+        if (!cardElement) {
+            console.error('❌ Card element is undefined, cannot load canvas preview for canvas', canvas?.id || 'unknown');
+            return;
+        }
+
+        // Defensive check before using querySelector
+        if (typeof cardElement.querySelector !== 'function') {
+            console.error('❌ Card element querySelector not available for canvas', canvas?.id || 'unknown');
+            return;
+        }
+
         const previewCanvas = cardElement.querySelector('.canvas-preview');
         const previewOverlay = cardElement.querySelector('.preview-overlay');
         
         if (!previewCanvas || !previewOverlay) {
-            console.warn('Preview canvas elements not found');
+            console.warn('Preview canvas elements not found for canvas', canvas?.id || 'unknown');
             return;
         }
 
