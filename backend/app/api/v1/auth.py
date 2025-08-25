@@ -3,7 +3,7 @@ Authentication API endpoints
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from pydantic import ValidationError, BaseModel
 import logging
@@ -79,14 +79,14 @@ async def confirm_password_reset_options():
 @router.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def register(
     user_create: UserCreate,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Register a new user"""
     try:
         logger.info(f"Registration attempt for username: {user_create.username}")
         
-        # Use the original auth service
-        user = auth_service.create_user(db, user_create)
+        # Use the async auth service
+        user = await auth_service.create_user(db, user_create)
         token_response = auth_service.create_token_response(user)
         
         logger.info(f"User registered successfully: {user_create.username}")
@@ -120,14 +120,14 @@ async def register(
 @router.post("/login", response_model=dict)
 async def login(
     user_login: UserLogin,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Authenticate user and return access token"""
     try:
         logger.info(f"Login attempt for username: {user_login.username}")
         
-        # Use the original auth service
-        user = auth_service.authenticate_user(db, user_login.username, user_login.password)
+        # Use the async auth service
+        user = await auth_service.authenticate_user(db, user_login.username, user_login.password)
         
         if not user:
             raise HTTPException(
@@ -154,14 +154,17 @@ async def login(
 @router.post("/verify-email", response_model=dict)
 async def send_verification_email(
     request: EmailVerificationRequest,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Send email verification to user"""
     try:
         logger.info(f"Email verification request for: {request.email}")
         
-        # Find user by email
-        user = db.query(User).filter(User.email == request.email).first()
+        # Find user by email - use async syntax
+        from sqlalchemy import select
+        stmt = select(User).where(User.email == request.email)
+        result = await db.execute(stmt)
+        user = result.scalar_one_or_none()
         
         if not user:
             # Don't reveal if email exists or not for security
@@ -213,14 +216,14 @@ async def send_verification_email(
 @router.post("/confirm-email", response_model=dict)
 async def confirm_email_verification(
     request: EmailVerificationConfirm,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Confirm email verification with token"""
     try:
         logger.info("Email verification confirmation attempt")
         
         # Verify the token
-        user = verification_service.verify_token(db, request.token, "email_verification")
+        user = await verification_service.verify_token(db, request.token, "email_verification")
         
         if not user:
             logger.warning("Invalid email verification token")
@@ -231,7 +234,7 @@ async def confirm_email_verification(
         
         # Mark user as verified
         user.is_verified = True
-        db.commit()
+        await db.commit()
         
         logger.info(f"Email verified successfully for user: {user.username}")
         return {
@@ -259,14 +262,17 @@ async def confirm_email_verification(
 @router.post("/reset-password", response_model=dict)
 async def send_password_reset_email(
     request: PasswordResetRequest,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Send password reset email to user"""
     try:
         logger.info(f"Password reset request for: {request.email}")
         
-        # Find user by email
-        user = db.query(User).filter(User.email == request.email).first()
+        # Find user by email - use async syntax
+        from sqlalchemy import select
+        stmt = select(User).where(User.email == request.email)
+        result = await db.execute(stmt)
+        user = result.scalar_one_or_none()
         
         if not user:
             # Don't reveal if email exists or not for security
@@ -311,14 +317,14 @@ async def send_password_reset_email(
 @router.post("/confirm-password-reset", response_model=dict)
 async def confirm_password_reset(
     request: PasswordResetConfirm,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Confirm password reset with token"""
     try:
         logger.info("Password reset confirmation attempt")
         
         # Reset password using token
-        success = verification_service.reset_password(db, request.token, request.new_password)
+        success = await verification_service.reset_password(db, request.token, request.new_password)
         
         if not success:
             logger.warning("Invalid password reset token")
@@ -337,7 +343,7 @@ async def confirm_password_reset(
         raise e
     except Exception as e:
         logger.error(f"Unexpected error during password reset confirmation: {e}")
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Password reset confirmation failed due to server error"
@@ -346,11 +352,11 @@ async def confirm_password_reset(
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ) -> User:
     """Get current authenticated user"""
     try:
-        user = auth_service.get_current_user(db, credentials.credentials)
+        user = await auth_service.get_current_user(db, credentials.credentials)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

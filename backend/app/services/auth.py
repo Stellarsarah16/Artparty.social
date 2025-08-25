@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from fastapi import HTTPException, status
 
 from ..core.config import settings
@@ -58,9 +59,12 @@ class AuthService:
         except JWTError:
             raise credentials_exception
     
-    def authenticate_user(self, db: Session, username: str, password: str) -> Optional[User]:
-        """Authenticate a user with username and password"""
-        user = db.query(User).filter(User.username == username.lower()).first()
+    async def authenticate_user(self, db: AsyncSession, username: str, password: str) -> Optional[User]:
+        """Authenticate a user with username and password - ASYNC VERSION"""
+        # Use select() instead of query()
+        stmt = select(User).where(User.username == username.lower())
+        result = await db.execute(stmt)
+        user = result.scalar_one_or_none()
         
         if not user:
             return None
@@ -73,10 +77,13 @@ class AuthService:
             
         return user
     
-    def create_user(self, db: Session, user_create: UserCreate) -> User:
-        """Create a new user account"""
+    async def create_user(self, db: AsyncSession, user_create: UserCreate) -> User:
+        """Create a new user account - ASYNC VERSION"""
         # Check if username already exists
-        existing_user = db.query(User).filter(User.username == user_create.username.lower()).first()
+        stmt = select(User).where(User.username == user_create.username.lower())
+        result = await db.execute(stmt)
+        existing_user = result.scalar_one_or_none()
+        
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -84,7 +91,10 @@ class AuthService:
             )
         
         # Check if email already exists
-        existing_email = db.query(User).filter(User.email == user_create.email).first()
+        stmt = select(User).where(User.email == user_create.email)
+        result = await db.execute(stmt)
+        existing_email = result.scalar_one_or_none()
+        
         if existing_email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -107,21 +117,25 @@ class AuthService:
         )
         
         db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
+        await db.commit()
+        await db.refresh(db_user)
         
         return db_user
     
-    def get_user_by_username(self, db: Session, username: str) -> Optional[User]:
-        """Get user by username"""
-        return db.query(User).filter(User.username == username.lower()).first()
+    async def get_user_by_username(self, db: AsyncSession, username: str) -> Optional[User]:
+        """Get user by username - ASYNC VERSION"""
+        stmt = select(User).where(User.username == username.lower())
+        result = await db.execute(stmt)
+        return result.scalar_one_or_none()
     
-    def get_user_by_id(self, db: Session, user_id: int) -> Optional[User]:
-        """Get user by ID"""
-        return db.query(User).filter(User.id == user_id).first()
+    async def get_user_by_id(self, db: AsyncSession, user_id: int) -> Optional[User]:
+        """Get user by ID - ASYNC VERSION"""
+        stmt = select(User).where(User.id == user_id)
+        result = await db.execute(stmt)
+        return result.scalar_one_or_none()
     
-    def get_current_user(self, db: Session, token: str) -> User:
-        """Get current user from JWT token"""
+    async def get_current_user(self, db: AsyncSession, token: str) -> User:
+        """Get current user from JWT token - ASYNC VERSION"""
         token_data = self.verify_token(token)
         if token_data.user_id is None:
             raise HTTPException(
@@ -129,7 +143,7 @@ class AuthService:
                 detail="Invalid token"
             )
         
-        user = self.get_user_by_id(db, token_data.user_id)
+        user = await self.get_user_by_id(db, token_data.user_id)
         
         if user is None:
             raise HTTPException(
@@ -149,9 +163,9 @@ class AuthService:
         """Check if user has admin privileges"""
         return user.is_admin or user.is_superuser
     
-    def get_current_user_with_admin_check(self, db: Session, token: str) -> User:
-        """Get current user and verify admin status"""
-        user = self.get_current_user(db, token)
+    async def get_current_user_with_admin_check(self, db: AsyncSession, token: str) -> User:
+        """Get current user and verify admin status - ASYNC VERSION"""
+        user = await self.get_current_user(db, token)
         if not self.is_user_admin(user):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
