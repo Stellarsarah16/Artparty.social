@@ -3,7 +3,7 @@ Admin management endpoints
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Dict, Any
 
 from ...core.database import get_db
@@ -24,11 +24,11 @@ security = HTTPBearer()
 
 async def get_current_admin_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Dependency to get current authenticated admin user"""
     token = credentials.credentials
-    user = auth_service.get_current_user(db, token)
+    user = await auth_service.get_current_user(db, token)
     
     if not user.is_admin and not user.is_superuser:
         raise HTTPException(
@@ -41,11 +41,11 @@ async def get_current_admin_user(
 
 async def get_current_superuser(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Dependency to get current authenticated superuser"""
     token = credentials.credentials
-    user = auth_service.get_current_user(db, token)
+    user = await auth_service.get_current_user(db, token)
     
     if not user.is_superuser:
         raise HTTPException(
@@ -59,7 +59,7 @@ async def get_current_superuser(
 @router.get("/stats", response_model=AdminStats)
 async def get_admin_stats(
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get admin statistics"""
     return admin_service.get_user_stats(db)
@@ -70,10 +70,10 @@ async def get_all_users(
     skip: int = 0,
     limit: int = 50,
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get all users (admin only)"""
-    users = admin_service.get_all_users(db, skip, limit)
+    users = await admin_service.get_all_users(db, skip, limit)
     return users
 
 
@@ -82,11 +82,11 @@ async def get_all_users(
 @router.delete("/users/cleanup-inactive")
 async def cleanup_inactive_users(
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Cleanup all inactive users (admin only)"""
     try:
-        deleted_count = admin_service.cleanup_inactive_users(db)
+        deleted_count = await admin_service.cleanup_inactive_users(db)
         return {
             "message": f"Cleanup completed successfully",
             "deleted_count": deleted_count,
@@ -102,10 +102,10 @@ async def cleanup_inactive_users(
 async def get_user_details(
     user_id: int,
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get user details (admin only)"""
-    user = admin_service.get_user_by_id(db, user_id)
+    user = await admin_service.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -119,10 +119,10 @@ async def update_user(
     user_id: int,
     user_update: AdminUserUpdate,
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Update user (admin only)"""
-    user = admin_service.update_user(db, user_id, user_update)
+    user = await admin_service.update_user(db, user_id, user_update)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -135,10 +135,10 @@ async def update_user(
 async def delete_user(
     user_id: int,
     current_superuser: User = Depends(get_current_superuser),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Delete user (superuser only)"""
-    success = admin_service.delete_user(db, user_id)
+    success = await admin_service.delete_user(db, user_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -151,11 +151,11 @@ async def delete_user(
 @router.delete("/canvases/cleanup-inactive")
 async def cleanup_inactive_canvases(
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Cleanup all inactive canvases (admin only)"""
     try:
-        deleted_count = admin_service.cleanup_inactive_canvases(db)
+        deleted_count = await admin_service.cleanup_inactive_canvases(db)
         return {
             "message": f"Cleanup completed successfully",
             "deleted_count": deleted_count,
@@ -173,10 +173,10 @@ async def get_all_canvases(
     skip: int = 0,
     limit: int = 50,
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get all canvases (admin only)"""
-    canvases = admin_service.get_all_canvases(db, skip, limit)
+    canvases = await admin_service.get_all_canvases(db, skip, limit)
     return canvases
 
 
@@ -184,10 +184,10 @@ async def get_all_canvases(
 async def get_canvas_details(
     canvas_id: int,
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get canvas details (admin only)"""
-    canvas = admin_service.get_canvas_by_id(db, canvas_id)
+    canvas = await admin_service.get_canvas_by_id(db, canvas_id)
     if not canvas:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -201,10 +201,10 @@ async def update_canvas(
     canvas_id: int,
     canvas_update: AdminCanvasUpdate,
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Update canvas (admin only)"""
-    canvas = admin_service.update_canvas(db, canvas_id, canvas_update)
+    canvas = await admin_service.update_canvas(db, canvas_id, canvas_update)
     if not canvas:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -217,10 +217,10 @@ async def update_canvas(
 async def delete_canvas(
     canvas_id: int,
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Delete canvas (admin only)"""
-    success = admin_service.delete_canvas(db, canvas_id)
+    success = await admin_service.delete_canvas(db, canvas_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -233,10 +233,10 @@ async def delete_canvas(
 async def get_recent_activity(
     limit: int = 20,
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get recent system activity (admin only)"""
-    activity = admin_service.get_recent_activity(db, limit)
+    activity = await admin_service.get_recent_activity(db, limit)
     return {"activity": activity}
 
 
@@ -244,10 +244,10 @@ async def get_recent_activity(
 async def make_superuser(
     user_id: int,
     current_superuser: User = Depends(get_current_superuser),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Make a user a superuser (superuser only)"""
-    user = admin_service.get_user_by_id(db, user_id)
+    user = await admin_service.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -256,7 +256,7 @@ async def make_superuser(
     
     user.is_superuser = True
     user.is_admin = True
-    db.commit()
+    await db.commit()
     
     return {"message": f"User {user.username} is now a superuser"}
 
@@ -266,7 +266,7 @@ async def make_superuser(
 @router.get("/locks")
 async def get_all_locks(
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get all active locks (admin only)"""
     return tile_lock_repository.get_active_locks(db)
@@ -274,19 +274,19 @@ async def get_all_locks(
 @router.get("/locks/statistics")
 async def get_lock_statistics(
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get lock statistics (admin only)"""
-    return tile_lock_repository.get_lock_statistics(db)
+    return await tile_lock_repository.get_lock_statistics(db)
 
 @router.delete("/locks/{tile_id}")
 async def force_release_lock(
     tile_id: int,
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Force release a lock on a tile (admin only)"""
-    success = tile_lock_repository.force_release_lock(db, tile_id)
+    success = await tile_lock_repository.force_release_lock(db, tile_id)
     if success:
         return {"message": f"Lock on tile {tile_id} has been force released"}
     else:
@@ -295,10 +295,10 @@ async def force_release_lock(
 @router.post("/locks/cleanup")
 async def cleanup_all_expired_locks(
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Clean up all expired locks (admin only)"""
-    count = tile_lock_repository.cleanup_expired_locks(db)
+    count = await tile_lock_repository.cleanup_expired_locks(db)
     return {"message": f"Cleaned up {count} expired locks"}
 
 # ===== SYSTEM REPORTS =====
@@ -306,14 +306,14 @@ async def cleanup_all_expired_locks(
 @router.get("/reports/system-overview")
 async def get_system_overview(
     current_admin: User = Depends(get_current_admin_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get system overview report (admin only)"""
     # Get user statistics
-    user_stats = admin_service.get_user_stats(db)
+    user_stats = await admin_service.get_user_stats(db)
     
     # Get lock statistics
-    lock_stats = tile_lock_repository.get_lock_statistics(db)
+    lock_stats = await tile_lock_repository.get_lock_statistics(db)
     
     return {
         "users": {
