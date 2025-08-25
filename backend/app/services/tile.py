@@ -296,7 +296,7 @@ class TileService:
             print(f"🔄 TileService: Updating tile with data: {tile_update.dict(exclude_unset=True)}")
             
             # Update the tile
-            updated_tile = self.tile_repository.update(db, db_obj=tile, obj_in=tile_update)
+            updated_tile = await self.tile_repository.update(db, db_obj=tile, obj_in=tile_update)
             
             print(f"✅ TileService: Tile {tile_id} updated successfully")
             return updated_tile

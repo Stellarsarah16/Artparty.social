@@ -198,7 +198,7 @@ async def delete_tile(
     """Delete tile (only owner can delete)"""
     try:
         # Delete tile using service
-        tile = tile_service.delete_tile(db, tile_id, current_user)
+        tile = await tile_service.delete_tile(db, tile_id, current_user)
         
         # Broadcast tile deletion to WebSocket clients
         await connection_manager.broadcast_tile_deleted(tile.canvas_id, tile_id, current_user.id)
@@ -208,7 +208,7 @@ async def delete_tile(
     except HTTPException as e:
         raise e
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error deleting tile"
@@ -218,20 +218,20 @@ async def delete_tile(
 @router.get("/{tile_id}/neighbors", response_model=List[TileResponse])
 async def get_tile_neighbors(
     tile_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get neighboring tiles around a tile"""
-    neighbors = tile_service.get_tile_neighbors(db, tile_id)
+    neighbors = await tile_service.get_tile_neighbors(db, tile_id)
     return [tile_service.create_tile_response(tile) for tile in neighbors]
 
 
 @router.get("/{tile_id}/adjacent-neighbors", response_model=List[TileResponse])
 async def get_adjacent_neighbors(
     tile_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get only adjacent neighbors (left, right, top, bottom) of a tile"""
-    neighbors = tile_service.get_adjacent_neighbors(db, tile_id)
+    neighbors = await tile_service.get_adjacent_neighbors(db, tile_id)
     return [tile_service.create_tile_response(tile) for tile in neighbors]
 
 
