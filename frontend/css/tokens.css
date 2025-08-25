@@ -1,0 +1,241 @@
+/* ========================================================================
+   STELLAR COLLAB APP - DESIGN TOKENS
+   ========================================================================
+   
+   Central design system tokens for consistent styling across all components.
+   Import this file first in all other stylesheets.
+   
+   ======================================================================== */
+
+:root {
+    /* ===== CORE DESIGN TOKENS ===== */
+    
+    /* Primary Brand Colors */
+    --color-primary: #5c7cfa;             /* primary accent (indigo/blue) */
+    --color-primary-hover: #4f46e5;       /* primary hover state */
+    --color-secondary: #64748b;           /* secondary accent */
+    --color-secondary-hover: #475569;     /* secondary hover state */
+    
+    /* Status Colors */
+    --color-success: #10b981;             /* success/positive actions */
+    --color-error: #ef4444;               /* error/danger states */
+    --color-warning: #f59e0b;             /* warning states */
+    --color-info: #3b82f6;                /* info/neutral states */
+    
+    /* Dark Theme Colors (Primary) */
+    --color-white: #ffffff;
+    --color-grey: #e5e7eb;
+    --color-bg-primary: #0b1220;          /* main dark background */
+    --color-bg-secondary: #141c2e;        /* panels, cards */
+    --color-bg-tertiary: #1c2438;         /* subtle backgrounds */
+    --color-text-primary: #e5e7eb;        /* main text (dark theme) */
+    --color-text-secondary: #a9b1c3;      /* muted text (dark theme) */
+    --color-text-inverse: #0b1220;        /* for light-on-dark contrast */
+    --color-border: rgba(255,255,255,0.12);  /* default border (dark theme) */
+    --color-border-strong: rgba(255,255,255,0.24); /* strong border (dark theme) */
+    
+    /* Light Theme Colors (Alternative) */
+    --color-bg-light: #ffffff;            /* light backgrounds */
+    --color-bg-light-secondary: #f8fafc;  /* light secondary */
+    --color-bg-light-tertiary: #e2e8f0;   /* light tertiary */
+    --color-text-light-primary: #1e293b;  /* main text (light theme) */
+    --color-text-light-secondary: #64748b; /* muted text (light theme) */
+    --color-text-light-tertiary: #94a3b8; /* tertiary text (light theme) */
+    --color-text-white: #ffffff;          /* pure white text */
+    --color-border-light: #e2e8f0;        /* border (light theme) */
+    
+    /* Additional Theme Colors */
+    --color-bg-dark: #1e293b;
+    --color-bg-darker: #0f172a;
+    
+    /* ===== SPACING SYSTEM ===== */
+    --space-xs: 0.25rem;   /* 4px */
+    --space-sm: 0.5rem;    /* 8px */
+    --space-md: 1rem;      /* 16px */
+    --space-lg: 1.5rem;    /* 24px */
+    --space-xl: 2rem;      /* 32px */
+    --space-2xl: 3rem;     /* 48px */
+    --space-3xl: 4rem;     /* 64px */
+    
+    /* ===== TYPOGRAPHY SYSTEM ===== */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-family-mono: 'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace;
+    
+    --font-size-xs: 0.75rem;    /* 12px */
+    --font-size-sm: 0.875rem;   /* 14px */
+    --font-size-md: 1rem;       /* 16px */
+    --font-size-lg: 1.125rem;   /* 18px */
+    --font-size-xl: 1.25rem;    /* 20px */
+    --font-size-2xl: 1.5rem;    /* 24px */
+    --font-size-3xl: 1.875rem;  /* 30px */
+    --font-size-4xl: 2.25rem;   /* 36px */
+    
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    
+    --line-height-tight: 1.25;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.75;
+    
+    /* ===== BORDER RADIUS SYSTEM ===== */
+    --radius-sm: 0.25rem;   /* 4px */
+    --radius-md: 0.5rem;    /* 8px */
+    --radius-lg: 0.75rem;   /* 12px */
+    --radius-xl: 1rem;      /* 16px */
+    --radius-2xl: 1.5rem;   /* 24px */
+    --radius-full: 9999px;  /* pill shape */
+    
+    /* ===== SHADOW SYSTEM ===== */
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    
+    /* ===== ANIMATION SYSTEM ===== */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+    
+    --ease-in-out-cubic: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+    --bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    --duration-fast: 0.15s;
+    --duration-normal: 0.3s;
+    --duration-slow: 0.5s;
+    --duration-slower: 0.8s;
+    
+    /* ===== Z-INDEX SYSTEM ===== */
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+    --z-toast: 1080;
+    
+    /* ===== LEGACY ALIASES (for backward compatibility) ===== */
+    /* These map to the new token system for existing code */
+    --primary-color: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --secondary-color: var(--color-secondary);
+    --success-color: var(--color-success);
+    --error-color: var(--color-error);
+    --warning-color: var(--color-warning);
+    --info-color: var(--color-info);
+    
+    --bg-primary: var(--color-bg-primary);
+    --bg-secondary: var(--color-bg-secondary);
+    --bg-tertiary: var(--color-bg-tertiary);
+    --text-primary: var(--color-text-primary);
+    --text-secondary: var(--color-text-secondary);
+    --text-white: var(--color-text-white);
+    --border-color: var(--color-border);
+    
+    --border-radius: var(--radius-md);
+    --border-radius-sm: var(--radius-sm);
+    --border-radius-lg: var(--radius-lg);
+    
+    --font-size-base: var(--font-size-md);
+    --transition-duration: var(--duration-normal);
+
+    /* Base tile size - adjust this one variable to change everything */
+    --tile-display-size: 120px;
+
+    /* Calculated grid dimensions */
+    --grid-total-size: calc(var(--tile-display-size) * 3);
+    
+    /* Device-specific overrides */
+    --mobile-tile-size: 80px;
+    --tablet-tile-size: 100px;
+    --desktop-tile-size: 120px;
+    --large-desktop-tile-size: 140px;
+}
+
+/* ===== THEME VARIATIONS ===== */
+
+/* Light Theme Override */
+.theme-light {
+    --color-bg-primary: var(--color-bg-light);
+    --color-bg-secondary: var(--color-bg-light-secondary);
+    --color-bg-tertiary: var(--color-bg-light-tertiary);
+    --color-text-primary: var(--color-text-light-primary);
+    --color-text-secondary: var(--color-text-light-secondary);
+    --color-border: var(--color-border-light);
+    
+    /* Update legacy aliases */
+    --bg-primary: var(--color-bg-light);
+    --bg-secondary: var(--color-bg-light-secondary);
+    --text-primary: var(--color-text-light-primary);
+    --text-secondary: var(--color-text-light-secondary);
+    --border-color: var(--color-border-light);
+}
+
+/* High Contrast Theme */
+.theme-high-contrast {
+    --color-primary: #0000ff;
+    --color-success: #008000;
+    --color-error: #ff0000;
+    --color-warning: #ff8c00;
+    --color-border: #000000;
+    --color-border-strong: #000000;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --transition-fast: 0.01ms;
+        --transition-normal: 0.01ms;
+        --transition-slow: 0.01ms;
+        --duration-fast: 0.01ms;
+        --duration-normal: 0.01ms;
+        --duration-slow: 0.01ms;
+        --duration-slower: 0.01ms;
+    }
+}
+
+/* Dark Mode Auto-Detection */
+@media (prefers-color-scheme: dark) {
+    .theme-auto {
+        --color-bg-primary: var(--color-bg-primary);
+        --color-bg-secondary: var(--color-bg-secondary);
+        --color-bg-tertiary: var(--color-bg-tertiary);
+        --color-text-primary: var(--color-text-primary);
+        --color-text-secondary: var(--color-text-secondary);
+        --color-border: var(--color-border);
+        
+        /* Update legacy aliases */
+        --bg-primary: var(--color-bg-primary);
+        --bg-secondary: var(--color-bg-secondary);
+        --text-primary: var(--color-text-primary);
+        --text-secondary: var(--color-text-secondary);
+        --border-color: var(--color-border);
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    .theme-auto {
+        --color-bg-primary: var(--color-bg-light);
+        --color-bg-secondary: var(--color-bg-light-secondary);
+        --color-bg-tertiary: var(--color-bg-light-tertiary);
+        --color-text-primary: var(--color-text-light-primary);
+        --color-text-secondary: var(--color-text-light-secondary);
+        --color-border: var(--color-border-light);
+        
+        /* Update legacy aliases */
+        --bg-primary: var(--color-bg-light);
+        --bg-secondary: var(--color-bg-light-secondary);
+        --text-primary: var(--color-text-light-primary);
+        --text-secondary: var(--color-text-light-secondary);
+        --border-color: var(--color-border-light);
+    }
+}
+
+

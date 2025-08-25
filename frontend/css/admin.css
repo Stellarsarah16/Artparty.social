@@ -1,3 +1,14 @@
+/* ========================================================================
+   STELLAR COLLAB APP - ADMIN PANEL STYLES
+   ========================================================================
+   
+   Admin panel specific styles and components.
+   Depends on: tokens.css
+   
+   ======================================================================== */
+
+@import url('tokens.css');
+
 /* Admin Panel Styles */
 .admin-container {
     max-width: 1200px;
@@ -7,7 +18,7 @@
 }
 
 .admin-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
     color: white;
     padding: 20px;
     border-radius: 10px;
@@ -46,7 +57,7 @@
 
 .admin-tab.active {
     background: white;
-    color: #667eea;
+    color: var(--color-primary);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
@@ -86,7 +97,7 @@
 .stat-number {
     font-size: 3em;
     font-weight: bold;
-    color: #667eea;
+    color: var(--color-primary);
     margin-bottom: 10px;
 }
 
@@ -102,7 +113,7 @@
 }
 
 .stat-status.healthy {
-    color: #28a745;
+    color: var(--color-success);
 }
 
 .stat-status.warning {
@@ -155,7 +166,7 @@
 }
 
 .admin-table th {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
     color: white;
     font-weight: 600;
     font-size: 14px;
@@ -285,7 +296,7 @@
 
 .report-item span {
     font-weight: bold;
-    color: #667eea;
+    color: var(--color-primary);
 }
 
 .health-status {

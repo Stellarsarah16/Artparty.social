@@ -1,7 +1,13 @@
-/**
- * UI/UX Enhancements
- * Additional styling for improved user experience, accessibility, and responsiveness
- */
+/* ========================================================================
+   STELLAR COLLAB APP - UI/UX ENHANCEMENTS
+   ========================================================================
+   
+   Additional styling for improved user experience, accessibility, and responsiveness.
+   Depends on: tokens.css
+   
+   ======================================================================== */
+
+@import url('tokens.css');
 
 /* Enhanced Focus Management */
 :focus {

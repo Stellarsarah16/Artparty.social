@@ -1,3 +1,14 @@
+/* ========================================================================
+   STELLAR COLLAB APP - TOUCH & MOBILE OPTIMIZATIONS
+   ========================================================================
+   
+   Touch-specific improvements for mobile and tablet devices.
+   Depends on: tokens.css
+   
+   ======================================================================== */
+
+@import url('tokens.css');
+
 /* Touch-specific improvements for mobile and tablet */
 @media (hover: none) and (pointer: coarse) {
     /* Touch device optimizations */
@@ -76,7 +87,7 @@
         width: 24px;
         height: 24px;
         border-radius: 50%;
-        background: #4f46e5;
+        background: var(--color-primary-hover);
         cursor: pointer;
     }
     
@@ -84,7 +95,7 @@
         width: 24px;
         height: 24px;
         border-radius: 50%;
-        background: #4f46e5;
+        background: var(--color-primary-hover);
         cursor: pointer;
         border: none;
     }
@@ -103,11 +114,11 @@
     
     .tool-button:active {
         transform: scale(0.9);
-        background-color: #e5e7eb;
+        background-color: var(--color-bg-light-tertiary);
     }
     
     .tool-button.active {
-        background-color: #4f46e5;
+        background-color: var(--color-primary-hover);
         color: white;
     }
     
@@ -123,7 +134,7 @@
         width: 44px;
         height: 44px;
         border-radius: 8px;
-        border: 2px solid #e5e7eb;
+        border: 2px solid var(--color-border-light);
         cursor: pointer;
         transition: all 0.2s ease;
     }
@@ -133,7 +144,7 @@
     }
     
     .color-swatch.active {
-        border-color: #4f46e5;
+        border-color: var(--color-primary-hover);
         box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3);
     }
     
@@ -197,7 +208,7 @@
     /* Touch-friendly mini-map */
     .mini-map-container canvas {
         border-radius: 8px;
-        border: 2px solid #e5e7eb;
+        border: 2px solid var(--color-border-light);
     }
     
     /* Touch-friendly stats */

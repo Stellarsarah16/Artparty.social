@@ -89,8 +89,9 @@ export class CanvasViewportManager {
         const oldY = this.viewportY;
         
         // EXACT SAME logic: convert screen delta to world space and update viewport
-        this.viewportX -= deltaX / this.zoom;
-        this.viewportY -= deltaY / this.zoom;
+        // CRITICAL FIX: Round coordinates to prevent fractional pixel accumulation
+        this.viewportX = Math.round((this.viewportX - deltaX / this.zoom) * 100) / 100;
+        this.viewportY = Math.round((this.viewportY - deltaY / this.zoom) * 100) / 100;
         
         // EXACT SAME clamping logic
         this.clampViewport();
@@ -115,8 +116,9 @@ export class CanvasViewportManager {
             
             this.zoom = newZoom;
             
-            this.viewportX = worldX - (centerX / this.zoom);
-            this.viewportY = worldY - (centerY / this.zoom);
+            // CRITICAL FIX: Round coordinates to prevent fractional pixel issues
+            this.viewportX = Math.round((worldX - (centerX / this.zoom)) * 100) / 100;
+            this.viewportY = Math.round((worldY - (centerY / this.zoom)) * 100) / 100;
             
             // EXACT SAME clamping logic
             this.clampViewport();
@@ -142,8 +144,9 @@ export class CanvasViewportManager {
         const canvasHeight = this.canvasData.height || 1024;
         
         // Center the canvas in the viewport - EXACT SAME as original
-        this.viewportX = (canvasWidth - (this.canvas.width / this.zoom)) / 2;
-        this.viewportY = (canvasHeight - (this.canvas.height / this.zoom)) / 2;
+        // CRITICAL FIX: Round coordinates to prevent fractional pixel issues
+        this.viewportX = Math.round(((canvasWidth - (this.canvas.width / this.zoom)) / 2) * 100) / 100;
+        this.viewportY = Math.round(((canvasHeight - (this.canvas.height / this.zoom)) / 2) * 100) / 100;
         
         // Clamp and notify
         this.clampViewport();
@@ -306,8 +309,9 @@ export class CanvasViewportManager {
             // CRITICAL: Always apply clamped values
             const wasChanged = (Math.abs(clampedX - this.viewportX) > 0.001 || Math.abs(clampedY - this.viewportY) > 0.001);
             
-            this.viewportX = clampedX;
-            this.viewportY = clampedY;
+            // CRITICAL FIX: Round clamped coordinates to prevent fractional pixel issues
+            this.viewportX = Math.round(clampedX * 100) / 100;
+            this.viewportY = Math.round(clampedY * 100) / 100;
             
             // Only log when actually clamped
             if (wasChanged) {
@@ -330,8 +334,9 @@ export class CanvasViewportManager {
         }
         
         // Apply constraints
-        this.viewportX = x;
-        this.viewportY = y;
+        // CRITICAL FIX: Round coordinates to prevent fractional pixel issues after resize
+        this.viewportX = Math.round(x * 100) / 100; // Round to 2 decimal places for precision
+        this.viewportY = Math.round(y * 100) / 100;
         this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, zoom));
         
         // Clamp to prevent extreme values
@@ -380,11 +385,11 @@ export class CanvasViewportManager {
         const centerX = canvasData.width / 2;
         const centerY = canvasData.height / 2;
         
-        this.setViewport(
-            centerX - (canvasRect.width / 2) / zoom,
-            centerY - (canvasRect.height / 2) / zoom,
-            zoom
-        );
+        // CRITICAL FIX: Round viewport coordinates to prevent fractional pixel issues
+        const viewportX = Math.round((centerX - (canvasRect.width / 2) / zoom) * 100) / 100;
+        const viewportY = Math.round((centerY - (canvasRect.height / 2) / zoom) * 100) / 100;
+        
+        this.setViewport(viewportX, viewportY, zoom);
         
         console.log('🔧 Viewport reset to fit canvas:', this.getViewport());
     }
@@ -427,8 +432,9 @@ export class CanvasViewportManager {
             this.zoom = newZoom;
             
             // Adjust viewport to keep the same world center point in the middle of the screen
-            this.viewportX = currentViewportCenterX - (rect.width / 2) / this.zoom;
-            this.viewportY = currentViewportCenterY - (rect.height / 2) / this.zoom;
+            // CRITICAL FIX: Round coordinates to prevent fractional pixel issues
+            this.viewportX = Math.round((currentViewportCenterX - (rect.width / 2) / this.zoom) * 100) / 100;
+            this.viewportY = Math.round((currentViewportCenterY - (rect.height / 2) / this.zoom) * 100) / 100;
             
             // Clamp to keep canvas visible
             this.clampViewport();

@@ -1,33 +1,118 @@
-/* ========================================================================
-   STELLAR COLLAB APP - MAIN STYLESHEET
-   ========================================================================
-   
-   Modular CSS structure:
-   - tokens.css: Design system tokens and variables  
-   - base.css: Reset, base styles, and utility classes
-   - styles.css: Component-specific styles (this file)
-   - main.css: Touch and mobile optimizations
-   - enhancements.css: UI/UX enhancements  
-   - animations.css: Animation library
-   - admin.css: Admin panel specific styles
-   
-   TABLE OF CONTENTS:
-   1. Layout & Navigation
-   2. Authentication Components
-   3. Canvas Components
-   4. Tile Editor Components
-   5. Modal Components
-   6. Responsive Design
-   
-   ======================================================================== */
+:root {
+    /* ===== Colors ===== */
+    --color-bg-primary: #0b1220;         /* main background */
+    --color-bg-secondary: #141c2e;       /* panels, cards */
+    --color-bg-muted: #1c2438;           /* subtle backgrounds */
+  
+    --color-text-primary: #e5e7eb;       /* main text */
+    --color-text-secondary: #a9b1c3;     /* muted text */
+    --color-text-inverse: #0b1220;       /* for light-on-dark contrast */
+  
+    --color-border: rgba(255,255,255,0.12);
+    --color-border-strong: rgba(255,255,255,0.24);
+  
+    --color-accent: #5c7cfa;             /* primary accent (indigo/blue) */
+    --color-accent-muted: #374151;       /* subdued accent background */
+    --color-accent-contrast: #ffffff;    /* text/icon on accent */
+  
+    /* ===== Spacing ===== */
+    --space-xs: 0.25rem;   /* 4px */
+    --space-sm: 0.5rem;    /* 8px */
+    --space-md: 1rem;      /* 16px */
+    --space-lg: 1.5rem;    /* 24px */
+    --space-xl: 2rem;      /* 32px */
+  
+    /* ===== Typography ===== */
+    --font-size-xs: 0.75rem;  /* 12px */
+    --font-size-sm: 0.875rem; /* 14px */
+    --font-size-md: 1rem;     /* 16px */
+    --font-size-lg: 1.25rem;  /* 20px */
+    --font-size-xl: 1.5rem;   /* 24px */
+  
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 700;
+  
+    --line-height-tight: 1.1;
+    --line-height-normal: 1.4;
+  
+    /* ===== Radius ===== */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 9999px; /* pills, circles */
+  
+    /* ===== Shadows ===== */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.1);
+    --shadow-md: 0 2px 6px rgba(0,0,0,0.15);
+    --shadow-lg: 0 4px 14px rgba(0,0,0,0.2);
+  }
 
-/* Import required dependencies */
-@import url('tokens.css');
-@import url('base.css');
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-/* ========================================================================
-   1. LAYOUT & NAVIGATION
-   ======================================================================== */
+:root {
+    /* Colors */
+    --primary-color: #6366f1;
+    --primary-hover: #4f46e5;
+    --secondary-color: #64748b;
+    --secondary-hover: #475569;
+    --success-color: #10b981;
+    --error-color: #ef4444;
+    --warning-color: #f59e0b;
+    --info-color: #3b82f6;
+    
+    /* Backgrounds */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-tertiary: #e2e8f0;
+    --bg-dark: #1e293b;
+    --bg-darker: #0f172a;
+    
+    /* Text */
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --text-light: #94a3b8;
+    --text-white: #ffffff;
+    
+    /* Borders */
+    --border-color: #e2e8f0;
+    --border-radius: 8px;
+    --border-radius-sm: 4px;
+    --border-radius-lg: 12px;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    /* Spacing */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+    
+    /* Typography */
+    --font-family: 'Inter', sans-serif;
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 2rem;
+    
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+}
 
 body {
     font-family: var(--font-family);
@@ -113,10 +198,7 @@ main {
     100% { transform: rotate(360deg); }
 }
 
-/* ========================================================================
-   3. LAYOUT & NAVIGATION
-   ======================================================================== */
-
+/* Navigation */
 .navbar {
     background: var(--bg-primary);
     border-bottom: 1px solid var(--border-color);
@@ -193,7 +275,7 @@ main {
     position: absolute;
     top: 100%;
     right: 0;
-    background: var(--color-white);
+    background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-lg);
@@ -221,7 +303,7 @@ main {
 }
 
 .dropdown-btn:hover {
-    background: var(--color-grey);
+    background: var(--bg-secondary);
 }
 
 /* Buttons */
@@ -370,10 +452,6 @@ main {
     gap: var(--space-md);
 }
 
-/* ========================================================================
-   5. CANVAS COMPONENTS
-   ======================================================================== */
-
 .canvas-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -382,7 +460,6 @@ main {
 
 /* Remove background from canvas cards - keep container only */
 .canvas-card {
-    position: relative;
     background: transparent !important; /* Remove card background */
     border-radius: var(--border-radius-lg);
     overflow: hidden;
@@ -529,7 +606,7 @@ main {
 .canvas-preview {
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-sm);
-    background: var(--color-bg-light);
+    background: #ffffff;
     border: 1px solid var(--border-color);
 }
 
@@ -807,21 +884,12 @@ main {
     min-height: 600px;
 }
 
-/* Editor Panel - accommodate centered grid */
+/* Editor Panel */
 .editor-panel {
     background: var(--bg-primary);
     border-radius: var(--border-radius-lg);
     padding: var(--space-lg);
     box-shadow: var(--shadow-md);
-    
-    /* Ensure panel doesn't interfere with centered grid */
-    position: relative;
-    z-index: 5;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
 }
 
 .editor-tools {
@@ -903,9 +971,38 @@ main {
     cursor: crosshair;
 }
 
-/* Old integrated canvas and neighbor row styles removed - using CSS grid now */
+/* Integrated Canvas with Neighbors */
+.integrated-canvas-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px; /* Minimal gap for seamless connection */
+    margin-top: var(--space-lg);
+}
 
-/* Old main-canvas-container styles removed - using CSS grid system now */
+.neighbor-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2px; /* Minimal gap for seamless connection */
+}
+
+.main-canvas-container {
+    position: relative;
+    text-align: center;
+    border: 2px solid var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: var(--space-sm);
+    background: var(--bg-secondary);
+}
+
+.main-canvas-container canvas {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-primary);
+    cursor: crosshair;
+    display: block;
+}
 
 .canvas-label {
     font-size: var(--font-size-xs);
@@ -966,7 +1063,36 @@ main {
     color: var(--text-secondary);
 }
 
-/* Old neighbor grid styles removed - using dynamic CSS variables system above */
+.neighbor-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    flex: 1;
+}
+
+.neighbor-row {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-sm);
+}
+
+.neighbor-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    background: transparent;
+    transition: all var(--transition-fast);
+    opacity: 0.9;
+}
+
+.neighbor-cell:hover {
+    opacity: 1;
+    transform: scale(1.02);
+}
 
 /* FIXED: Desktop mode - no padding, no labels, no vertical spacing */
 @media (min-width: 768px) {
@@ -979,10 +1105,37 @@ main {
         display: none;
     }
     
-    /* Old neighbor row and integrated container styles removed */
+    .neighbor-row {
+        gap: 0;
+    }
+    
+    .integrated-canvas-container {
+        gap: 0;
+    }
 }
 
-/* Current tile and empty cell styles moved to dynamic system above */
+.neighbor-canvas {
+    border: none;
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-primary);
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    display: block;
+}
+
+.neighbor-cell.empty {
+    border: none;
+    background: transparent;
+    opacity: 0.6;
+}
+
+.neighbor-cell.current {
+    border: none;
+    background: rgba(99, 102, 241, 0.05);
+    color: var(--text-primary);
+    border-radius: var(--border-radius);
+}
 
 .neighbor-cell.has-tile {
     border: none;
@@ -996,7 +1149,18 @@ main {
     text-align: center;
 }
 
-/* Old neighbor-canvas styles removed - using dynamic CSS variables system above */
+.neighbor-canvas {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-primary);
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
+.neighbor-cell.current .neighbor-canvas {
+    border: none;
+}
 
 .neighbor-cell.has-tile .neighbor-canvas {
     border-color: var(--success-color);
@@ -1225,9 +1389,23 @@ form {
         gap: var(--space-md);
     }
     
-    /* Old responsive styles for integrated container removed */
+    .integrated-canvas-container {
+        gap: var(--space-sm);
+    }
     
-    /* Old main-canvas-container responsive styles removed */
+    .neighbor-row {
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+    
+    .main-canvas-container {
+        padding: var(--space-sm);
+    }
+    
+    .main-canvas-container canvas {
+        max-width: 100%;
+        height: auto;
+    }
     
     .feature-grid {
         grid-template-columns: 1fr;
@@ -1247,9 +1425,6 @@ form {
 }
 
 @media (max-width: 480px) {
-    :root {
-        --tile-display-size: var(--mobile-tile-size);
-    }
     .welcome-container h1 {
         font-size: var(--font-size-2xl);
     }
@@ -1509,23 +1684,8 @@ form {
     outline-offset: 2px;
 }
 
-@media (min-width: 769px) and (max-width: 1199px) {
-    :root {
-        --tile-display-size: var(--desktop-tile-size);
-    }
-}
-
-@media (min-width: 1200px) {
-    :root {
-        --tile-display-size: var(--large-desktop-tile-size);
-    }
-}
-
 /* Mobile responsiveness */
 @media (max-width: 768px) {
-    :root {
-        --tile-display-size: var(--tablet-tile-size);
-    }
     .nav-link.btn-primary,
     .nav-link.btn-secondary {
         padding: 2px 3px;
@@ -1542,13 +1702,6 @@ form {
     
     .nav-item {
         width: auto;
-    }
-}
-
-
-@media (min-width: 481px) and (max-width: 768px) {
-    :root {
-        --tile-display-size: var(--tablet-tile-size);
     }
 }
 
@@ -1665,7 +1818,7 @@ form {
     padding: 2px 6px;
     background: var(--bg-secondary);
     border-radius: var(--border-radius-sm);
-    border: 0.5px solid var(--color-border-light);
+    border: 0.5px solid #d1d5db;
     white-space: nowrap;
     flex-shrink: 0;
 } 
@@ -1903,12 +2056,12 @@ form {
 
 /* FIXED: Tile ownership indicators */
 .tile-owned {
-    border: 2px solid var(--color-success) !important; /* Green border for owned tiles */
+    border: 2px solid #4CAF50 !important; /* Green border for owned tiles */
     box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
 }
 
 .tile-other {
-    border: 2px solid var(--color-warning) !important; /* Orange border for other users' tiles */
+    border: 2px solid #FF9800 !important; /* Orange border for other users' tiles */
     box-shadow: 0 0 8px rgba(255, 152, 0, 0.3);
 }
 
@@ -1923,12 +2076,12 @@ form {
 }
 
 .tile-ownership-indicator.owned {
-    background: var(--color-success);
+    background: #4CAF50;
     border: 1px solid #388E3C;
 }
 
 .tile-ownership-indicator.other {
-    background: var(--color-warning);
+    background: #FF9800;
     border: 1px solid #F57C00;
 }
 
@@ -2965,7 +3118,7 @@ form {
     /* FIXED: Touch active state styling */
     .floating-action-left .btn.touch-active,
     .floating-action-right .btn.touch-active {
-        background-color: var(--color-success) !important;
+        background-color: #45a049 !important;
         transform: scale(0.95);
         box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
     }
@@ -3159,12 +3312,14 @@ form {
     opacity: 1;
 }
 
-
+.canvas-card {
+    position: relative;
+}
 
 /* User tiles count styling */
 .user-tiles-count {
     font-weight: bold;
-    color: var(--color-success);
+    color: #4CAF50;
 }
 
 /* Canvas Settings Modal */
@@ -3489,7 +3644,7 @@ form {
 
 .online-users h4 span {
     background: rgba(76, 175, 80, 0.2);
-    color: var(--color-success);
+    color: #4CAF50;
     padding: 0.1rem 0.4rem;
     border-radius: 12px;
     font-size: 0.8rem;
@@ -3507,225 +3662,4 @@ form {
     .canvas-info span {
         font-size: 0.85rem;
     }
-}
-
-/* JavaScript functions moved to pixel-editor.js */
-
-/* ========================================================================
-   DYNAMIC TILE SIZING SYSTEM - CSS Variables
-   ======================================================================== */
-
-/* Base tile size variables - single source of truth */
-:root {
-    /* Base tile size - adjust this one variable to change everything */
-    --tile-display-size: 240px;
-    
-    /* Calculated grid dimensions */
-    --grid-total-size: calc(var(--tile-display-size) * 3);
-    
-    /* Device-specific size presets - DOUBLED from original */
-    --mobile-tile-size: 120px;      /* Was 80px, now 120px */
-    --tablet-tile-size: 160px;      /* Was 100px, now 160px */
-    --desktop-tile-size: 240px;     /* Was 120px, now 240px */
-    --large-desktop-tile-size: 280px; /* Was 140px, now 280px */
-}
-
-/* Responsive tile size adjustments */
-@media (max-width: 480px) {
-    :root {
-        --tile-display-size: var(--mobile-tile-size);
-    }
-}
-
-@media (min-width: 481px) and (max-width: 768px) {
-    :root {
-        --tile-display-size: var(--tablet-tile-size);
-    }
-}
-
-@media (min-width: 769px) and (max-width: 1199px) {
-    :root {
-        --tile-display-size: var(--desktop-tile-size);
-    }
-}
-
-@media (min-width: 1200px) {
-    :root {
-        --tile-display-size: var(--large-desktop-tile-size);
-    }
-}
-
-/* Seamless 3x3 tile grid - centered with overflow allowed */
-.neighbor-grid {
-    display: grid;
-    grid-template-columns: repeat(3, var(--tile-display-size));
-    grid-template-rows: repeat(3, var(--tile-display-size));
-    gap: 0;
-    width: var(--grid-total-size);
-    height: var(--grid-total-size);
-    
-    /* Center the grid - current tile will be in screen center */
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    
-    /* Allow overflow - neighbors can extend beyond screen */
-    overflow: visible;
-    border: none; /* Remove border since grid extends beyond screen */
-    z-index: 10;
-}
-
-.neighbor-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    background: transparent;
-    position: relative;
-    
-    /* All tiles exactly the same size using CSS variables */
-    width: var(--tile-display-size);
-    height: var(--tile-display-size);
-    min-width: var(--tile-display-size);
-    min-height: var(--tile-display-size);
-    max-width: var(--tile-display-size);
-    max-height: var(--tile-display-size);
-    flex: none;
-}
-
-/* Current tile styling - centered in screen */
-.neighbor-cell.current {
-    background: rgba(99, 102, 241, 0.15);
-    position: relative;
-    /* Same size as all other cells */
-    width: var(--tile-display-size);
-    height: var(--tile-display-size);
-}
-
-.neighbor-cell.current::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border: 3px solid var(--color-primary);
-    pointer-events: none;
-    z-index: 1;
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-}
-
-/* Add a subtle glow to indicate this is the center tile */
-.neighbor-cell.current::after {
-    content: 'CENTER';
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--color-primary);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: bold;
-    z-index: 2;
-    pointer-events: none;
-}
-
-/* Current tile canvas - same size as neighbor canvases */
-.neighbor-cell.current canvas {
-    width: var(--tile-display-size);
-    height: var(--tile-display-size);
-    background: var(--color-white);
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    border: none;
-    display: block;
-    margin: 0;
-    padding: 0;
-    cursor: crosshair;
-}
-
-.neighbor-canvas {
-    background: var(--color-white);
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    border: none;
-    
-    /* Canvas fills entire cell using CSS variables */
-    width: var(--tile-display-size);
-    height: var(--tile-display-size);
-    display: block;
-    margin: 0;
-    padding: 0;
-}
-
-/* Canvas overlay for current tile */
-.neighbor-cell.current .canvas-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    padding: var(--space-xs);
-    z-index: 2;
-}
-
-.neighbor-cell.current .position-indicator {
-    background: rgba(0, 0, 0, 0.8);
-    color: var(--text-white);
-    padding: var(--space-xs) var(--space-sm);
-    border-radius: var(--border-radius-sm);
-    font-size: var(--font-size-xs);
-    font-family: 'Courier New', monospace;
-}
-
-/* Remove old main-canvas-container styles that conflict */
-.main-canvas-container {
-    /* This container is no longer used - current tile is now in grid */
-    display: none;
-}
-
-/* Current tile highlighting */
-.neighbor-cell.current {
-    background: rgba(99, 102, 241, 0.1);
-    position: relative;
-}
-
-.neighbor-cell.current::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border: 2px solid var(--color-primary);
-    pointer-events: none;
-    z-index: 1;
-}
-
-/* Empty cell styling */
-.neighbor-cell.empty {
-    background: var(--color-white);
-    opacity: 0.6;
-}
-
-.neighbor-cell.empty::after {
-    content: '';
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background: repeating-conic-gradient(
-        from 0deg,
-        transparent 0deg 90deg,
-        rgba(0,0,0,0.1) 90deg 180deg
-    );
-    opacity: 0.3;
 }

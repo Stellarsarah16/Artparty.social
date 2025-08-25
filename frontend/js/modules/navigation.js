@@ -490,19 +490,26 @@ class NavigationManager {
                 console.warn('⚠️ Canvas title element not found or no canvas name');
             }
             
-            // Update canvas dimensions
+            // Update canvas dimensions (moved to header)
             const dimensionsElement = document.getElementById('viewer-canvas-dimensions');
             if (dimensionsElement && canvas.width && canvas.height) {
                 dimensionsElement.textContent = `${canvas.width}×${canvas.height}`;
                 console.log('✅ Updated canvas dimensions:', `${canvas.width}×${canvas.height}`);
             }
             
-            // Update users online (placeholder for now - can be enhanced with WebSocket data)
+            // Update tile size (new element in header)
+            const tileSizeElement = document.getElementById('viewer-canvas-tile-size');
+            if (tileSizeElement && canvas.tile_size) {
+                tileSizeElement.textContent = `${canvas.tile_size}px tiles`;
+                console.log('✅ Updated tile size:', `${canvas.tile_size}px tiles`);
+            }
+            
+            // Update users online (moved to sidebar)
             const usersElement = document.getElementById('viewer-canvas-users');
             if (usersElement) {
                 const userCount = canvas.user_count || 1; // Default to 1 (current user)
-                usersElement.textContent = `${userCount} user${userCount !== 1 ? 's' : ''} online`;
-                console.log('✅ Updated users online:', userCount);
+                usersElement.textContent = `(${userCount})`;
+                console.log('✅ Updated users online in sidebar:', userCount);
             }
             
         } catch (error) {

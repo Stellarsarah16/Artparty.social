@@ -13,7 +13,11 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="apple-touch-icon" href="favicon.svg">
     
+    <!-- Modular CSS Structure -->
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/enhancements.css">
+    <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -171,11 +175,12 @@
 
             <div class="viewer-header">
                 <div class="viewer-title">
-                    <h2 id="viewer-canvas-title">Canvas Name</h2>
+                    <div class="title-line">
+                        <h2 id="viewer-canvas-title">Canvas Name</h2>
+                        <span id="viewer-canvas-dimensions" class="canvas-dimensions">32x32</span>
+                    </div>
                     <div class="canvas-info">
-                        <span id="viewer-canvas-users">0 users online</span>
-                        <span id="viewer-canvas-dimensions">32x32</span>
-                        <span id="viewer-instructions">Click on a tile to edit it</span>
+                        <span id="viewer-instructions">Click on empty spaces to create tiles, or click existing tiles to edit them</span>
                     </div>
                 </div>
                 <div class="viewer-actions">
@@ -234,7 +239,7 @@
                 <!-- Sidebar Info (simplified - only online users) -->
                 <div class="viewer-sidebar">
                     <div class="online-users">
-                        <h4>Online Users</h4>
+                        <h4>Online Users <span id="viewer-canvas-users">(0)</span></h4>
                         <div class="user-list" id="viewer-users-list">
                             <!-- Online users will be shown here -->
                         </div>
@@ -363,57 +368,44 @@
             <div class="editor-layout">
                 <!-- Pixel Art Editor with Integrated Neighbors -->
                 <div class="editor-panel">
-                    <!-- Integrated Canvas with Neighbors -->
-                    <div class="integrated-canvas-container">
-                        <!-- Top row with diagonal neighbors -->
-                        <div class="neighbor-row">
-                            <div class="neighbor-cell empty" id="neighbor-top-left">
-                                <div class="neighbor-label">Top-Left</div>
-                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-top-left-canvas"></canvas>
-                            </div>
-                            <div class="neighbor-cell empty" id="neighbor-top">
-                                <div class="neighbor-label">Top</div>
-                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-top-canvas"></canvas>
-                            </div>
-                            <div class="neighbor-cell empty" id="neighbor-top-right">
-                                <div class="neighbor-label">Top-Right</div>
-                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-top-right-canvas"></canvas>
-                            </div>
+                    <!-- Seamless 3x3 Grid with CSS Grid Layout -->
+                    <div class="neighbor-grid">
+                        <!-- Top Row -->
+                        <div class="neighbor-cell empty" id="neighbor-top-left">
+                            <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-top-left-canvas"></canvas>
                         </div>
-                        <!-- Middle row with main canvas -->
-                        <div class="neighbor-row">
-                            <div class="neighbor-cell empty" id="neighbor-left">
-                                <div class="neighbor-label">Left</div>
-                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-left-canvas"></canvas>
-                            </div>
-                            <div class="main-canvas-container">
-                                <div class="canvas-label">Current Tile</div>
-                                <canvas id="pixel-canvas" width="512" height="512"></canvas>
-                                <div class="canvas-overlay">
-                                    <div class="position-indicator" id="position-indicator">
-                                        Position: (0, 0)
-                                    </div>
+                        <div class="neighbor-cell empty" id="neighbor-top">
+                            <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-top-canvas"></canvas>
+                        </div>
+                        <div class="neighbor-cell empty" id="neighbor-top-right">
+                            <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-top-right-canvas"></canvas>
+                        </div>
+                        
+                        <!-- Middle Row -->
+                        <div class="neighbor-cell empty" id="neighbor-left">
+                            <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-left-canvas"></canvas>
+                        </div>
+                        <div class="neighbor-cell current" id="neighbor-current">
+                            <canvas id="pixel-canvas" class="neighbor-canvas" width="512" height="512"></canvas>
+                            <div class="canvas-overlay">
+                                <div class="position-indicator" id="position-indicator">
+                                    Position: (0, 0)
                                 </div>
                             </div>
-                            <div class="neighbor-cell empty" id="neighbor-right">
-                                <div class="neighbor-label">Right</div>
-                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-right-canvas"></canvas>
-                            </div>
                         </div>
-                        <!-- Bottom row with diagonal neighbors -->
-                        <div class="neighbor-row">
-                            <div class="neighbor-cell empty" id="neighbor-bottom-left">
-                                <div class="neighbor-label">Bottom-Left</div>
-                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-bottom-left-canvas"></canvas>
-                            </div>
-                            <div class="neighbor-cell empty" id="neighbor-bottom">
-                                <div class="neighbor-label">Bottom</div>
-                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-bottom-canvas"></canvas>
-                            </div>
-                            <div class="neighbor-cell empty" id="neighbor-bottom-right">
-                                <div class="neighbor-label">Bottom-Right</div>
-                                <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-bottom-right-canvas"></canvas>
-                            </div>
+                        <div class="neighbor-cell empty" id="neighbor-right">
+                            <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-right-canvas"></canvas>
+                        </div>
+                        
+                        <!-- Bottom Row -->
+                        <div class="neighbor-cell empty" id="neighbor-bottom-left">
+                            <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-bottom-left-canvas"></canvas>
+                        </div>
+                        <div class="neighbor-cell empty" id="neighbor-bottom">
+                            <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-bottom-canvas"></canvas>
+                        </div>
+                        <div class="neighbor-cell empty" id="neighbor-bottom-right">
+                            <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-bottom-right-canvas"></canvas>
                         </div>
                     </div>
                 </div>

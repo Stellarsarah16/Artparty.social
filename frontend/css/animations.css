@@ -1,7 +1,13 @@
-/**
- * Enhanced Animations and Visual Effects
- * Polished animations for StellarCollabApp
- */
+/* ========================================================================
+   STELLAR COLLAB APP - ANIMATIONS & VISUAL EFFECTS
+   ========================================================================
+   
+   Polished animations and visual effects library.
+   Depends on: tokens.css
+   
+   ======================================================================== */
+
+@import url('tokens.css');
 
 /* Animation Variables */
 :root {

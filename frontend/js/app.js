@@ -35,6 +35,9 @@ class ArtPartySocial {
             // Set up event listeners (moved to navigation manager)
             // this.setupEventListeners();
             
+            // Set up dynamic tile sizing
+            this.setupDynamicTileSizing();
+            
             this.initialized = true;
             console.log('✅ ArtPartySocial ready!');
             
@@ -236,6 +239,24 @@ class ArtPartySocial {
             return false;
         }
         return false;
+    }
+
+    setupDynamicTileSizing() {
+        // Apply initial tile sizing on load
+        if (typeof adjustTileSize === 'function') {
+            adjustTileSize();
+            
+            // Apply on window resize
+            window.addEventListener('resize', adjustTileSize);
+            window.addEventListener('orientationchange', () => {
+                // Small delay to allow orientation change to complete
+                setTimeout(adjustTileSize, 100);
+            });
+            
+            console.log('🎨 Dynamic tile sizing system initialized');
+        } else {
+            console.warn('⚠️ adjustTileSize function not found - tile sizing may be static');
+        }
     }
 
     // Lifecycle methods

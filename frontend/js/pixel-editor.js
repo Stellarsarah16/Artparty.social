@@ -3,6 +3,47 @@
  * Handles drawing, tools, and canvas operations
  */
 
+/**
+ * Dynamic tile sizing system - adjusts CSS variables based on screen size
+ */
+function adjustTileSize() {
+    const root = document.documentElement;
+    const viewport = {
+        width: window.innerWidth,
+        height: window.innerHeight
+    };
+    
+    // Calculate optimal tile size based on available space
+    const maxGridWidth = Math.min(viewport.width * 0.8, 500);
+    const maxGridHeight = Math.min(viewport.height * 0.6, 500);
+    const maxTileSize = Math.floor(Math.min(maxGridWidth, maxGridHeight) / 3);
+    
+    // Device-based defaults - DOUBLED sizes, no maximum constraint
+    let tileSize;
+    if (viewport.width <= 480) {
+        tileSize = 120; // Mobile: 120px (was 80px)
+    } else if (viewport.width <= 768) {
+        tileSize = 160; // Tablet: 160px (was 100px)
+    } else if (viewport.width <= 1199) {
+        tileSize = 240; // Desktop: 240px (was 120px)
+    } else {
+        tileSize = 280; // Large Desktop: 280px (was 140px)
+    }
+    
+    // Apply the calculated size
+    root.style.setProperty('--tile-display-size', `${tileSize}px`);
+    
+    console.log(`🎨 Tile size adjusted to: ${tileSize}px for viewport: ${viewport.width}x${viewport.height}`);
+}
+
+/**
+ * Manual tile size adjustment
+ */
+function setTileSize(size) {
+    document.documentElement.style.setProperty('--tile-display-size', `${size}px`);
+    console.log(`🎨 Manual tile size set to: ${size}px`);
+}
+
 class PixelEditor {
     constructor() {
         this.canvas = null;
@@ -168,6 +209,46 @@ class PixelEditor {
     }
     
     /**
+     * Get accurate pixel coordinates accounting for canvas scaling
+     * @param {MouseEvent|Touch} event - Mouse or touch event
+     * @returns {Object} Pixel coordinates {x, y}
+     */
+    getPixelCoordinates(event) {
+        const rect = this.canvas.getBoundingClientRect();
+        
+        // Get mouse/touch position relative to canvas display area
+        const canvasX = event.clientX - rect.left;
+        const canvasY = event.clientY - rect.top;
+        
+        // Account for canvas scaling: canvas internal size vs display size
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+        
+        // Convert to internal canvas coordinates
+        const internalX = canvasX * scaleX;
+        const internalY = canvasY * scaleY;
+        
+        // Convert to pixel grid coordinates
+        const x = Math.floor(internalX / this.gridSize);
+        const y = Math.floor(internalY / this.gridSize);
+        
+        // Debug logging for coordinate verification
+        if (window.DEBUG_COORDINATES) {
+            console.log(`🎯 Coordinate Debug:`, {
+                mouse: { x: event.clientX, y: event.clientY },
+                canvas: { x: canvasX, y: canvasY },
+                rect: { width: rect.width, height: rect.height },
+                scale: { x: scaleX, y: scaleY },
+                internal: { x: internalX, y: internalY },
+                pixel: { x, y },
+                gridSize: this.gridSize
+            });
+        }
+        
+        return { x, y };
+    }
+
+    /**
      * Handle mouse down event
      * @param {MouseEvent} e - Mouse event
      */
@@ -175,9 +256,7 @@ class PixelEditor {
         // Safety check - ensure drawingState exists
         this.ensureDrawingState();
         
-        const rect = this.canvas.getBoundingClientRect();
-        const x = Math.floor((e.clientX - rect.left) / this.gridSize);
-        const y = Math.floor((e.clientY - rect.top) / this.gridSize);
+        const { x, y } = this.getPixelCoordinates(e);
         
         if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize) {
             // Only allow left mouse button (button 0) for painting
@@ -207,9 +286,7 @@ class PixelEditor {
         // Safety check - ensure drawingState exists
         this.ensureDrawingState();
         
-        const rect = this.canvas.getBoundingClientRect();
-        const x = Math.floor((e.clientX - rect.left) / this.gridSize);
-        const y = Math.floor((e.clientY - rect.top) / this.gridSize);
+        const { x, y } = this.getPixelCoordinates(e);
         
         if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize) {
             this.updatePositionIndicator(x, y);
@@ -275,9 +352,7 @@ class PixelEditor {
             const touch = e.touches[0];
             
             // Convert touch to pixel coordinates
-            const rect = this.canvas.getBoundingClientRect();
-            const x = Math.floor((touch.clientX - rect.left) / this.gridSize);
-            const y = Math.floor((touch.clientY - rect.top) / this.gridSize);
+            const { x, y } = this.getPixelCoordinates(touch);
             
             // Only prevent default if we're on the canvas area
             if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize) {
@@ -319,9 +394,7 @@ class PixelEditor {
             const touch = e.touches[0];
             
             // Convert touch to pixel coordinates
-            const rect = this.canvas.getBoundingClientRect();
-            const x = Math.floor((touch.clientX - rect.left) / this.gridSize);
-            const y = Math.floor((touch.clientY - rect.top) / this.gridSize);
+            const { x, y } = this.getPixelCoordinates(touch);
             
             // Only prevent default if we're on the canvas area and drawing
             if (x >= 0 && x < this.tileSize && y >= 0 && y < this.tileSize && this.drawingState.isDrawing) {
@@ -615,10 +688,24 @@ class PixelEditor {
     pickColorFromExternalCanvas(canvas, x, y, pixelData) {
         if (!canvas || !pixelData || !Array.isArray(pixelData)) return;
         
-        // Convert canvas coordinates to pixel coordinates
+        // Convert canvas coordinates to pixel coordinates with scaling
         const rect = canvas.getBoundingClientRect();
-        const canvasX = Math.floor((x - rect.left) / (canvas.width / this.tileSize));
-        const canvasY = Math.floor((y - rect.top) / (canvas.height / this.tileSize));
+        
+        // Get position relative to canvas display area
+        const canvasX_display = x - rect.left;
+        const canvasY_display = y - rect.top;
+        
+        // Account for canvas scaling: canvas internal size vs display size
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        
+        // Convert to internal canvas coordinates
+        const internalX = canvasX_display * scaleX;
+        const internalY = canvasY_display * scaleY;
+        
+        // Convert to pixel grid coordinates
+        const canvasX = Math.floor(internalX / (canvas.width / this.tileSize));
+        const canvasY = Math.floor(internalY / (canvas.height / this.tileSize));
         
         // Check bounds
         if (canvasX < 0 || canvasX >= this.tileSize || canvasY < 0 || canvasY >= this.tileSize) return;

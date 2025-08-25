@@ -23,9 +23,14 @@ export class IsolatedDebugManager {
             lastUpdate: Date.now()
         };
         
+        // Throttling for performance
+        this.updateThrottle = null;
+        this.resizeThrottle = null;
+        
         // Setup mouse tracking and event listeners
         this.setupEventListeners();
         this.setupMouseTracking();
+        this.setupResizeHandler();
         
         console.log('✅ Enhanced DebugManager initialized');
     }
@@ -105,6 +110,50 @@ export class IsolatedDebugManager {
     }
     
     /**
+     * Setup window resize handler to keep overlay canvas size in sync
+     */
+    setupResizeHandler() {
+        // Track window resize events
+        window.addEventListener('resize', () => {
+            if (this.isEnabled && this.overlayCanvas) {
+                // Throttle resize updates to avoid excessive calls
+                if (this.resizeThrottle) {
+                    clearTimeout(this.resizeThrottle);
+                }
+                
+                this.resizeThrottle = setTimeout(() => {
+                    this.updateOverlaySize();
+                    this.updateOverlay();
+                    this.resizeThrottle = null;
+                }, 100); // Throttle resize to 10fps
+            }
+        });
+    }
+    
+    /**
+     * Update overlay canvas size to match main canvas
+     */
+    updateOverlaySize() {
+        if (!this.overlayCanvas) return;
+        
+        const canvasViewer = document.getElementById('canvas-viewer');
+        if (canvasViewer) {
+            const rect = canvasViewer.getBoundingClientRect();
+            
+            // Update overlay canvas size to match (accounting for border)
+            const newWidth = rect.width - 2;
+            const newHeight = rect.height - 2;
+            
+            // Only update if size actually changed to avoid unnecessary redraws
+            if (this.overlayCanvas.width !== newWidth || this.overlayCanvas.height !== newHeight) {
+                this.overlayCanvas.width = newWidth;
+                this.overlayCanvas.height = newHeight;
+                console.log(`🔧 Updated overlay canvas size: ${newWidth}x${newHeight}`);
+            }
+        }
+    }
+    
+    /**
      * Create debug overlay when needed - Enhanced with barely visible styling
      */
     createOverlay() {
@@ -121,12 +170,12 @@ export class IsolatedDebugManager {
         this.overlayCanvas.className = 'debug-overlay';
         this.overlayCanvas.style.cssText = `
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 1px;
+            left: 1px;
             pointer-events: none;
             z-index: 100;
             opacity: 0.3;
-            display: none;
+            display: block;
         `;
         
         // Create info panel for real-time data
@@ -168,10 +217,11 @@ export class IsolatedDebugManager {
             // Add info panel to document body
             document.body.appendChild(this.infoPanel);
             
-            // Set canvas size to match the canvas viewer
+            // Set canvas size to match the canvas viewer (accounting for border)
             const rect = canvasViewer.getBoundingClientRect();
-            this.overlayCanvas.width = rect.width;
-            this.overlayCanvas.height = rect.height;
+            // Account for 1px border on all sides
+            this.overlayCanvas.width = rect.width - 2;
+            this.overlayCanvas.height = rect.height - 2;
             
             console.log('✅ Enhanced debug overlay created');
             return true;
@@ -209,6 +259,10 @@ export class IsolatedDebugManager {
         // Start or stop updates
         if (enabled) {
             this.startRealTimeUpdates();
+            // CRITICAL FIX: Force immediate overlay update to show grid right away
+            setTimeout(() => {
+                this.updateOverlay();
+            }, 50); // Small delay to ensure canvas data is loaded
         } else {
             this.stopRealTimeUpdates();
         }
@@ -291,50 +345,54 @@ export class IsolatedDebugManager {
         const ctx = this.overlayCtx;
         const canvas = this.overlayCanvas;
         
-        // Get actual tile size from canvas viewer if available
-        let tileSize = 32; // Default fallback
-        if (window.CanvasViewer && window.CanvasViewer.canvasData) {
-            tileSize = window.CanvasViewer.canvasData.tile_size || 32;
+        // Get actual tile size from renderer manager
+        let tileSize = 32;
+        if (window.rendererManager && window.rendererManager.canvasData) {
+            tileSize = window.rendererManager.canvasData.tile_size || 32;
         }
         
-        // Draw barely visible grid
-        ctx.strokeStyle = 'rgba(0, 255, 0, 0.15)';
-        ctx.lineWidth = 0.5;
-        
-        // Get viewport info if available
-        let offsetX = 0, offsetY = 0, zoom = 1;
-        if (window.CanvasViewer) {
-            offsetX = window.CanvasViewer.viewportX || 0;
-            offsetY = window.CanvasViewer.viewportY || 0;
-            zoom = window.CanvasViewer.zoom || 1;
-        }
-        
-        // Calculate visible tile range
-        const startTileX = Math.floor(offsetX / tileSize);
-        const startTileY = Math.floor(offsetY / tileSize);
-        const tilesX = Math.ceil(canvas.width / (tileSize * zoom)) + 2;
-        const tilesY = Math.ceil(canvas.height / (tileSize * zoom)) + 2;
-        
-        // Draw vertical lines
-        for (let i = 0; i <= tilesX; i++) {
-            const x = ((startTileX + i) * tileSize - offsetX) * zoom;
-            if (x >= 0 && x <= canvas.width) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, canvas.height);
-            ctx.stroke();
+        // CRITICAL FIX: Use SAME coordinate system as main canvas renderer
+        if (window.viewportManager && window.rendererManager && window.rendererManager.canvasData) {
+            // Save context for viewport transformations
+            ctx.save();
+            
+            // Apply EXACT SAME viewport transformation as main renderer
+            const viewportState = window.viewportManager.getViewport();
+            ctx.translate(-viewportState.x * viewportState.zoom, -viewportState.y * viewportState.zoom);
+            ctx.scale(viewportState.zoom, viewportState.zoom);
+            
+            // Draw barely visible grid in world coordinates (same as main renderer)
+            ctx.strokeStyle = 'rgba(0, 255, 0, 0.15)';
+            ctx.lineWidth = 0.5 / viewportState.zoom; // Adjust line width for zoom
+            
+            const canvasData = window.rendererManager.canvasData;
+            const maxTilesX = Math.floor(canvasData.width / tileSize);
+            const maxTilesY = Math.floor(canvasData.height / tileSize);
+            
+            // Draw vertical lines (same as main renderer)
+            for (let x = 0; x <= maxTilesX; x++) {
+                const xPos = x * tileSize;
+                if (xPos <= canvasData.width) {
+                    ctx.beginPath();
+                    ctx.moveTo(xPos, 0);
+                    ctx.lineTo(xPos, canvasData.height);
+                    ctx.stroke();
+                }
             }
-        }
-        
-        // Draw horizontal lines
-        for (let i = 0; i <= tilesY; i++) {
-            const y = ((startTileY + i) * tileSize - offsetY) * zoom;
-            if (y >= 0 && y <= canvas.height) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(canvas.width, y);
-            ctx.stroke();
-        }
+            
+            // Draw horizontal lines (same as main renderer)
+            for (let y = 0; y <= maxTilesY; y++) {
+                const yPos = y * tileSize;
+                if (yPos <= canvasData.height) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, yPos);
+                    ctx.lineTo(canvasData.width, yPos);
+                    ctx.stroke();
+                }
+            }
+            
+            // Restore context
+            ctx.restore();
         }
     }
     
@@ -347,42 +405,45 @@ export class IsolatedDebugManager {
         const ctx = this.overlayCtx;
         const canvas = this.overlayCanvas;
         
-        // Get tile size and viewport info
+        // Get tile size from renderer manager
         let tileSize = 32;
-        let offsetX = 0, offsetY = 0, zoom = 1;
-        
-        if (window.CanvasViewer) {
-            if (window.CanvasViewer.canvasData) {
-                tileSize = window.CanvasViewer.canvasData.tile_size || 32;
-            }
-            offsetX = window.CanvasViewer.viewportX || 0;
-            offsetY = window.CanvasViewer.viewportY || 0;
-            zoom = window.CanvasViewer.zoom || 1;
+        if (window.rendererManager && window.rendererManager.canvasData) {
+            tileSize = window.rendererManager.canvasData.tile_size || 32;
         }
         
-        // Calculate screen position of hovered tile
-        const screenX = (this.hoveredTile.x * tileSize - offsetX) * zoom;
-        const screenY = (this.hoveredTile.y * tileSize - offsetY) * zoom;
-        const screenSize = tileSize * zoom;
-        
-        // Only draw if tile is visible
-        if (screenX + screenSize > 0 && screenX < canvas.width &&
-            screenY + screenSize > 0 && screenY < canvas.height) {
+        // CRITICAL FIX: Use SAME coordinate system as main canvas renderer
+        if (window.viewportManager) {
+            // Save context for viewport transformations
+            ctx.save();
             
-            // Draw subtle highlight
+            // Apply EXACT SAME viewport transformation as main renderer
+            const viewportState = window.viewportManager.getViewport();
+            ctx.translate(-viewportState.x * viewportState.zoom, -viewportState.y * viewportState.zoom);
+            ctx.scale(viewportState.zoom, viewportState.zoom);
+            
+            // Convert tile coordinates to world coordinates (same as main renderer)
+            const worldX = this.hoveredTile.x * tileSize;
+            const worldY = this.hoveredTile.y * tileSize;
+            
+            // Draw highlight in world coordinates (same as main renderer)
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(screenX, screenY, screenSize, screenSize);
+            ctx.lineWidth = 2 / viewportState.zoom; // Adjust line width for zoom
+            ctx.strokeRect(worldX, worldY, tileSize, tileSize);
             
             // Draw subtle crosshair
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 1 / viewportState.zoom; // Adjust line width for zoom
             ctx.beginPath();
-            ctx.moveTo(screenX + screenSize / 2, screenY);
-            ctx.lineTo(screenX + screenSize / 2, screenY + screenSize);
-            ctx.moveTo(screenX, screenY + screenSize / 2);
-            ctx.lineTo(screenX + screenSize, screenY + screenSize / 2);
+            ctx.moveTo(worldX + tileSize / 2, worldY);
+            ctx.lineTo(worldX + tileSize / 2, worldY + tileSize);
+            ctx.moveTo(worldX, worldY + tileSize / 2);
+            ctx.lineTo(worldX + tileSize, worldY + tileSize / 2);
             ctx.stroke();
+            
+            // Restore context
+            ctx.restore();
+        } else {
+            console.warn('⚠️ ViewportManager not available for highlight drawing');
         }
     }
     
@@ -405,13 +466,9 @@ export class IsolatedDebugManager {
             html += `<div><span style="color: #888;">Mode:</span> ${this.currentCanvas.collaboration_mode}</div>`;
         }
         
-        // Viewport information
-        if (window.CanvasViewer) {
-            const viewport = {
-                x: window.CanvasViewer.viewportX || 0,
-                y: window.CanvasViewer.viewportY || 0,
-                zoom: window.CanvasViewer.zoom || 1
-            };
+        // Viewport information from proper manager
+        if (window.viewportManager) {
+            const viewport = window.viewportManager.getViewport();
             html += `<div style="margin-top: 6px; color: #ffcc00;"><strong>Viewport:</strong></div>`;
             html += `<div><span style="color: #888;">Position:</span> (${viewport.x.toFixed(1)}, ${viewport.y.toFixed(1)})</div>`;
             html += `<div><span style="color: #888;">Zoom:</span> ${(viewport.zoom * 100).toFixed(0)}%</div>`;
@@ -477,10 +534,15 @@ export class IsolatedDebugManager {
             this.infoPanel = null;
         }
         
-        // Clear throttle timeout
+        // Clear throttle timeouts
         if (this.updateThrottle) {
             clearTimeout(this.updateThrottle);
             this.updateThrottle = null;
+        }
+        
+        if (this.resizeThrottle) {
+            clearTimeout(this.resizeThrottle);
+            this.resizeThrottle = null;
         }
         
         console.log('✅ Debug manager cleanup complete');
