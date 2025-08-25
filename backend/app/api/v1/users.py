@@ -164,7 +164,7 @@ async def update_password(
     """Update user's password"""
     try:
         # Verify current password
-        if not auth_service.verify_password(password_update.current_password, current_user.password_hash):
+        if not auth_service.verify_password(password_update.current_password, current_user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Current password is incorrect"
@@ -174,7 +174,7 @@ async def update_password(
         new_password_hash = auth_service.hash_password(password_update.new_password)
         
         # Update password
-        setattr(current_user, 'password_hash', new_password_hash)
+        setattr(current_user, 'hashed_password', new_password_hash)
         await db.commit()
         
         return {"message": "Password updated successfully"}
@@ -197,7 +197,7 @@ async def delete_account(
     """Delete user account (soft delete)"""
     try:
         # Verify password
-        if not auth_service.verify_password(account_delete.password, current_user.password_hash):
+        if not auth_service.verify_password(account_delete.password, current_user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Password is incorrect"

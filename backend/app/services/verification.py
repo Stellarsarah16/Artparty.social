@@ -33,11 +33,13 @@ class VerificationService:
     ) -> VerificationToken:
         """Create a verification token for a user"""
         # Invalidate any existing tokens of the same type for this user
-        existing_tokens = db.query(VerificationToken).filter(
+        stmt = select(VerificationToken).where(
             VerificationToken.user_id == user_id,
             VerificationToken.token_type == token_type,
             VerificationToken.is_used == False
-        ).all()
+        )
+        result = await db.execute(stmt)
+        existing_tokens = result.scalars().all()
         
         for token in existing_tokens:
             token.is_used = True
