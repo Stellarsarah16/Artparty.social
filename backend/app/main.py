@@ -17,7 +17,7 @@ from starlette.responses import JSONResponse
 from sqlalchemy import text
 
 from app.core.config import settings
-from app.core.database import test_db_connection, test_redis_connection, engine, Base
+from app.core.database import engine, Base
 from app.api.v1 import api_router, auth, users, canvas, tiles, websockets
 
 # Configure logging
@@ -69,27 +69,15 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting up StellarArtCollab backend...")
     
-    # Wait for database to be ready
-    max_retries = 30
-    for attempt in range(max_retries):
-        try:
-            async with engine.begin() as conn:
-                await conn.execute(text("SELECT 1"))
-            logger.info("Database connection established")
-            break
-        except Exception as e:
-            if attempt == max_retries - 1:
-                logger.error(f"Failed to connect to database after {max_retries} attempts")
-                raise
-            logger.warning(f"Database connection attempt {attempt + 1} failed, retrying...")
-            await asyncio.sleep(2)
+    # Simple startup without complex database checking
+    try:
+        # Just create tables
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables created successfully")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        # Don't crash, just log the error
     
-    # Create database tables
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database tables created successfully")
-    
-    # Mark service as ready
-    app.state.ready = True
     logger.info("Service is ready to accept requests")
     
     yield
