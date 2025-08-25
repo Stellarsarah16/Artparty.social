@@ -179,8 +179,8 @@ class TileService:
     
     async def acquire_tile_lock(self, db: AsyncSession, tile_id: int, current_user: User, minutes: int = 30) -> Dict[str, Any]:
         """Acquire a lock for editing a tile with improved race condition handling"""
-        # Check if tile exists
-        tile = await self.tile_repository.get(db, tile_id)
+        # Check if tile exists with eager loading
+        tile = await self.get_tile_by_id(db, tile_id)
         if not tile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -263,8 +263,8 @@ class TileService:
     
     async def get_tile_lock_status(self, db: AsyncSession, tile_id: int, current_user: User) -> Dict[str, Any]:
         """Get the lock status for a tile"""
-        # Check if tile exists
-        tile = await self.tile_repository.get(db, tile_id)
+        # Check if tile exists with eager loading
+        tile = await self.get_tile_by_id(db, tile_id)
         if not tile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -369,7 +369,7 @@ class TileService:
     
     async def delete_tile(self, db: AsyncSession, tile_id: int, current_user: User) -> Optional[Tile]:
         """Delete tile with collaboration mode support"""
-        tile = await self.tile_repository.get(db, tile_id)
+        tile = await self.get_tile_by_id(db, tile_id)
         if not tile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -386,8 +386,8 @@ class TileService:
     
     async def like_tile(self, db: AsyncSession, tile_id: int, user_id: int) -> bool:
         """Like a tile"""
-        # Check if tile exists
-        tile = await self.tile_repository.get(db, tile_id)
+        # Check if tile exists with eager loading
+        tile = await self.get_tile_by_id(db, tile_id)
         if not tile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -411,8 +411,8 @@ class TileService:
     
     async def unlike_tile(self, db: AsyncSession, tile_id: int, user_id: int) -> bool:
         """Unlike a tile"""
-        # Check if tile exists
-        tile = await self.tile_repository.get(db, tile_id)
+        # Check if tile exists with eager loading
+        tile = await self.get_tile_by_id(db, tile_id)
         if not tile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
