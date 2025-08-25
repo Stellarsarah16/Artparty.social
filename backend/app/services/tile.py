@@ -76,28 +76,80 @@ class TileService:
         return tile
     
     async def get_tile_by_id(self, db: AsyncSession, tile_id: int) -> Optional[Tile]:
-        """Get tile by ID"""
-        return await self.tile_repository.get(db, tile_id)
+        """Get tile by ID with relationships eagerly loaded"""
+        from sqlalchemy.orm import selectinload
+        stmt = select(Tile).options(selectinload(Tile.creator)).where(Tile.id == tile_id)
+        result = await db.execute(stmt)
+        return result.scalar_one_or_none()
     
     async def get_tile_by_position(self, db: AsyncSession, canvas_id: int, x: int, y: int) -> Optional[Tile]:
-        """Get tile by position"""
-        return await self.tile_repository.get_by_position(db, canvas_id=canvas_id, x=x, y=y)
+        """Get tile by position with relationships eagerly loaded"""
+        from sqlalchemy.orm import selectinload
+        stmt = select(Tile).options(selectinload(Tile.creator)).where(
+            Tile.canvas_id == canvas_id, 
+            Tile.x == x, 
+            Tile.y == y
+        )
+        result = await db.execute(stmt)
+        return result.scalar_one_or_none()
     
     async def get_canvas_tiles(self, db: AsyncSession, canvas_id: int, skip: int = 0, limit: int = 100) -> List[Tile]:
-        """Get tiles for a canvas"""
-        return await self.tile_repository.get_by_canvas(db, canvas_id=canvas_id, skip=skip, limit=limit)
+        """Get tiles for a canvas with relationships eagerly loaded"""
+        from sqlalchemy.orm import selectinload
+        stmt = select(Tile).options(selectinload(Tile.creator)).where(Tile.canvas_id == canvas_id).offset(skip).limit(limit)
+        result = await db.execute(stmt)
+        return result.scalars().all()
     
     async def get_user_tiles(self, db: AsyncSession, user_id: int, skip: int = 0, limit: int = 100) -> List[Tile]:
-        """Get tiles by user"""
-        return await self.tile_repository.get_by_creator(db, creator_id=user_id, skip=skip, limit=limit)
+        """Get tiles by user with relationships eagerly loaded"""
+        from sqlalchemy.orm import selectinload
+        stmt = select(Tile).options(selectinload(Tile.creator)).where(Tile.creator_id == user_id).offset(skip).limit(limit)
+        result = await db.execute(stmt)
+        return result.scalars().all()
     
     async def get_tile_neighbors(self, db: AsyncSession, tile_id: int, radius: int = 1) -> List[Tile]:
-        """Get neighboring tiles"""
-        return await self.tile_repository.get_tile_neighbors(db, tile_id=tile_id, radius=radius)
+        """Get neighboring tiles with relationships eagerly loaded"""
+        from sqlalchemy.orm import selectinload
+        stmt = select(Tile).options(selectinload(Tile.creator)).where(Tile.id == tile_id)
+        result = await db.execute(stmt)
+        tile = result.scalar_one_or_none()
+        
+        if not tile:
+            return []
+        
+        # Get neighbors using the repository method but with eager loading
+        neighbors = await self.tile_repository.get_tile_neighbors(db, tile_id=tile_id, radius=radius)
+        
+        # Eagerly load relationships for neighbors
+        neighbor_ids = [n.id for n in neighbors]
+        if neighbor_ids:
+            stmt = select(Tile).options(selectinload(Tile.creator)).where(Tile.id.in_(neighbor_ids))
+            result = await db.execute(stmt)
+            return result.scalars().all()
+        
+        return []
     
     async def get_adjacent_neighbors(self, db: AsyncSession, tile_id: int) -> List[Tile]:
-        """Get only adjacent neighbors (left, right, top, bottom) of a tile"""
-        return await self.tile_repository.get_adjacent_neighbors(db, tile_id=tile_id)
+        """Get only adjacent neighbors (left, right, top, bottom) of a tile with relationships eagerly loaded"""
+        from sqlalchemy.orm import selectinload
+        stmt = select(Tile).options(selectinload(Tile.creator)).where(Tile.id == tile_id)
+        result = await db.execute(stmt)
+        tile = result.scalar_one_or_none()
+        
+        if not tile:
+            return []
+        
+        # Get adjacent neighbors using the repository method but with eager loading
+        neighbors = await self.tile_repository.get_adjacent_neighbors(db, tile_id=tile_id)
+        
+        # Eagerly load relationships for neighbors
+        neighbor_ids = [n.id for n in neighbors]
+        if neighbor_ids:
+            stmt = select(Tile).options(selectinload(Tile.creator)).where(Tile.id.in_(neighbor_ids))
+            result = await db.execute(stmt)
+            return result.scalars().all()
+        
+        return []
     
     async def get_adjacent_neighbors_by_position(self, db: AsyncSession, canvas_id: int, x: int, y: int) -> List[Tile]:
         """Get adjacent neighbors for a position (even if tile doesn't exist)"""
@@ -261,7 +313,12 @@ class TileService:
         try:
             print(f"🔧 TileService: Starting update for tile {tile_id}")
             
-            tile = await self.tile_repository.get(db, tile_id)
+            # Eagerly load the tile with relationships to prevent MissingGreenlet errors
+            from sqlalchemy.orm import selectinload
+            stmt = select(Tile).options(selectinload(Tile.creator)).where(Tile.id == tile_id)
+            result = await db.execute(stmt)
+            tile = result.scalar_one_or_none()
+            
             if not tile:
                 print(f"❌ TileService: Tile {tile_id} not found")
                 raise HTTPException(
