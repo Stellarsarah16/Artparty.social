@@ -56,11 +56,11 @@ services:
     volumes:
       - uploads_data:/app/uploads
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]  # Use readiness check
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]  # ✅ Use /health instead of /ready
       interval: 60s
       timeout: 15s
       retries: 3
-      start_period: 180s  # 2 minutes for full startup
+      start_period: 180s
 
   # Frontend (Nginx serving static files and reverse proxy)
   frontend:
