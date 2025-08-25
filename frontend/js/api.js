@@ -188,6 +188,29 @@ class APIClient {
             }
         }
     }
+
+    /**
+     * Execute a function with retry logic for 503 errors
+     * @param {Function} apiCall - Function to execute
+     * @param {number} maxRetries - Maximum retry attempts
+     * @param {number} baseDelay - Base delay between retries
+     * @returns {Promise} Result of the API call
+     */
+    async executeWithRetry(apiCall, maxRetries = 3, baseDelay = 1000) {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                return await apiCall();
+            } catch (error) {
+                if (error.status === 503 && attempt < maxRetries) {
+                    const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+                    console.log(`🔄 API call attempt ${attempt}/${maxRetries} failed with 503, retrying in ${delay}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    continue;
+                }
+                throw error;
+            }
+        }
+    }
     
     /**
      * Execute the actual HTTP request
