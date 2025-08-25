@@ -46,6 +46,23 @@ export class TileEditorManager {
                 
                 console.log('📝 Creating tile with data:', createData);
                 
+                // Check authentication before making requests
+                const isAuthenticated = window.CONFIG_UTILS && window.CONFIG_UTILS.isAuthenticated();
+                const authToken = window.CONFIG_UTILS && window.CONFIG_UTILS.getAuthToken();
+                
+                if (!isAuthenticated || !authToken) {
+                    console.error('🔒 User not authenticated, cannot create tile');
+                    window.UIManager.showToast('Please log in to create tiles', 'warning');
+                    
+                    // Redirect to login
+                    if (window.navigationManager) {
+                        window.navigationManager.showSection('welcome');
+                    }
+                    throw new Error('Authentication required');
+                }
+                
+                console.log('🔐 Authentication verified, proceeding with tile creation');
+                
                 try {
                     const newTile = await this.apiService.create(createData);
                     console.log('✅ Tile created successfully:', newTile);
@@ -61,7 +78,35 @@ export class TileEditorManager {
                     tile.updated_at = tileData.updated_at;
                     
                 } catch (createError) {
-                    // Handle 409 Conflict - tile already exists (this is expected for existing tiles)
+                    // Handle 403 Forbidden - authentication/authorization issue
+                    if (createError.status === 403) {
+                        console.error('🔒 403 Forbidden: Authentication or authorization issue');
+                        
+                        // Check if user is still authenticated
+                        const isAuthenticated = window.CONFIG_UTILS && window.CONFIG_UTILS.isAuthenticated();
+                        const authToken = window.CONFIG_UTILS && window.CONFIG_UTILS.getAuthToken();
+                        
+                        console.log('🔍 Auth status check:', { isAuthenticated, hasToken: !!authToken });
+                        
+                        if (!isAuthenticated || !authToken) {
+                            // User needs to re-authenticate
+                            console.log('🔐 User needs to re-authenticate');
+                            window.UIManager.showToast('Please log in again to continue', 'warning');
+                            
+                            // Redirect to login or refresh token
+                            if (window.navigationManager) {
+                                window.navigationManager.showSection('welcome');
+                            }
+                            throw new Error('Authentication required');
+                        } else {
+                            // User has token but still getting 403 - might be permission issue
+                            console.warn('⚠️ User authenticated but getting 403 - checking permissions');
+                            window.UIManager.showToast('You may not have permission to create tiles on this canvas', 'warning');
+                            throw new Error('Insufficient permissions');
+                        }
+                    }
+                    
+                    // Handle 409 Conflict - tile already exists (existing code)
                     if (createError.status === 409) {
                         console.log('✅ Tile already exists on server (expected), fetching existing tile...');
                         
@@ -1167,11 +1212,39 @@ export class TileEditorManager {
         this.updateUndoRedoButtons();
     }
     
+
+    cleanupBackButtonListeners() {
+        console.log('🧹 Cleaning up existing back button event listeners...');
+        
+        const backBtn = document.getElementById('back-to-grid-btn');
+        const floatingBackBtn = document.getElementById('floating-back-btn');
+        
+        const buttons = [
+            { element: backBtn, type: 'header' },
+            { element: floatingBackBtn, type: 'floating' }
+        ].filter(btn => btn.element);
+        
+        buttons.forEach(({ element, type }) => {
+            if (element._backHandlers) {
+                // Remove all existing event listeners
+                element._backHandlers.forEach(({ event, handler }) => {
+                    element.removeEventListener(event, handler);
+                });
+                
+                // Clear the handler tracking
+                delete element._backHandlers;
+                
+                console.log(`🧹 Cleaned up ${type} back button listeners`);
+            }
+        });
+    }
+    
     /**
      * Setup back button (both header and floating)
      */
     setupBackButton() {
         console.log('🔧 Setting up back buttons...');
+        this.cleanupBackButtonListeners();
         
         const backBtn = document.getElementById('back-to-grid-btn');
         const floatingBackBtn = document.getElementById('floating-back-btn');
@@ -1188,17 +1261,37 @@ export class TileEditorManager {
         
         const backHandler = async () => {
             console.log('🔙 Back button clicked, returning to canvas viewer');
+            if (this._backButtonProcessing) {
+                console.log('🔄 Back button already processing, ignoring duplicate click');
+                return;
+            }
             
-            // Release the lock before going back
-            await this.releaseCurrentLock();
+            this._backButtonProcessing = true;
             
-            if (window.navigationManager) {
-                window.navigationManager.showSection('viewer');
+            try {
+                // Release the lock before going back
+                await this.releaseCurrentLock();
+                
+                if (window.navigationManager) {
+                    window.navigationManager.showSection('viewer');
+                }
+            } catch (error) {
+                console.error('❌ Error in back button handler:', error);
+            } finally {
+                // Reset processing flag after a delay
+                setTimeout(() => {
+                    this._backButtonProcessing = false;
+                }, 1000);
             }
         };
         
         buttons.forEach(({ element, type }) => {
-            // FIXED: Use unified touch event system
+            // Track handlers for cleanup
+            if (!element._backHandlers) {
+                element._backHandlers = [];
+            }
+            
+            // FIXED: Use unified touch event system with tracking
             this.setupUnifiedTouchEvents(element, backHandler, type);
             
             console.log(`✅ ${type} back button setup complete with unified touch support`);
@@ -1754,8 +1847,8 @@ export class TileEditorManager {
             }
         };
         
-        // Mouse click events (for desktop)
-        element.addEventListener('click', (e) => {
+        // CRITICAL FIX: Define actual handlers that will be tracked
+        const clickHandler = (e) => {
             // Only handle mouse clicks, not touch-triggered clicks
             if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) {
                 console.log(`🖱️ ${buttonType} button: ignoring touch-triggered click`);
@@ -1764,10 +1857,9 @@ export class TileEditorManager {
             
             console.log(`🖱️ ${buttonType} button: mouse click detected`);
             unifiedHandler(e);
-        });
+        };
         
-        // Touch start event
-        element.addEventListener('touchstart', (e) => {
+        const touchStartHandler = (e) => {
             // Prevent default to avoid conflicts with click events
             e.preventDefault();
             
@@ -1782,10 +1874,9 @@ export class TileEditorManager {
             element.classList.add('touch-active');
             
             console.log(`📱 ${buttonType} button: touch started at (${touchStartX}, ${touchStartY})`);
-        }, { passive: false });
+        };
         
-        // Touch move event
-        element.addEventListener('touchmove', (e) => {
+        const touchMoveHandler = (e) => {
             if (e.touches.length === 1) {
                 const touch = e.touches[0];
                 const deltaX = Math.abs(touch.clientX - touchStartX);
@@ -1797,10 +1888,9 @@ export class TileEditorManager {
                     console.log(`📱 ${buttonType} button: touch moved (${deltaX}, ${deltaY})`);
                 }
             }
-        }, { passive: true });
+        };
         
-        // Touch end event
-        element.addEventListener('touchend', (e) => {
+        const touchEndHandler = (e) => {
             // Prevent default to avoid conflicts
             e.preventDefault();
             
@@ -1823,19 +1913,39 @@ export class TileEditorManager {
             } else {
                 console.log(`📱 ${buttonType} button: invalid tap (too long or moved), ignoring`);
             }
-        }, { passive: false });
+        };
         
-        // Touch cancel event
-        element.addEventListener('touchcancel', (e) => {
+        const touchCancelHandler = (e) => {
             element.classList.remove('touch-active');
             touchEnded = true;
             console.log(`📱 ${buttonType} button: touch cancelled`);
-        }, { passive: true });
+        };
+        
+        // CRITICAL FIX: Initialize handler tracking array
+        if (!element._backHandlers) {
+            element._backHandlers = [];
+        }
+        
+        // Add event listeners with proper options
+        element.addEventListener('click', clickHandler);
+        element.addEventListener('touchstart', touchStartHandler, { passive: false });
+        element.addEventListener('touchmove', touchMoveHandler, { passive: true });
+        element.addEventListener('touchend', touchEndHandler, { passive: false });
+        element.addEventListener('touchcancel', touchCancelHandler, { passive: true });
+        
+        // CRITICAL FIX: Track all handlers for cleanup
+        element._backHandlers.push(
+            { event: 'click', handler: clickHandler },
+            { event: 'touchstart', handler: touchStartHandler },
+            { event: 'touchmove', handler: touchMoveHandler },
+            { event: 'touchend', handler: touchEndHandler },
+            { event: 'touchcancel', handler: touchCancelHandler }
+        );
         
         // Add CSS classes for better touch styling
         element.classList.add('touch-enabled');
         
-        console.log(`✅ ${buttonType} button: unified touch events configured`);
+        console.log(`✅ ${buttonType} button: unified touch events configured with ${element._backHandlers.length} tracked handlers`);
     }
 
     /**

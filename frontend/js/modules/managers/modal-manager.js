@@ -133,7 +133,7 @@ export class ModalManager {
                         </div>
                         <div class="form-group">
                             <label for="settings-max-tiles-per-user">Max Tiles per User</label>
-                            <input type="number" id="settings-max-tiles-per-user" name="max_tiles_per_user" min="1" max="100" value="10">
+                            <input type="number" id="settings-max-tiles-per-user" name="max_tiles_per_user" min="1" value="10">
                         </div>
                         <div class="form-group">
                             <label for="settings-palette-type">Color Palette</label>

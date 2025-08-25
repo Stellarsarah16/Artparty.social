@@ -35,7 +35,9 @@
     display: flex;
     justify-content: center;
     gap: 10px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    flex-shrink: 1;
 }
 
 .admin-tab {
@@ -43,7 +45,7 @@
     border: none;
     color: white;
     padding: 12px 24px;
-    border-radius: 25px;
+    border-radius: 15px;
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 16px;
@@ -56,7 +58,7 @@
 }
 
 .admin-tab.active {
-    background: white;
+    background: var(--bg-tertiary);
     color: var(--color-primary);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
@@ -70,6 +72,7 @@
 
 .admin-view {
     padding: 30px;
+    background: var(--bg-secondary);
 }
 
 /* Dashboard Styles */
@@ -122,13 +125,22 @@
 
 .admin-actions {
     display: flex;
-    gap: 15px;
+    flex-direction: row;   /* force row layout */
     justify-content: center;
-    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: nowrap;     /* prevent line breaks */
+    width: 100%;           /* span across header if needed */
+}
+
+.admin-actions > * {
+    flex: 0 0 auto;
+    min-width: 0px;        /* prevent children from stretching */
 }
 
 /* Header Styles */
 .admin-header {
+    flex-direction: column;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -139,7 +151,7 @@
 
 .admin-header h2 {
     margin: 0;
-    color: #333;
+    color: var(--color-primary);
     font-size: 1.8em;
 }
 
@@ -163,10 +175,11 @@
     padding: 15px;
     text-align: left;
     border-bottom: 1px solid #eee;
+    color: var(--color-secondary);
 }
 
 .admin-table th {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
     color: white;
     font-weight: 600;
     font-size: 14px;
@@ -201,7 +214,7 @@
 
 /* Buttons */
 .btn {
-    padding: 8px 16px;
+    padding: 8px 8px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
@@ -353,8 +366,12 @@
     }
     
     .admin-nav {
-        flex-direction: column;
-        align-items: center;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: nowrap; /* prevent wrapping */
+        overflow-x: none;
+        flex-shrink: 1;
     }
     
     .admin-tab {

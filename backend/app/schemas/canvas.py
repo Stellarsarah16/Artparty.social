@@ -66,6 +66,25 @@ class CanvasCreate(BaseModel):
             raise ValueError(f'Auto-save interval must be one of: {", ".join(map(str, valid_intervals))}')
         return v
 
+    @validator('max_tiles_per_user')
+    def validate_max_tiles_per_user(cls, v, values):
+        """Validate that max_tiles_per_user doesn't exceed total possible tiles"""
+        if 'width' in values and 'height' in values and 'tile_size' in values:
+            width = values['width']
+            height = values['height']
+            tile_size = values['tile_size']
+            
+            # Calculate maximum possible tiles
+            max_possible_tiles = (width // tile_size) * (height // tile_size)
+            
+            if v > max_possible_tiles:
+                raise ValueError(f'Max tiles per user ({v}) cannot exceed total possible tiles ({max_possible_tiles})')
+            
+            if v < 1:
+                raise ValueError('Max tiles per user must be at least 1')
+        
+        return v
+
 
 class CanvasUpdate(BaseModel):
     """Schema for updating canvas information"""

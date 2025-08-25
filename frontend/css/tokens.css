@@ -2,51 +2,93 @@
    STELLAR COLLAB APP - DESIGN TOKENS
    ========================================================================
    
-   Central design system tokens for consistent styling across all components.
+   Simplified design system tokens for consistent styling.
    Import this file first in all other stylesheets.
    
    ======================================================================== */
 
 :root {
-    /* ===== CORE DESIGN TOKENS ===== */
+    /* ===== BRAND & STATUS COLORS (Theme Independent) ===== */
     
     /* Primary Brand Colors */
-    --color-primary: #5c7cfa;             /* primary accent (indigo/blue) */
-    --color-primary-hover: #4f46e5;       /* primary hover state */
-    --color-secondary: #64748b;           /* secondary accent */
-    --color-secondary-hover: #475569;     /* secondary hover state */
+    --primary-color: #5295d4;             /* primary accent (indigo/blue) */
+    --primary-hover: #326086;             /* primary hover state */
+    --secondary-color: #99448f;           /* secondary accent */
+    --secondary-hover: #78396a;           /* secondary hover state */
     
     /* Status Colors */
-    --color-success: #10b981;             /* success/positive actions */
-    --color-error: #ef4444;               /* error/danger states */
-    --color-warning: #f59e0b;             /* warning states */
-    --color-info: #3b82f6;                /* info/neutral states */
+    --success-color: #10b981;             /* success/positive actions */
+    --error-color: #ef4444;               /* error/danger states */
+    --warning-color: #f59e0b;             /* warning states */
+    --info-color: #3b82f6;                /* info/neutral states */
     
-    /* Dark Theme Colors (Primary) */
+    /* Utility Colors */
     --color-white: #ffffff;
     --color-grey: #e5e7eb;
-    --color-bg-primary: #0b1220;          /* main dark background */
-    --color-bg-secondary: #141c2e;        /* panels, cards */
-    --color-bg-tertiary: #1c2438;         /* subtle backgrounds */
-    --color-text-primary: #e5e7eb;        /* main text (dark theme) */
-    --color-text-secondary: #a9b1c3;      /* muted text (dark theme) */
-    --color-text-inverse: #0b1220;        /* for light-on-dark contrast */
-    --color-border: rgba(255,255,255,0.12);  /* default border (dark theme) */
-    --color-border-strong: rgba(255,255,255,0.24); /* strong border (dark theme) */
     
-    /* Light Theme Colors (Alternative) */
-    --color-bg-light: #ffffff;            /* light backgrounds */
-    --color-bg-light-secondary: #f8fafc;  /* light secondary */
-    --color-bg-light-tertiary: #e2e8f0;   /* light tertiary */
-    --color-text-light-primary: #1e293b;  /* main text (light theme) */
-    --color-text-light-secondary: #64748b; /* muted text (light theme) */
-    --color-text-light-tertiary: #94a3b8; /* tertiary text (light theme) */
-    --color-text-white: #ffffff;          /* pure white text */
-    --color-border-light: #e2e8f0;        /* border (light theme) */
+    /* ===== DARK MODE TOKENS ===== */
     
-    /* Additional Theme Colors */
-    --color-bg-dark: #1e293b;
-    --color-bg-darker: #0f172a;
+    /* Dark Mode Backgrounds */
+    --darkmode-bg-primary: #18253e;       /* main dark background */
+    --darkmode-bg-secondary: #273659;     /* panels, cards */
+    --darkmode-bg-tertiary: #3e5286;      /* subtle backgrounds */
+    --darkmode-bg-quaternary: #5d89d1;    /* additional background level */
+    --darkmode-bg-overlay: #0f172a;       /* overlays, dropdowns */
+    
+    /* Dark Mode Text Colors */
+    --darkmode-text-primary: #e5e7eb;     /* main text */
+    --darkmode-text-secondary: #a9b1c3;   /* muted text */
+    --darkmode-text-tertiary: #6b7280;    /* very muted text */
+    --darkmode-text-inverse: #0b1220;     /* dark text on light backgrounds */
+    
+    /* Dark Mode Border Colors */
+    --darkmode-border-primary: rgba(255,255,255,0.12);  /* default border */
+    --darkmode-border-secondary: rgba(255,255,255,0.08); /* subtle border */
+    --darkmode-border-strong: rgba(255,255,255,0.24);   /* strong border */
+    
+    /* ===== LIGHT MODE TOKENS ===== */
+    
+    /* Light Mode Backgrounds */
+    --lightmode-bg-primary: #ffffff;      /* main light background */
+    --lightmode-bg-secondary: #f8fafc;    /* panels, cards */
+    --lightmode-bg-tertiary: #f1f5f9;     /* subtle backgrounds */
+    --lightmode-bg-quaternary: #e2e8f0;   /* additional background level */
+    --lightmode-bg-overlay: #ffffff;      /* overlays, dropdowns */
+    
+    /* Light Mode Text Colors */
+    --lightmode-text-primary: #1e293b;    /* main text */
+    --lightmode-text-secondary: #64748b;  /* muted text */
+    --lightmode-text-tertiary: #94a3b8;   /* very muted text */
+    --lightmode-text-inverse: #ffffff;    /* light text on dark backgrounds */
+    
+    /* Light Mode Border Colors */
+    --lightmode-border-primary: #e2e8f0;  /* default border */
+    --lightmode-border-secondary: #f1f5f9; /* subtle border */
+    --lightmode-border-strong: #cbd5e1;   /* strong border */
+    
+    /* ===== ACTIVE THEME TOKENS (Default: Dark Mode) ===== */
+    
+    /* Active Background Colors */
+    --bg-primary: var(--darkmode-bg-primary);
+    --bg-secondary: var(--darkmode-bg-secondary);
+    --bg-tertiary: var(--darkmode-bg-tertiary);
+    --bg-quaternary: var(--darkmode-bg-quaternary);
+    --bg-overlay: var(--darkmode-bg-overlay);
+    
+    /* Active Text Colors */
+    --text-primary: var(--darkmode-text-primary);
+    --text-secondary: var(--darkmode-text-secondary);
+    --text-tertiary: var(--darkmode-text-tertiary);
+    --text-inverse: var(--darkmode-text-inverse);
+    
+    /* Active Border Colors */
+    --border-primary: var(--darkmode-border-primary);
+    --border-secondary: var(--darkmode-border-secondary);
+    --border-strong: var(--darkmode-border-strong);
+    
+    /* Legacy aliases for backward compatibility */
+    --border-color: var(--border-primary);
+    --text-white: var(--color-white);
     
     /* ===== SPACING SYSTEM ===== */
     --space-xs: 0.25rem;   /* 4px */
@@ -121,30 +163,10 @@
     --z-tooltip: 1070;
     --z-toast: 1080;
     
-    /* ===== LEGACY ALIASES (for backward compatibility) ===== */
-    /* These map to the new token system for existing code */
-    --primary-color: var(--color-primary);
-    --primary-hover: var(--color-primary-hover);
-    --secondary-color: var(--color-secondary);
-    --success-color: var(--color-success);
-    --error-color: var(--color-error);
-    --warning-color: var(--color-warning);
-    --info-color: var(--color-info);
-    
-    --bg-primary: var(--color-bg-primary);
-    --bg-secondary: var(--color-bg-secondary);
-    --bg-tertiary: var(--color-bg-tertiary);
-    --text-primary: var(--color-text-primary);
-    --text-secondary: var(--color-text-secondary);
-    --text-white: var(--color-text-white);
-    --border-color: var(--color-border);
-    
-    --border-radius: var(--radius-md);
-    --border-radius-sm: var(--radius-sm);
-    --border-radius-lg: var(--radius-lg);
-    
-    --font-size-base: var(--font-size-md);
-    --transition-duration: var(--duration-normal);
+        /* ===== BORDER RADIUS SYSTEM ===== */
+    --border-radius: 0.5rem;    /* 8px - default */
+    --border-radius-sm: 0.25rem;   /* 4px */
+    --border-radius-lg: 0.75rem;   /* 12px */
 
     /* Base tile size - adjust this one variable to change everything */
     --tile-display-size: 120px;
@@ -159,33 +181,61 @@
     --large-desktop-tile-size: 140px;
 }
 
-/* ===== THEME VARIATIONS ===== */
+/* ===== THEME SWITCHING CLASSES ===== */
 
-/* Light Theme Override */
+/* Light Mode Theme Class */
 .theme-light {
-    --color-bg-primary: var(--color-bg-light);
-    --color-bg-secondary: var(--color-bg-light-secondary);
-    --color-bg-tertiary: var(--color-bg-light-tertiary);
-    --color-text-primary: var(--color-text-light-primary);
-    --color-text-secondary: var(--color-text-light-secondary);
-    --color-border: var(--color-border-light);
+    /* Switch active tokens to light mode */
+    --bg-primary: var(--lightmode-bg-primary);
+    --bg-secondary: var(--lightmode-bg-secondary);
+    --bg-tertiary: var(--lightmode-bg-tertiary);
+    --bg-quaternary: var(--lightmode-bg-quaternary);
+    --bg-overlay: var(--lightmode-bg-overlay);
+    
+    --text-primary: var(--lightmode-text-primary);
+    --text-secondary: var(--lightmode-text-secondary);
+    --text-tertiary: var(--lightmode-text-tertiary);
+    --text-inverse: var(--lightmode-text-inverse);
+    
+    --border-primary: var(--lightmode-border-primary);
+    --border-secondary: var(--lightmode-border-secondary);
+    --border-strong: var(--lightmode-border-strong);
     
     /* Update legacy aliases */
-    --bg-primary: var(--color-bg-light);
-    --bg-secondary: var(--color-bg-light-secondary);
-    --text-primary: var(--color-text-light-primary);
-    --text-secondary: var(--color-text-light-secondary);
-    --border-color: var(--color-border-light);
+    --border-color: var(--lightmode-border-primary);
+}
+
+/* Dark Mode Theme Class (explicit override) */
+.theme-dark {
+    /* Switch active tokens to dark mode */
+    --bg-primary: var(--darkmode-bg-primary);
+    --bg-secondary: var(--darkmode-bg-secondary);
+    --bg-tertiary: var(--darkmode-bg-tertiary);
+    --bg-quaternary: var(--darkmode-bg-quaternary);
+    --bg-overlay: var(--darkmode-bg-overlay);
+    
+    --text-primary: var(--darkmode-text-primary);
+    --text-secondary: var(--darkmode-text-secondary);
+    --text-tertiary: var(--darkmode-text-tertiary);
+    --text-inverse: var(--darkmode-text-inverse);
+    
+    --border-primary: var(--darkmode-border-primary);
+    --border-secondary: var(--darkmode-border-secondary);
+    --border-strong: var(--darkmode-border-strong);
+    
+    /* Update legacy aliases */
+    --border-color: var(--darkmode-border-primary);
 }
 
 /* High Contrast Theme */
 .theme-high-contrast {
-    --color-primary: #0000ff;
-    --color-success: #008000;
-    --color-error: #ff0000;
-    --color-warning: #ff8c00;
-    --color-border: #000000;
-    --color-border-strong: #000000;
+    --primary-color: #0000ff;
+    --success-color: #008000;
+    --error-color: #ff0000;
+    --warning-color: #ff8c00;
+    --border-primary: #000000;
+    --border-strong: #000000;
+    --border-color: #000000;
 }
 
 /* Reduced Motion Support */
@@ -201,40 +251,50 @@
     }
 }
 
-/* Dark Mode Auto-Detection */
+/* Auto Theme Detection Based on System Preference */
 @media (prefers-color-scheme: dark) {
     .theme-auto {
-        --color-bg-primary: var(--color-bg-primary);
-        --color-bg-secondary: var(--color-bg-secondary);
-        --color-bg-tertiary: var(--color-bg-tertiary);
-        --color-text-primary: var(--color-text-primary);
-        --color-text-secondary: var(--color-text-secondary);
-        --color-border: var(--color-border);
+        /* Use dark mode tokens */
+        --bg-primary: var(--darkmode-bg-primary);
+        --bg-secondary: var(--darkmode-bg-secondary);
+        --bg-tertiary: var(--darkmode-bg-tertiary);
+        --bg-quaternary: var(--darkmode-bg-quaternary);
+        --bg-overlay: var(--darkmode-bg-overlay);
+        
+        --text-primary: var(--darkmode-text-primary);
+        --text-secondary: var(--darkmode-text-secondary);
+        --text-tertiary: var(--darkmode-text-tertiary);
+        --text-inverse: var(--darkmode-text-inverse);
+        
+        --border-primary: var(--darkmode-border-primary);
+        --border-secondary: var(--darkmode-border-secondary);
+        --border-strong: var(--darkmode-border-strong);
         
         /* Update legacy aliases */
-        --bg-primary: var(--color-bg-primary);
-        --bg-secondary: var(--color-bg-secondary);
-        --text-primary: var(--color-text-primary);
-        --text-secondary: var(--color-text-secondary);
-        --border-color: var(--color-border);
+        --border-color: var(--darkmode-border-primary);
     }
 }
 
 @media (prefers-color-scheme: light) {
     .theme-auto {
-        --color-bg-primary: var(--color-bg-light);
-        --color-bg-secondary: var(--color-bg-light-secondary);
-        --color-bg-tertiary: var(--color-bg-light-tertiary);
-        --color-text-primary: var(--color-text-light-primary);
-        --color-text-secondary: var(--color-text-light-secondary);
-        --color-border: var(--color-border-light);
+        /* Use light mode tokens */
+        --bg-primary: var(--lightmode-bg-primary);
+        --bg-secondary: var(--lightmode-bg-secondary);
+        --bg-tertiary: var(--lightmode-bg-tertiary);
+        --bg-quaternary: var(--lightmode-bg-quaternary);
+        --bg-overlay: var(--lightmode-bg-overlay);
+        
+        --text-primary: var(--lightmode-text-primary);
+        --text-secondary: var(--lightmode-text-secondary);
+        --text-tertiary: var(--lightmode-text-tertiary);
+        --text-inverse: var(--lightmode-text-inverse);
+        
+        --border-primary: var(--lightmode-border-primary);
+        --border-secondary: var(--lightmode-border-secondary);
+        --border-strong: var(--lightmode-border-strong);
         
         /* Update legacy aliases */
-        --bg-primary: var(--color-bg-light);
-        --bg-secondary: var(--color-bg-light-secondary);
-        --text-primary: var(--color-text-light-primary);
-        --text-secondary: var(--color-text-light-secondary);
-        --border-color: var(--color-border-light);
+        --border-color: var(--lightmode-border-primary);
     }
 }
 

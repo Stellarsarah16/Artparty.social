@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Footer Responsive Test</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Test styles to show responsive behavior */
+        .test-info {
+            background: #f0f0f0;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+        
+        .test-info h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .test-info p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .responsive-test {
+            background: #e8f4fd;
+            padding: 15px;
+            margin: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .responsive-test h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        .responsive-test ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .responsive-test li {
+            margin: 5px 0;
+            color: #424242;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h2>Footer Responsive Test</h2>
+        <p><strong>Current viewport width:</strong> <span id="viewport-width">Calculating...</span></p>
+        <p><strong>Current footer layout:</strong> <span id="footer-layout">Calculating...</span></p>
+        <p><strong>Instructions:</strong> Resize your browser window to see the footer adapt!</p>
+    </div>
+
+    <div class="responsive-test">
+        <h3>Responsive Breakpoints:</h3>
+        <ul>
+            <li><strong>1400px+:</strong> 4 columns, largest content</li>
+            <li><strong>1200px-1399px:</strong> 4 columns, large content</li>
+            <li><strong>769px-1199px:</strong> 2 columns, medium content</li>
+            <li><strong>481px-768px:</strong> 2 columns, smaller content</li>
+            <li><strong>361px-480px:</strong> 1 column, small content</li>
+            <li><strong>360px and below:</strong> 1 column, ultra compact</li>
+        </ul>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="footer-brand">
+                    <h3>Artparty.social</h3>
+                    <p>Collaborative pixel art creation platform
+                        <br>Brought to you by Stellar Creations
+                    </p>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">DMCA Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="mailto:support@artparty.social">Contact Support</a></li>
+                    <li><a href="#">About</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <div class="footer-copyright">
+                    <p>&copy; 2025 Artparty.social. All rights reserved.</p>
+                    <p>Made with ❤️ for creative communities</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Update viewport info
+        function updateViewportInfo() {
+            const width = window.innerWidth;
+            const viewportSpan = document.getElementById('viewport-width');
+            const layoutSpan = document.getElementById('footer-layout');
+            
+            viewportSpan.textContent = width + 'px';
+            
+            let layout = '';
+            if (width >= 1400) {
+                layout = '4 columns, largest content';
+            } else if (width >= 1200) {
+                layout = '4 columns, large content';
+            } else if (width >= 769) {
+                layout = '2 columns, medium content';
+            } else if (width >= 481) {
+                layout = '2 columns, smaller content';
+            } else if (width >= 361) {
+                layout = '1 column, small content';
+            } else {
+                layout = '1 column, ultra compact';
+            }
+            
+            layoutSpan.textContent = layout;
+        }
+        
+        // Update on load and resize
+        window.addEventListener('load', updateViewportInfo);
+        window.addEventListener('resize', updateViewportInfo);
+        
+        // Initial update
+        updateViewportInfo();
+    </script>
+</body>
+</html>

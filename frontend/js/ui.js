@@ -129,8 +129,8 @@ class UIManager {
             max_tiles_per_user: {
                 required: true,
                 min: 1,
-                max: 100,
-                message: 'Max tiles per user must be between 1 and 100'
+                max: 1024, // Will be updated dynamically
+                message: 'Max tiles per user must be between 1 and calculated maximum'
             }
         };
         
@@ -1110,6 +1110,47 @@ class UIManager {
             option.textContent = name.charAt(0).toUpperCase() + name.slice(1);
             selector.appendChild(option);
         }
+    }
+
+    // Add this function to calculate max tiles
+    calculateMaxTilesForCanvas(width, height, tileSize) {
+        const maxX = Math.floor(width / tileSize);
+        const maxY = Math.floor(height / tileSize);
+        return maxX * maxY;
+    }
+
+    // Update the form validation to use dynamic limits
+    setupCanvasFormValidation() {
+        const widthInput = document.getElementById('width');
+        const heightInput = document.getElementById('height');
+        const tileSizeInput = document.getElementById('tile-size');
+        const maxTilesInput = document.getElementById('max-tiles');
+        const maxTilesCalculated = document.getElementById('max-tiles-calculated');
+        
+        const updateMaxTilesLimit = () => {
+            const width = parseInt(widthInput.value) || 1024;
+            const height = parseInt(heightInput.value) || 1024;
+            const tileSize = parseInt(tileSizeInput.value) || 64;
+            
+            const maxTiles = this.calculateMaxTilesForCanvas(width, height, tileSize);
+            
+            maxTilesInput.max = maxTiles;
+            maxTilesCalculated.textContent = maxTiles;
+            
+            // Update validation message
+            this.formValidators.createCanvas.max_tiles_per_user.max = maxTiles;
+            this.formValidators.createCanvas.max_tiles_per_user.message = 
+                `Max tiles per user must be between 1 and ${maxTiles}`;
+        };
+        
+        // Update limits when dimensions or tile size change
+        [widthInput, heightInput, tileSizeInput].forEach(input => {
+            input.addEventListener('change', updateMaxTilesLimit);
+            input.addEventListener('input', updateMaxTilesLimit);
+        });
+        
+        // Initial calculation
+        updateMaxTilesLimit();
     }
 }
 

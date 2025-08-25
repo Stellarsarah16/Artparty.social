@@ -1032,42 +1032,43 @@ main {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
     justify-content: center;
     align-items: center;
-    z-index: 2000;
+    z-index: 999999;
     opacity: 0;
     visibility: hidden;
     transition: all var(--transition-fast);
 }
 
-.modal.active {
+.modal.active,
+.modal[style*="flex"] {
+    display: flex;
     opacity: 1;
     visibility: visible;
 }
 
 .modal-content {
-    background: var(--bg-primary);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-lg);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     max-width: 500px;
     width: 90%;
     max-height: 90vh;
     overflow-y: auto;
-    transform: scale(0.9);
+    overflow-x: hidden;  /* ADD THIS LINE */
+    position: relative;
+    transform: none;
+    margin: auto;
     transition: transform var(--transition-fast);
-}
-
-.modal.active .modal-content {
-    transform: scale(1);
 }
 
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--space-lg);
+    padding: var(--space-sm);
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -1093,22 +1094,22 @@ main {
 
 /* Forms */
 form {
-    padding: var(--space-lg);
+    padding: var(--space-sm);
 }
 
 .form-group {
-    margin-bottom: var(--space-md);
+    margin-bottom: var(--space-md) !important;
 }
 
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-md);
+    gap: var(--space-xs) !important;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: var(--space-sm);
+    margin-bottom: 1px !important;
     font-weight: 500;
     color: var(--text-primary);
 }
@@ -1116,28 +1117,73 @@ form {
 .form-group input,
 .form-group select,
 .form-group textarea {
-    width: 100%;
-    padding: var(--space-sm) var(--space-md);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    font-size: var(--font-size-sm);
-    transition: border-color var(--transition-fast);
+    width: 100% !important;
+    padding: 10px 14px !important;
+    border: 2px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
+    font-size: var(--font-size-sm) !important;
+    background-color: var(--color-white) !important;
+    color: var(--lightmode-text-primary) !important;
+    transition: all var(--transition-normal) !important;
+    padding: 4px 6px !important;
+    height: 40px !important;
+    min-height: 30px !important;
+    max-height: 50px !important;
+    resize: vertical !important;
 }
+
+
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
+    outline: none !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
 }
 
-.form-group textarea {
-    resize: vertical;
+/* Enhanced validation states */
+.form-group input:invalid,
+.form-group select:invalid,
+.form-group textarea:invalid {
+    border-color: var(--error-color) !important;
 }
+
+.form-group input:valid,
+.form-group select:valid,
+.form-group textarea:valid {
+    border-color: var(--success-color) !important;
+}
+
 
 .form-group input[type="checkbox"] {
     width: auto;
     margin-right: var(--space-sm);
+}
+
+/* Form input placeholder styling for consistent theming */
+.form-group input::placeholder,
+.form-group select::placeholder,
+.form-group textarea::placeholder {
+    color: var(--lightmode-text-secondary);
+    opacity: 0.7;
+}
+
+/* Disabled form inputs */
+.form-group input:disabled,
+.form-group select:disabled,
+.form-group textarea:disabled {
+    background-color: var(--lightmode-bg-tertiary);
+    color: var(--lightmode-text-secondary);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Select dropdown options styling */
+.form-group select option {
+    background-color: var(--color-white);
+    color: var(--lightmode-text-primary);
+    padding: var(--space-sm);
 }
 
 /* Toast Notifications */
@@ -3517,43 +3563,16 @@ form {
 
 /* Base tile size variables - single source of truth */
 :root {
-    /* Base tile size - adjust this one variable to change everything */
-    --tile-display-size: 240px;
+    /* Dynamic tile size - set by JavaScript based on viewport and body constraints */
+    --tile-display-size: 240px; /* Default fallback, overridden by JS */
     
     /* Calculated grid dimensions */
     --grid-total-size: calc(var(--tile-display-size) * 3);
-    
-    /* Device-specific size presets - DOUBLED from original */
-    --mobile-tile-size: 120px;      /* Was 80px, now 120px */
-    --tablet-tile-size: 160px;      /* Was 100px, now 160px */
-    --desktop-tile-size: 240px;     /* Was 120px, now 240px */
-    --large-desktop-tile-size: 280px; /* Was 140px, now 280px */
 }
 
-/* Responsive tile size adjustments */
-@media (max-width: 480px) {
-    :root {
-        --tile-display-size: var(--mobile-tile-size);
-    }
-}
-
-@media (min-width: 481px) and (max-width: 768px) {
-    :root {
-        --tile-display-size: var(--tablet-tile-size);
-    }
-}
-
-@media (min-width: 769px) and (max-width: 1199px) {
-    :root {
-        --tile-display-size: var(--desktop-tile-size);
-    }
-}
-
-@media (min-width: 1200px) {
-    :root {
-        --tile-display-size: var(--large-desktop-tile-size);
-    }
-}
+/* Dynamic tile sizing - responsive breakpoints removed
+   Sizing is now handled by JavaScript adjustTileSize() function
+   which sets --tile-display-size based on viewport and body constraints */
 
 /* Seamless 3x3 tile grid - centered with overflow allowed */
 .neighbor-grid {
@@ -3581,7 +3600,7 @@ form {
     align-items: center;
     justify-content: center;
     border: none;
-    background: transparent;
+    background: var(--color-white);
     position: relative;
     
     /* All tiles exactly the same size using CSS variables */
@@ -3714,7 +3733,7 @@ form {
 /* Empty cell styling */
 .neighbor-cell.empty {
     background: var(--color-white);
-    opacity: 0.6;
+
 }
 
 .neighbor-cell.empty::after {
@@ -3727,5 +3746,17 @@ form {
         transparent 0deg 90deg,
         rgba(0,0,0,0.1) 90deg 180deg
     );
-    opacity: 0.3;
+
+}
+
+/* If you have a specific shake animation class */
+.modal-content .shake,
+.modal-content .error-shake {
+    overflow: hidden;
+    /* This ensures the shake stays within bounds */
+}
+
+/* Ensure form elements don't cause overflow during animations */
+.modal-content .form-group {
+    overflow: hidden; /* Contain any shake animations */
 }

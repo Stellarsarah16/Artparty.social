@@ -7,33 +7,111 @@
  * Dynamic tile sizing system - adjusts CSS variables based on screen size
  */
 function adjustTileSize() {
-    const root = document.documentElement;
     const viewport = {
         width: window.innerWidth,
         height: window.innerHeight
     };
     
-    // Calculate optimal tile size based on available space
-    const maxGridWidth = Math.min(viewport.width * 0.8, 500);
-    const maxGridHeight = Math.min(viewport.height * 0.6, 500);
-    const maxTileSize = Math.floor(Math.min(maxGridWidth, maxGridHeight) / 3);
+    console.log(`🎨 CRITICAL: Adjusting tile size for viewport: ${viewport.width}x${viewport.height}`);
     
-    // Device-based defaults - DOUBLED sizes, no maximum constraint
-    let tileSize;
-    if (viewport.width <= 480) {
-        tileSize = 120; // Mobile: 120px (was 80px)
-    } else if (viewport.width <= 768) {
-        tileSize = 160; // Tablet: 160px (was 100px)
-    } else if (viewport.width <= 1199) {
-        tileSize = 240; // Desktop: 240px (was 120px)
+    // Device detection for optimized sizing
+    const isMobile = viewport.width <= 768;
+    const isTablet = viewport.width > 768 && viewport.width <= 1024;
+    const isDesktop = viewport.width > 1024;
+    
+    // Calculate usable space accounting for UI elements
+    const headerHeight = isMobile ? 56 : 64; // Navigation bar
+    const toolbarHeight = isMobile ? 120 : 100; // Floating tools panel (taller on mobile due to stacking)
+    const padding = isMobile ? 10 : 20; // Minimal padding
+    
+    // Calculate available space
+    const availableWidth = viewport.width - (padding * 2);
+    const availableHeight = viewport.height - headerHeight - toolbarHeight - (padding * 2);
+    
+    let finalTileSize;
+    let gridSize;
+    
+    if (isMobile) {
+        // MOBILE: Maximize grid to fit screen width, prioritize width over height
+        console.log(`📱 MOBILE optimization for ${viewport.width}x${viewport.height}`);
+        
+        // Use 95% of available width for maximum size
+        const maxGridWidth = Math.floor(availableWidth * 0.95);
+        const maxGridHeight = Math.floor(availableHeight * 0.85); // Leave more space for tools
+        
+        // Choose the smaller dimension but prefer width on mobile
+        gridSize = Math.min(maxGridWidth, maxGridHeight);
+        
+        // Ensure minimum grid size for usability
+        gridSize = Math.max(gridSize, 300); // Minimum 300px grid on mobile
+        
+        finalTileSize = Math.floor(gridSize / 3);
+        
+        // Mobile-specific bounds
+        finalTileSize = Math.max(80, Math.min(200, finalTileSize));
+        
+    } else if (isTablet) {
+        // TABLET: Balance between width and height
+        console.log(`📱 TABLET optimization for ${viewport.width}x${viewport.height}`);
+        
+        const maxGridWidth = Math.floor(availableWidth * 0.90);
+        const maxGridHeight = Math.floor(availableHeight * 0.90);
+        
+        gridSize = Math.min(maxGridWidth, maxGridHeight);
+        gridSize = Math.max(gridSize, 400); // Minimum 400px grid on tablet
+        
+        finalTileSize = Math.floor(gridSize / 3);
+        finalTileSize = Math.max(120, Math.min(250, finalTileSize));
+        
     } else {
-        tileSize = 280; // Large Desktop: 280px (was 140px)
+        // DESKTOP: Optimize for larger screens but respect content bounds
+        console.log(`🖥️ DESKTOP optimization for ${viewport.width}x${viewport.height}`);
+        
+        // For very wide screens, limit to reasonable content width
+        const maxContentWidth = viewport.width > 1400 ? 1200 : availableWidth;
+        const effectiveWidth = Math.min(availableWidth, maxContentWidth);
+        
+        const maxGridWidth = Math.floor(effectiveWidth * 0.85);
+        const maxGridHeight = Math.floor(availableHeight * 0.85);
+        
+        gridSize = Math.min(maxGridWidth, maxGridHeight);
+        
+        // Desktop bounds - allow larger grids
+        gridSize = Math.max(gridSize, 500); // Minimum 500px grid on desktop
+        gridSize = Math.min(gridSize, 900); // Maximum 900px grid to prevent oversizing
+        
+        finalTileSize = Math.floor(gridSize / 3);
+        finalTileSize = Math.max(150, Math.min(300, finalTileSize));
     }
     
-    // Apply the calculated size
-    root.style.setProperty('--tile-display-size', `${tileSize}px`);
+    // Ensure tile size is divisible by common factors for clean pixel alignment
+    finalTileSize = Math.floor(finalTileSize / 4) * 4;
     
-    console.log(`🎨 Tile size adjusted to: ${tileSize}px for viewport: ${viewport.width}x${viewport.height}`);
+    // Apply the calculated size
+    const root = document.documentElement;
+    root.style.setProperty('--tile-display-size', `${finalTileSize}px`);
+    
+    // Calculate final grid size and center tile coverage
+    const actualGridSize = finalTileSize * 3;
+    const centerTileWidthPercentage = Math.round((finalTileSize / availableWidth) * 100);
+    const centerTileHeightPercentage = Math.round((finalTileSize / availableHeight) * 100);
+    
+    console.log(`🎨 OPTIMIZED tile sizing complete:
+        Device: ${isMobile ? 'Mobile' : isTablet ? 'Tablet' : 'Desktop'}
+        Available space: ${availableWidth}x${availableHeight}px
+        Final grid size: ${actualGridSize}px (${finalTileSize}px per tile)
+        Center tile coverage: ${centerTileWidthPercentage}% width, ${centerTileHeightPercentage}% height
+        Grid fits in viewport: ${actualGridSize <= availableWidth && actualGridSize <= availableHeight ? 'YES' : 'NO'}
+    `);
+    
+    // Trigger resize event for any listeners
+    window.dispatchEvent(new CustomEvent('tileGridResized', {
+        detail: {
+            tileSize: finalTileSize,
+            gridSize: actualGridSize,
+            deviceType: isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop'
+        }
+    }));
 }
 
 /**
@@ -1456,6 +1534,19 @@ if (window.ArtPartySocial) {
             saveBtn.disabled = !pixelEditor.hasPixels();
         }
     };
+}
+
+// Initialize tile sizing on page load and window resize
+document.addEventListener('DOMContentLoaded', adjustTileSize);
+window.addEventListener('resize', adjustTileSize);
+
+// Also call immediately in case DOM is already loaded
+if (document.readyState === 'loading') {
+    // DOM is still loading
+    document.addEventListener('DOMContentLoaded', adjustTileSize);
+} else {
+    // DOM has already loaded
+    adjustTileSize();
 }
 
 // console.log('✅ Pixel editor loaded'); 
