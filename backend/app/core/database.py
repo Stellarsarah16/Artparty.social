@@ -1,9 +1,9 @@
 """
 Database configuration and connection setup
 """
-from sqlalchemy import create_engine, text
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text
 import logging
 
 from .config import settings
@@ -21,8 +21,8 @@ engine = create_async_engine(
     max_overflow=20
 )
 
-# Create sessionmaker
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=AsyncSession)
+# Create async sessionmaker
+SessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=AsyncSession)
 
 # Create declarative base
 Base = declarative_base()
