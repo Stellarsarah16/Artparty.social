@@ -12,9 +12,9 @@ from .config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Create database engine
-engine = create_engine(
-    settings.DATABASE_URL or "sqlite:///artparty_social.db",
+# Create ASYNC database engine
+engine = create_async_engine(
+    settings.DATABASE_URL or "sqlite+aiosqlite:///artparty_social.db",
     echo=settings.DEBUG,  # Log SQL statements in debug mode
     pool_pre_ping=True,
     pool_size=10,
@@ -22,7 +22,7 @@ engine = create_engine(
 )
 
 # Create sessionmaker
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=AsyncSession)
 
 # Create declarative base
 Base = declarative_base()
@@ -37,13 +37,13 @@ if settings.USE_REDIS:
         logger.warning("Redis not available, using in-memory fallback")
 
 
-def get_db():
-    """Dependency for getting database session"""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db():
+    """Async dependency for getting database session"""
+    async with SessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
 
 
 def get_redis():
@@ -53,11 +53,12 @@ def get_redis():
     return redis_client
 
 
-def test_db_connection():
-    """Test database connection"""
+async def test_db_connection():
+    """Test database connection - async version"""
     try:
-        with engine.connect() as conn:
-            result = conn.execute(text("SELECT 1"))
+        async with engine.begin() as conn:
+            result = await conn.execute(text("SELECT 1"))
+            await result.fetchone()
             logger.info("Database connection successful")
             return True
     except Exception as e:
@@ -65,14 +66,15 @@ def test_db_connection():
         return False
 
 
-def create_tables():
-    """Create all tables in the database"""
+async def create_tables():
+    """Create all tables in the database - async version"""
     try:
         # Import models to ensure they are registered with Base
         from ..models import User, Canvas, Tile, Like
         
         # Create all tables
-        Base.metadata.create_all(bind=engine)
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
         logger.info("All tables created successfully")
         return True
     except Exception as e:
@@ -80,10 +82,11 @@ def create_tables():
         return False
 
 
-def drop_tables():
-    """Drop all tables in the database"""
+async def drop_tables():
+    """Drop all tables in the database - async version"""
     try:
-        Base.metadata.drop_all(bind=engine)
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
         logger.info("All tables dropped successfully")
         return True
     except Exception as e:

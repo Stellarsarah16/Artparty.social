@@ -72,7 +72,8 @@ async def lifespan(app: FastAPI):
     # Simple startup without complex database checking
     try:
         # Just create tables
-        Base.metadata.create_all(bind=engine)
+        from app.core.database import create_tables
+        await create_tables()
         logger.info("Database tables created successfully")
     except Exception as e:
         logger.error(f"Database initialization failed: {e}")
