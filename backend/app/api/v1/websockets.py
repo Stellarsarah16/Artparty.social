@@ -11,16 +11,17 @@ from ...core.websocket import connection_manager
 from ...services.auth import auth_service
 from ...models.canvas import Canvas
 from ...models.user import User
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-def get_user_from_token(token: str, db: Session) -> User:
+async def get_user_from_token(token: str, db: AsyncSession) -> User:
     """Get user from JWT token for WebSocket authentication"""
     try:
         logger.info(f"Attempting to authenticate WebSocket token: {token[:20]}...")
-        user = auth_service.get_current_user(db, token)
+        user = await auth_service.get_current_user(db, token)
         logger.info(f"WebSocket authentication successful for user: {user.username}")
         return user
     except HTTPException as e:
@@ -36,7 +37,7 @@ async def websocket_canvas_endpoint(
     websocket: WebSocket,
     canvas_id: int,
     token: str = Query(..., description="JWT authentication token"),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     WebSocket endpoint for real-time canvas collaboration
@@ -54,13 +55,13 @@ async def websocket_canvas_endpoint(
         logger.info(f"WebSocket connection attempt for canvas {canvas_id}")
         
         # Authenticate user BEFORE accepting the connection
-        user = get_user_from_token(token, db)
+        user = await get_user_from_token(token, db)
         
         # Validate canvas exists
-        canvas = db.query(Canvas).filter(
-            Canvas.id == canvas_id, 
-            Canvas.is_active == True
-        ).first()
+        from sqlalchemy import select
+        stmt = select(Canvas).where(Canvas.id == canvas_id, Canvas.is_active == True)
+        result = await db.execute(stmt)
+        canvas = result.scalar_one_or_none()
         
         if not canvas:
             logger.warning(f"Canvas {canvas_id} not found or inactive")
@@ -113,7 +114,7 @@ async def websocket_canvas_endpoint(
             logger.info(f"User {user.username} disconnected from canvas {canvas_id}")
 
 
-async def handle_websocket_message(canvas_id: int, user_id: int, message: dict, db: Session):
+async def handle_websocket_message(canvas_id: int, user_id: int, message: dict, db: AsyncSession):
     """Handle incoming WebSocket messages from clients"""
     message_type = message.get("type")
     
@@ -140,7 +141,7 @@ async def get_websocket_stats():
 async def admin_broadcast(
     canvas_id: int,
     message: dict,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Admin endpoint to broadcast messages to a canvas"""
     await connection_manager.broadcast_to_canvas(canvas_id, message)

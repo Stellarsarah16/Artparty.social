@@ -49,11 +49,11 @@ async def account_options():
 
 async def get_current_user_dependency(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Dependency to get current authenticated user"""
     token = credentials.credentials
-    return auth_service.get_current_user(db, token)
+    return await auth_service.get_current_user(db, token)
 
 
 @router.get("/profile", response_model=UserResponse)
@@ -81,10 +81,14 @@ async def get_user_stats(
 @router.get("/{user_id}", response_model=UserProfile)
 async def get_user_by_id(
     user_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get public user profile by ID"""
-    user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+    from sqlalchemy import select
+    stmt = select(User).where(User.id == user_id, User.is_active == True)
+    result = await db.execute(stmt)
+    user = result.scalar_one_or_none()
+    
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
