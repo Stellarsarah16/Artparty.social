@@ -3,7 +3,8 @@ Canvas management endpoints
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from typing import List, Dict, Any
 
 from ...core.database import get_db
@@ -19,30 +20,36 @@ security = HTTPBearer()
 
 async def get_current_user_dependency(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Dependency to get current authenticated user"""
     token = credentials.credentials
-    return auth_service.get_current_user(db, token)
+    return await auth_service.get_current_user(db, token)
 
 
 @router.get("/", response_model=List[CanvasResponse])
 async def get_canvas_list(
     skip: int = 0,
     limit: int = 10,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get list of active canvases with stats"""
-    canvases = db.query(Canvas).filter(Canvas.is_active == True).offset(skip).limit(limit).all()
+    stmt = select(Canvas).where(Canvas.is_active == True).offset(skip).limit(limit)
+    result = await db.execute(stmt)
+    canvases = result.scalars().all()
     
     # Add stats to each canvas
     canvas_responses = []
     for canvas in canvases:
         # Get tile count for this canvas
-        tile_count = db.query(Tile).filter(Tile.canvas_id == canvas.id).count()
+        tile_stmt = select(Tile).where(Tile.canvas_id == canvas.id)
+        tile_result = await db.execute(tile_stmt)
+        tile_count = len(tile_result.scalars().all())
         
         # Get unique user count for this canvas
-        user_count = db.query(Tile.creator_id).filter(Tile.canvas_id == canvas.id).distinct().count()
+        user_stmt = select(Tile.creator_id).where(Tile.canvas_id == canvas.id).distinct()
+        user_result = await db.execute(user_stmt)
+        user_count = len(user_result.scalars().all())
         
         canvas_responses.append(CanvasResponse(
             id=canvas.id,
@@ -71,10 +78,13 @@ async def get_canvas_list(
 @router.get("/{canvas_id}", response_model=CanvasWithTiles)
 async def get_canvas_details(
     canvas_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get canvas details with tiles"""
-    canvas = db.query(Canvas).filter(Canvas.id == canvas_id, Canvas.is_active == True).first()
+    stmt = select(Canvas).where(Canvas.id == canvas_id, Canvas.is_active == True)
+    result = await db.execute(stmt)
+    canvas = result.scalar_one_or_none()
+    
     if not canvas:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -82,7 +92,9 @@ async def get_canvas_details(
         )
     
     # Get tiles for this canvas
-    tiles = db.query(Tile).filter(Tile.canvas_id == canvas_id).all()
+    tile_stmt = select(Tile).where(Tile.canvas_id == canvas_id)
+    tile_result = await db.execute(tile_stmt)
+    tiles = tile_result.scalars().all()
     
     # Convert tiles to dict format
     tiles_data = []
@@ -120,7 +132,7 @@ async def get_canvas_details(
 async def create_canvas(
     canvas_create: CanvasCreate,
     current_user: User = Depends(get_current_user_dependency),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Create a new canvas"""
     try:
@@ -141,8 +153,8 @@ async def create_canvas(
         )
         
         db.add(canvas)
-        db.commit()
-        db.refresh(canvas)
+        await db.commit()
+        await db.refresh(canvas)
         
         return {
             "message": "Canvas created successfully",
@@ -168,7 +180,7 @@ async def create_canvas(
             )
         }
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error creating canvas"
@@ -180,12 +192,15 @@ async def update_canvas(
     canvas_id: int,
     canvas_update: CanvasUpdate,
     current_user: User = Depends(get_current_user_dependency),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Update canvas information"""
     try:
         # Get canvas
-        canvas = db.query(Canvas).filter(Canvas.id == canvas_id).first()
+        stmt = select(Canvas).where(Canvas.id == canvas_id)
+        result = await db.execute(stmt)
+        canvas = result.scalar_one_or_none()
+        
         if not canvas:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -212,8 +227,8 @@ async def update_canvas(
         if canvas_update.is_moderated is not None:
             setattr(canvas, 'is_moderated', canvas_update.is_moderated)
         
-        db.commit()
-        db.refresh(canvas)
+        await db.commit()
+        await db.refresh(canvas)
         
         return {
             "message": "Canvas updated successfully",
@@ -238,7 +253,7 @@ async def update_canvas(
     except HTTPException as e:
         raise e
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error updating canvas"
@@ -249,11 +264,14 @@ async def update_canvas(
 async def delete_canvas(
     canvas_id: int,
     current_user: User = Depends(get_current_user_dependency),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Delete a canvas (soft delete by setting is_active to False)"""
     try:
-        canvas = db.query(Canvas).filter(Canvas.id == canvas_id).first()
+        stmt = select(Canvas).where(Canvas.id == canvas_id)
+        result = await db.execute(stmt)
+        canvas = result.scalar_one_or_none()
+        
         if not canvas:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -262,13 +280,13 @@ async def delete_canvas(
         
         # Soft delete
         canvas.is_active = False
-        db.commit()
+        await db.commit()
         
         return {"message": "Canvas deleted successfully"}
     except HTTPException as e:
         raise e
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error deleting canvas"
@@ -282,12 +300,15 @@ async def get_canvas_region(
     y: int = 0,
     width: int = 512,
     height: int = 512,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get a specific region of the canvas with tiles"""
     try:
         # Get canvas
-        canvas = db.query(Canvas).filter(Canvas.id == canvas_id, Canvas.is_active == True).first()
+        stmt = select(Canvas).where(Canvas.id == canvas_id, Canvas.is_active == True)
+        result = await db.execute(stmt)
+        canvas = result.scalar_one_or_none()
+        
         if not canvas:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -302,13 +323,15 @@ async def get_canvas_region(
         end_tile_y = (y + height - 1) // tile_size
         
         # Get tiles in the region
-        tiles = db.query(Tile).filter(
+        tile_stmt = select(Tile).where(
             Tile.canvas_id == canvas_id,
             Tile.x >= start_tile_x,
             Tile.x <= end_tile_x,
             Tile.y >= start_tile_y,
             Tile.y <= end_tile_y
-        ).all()
+        )
+        tile_result = await db.execute(tile_stmt)
+        tiles = tile_result.scalars().all()
         
         # Convert tiles to dict format
         tiles_data = []
@@ -346,12 +369,15 @@ async def get_canvas_region(
 @router.get("/{canvas_id}/stats", response_model=Dict[str, Any])
 async def get_canvas_stats(
     canvas_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get canvas statistics"""
     try:
         # Get canvas
-        canvas = db.query(Canvas).filter(Canvas.id == canvas_id, Canvas.is_active == True).first()
+        stmt = select(Canvas).where(Canvas.id == canvas_id, Canvas.is_active == True)
+        result = await db.execute(stmt)
+        canvas = result.scalar_one_or_none()
+        
         if not canvas:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -359,7 +385,9 @@ async def get_canvas_stats(
             )
         
         # Get tile count
-        tile_count = db.query(Tile).filter(Tile.canvas_id == canvas_id).count()
+        tile_stmt = select(Tile).where(Tile.canvas_id == canvas_id)
+        tile_result = await db.execute(tile_stmt)
+        tile_count = len(tile_result.scalars().all())
         
         # Calculate total tiles possible
         total_tiles_possible = (canvas.width // canvas.tile_size) * (canvas.height // canvas.tile_size)

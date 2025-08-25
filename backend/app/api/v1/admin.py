@@ -269,7 +269,7 @@ async def get_all_locks(
     db: AsyncSession = Depends(get_db)
 ):
     """Get all active locks (admin only)"""
-    return tile_lock_repository.get_active_locks(db)
+    return await tile_lock_repository.get_active_locks(db)
 
 @router.get("/locks/statistics")
 async def get_lock_statistics(
@@ -277,7 +277,7 @@ async def get_lock_statistics(
     db: AsyncSession = Depends(get_db)
 ):
     """Get lock statistics (admin only)"""
-    return tile_lock_repository.get_lock_statistics(db)
+    return await tile_lock_repository.get_lock_statistics(db)
 
 @router.delete("/locks/{tile_id}")
 async def force_release_lock(
@@ -286,7 +286,7 @@ async def force_release_lock(
     db: AsyncSession = Depends(get_db)
 ):
     """Force release a lock on a tile (admin only)"""
-    success = tile_lock_repository.force_release_lock(db, tile_id)
+    success = await tile_lock_repository.force_release_lock(db, tile_id)
     if success:
         return {"message": f"Lock on tile {tile_id} has been force released"}
     else:
@@ -298,7 +298,7 @@ async def cleanup_all_expired_locks(
     db: AsyncSession = Depends(get_db)
 ):
     """Clean up all expired locks (admin only)"""
-    count = tile_lock_repository.cleanup_expired_locks(db)
+    count = await tile_lock_repository.cleanup_expired_locks(db)
     return {"message": f"Cleaned up {count} expired locks"}
 
 # ===== SYSTEM REPORTS =====
@@ -313,7 +313,7 @@ async def get_system_overview(
     user_stats = await admin_service.get_user_stats(db)  # Add await here
     
     # Get lock statistics
-    lock_stats = tile_lock_repository.get_lock_statistics(db)
+    lock_stats = await tile_lock_repository.get_lock_statistics(db)
     
     return {
         "users": {
