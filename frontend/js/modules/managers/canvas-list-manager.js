@@ -56,14 +56,14 @@ export class CanvasListManager {
         try {
             console.log('🔄 Loading canvases...');
             
-            // ✅ Check backend readiness first
-            const isReady = await this.checkBackendReadiness();
-            if (!isReady) {
-                console.log('⏳ Backend not ready, waiting...');
-                // Wait and retry
-                setTimeout(() => this.loadCanvases(), 2000);
-                return;
-            }
+            // ✅ Check backend readiness first - TEMPORARILY DISABLED due to HTML response issue
+            // const isReady = await this.checkBackendReadiness();
+            // if (!isReady) {
+            //     console.log('⏳ Backend not ready, waiting...');
+            //     // Wait and retry
+            //     setTimeout(() => this.loadCanvases(), 2000);
+            //     return;
+            // }
             
             console.log('🔧 this.canvasApi:', this.canvasApi);
             console.log('🔧 this.canvasApi.list:', this.canvasApi?.list);
