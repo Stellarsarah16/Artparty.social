@@ -3,7 +3,7 @@ Tiles management endpoints - Refactored with service layer
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional, Dict, Any
 import logging
 
@@ -40,13 +40,13 @@ async def tile_like_options(tile_id: int):
     return {"message": "OK"}
 
 
-def get_current_user(
-    db: Session = Depends(get_db),
+async def get_current_user(
+    db: AsyncSession = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ) -> User:
     """Dependency to get current authenticated user"""
     token = credentials.credentials
-    return auth_service.get_current_user(db, token)
+    return await auth_service.get_current_user(db, token)
 
 
 @router.post("/", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED)
@@ -54,15 +54,15 @@ def get_current_user(
 async def create_tile(
     tile_create: TileCreate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Create a new tile (paint on canvas) - handles both with and without trailing slash"""
     try:
         # Create tile using service
-        tile = tile_service.create_tile(db, tile_create, current_user)
+        tile = await tile_service.create_tile(db, tile_create, current_user)
         
         # Update user stats
-        user_service.increment_tiles_created(db, current_user.id)
+        await user_service.increment_tiles_created(db, current_user.id)
         
         # Broadcast tile creation to WebSocket clients
         tile_data = {
@@ -96,7 +96,7 @@ async def create_tile(
         import traceback
         print(f"📋 Full traceback: {traceback.format_exc()}")
         
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error creating tile"
@@ -106,10 +106,10 @@ async def create_tile(
 @router.get("/{tile_id}", response_model=TileWithCreator)
 async def get_tile_details(
     tile_id: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get tile details with creator information"""
-    tile = tile_service.get_tile_by_id(db, tile_id)
+    tile = await tile_service.get_tile_by_id(db, tile_id)
     if not tile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -141,7 +141,7 @@ async def update_tile(
     tile_id: int,
     tile_update: TileUpdate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Update tile (only owner can update)"""
     try:
@@ -149,7 +149,7 @@ async def update_tile(
         print(f"📝 Update data: {tile_update.dict(exclude_unset=True)}")
         
         # Update tile using service
-        tile = tile_service.update_tile(db, tile_id, tile_update, current_user)
+        tile = await tile_service.update_tile(db, tile_id, tile_update, current_user)
         
         print(f"✅ Tile {tile_id} updated successfully")
         
@@ -182,7 +182,7 @@ async def update_tile(
         print(f"❌ Unexpected error in update_tile: {type(e).__name__}: {str(e)}")
         import traceback
         print(f"📋 Full traceback: {traceback.format_exc()}")
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error updating tile: {str(e)}"
@@ -193,7 +193,7 @@ async def update_tile(
 async def delete_tile(
     tile_id: int,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Delete tile (only owner can delete)"""
     try:

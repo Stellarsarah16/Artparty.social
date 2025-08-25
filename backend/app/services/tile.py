@@ -2,7 +2,8 @@
 Tile service for tile-related business logic
 """
 from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from fastapi import HTTPException, status
 
 from ..repositories.tile import tile_repository
@@ -23,10 +24,10 @@ class TileService:
         self.like_repository = like_repository
         self.tile_lock_repository = tile_lock_repository
     
-    def create_tile(self, db: Session, tile_create: TileCreate, creator: User) -> Tile:
+    async def create_tile(self, db: AsyncSession, tile_create: TileCreate, creator: User) -> Tile:
         """Create a new tile with validation"""
         # Validate canvas exists and is active
-        canvas = self.canvas_repository.get(db, tile_create.canvas_id)
+        canvas = await self.canvas_repository.get(db, tile_create.canvas_id)
         if not canvas or not canvas.is_active:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -34,7 +35,7 @@ class TileService:
             )
         
         # Check if position is already occupied
-        if self.tile_repository.is_position_occupied(
+        if await self.tile_repository.is_position_occupied(
             db, canvas_id=tile_create.canvas_id, x=tile_create.x, y=tile_create.y
         ):
             raise HTTPException(
@@ -43,7 +44,7 @@ class TileService:
             )
         
         # Check user tile limit on this canvas
-        user_tiles_count = self.tile_repository.count_user_tiles_on_canvas(
+        user_tiles_count = await self.tile_repository.count_user_tiles_on_canvas(
             db, canvas_id=tile_create.canvas_id, creator_id=creator.id
         )
         if user_tiles_count >= canvas.max_tiles_per_user:
@@ -69,43 +70,43 @@ class TileService:
         tile = Tile(**tile_data)
         
         db.add(tile)
-        db.commit()
-        db.refresh(tile)
+        await db.commit()
+        await db.refresh(tile)
         
         return tile
     
-    def get_tile_by_id(self, db: Session, tile_id: int) -> Optional[Tile]:
+    async def get_tile_by_id(self, db: AsyncSession, tile_id: int) -> Optional[Tile]:
         """Get tile by ID"""
-        return self.tile_repository.get(db, tile_id)
+        return await self.tile_repository.get(db, tile_id)
     
-    def get_tile_by_position(self, db: Session, canvas_id: int, x: int, y: int) -> Optional[Tile]:
+    async def get_tile_by_position(self, db: AsyncSession, canvas_id: int, x: int, y: int) -> Optional[Tile]:
         """Get tile by position"""
-        return self.tile_repository.get_by_position(db, canvas_id=canvas_id, x=x, y=y)
+        return await self.tile_repository.get_by_position(db, canvas_id=canvas_id, x=x, y=y)
     
-    def get_canvas_tiles(self, db: Session, canvas_id: int, skip: int = 0, limit: int = 100) -> List[Tile]:
+    async def get_canvas_tiles(self, db: AsyncSession, canvas_id: int, skip: int = 0, limit: int = 100) -> List[Tile]:
         """Get tiles for a canvas"""
-        return self.tile_repository.get_by_canvas(db, canvas_id=canvas_id, skip=skip, limit=limit)
+        return await self.tile_repository.get_by_canvas(db, canvas_id=canvas_id, skip=skip, limit=limit)
     
-    def get_user_tiles(self, db: Session, user_id: int, skip: int = 0, limit: int = 100) -> List[Tile]:
+    async def get_user_tiles(self, db: AsyncSession, user_id: int, skip: int = 0, limit: int = 100) -> List[Tile]:
         """Get tiles by user"""
-        return self.tile_repository.get_by_creator(db, creator_id=user_id, skip=skip, limit=limit)
+        return await self.tile_repository.get_by_creator(db, creator_id=user_id, skip=skip, limit=limit)
     
-    def get_tile_neighbors(self, db: Session, tile_id: int, radius: int = 1) -> List[Tile]:
+    async def get_tile_neighbors(self, db: AsyncSession, tile_id: int, radius: int = 1) -> List[Tile]:
         """Get neighboring tiles"""
-        return self.tile_repository.get_tile_neighbors(db, tile_id=tile_id, radius=radius)
+        return await self.tile_repository.get_tile_neighbors(db, tile_id=tile_id, radius=radius)
     
-    def get_adjacent_neighbors(self, db: Session, tile_id: int) -> List[Tile]:
+    async def get_adjacent_neighbors(self, db: AsyncSession, tile_id: int) -> List[Tile]:
         """Get only adjacent neighbors (left, right, top, bottom) of a tile"""
-        return self.tile_repository.get_adjacent_neighbors(db, tile_id=tile_id)
+        return await self.tile_repository.get_adjacent_neighbors(db, tile_id=tile_id)
     
-    def get_adjacent_neighbors_by_position(self, db: Session, canvas_id: int, x: int, y: int) -> List[Tile]:
+    async def get_adjacent_neighbors_by_position(self, db: AsyncSession, canvas_id: int, x: int, y: int) -> List[Tile]:
         """Get adjacent neighbors for a position (even if tile doesn't exist)"""
-        return self.tile_repository.get_adjacent_neighbors_by_position(db, canvas_id=canvas_id, x=x, y=y)
+        return await self.tile_repository.get_adjacent_neighbors_by_position(db, canvas_id=canvas_id, x=x, y=y)
     
-    def _check_tile_permissions(self, db: Session, tile: Tile, current_user: User, action: str = "modify") -> None:
+    async def _check_tile_permissions(self, db: AsyncSession, tile: Tile, current_user: User, action: str = "modify") -> None:
         """Check if user has permission to modify/delete a tile based on canvas collaboration mode"""
         # Get canvas to check collaboration mode
-        canvas = self.canvas_repository.get(db, tile.canvas_id)
+        canvas = await self.canvas_repository.get(db, tile.canvas_id)
         if not canvas:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -124,10 +125,10 @@ class TileService:
                 detail=f"You can only {action} your own tiles in {mode_name} mode"
             )
     
-    def acquire_tile_lock(self, db: Session, tile_id: int, current_user: User, minutes: int = 30) -> Dict[str, Any]:
+    async def acquire_tile_lock(self, db: AsyncSession, tile_id: int, current_user: User, minutes: int = 30) -> Dict[str, Any]:
         """Acquire a lock for editing a tile with improved race condition handling"""
         # Check if tile exists
-        tile = self.tile_repository.get(db, tile_id)
+        tile = await self.tile_repository.get(db, tile_id)
         if not tile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -135,7 +136,7 @@ class TileService:
             )
         
         # Check permissions based on collaboration mode
-        self._check_tile_permissions(db, tile, current_user, "edit")
+        await self._check_tile_permissions(db, tile, current_user, "edit")
         
         # Try to acquire lock with retry logic for race conditions
         max_retries = 3
@@ -143,7 +144,7 @@ class TileService:
         
         while retry_count < max_retries:
             try:
-                lock = self.tile_lock_repository.acquire_lock(db, tile_id, current_user.id, minutes)
+                lock = await self.tile_lock_repository.acquire_lock(db, tile_id, current_user.id, minutes)
                 if lock:
                     return {
                         "id": lock.id,
@@ -155,7 +156,7 @@ class TileService:
                     }
                 else:
                     # Check if tile is locked by someone else
-                    existing_lock = self.tile_lock_repository.get_by_tile_id(db, tile_id)
+                    existing_lock = await self.tile_lock_repository.get_by_tile_id(db, tile_id)
                     if existing_lock and existing_lock.user_id != current_user.id:
                         raise HTTPException(
                             status_code=status.HTTP_409_CONFLICT,
@@ -186,9 +187,9 @@ class TileService:
                 import time
                 time.sleep(0.1 * retry_count)  # Exponential backoff
     
-    def release_tile_lock(self, db: Session, tile_id: int, current_user: User) -> Dict[str, str]:
+    async def release_tile_lock(self, db: AsyncSession, tile_id: int, current_user: User) -> Dict[str, str]:
         """Release a lock for a tile"""
-        success = self.tile_lock_repository.release_lock(db, tile_id, current_user.id)
+        success = await self.tile_lock_repository.release_lock(db, tile_id, current_user.id)
         if success:
             return {"message": "Tile lock released successfully"}
         else:
@@ -197,9 +198,9 @@ class TileService:
                 detail="No active lock found for this tile"
             )
     
-    def extend_tile_lock(self, db: Session, tile_id: int, current_user: User, minutes: int = 30) -> Dict[str, str]:
+    async def extend_tile_lock(self, db: AsyncSession, tile_id: int, current_user: User, minutes: int = 30) -> Dict[str, str]:
         """Extend a lock for a tile"""
-        success = self.tile_lock_repository.extend_lock(db, tile_id, current_user.id, minutes)
+        success = await self.tile_lock_repository.extend_lock(db, tile_id, current_user.id, minutes)
         if success:
             return {"message": "Tile lock extended successfully"}
         else:
@@ -208,17 +209,17 @@ class TileService:
                 detail="No active lock found for this tile"
             )
     
-    def get_tile_lock_status(self, db: Session, tile_id: int, current_user: User) -> Dict[str, Any]:
+    async def get_tile_lock_status(self, db: AsyncSession, tile_id: int, current_user: User) -> Dict[str, Any]:
         """Get the lock status for a tile"""
         # Check if tile exists
-        tile = self.tile_repository.get(db, tile_id)
+        tile = await self.tile_repository.get(db, tile_id)
         if not tile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Tile not found"
             )
         
-        lock = self.tile_lock_repository.get_by_tile_id(db, tile_id)
+        lock = await self.tile_lock_repository.get_by_tile_id(db, tile_id)
         
         if not lock:
             return {
@@ -230,7 +231,7 @@ class TileService:
         # Check if lock is expired
         if lock.is_expired():
             # Clean up expired lock
-            self.tile_lock_repository.cleanup_expired_locks(db)
+            await self.tile_lock_repository.cleanup_expired_locks(db)
             return {
                 "is_locked": False,
                 "can_acquire": True,
@@ -255,12 +256,12 @@ class TileService:
                 "message": "Tile is being edited by another user"
             }
     
-    def update_tile(self, db: Session, tile_id: int, tile_update: TileUpdate, current_user: User) -> Optional[Tile]:
+    async def update_tile(self, db: AsyncSession, tile_id: int, tile_update: TileUpdate, current_user: User) -> Optional[Tile]:
         """Update tile with collaboration mode support"""
         try:
             print(f"🔧 TileService: Starting update for tile {tile_id}")
             
-            tile = self.tile_repository.get(db, tile_id)
+            tile = await self.tile_repository.get(db, tile_id)
             if not tile:
                 print(f"❌ TileService: Tile {tile_id} not found")
                 raise HTTPException(
@@ -271,12 +272,12 @@ class TileService:
             print(f"✅ TileService: Found tile {tile_id}, checking permissions")
             
             # Check permissions based on collaboration mode
-            self._check_tile_permissions(db, tile, current_user, "update")
+            await self._check_tile_permissions(db, tile, current_user, "update")
             
             print(f"✅ TileService: Permissions check passed")
             
             # Check if there's an active lock by another user
-            lock = self.tile_lock_repository.get_by_tile_id(db, tile_id)
+            lock = await self.tile_lock_repository.get_by_tile_id(db, tile_id)
             if lock and lock.user_id != current_user.id and not lock.is_expired():
                 print(f"❌ TileService: Tile {tile_id} is locked by user {lock.user_id}")
                 raise HTTPException(
@@ -290,7 +291,7 @@ class TileService:
             # Clean up any expired lock
             if lock and lock.is_expired():
                 print(f"🧹 TileService: Cleaning up expired lock for tile {tile_id}")
-                self.tile_lock_repository.cleanup_expired_locks(db)
+                await self.tile_lock_repository.cleanup_expired_locks(db)
             
             print(f"🔄 TileService: Updating tile with data: {tile_update.dict(exclude_unset=True)}")
             
@@ -309,9 +310,9 @@ class TileService:
             print(f"📋 TileService: Full traceback: {traceback.format_exc()}")
             raise e
     
-    def delete_tile(self, db: Session, tile_id: int, current_user: User) -> Optional[Tile]:
+    async def delete_tile(self, db: AsyncSession, tile_id: int, current_user: User) -> Optional[Tile]:
         """Delete tile with collaboration mode support"""
-        tile = self.tile_repository.get(db, tile_id)
+        tile = await self.tile_repository.get(db, tile_id)
         if not tile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -319,17 +320,17 @@ class TileService:
             )
         
         # Check permissions based on collaboration mode
-        self._check_tile_permissions(db, tile, current_user, "delete")
+        await self._check_tile_permissions(db, tile, current_user, "delete")
         
         # Release any lock on this tile
-        self.tile_lock_repository.release_lock(db, tile_id, current_user.id)
+        await self.tile_lock_repository.release_lock(db, tile_id, current_user.id)
         
-        return self.tile_repository.delete(db, id=tile_id)
+        return await self.tile_repository.delete(db, id=tile_id)
     
-    def like_tile(self, db: Session, tile_id: int, user_id: int) -> bool:
+    async def like_tile(self, db: AsyncSession, tile_id: int, user_id: int) -> bool:
         """Like a tile"""
         # Check if tile exists
-        tile = self.tile_repository.get(db, tile_id)
+        tile = await self.tile_repository.get(db, tile_id)
         if not tile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -337,7 +338,7 @@ class TileService:
             )
         
         # Check if user already liked this tile
-        if self.like_repository.user_has_liked_tile(db, user_id=user_id, tile_id=tile_id):
+        if await self.like_repository.user_has_liked_tile(db, user_id=user_id, tile_id=tile_id):
             return False  # Already liked
         
         # Create like
@@ -346,15 +347,15 @@ class TileService:
         db.add(like)
         
         # Increment tile like count
-        self.tile_repository.increment_like_count(db, tile_id=tile_id)
+        await self.tile_repository.increment_like_count(db, tile_id=tile_id)
         
-        db.commit()
+        await db.commit()
         return True
     
-    def unlike_tile(self, db: Session, tile_id: int, user_id: int) -> bool:
+    async def unlike_tile(self, db: AsyncSession, tile_id: int, user_id: int) -> bool:
         """Unlike a tile"""
         # Check if tile exists
-        tile = self.tile_repository.get(db, tile_id)
+        tile = await self.tile_repository.get(db, tile_id)
         if not tile:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -362,10 +363,10 @@ class TileService:
             )
         
         # Remove like
-        like = self.like_repository.unlike_tile(db, user_id=user_id, tile_id=tile_id)
+        like = await self.like_repository.unlike_tile(db, user_id=user_id, tile_id=tile_id)
         if like:
             # Decrement tile like count
-            self.tile_repository.decrement_like_count(db, tile_id=tile_id)
+            await self.tile_repository.decrement_like_count(db, tile_id=tile_id)
             return True
         
         return False  # Like not found
@@ -387,13 +388,13 @@ class TileService:
             updated_at=tile.updated_at
         )
 
-    def get_user_tile_count_on_canvas(self, db: Session, user_id: int, canvas_id: int) -> int:
+    async def get_user_tile_count_on_canvas(self, db: AsyncSession, user_id: int, canvas_id: int) -> int:
         """Get tile count for a user on a specific canvas"""
-        return self.tile_repository.count_user_tiles_on_canvas(db, canvas_id=canvas_id, creator_id=user_id)
+        return await self.tile_repository.count_user_tiles_on_canvas(db, canvas_id=canvas_id, creator_id=user_id)
 
-    def get_user_total_tile_count(self, db: Session, user_id: int) -> int:
+    async def get_user_total_tile_count(self, db: AsyncSession, user_id: int) -> int:
         """Get total tile count for a user across all canvases"""
-        return self.tile_repository.count_user_total_tiles(db, creator_id=user_id)
+        return await self.tile_repository.count_user_tiles_on_canvas(db, creator_id=user_id)
 
 
 # Create a singleton instance

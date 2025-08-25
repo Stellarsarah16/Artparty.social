@@ -2,7 +2,7 @@
 User service for user-related business logic
 """
 from typing import Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
 from ..repositories.user import user_repository
@@ -18,17 +18,17 @@ class UserService:
         self.user_repository = user_repository
         self.password_service = password_service
     
-    def create_user(self, db: Session, user_create: UserCreate) -> User:
+    async def create_user(self, db: AsyncSession, user_create: UserCreate) -> User:
         """Create a new user account"""
         # Check if username already exists
-        if self.user_repository.is_username_taken(db, username=user_create.username):
+        if await self.user_repository.is_username_taken(db, username=user_create.username):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Username already registered"
             )
         
         # Check if email already exists
-        if self.user_repository.is_email_taken(db, email=user_create.email):
+        if await self.user_repository.is_email_taken(db, email=user_create.email):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
@@ -51,14 +51,14 @@ class UserService:
         # Create user using repository
         db_user = User(**user_data)
         db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
+        await db.commit()
+        await db.refresh(db_user)
         
         return db_user
     
-    def authenticate_user(self, db: Session, username: str, password: str) -> Optional[User]:
+    async def authenticate_user(self, db: AsyncSession, username: str, password: str) -> Optional[User]:
         """Authenticate a user with username and password"""
-        user = self.user_repository.get_by_username(db, username=username)
+        user = await self.user_repository.get_by_username(db, username=username)
         
         if not user:
             return None
@@ -71,33 +71,33 @@ class UserService:
             
         return user
     
-    def get_user_by_id(self, db: Session, user_id: int) -> Optional[User]:
+    async def get_user_by_id(self, db: AsyncSession, user_id: int) -> Optional[User]:
         """Get user by ID"""
-        return self.user_repository.get(db, user_id)
+        return await self.user_repository.get(db, user_id)
     
-    def get_user_by_username(self, db: Session, username: str) -> Optional[User]:
+    async def get_user_by_username(self, db: AsyncSession, username: str) -> Optional[User]:
         """Get user by username"""
-        return self.user_repository.get_by_username(db, username=username)
+        return await self.user_repository.get_by_username(db, username=username)
     
-    def update_user(self, db: Session, user_id: int, user_update: UserUpdate) -> Optional[User]:
+    async def update_user(self, db: AsyncSession, user_id: int, user_update: UserUpdate) -> Optional[User]:
         """Update user information"""
-        user = self.user_repository.get(db, user_id)
+        user = await self.user_repository.get(db, user_id)
         if not user:
             return None
         
-        return self.user_repository.update(db, db_obj=user, obj_in=user_update)
+        return await self.user_repository.update(db, db_obj=user, obj_in=user_update)
     
-    def increment_tiles_created(self, db: Session, user_id: int) -> Optional[User]:
+    async def increment_tiles_created(self, db: AsyncSession, user_id: int) -> Optional[User]:
         """Increment user's tiles created count"""
-        return self.user_repository.increment_tiles_created(db, user_id=user_id)
+        return await self.user_repository.increment_tiles_created(db, user_id=user_id)
     
-    def increment_likes_received(self, db: Session, user_id: int) -> Optional[User]:
+    async def increment_likes_received(self, db: AsyncSession, user_id: int) -> Optional[User]:
         """Increment user's likes received count"""
-        return self.user_repository.increment_likes_received(db, user_id=user_id)
+        return await self.user_repository.increment_likes_received(db, user_id=user_id)
     
-    def decrement_likes_received(self, db: Session, user_id: int) -> Optional[User]:
+    async def decrement_likes_received(self, db: AsyncSession, user_id: int) -> Optional[User]:
         """Decrement user's likes received count"""
-        return self.user_repository.decrement_likes_received(db, user_id=user_id)
+        return await self.user_repository.decrement_likes_received(db, user_id=user_id)
     
     def create_user_response_data(self, user: User) -> dict:
         """Create user data for API responses"""
