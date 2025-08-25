@@ -12,9 +12,21 @@ from .config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Create ASYNC database engine for PostgreSQL
+# Convert psycopg2:// to postgresql+asyncpg://
+if settings.DATABASE_URL and 'psycopg2://' in settings.DATABASE_URL:
+    # Convert to async PostgreSQL driver
+    async_database_url = settings.DATABASE_URL.replace('psycopg2://', 'postgresql+asyncpg://')
+elif settings.DATABASE_URL and 'postgresql://' in settings.DATABASE_URL:
+    # Convert to async PostgreSQL driver
+    async_database_url = settings.DATABASE_URL.replace('postgresql://', 'postgresql+asyncpg://')
+else:
+    # Fallback to SQLite for development
+    async_database_url = "sqlite+aiosqlite:///artparty_social.db"
+
 # Create ASYNC database engine
 engine = create_async_engine(
-    settings.DATABASE_URL or "sqlite+aiosqlite:///artparty_social.db",
+    async_database_url,
     echo=settings.DEBUG,  # Log SQL statements in debug mode
     pool_pre_ping=True,
     pool_size=10,
