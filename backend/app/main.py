@@ -12,6 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 import logging
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
+from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.database import test_db_connection, test_redis_connection, engine, Base
@@ -66,14 +68,28 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting up StellarArtCollab backend...")
     
+    # Wait for database to be ready
+    max_retries = 30
+    for attempt in range(max_retries):
+        try:
+            async with engine.begin() as conn:
+                await conn.execute(text("SELECT 1"))
+            logger.info("Database connection established")
+            break
+        except Exception as e:
+            if attempt == max_retries - 1:
+                logger.error(f"Failed to connect to database after {max_retries} attempts")
+                raise
+            logger.warning(f"Database connection attempt {attempt + 1} failed, retrying...")
+            await asyncio.sleep(2)
+    
     # Create database tables
     Base.metadata.create_all(bind=engine)
     logger.info("Database tables created successfully")
     
-    # Log CORS configuration for debugging
-    logger.info(f"CORS origins configured: {settings.BACKEND_CORS_ORIGINS}")
-    logger.info(f"Environment: {settings.ENVIRONMENT}")
-    logger.info(f"Debug mode: {settings.DEBUG}")
+    # Mark service as ready
+    app.state.ready = True
+    logger.info("Service is ready to accept requests")
     
     yield
     
@@ -118,8 +134,38 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy"}
+    """Health check endpoint with database connectivity test"""
+    try:
+        # Test database connection
+        async with engine.begin() as conn:
+            await conn.execute(text("SELECT 1"))
+        
+        return {"status": "healthy", "database": "connected"}
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        return JSONResponse(
+            status_code=503,
+            content={"status": "unhealthy", "error": str(e)}
+        )
+
+
+@app.get("/ready")
+async def readiness_check():
+    """Readiness check - more comprehensive than health"""
+    try:
+        # Test database
+        async with engine.begin() as conn:
+            await conn.execute(text("SELECT 1"))
+        
+        # Test Redis if using it
+        # Test other critical services
+        
+        return {"status": "ready"}
+    except Exception as e:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "error": str(e)}
+        )
 
 
 @app.get("/cors-debug")
