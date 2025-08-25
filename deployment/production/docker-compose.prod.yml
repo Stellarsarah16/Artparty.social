@@ -37,8 +37,8 @@ services:
     build:
       context: ../../backend
       dockerfile: Dockerfile.prod
-      ports:                    # ← ADD THIS SECTION
-      - "8000:8000"          # ← ADD THIS LINE
+    ports:
+      - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://artparty:${DB_PASSWORD}@db:5432/artparty_social_prod
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
