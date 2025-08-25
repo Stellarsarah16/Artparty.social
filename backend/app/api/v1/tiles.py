@@ -4,6 +4,7 @@ Tiles management endpoints - Refactored with service layer
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from typing import List, Optional, Dict, Any
 import logging
 
@@ -240,10 +241,10 @@ async def get_canvas_tiles(
     canvas_id: int,
     skip: int = 0,
     limit: int = 100,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get tiles for a specific canvas"""
-    tiles = tile_service.get_canvas_tiles(db, canvas_id, skip, limit)
+    tiles = await tile_service.get_canvas_tiles(db, canvas_id, skip, limit)
     return [tile_service.create_tile_response(tile) for tile in tiles]
 
 
@@ -252,10 +253,10 @@ async def get_tile_at_position(
     canvas_id: int,
     x: int,
     y: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get tile at specific position"""
-    tile = tile_service.get_tile_by_position(db, canvas_id, x, y)
+    tile = await tile_service.get_tile_by_position(db, canvas_id, x, y)
     if not tile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -270,10 +271,10 @@ async def get_neighbors_at_position(
     canvas_id: int,
     x: int,
     y: int,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get adjacent neighbors for a position (even if tile doesn't exist)"""
-    neighbors = tile_service.get_adjacent_neighbors_by_position(db, canvas_id, x, y)
+    neighbors = await tile_service.get_adjacent_neighbors_by_position(db, canvas_id, x, y)
     return [tile_service.create_tile_response(tile) for tile in neighbors]
 
 
@@ -282,10 +283,10 @@ async def get_user_tiles(
     user_id: int,
     skip: int = 0,
     limit: int = 50,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get tiles by a specific user"""
-    tiles = tile_service.get_user_tiles(db, user_id, skip, limit)
+    tiles = await tile_service.get_user_tiles(db, user_id, skip, limit)
     return [tile_service.create_tile_response(tile) for tile in tiles]
 
 
@@ -293,18 +294,18 @@ async def get_user_tiles(
 async def like_tile(
     tile_id: int,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Like a tile"""
     try:
         # Like tile using service
-        liked = tile_service.like_tile(db, tile_id, current_user.id)
+        liked = await tile_service.like_tile(db, tile_id, current_user.id)
         
         if liked:
             # Update creator's like count
-            tile = tile_service.get_tile_by_id(db, tile_id)
+            tile = await tile_service.get_tile_by_id(db, tile_id)
             if tile:
-                user_service.increment_likes_received(db, tile.creator_id)
+                await user_service.increment_likes_received(db, tile.creator_id)
             
             # Broadcast like to WebSocket clients
             await connection_manager.broadcast_tile_liked(tile.canvas_id, tile_id, current_user.id)
@@ -333,18 +334,18 @@ async def like_tile(
 async def unlike_tile(
     tile_id: int,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Unlike a tile"""
     try:
         # Unlike tile using service
-        unliked = tile_service.unlike_tile(db, tile_id, current_user.id)
+        unliked = await tile_service.unlike_tile(db, tile_id, current_user.id)
         
         if unliked:
             # Update creator's like count
-            tile = tile_service.get_tile_by_id(db, tile_id)
+            tile = await tile_service.get_tile_by_id(db, tile_id)
             if tile:
-                user_service.decrement_likes_received(db, tile.creator_id)
+                await user_service.decrement_likes_received(db, tile.creator_id)
             
             # Broadcast unlike to WebSocket clients
             await connection_manager.broadcast_tile_unliked(tile.canvas_id, tile_id, current_user.id)
@@ -371,14 +372,17 @@ async def get_user_tile_count(
     user_id: int,
     canvas_id: Optional[int] = None,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Get tile count for a user (optionally filtered by canvas)"""
     try:
         if canvas_id:
             # Get count for specific canvas
-            count = tile_service.get_user_tile_count_on_canvas(db, user_id, canvas_id)
-            canvas = db.query(Canvas).filter(Canvas.id == canvas_id).first()
+            count = await tile_service.get_user_tile_count_on_canvas(db, user_id, canvas_id)
+            # Use async query for canvas
+            stmt = select(Canvas).where(Canvas.id == canvas_id)
+            result = await db.execute(stmt)
+            canvas = result.scalar_one_or_none()
             max_tiles = canvas.max_tiles_per_user if canvas else 10
             return {
                 "user_id": user_id,
@@ -389,7 +393,7 @@ async def get_user_tile_count(
             }
         else:
             # Get total count across all canvases
-            count = tile_service.get_user_total_tile_count(db, user_id)
+            count = await tile_service.get_user_total_tile_count(db, user_id)
             return {
                 "user_id": user_id,
                 "total_tile_count": count
