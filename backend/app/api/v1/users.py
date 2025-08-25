@@ -6,6 +6,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Dict, Any
 from datetime import datetime
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.database import get_db
 from ...services.auth import auth_service
@@ -104,25 +105,13 @@ async def get_user_by_id(
 
 
 @router.put("/profile", response_model=Dict[str, Any])
-async def update_user_profile(
+async def update_profile(
     user_update: UserUpdate,
     current_user: User = Depends(get_current_user_dependency),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
-    """Update current user's profile information"""
+    """Update user profile information"""
     try:
-        # Check if email is being updated and if it's already taken
-        if user_update.email and user_update.email != current_user.email:
-            existing_user = db.query(User).filter(
-                User.email == user_update.email,
-                User.id != current_user.id
-            ).first()
-            if existing_user:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Email already registered"
-                )
-        
         # Update user fields
         if user_update.first_name is not None:
             setattr(current_user, 'first_name', user_update.first_name)
@@ -132,8 +121,8 @@ async def update_user_profile(
             setattr(current_user, 'email', user_update.email)
         
         # Save changes
-        db.commit()
-        db.refresh(current_user)
+        await db.commit()
+        await db.refresh(current_user)
         
         return {
             "message": "Profile updated successfully",
@@ -155,7 +144,7 @@ async def update_user_profile(
     except HTTPException as e:
         raise e
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error updating profile"
@@ -166,7 +155,7 @@ async def update_user_profile(
 async def update_password(
     password_update: PasswordUpdate,
     current_user: User = Depends(get_current_user_dependency),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Update user's password"""
     try:
@@ -182,13 +171,13 @@ async def update_password(
         
         # Update password
         setattr(current_user, 'password_hash', new_password_hash)
-        db.commit()
+        await db.commit()
         
         return {"message": "Password updated successfully"}
     except HTTPException as e:
         raise e
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error updating password"
@@ -199,7 +188,7 @@ async def update_password(
 async def delete_account(
     account_delete: AccountDelete,
     current_user: User = Depends(get_current_user_dependency),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Delete user account (soft delete)"""
     try:
@@ -212,13 +201,13 @@ async def delete_account(
         
         # Soft delete - just mark as inactive
         setattr(current_user, 'is_active', False)
-        db.commit()
+        await db.commit()
         
         return {"message": "Account deleted successfully"}
     except HTTPException as e:
         raise e
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error deleting account"

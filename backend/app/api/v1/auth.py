@@ -103,14 +103,14 @@ async def register(
         )
     except IntegrityError as e:
         logger.error(f"Database integrity error during registration: {e}")
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username or email already exists"
         )
     except Exception as e:
         logger.error(f"Unexpected error during registration: {e}")
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Registration failed due to server error"
@@ -252,7 +252,7 @@ async def confirm_email_verification(
         raise e
     except Exception as e:
         logger.error(f"Unexpected error during email confirmation: {e}")
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Email confirmation failed due to server error"

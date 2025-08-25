@@ -323,7 +323,7 @@ async def like_tile(
     except HTTPException as e:
         raise e
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error liking tile"
@@ -360,7 +360,7 @@ async def unlike_tile(
     except HTTPException as e:
         raise e
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error unliking tile"
