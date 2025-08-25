@@ -141,17 +141,15 @@ async def health_check():
 
 @app.get("/ready")
 async def readiness_check():
-    """Readiness check - more comprehensive than health"""
+    """Readiness check endpoint for frontend"""
     try:
-        # Test database
+        # Test database connection
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
         
-        # Test Redis if using it
-        # Test other critical services
-        
-        return {"status": "ready"}
+        return {"status": "ready", "database": "connected"}
     except Exception as e:
+        logger.error(f"Readiness check failed: {e}")
         return JSONResponse(
             status_code=503,
             content={"status": "not_ready", "error": str(e)}

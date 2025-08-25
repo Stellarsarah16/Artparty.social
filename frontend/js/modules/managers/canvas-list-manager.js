@@ -29,11 +29,19 @@ export class CanvasListManager {
      */
     async checkBackendReadiness() {
         try {
-            const response = await fetch('/ready');
+            // Get the API base URL from the global config
+            const baseURL = window.API_CONFIG?.BASE_URL || window.location.origin;
+            const readyURL = `${baseURL}/ready`;
+            
+            console.log('🔧 Checking backend readiness at:', readyURL);
+            
+            const response = await fetch(readyURL);
             if (response.ok) {
                 const data = await response.json();
+                console.log('✅ Backend readiness check response:', data);
                 return data.status === 'ready';
             }
+            console.warn('⚠️ Backend readiness check failed - response not ok:', response.status, response.statusText);
             return false;
         } catch (error) {
             console.warn('⚠️ Backend readiness check failed:', error);
