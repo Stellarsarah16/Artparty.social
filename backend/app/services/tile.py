@@ -71,9 +71,14 @@ class TileService:
         
         db.add(tile)
         await db.commit()
-        await db.refresh(tile)
         
-        return tile
+        # Eagerly load relationships to prevent MissingGreenlet errors
+        from sqlalchemy.orm import selectinload
+        stmt = select(Tile).options(selectinload(Tile.creator)).where(Tile.id == tile.id)
+        result = await db.execute(stmt)
+        tile_with_relationships = result.scalar_one_or_none()
+        
+        return tile_with_relationships
     
     async def get_tile_by_id(self, db: AsyncSession, tile_id: int) -> Optional[Tile]:
         """Get tile by ID with relationships eagerly loaded"""
