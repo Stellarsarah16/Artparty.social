@@ -102,18 +102,12 @@ export class CanvasListManager {
      * Render canvas list with cards and staggered loading
      */
     renderCanvasList(canvases) {
-        console.log('🔍 CRITICAL DEBUG: renderCanvasList called with', canvases.length, 'canvases');
+        console.log('🎨 Rendering canvas list with', canvases.length, 'canvases');
         
         if (!this.canvasListContainer) {
             console.error('❌ Canvas list container not found');
             return;
         }
-        
-        // CRITICAL DEBUG: Check if canvas section is visible
-        const canvasSection = document.getElementById('canvas-section');
-        console.log('🔍 Canvas section element:', canvasSection);
-        console.log('🔍 Canvas section classes:', canvasSection?.className);
-        console.log('🔍 Canvas section display:', canvasSection ? window.getComputedStyle(canvasSection).display : 'N/A');
 
         this.canvasListContainer.innerHTML = '';
         
@@ -132,22 +126,20 @@ export class CanvasListManager {
         }
 
         // Create all cards first (without loading data)
-        const cardElements = canvases.map(canvas => this.createCanvasCard(canvas, false)); // false = don't load data yet
+        const cardElements = canvases.map(canvas => this.createCanvasCard(canvas, false));
         
-        console.log('🔍 CRITICAL DEBUG: About to append', cardElements.length, 'cards to container');
-        console.log('🔍 Container element:', this.canvasListContainer);
-        
-        cardElements.forEach((cardElement, index) => {
-            console.log(`🔍 Appending card ${index + 1}:`, cardElement);
+        cardElements.forEach(cardElement => {
             this.canvasListContainer.appendChild(cardElement);
         });
         
-        // CRITICAL DEBUG: Check if cards were actually added
-        console.log('🔍 Container children after append:', this.canvasListContainer.children.length);
-        console.log('🔍 Container innerHTML length:', this.canvasListContainer.innerHTML.length);
+        console.log('✅ Created and appended', cardElements.length, 'canvas cards');
         
-        // Stagger the data loading to prevent server overload
-        this.staggeredLoadCanvasData(canvases, cardElements);
+        // Wait for DOM to be ready, then start loading data
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                this.staggeredLoadCanvasData(canvases, cardElements);
+            }, 100);
+        });
     }
 
 // Update the staggeredLoadCanvasData method
@@ -230,6 +222,11 @@ async staggeredLoadCanvasData(canvases, cardElements) {
                 <h3>${canvas.name}</h3>
                 ${isOwner ? '<button class="canvas-settings-btn" title="Edit Canvas Settings"><i class="fas fa-cog"></i></button>' : ''}
             </div>
+            <div class="canvas-card-action">
+                <button class="btn btn-primary open-canvas-btn" data-canvas='${JSON.stringify(canvas)}'>
+                    <i class="fas fa-paint-brush"></i> Open Canvas
+                </button>
+            </div>
             <div class="canvas-preview-container">
                 <!-- Enhanced canvas preview - larger size for better showcase -->
                 <canvas class="canvas-preview" width="280" height="200" data-canvas-id="${canvas.id}"></canvas>
@@ -263,11 +260,6 @@ async staggeredLoadCanvasData(canvases, cardElements) {
                 <div class="user-tiles-info">
                     <span class="user-tiles-count">Loading...</span>
                 </div>
-            </div>
-            <div class="canvas-card-footer">
-                <button class="btn btn-primary open-canvas-btn" data-canvas='${JSON.stringify(canvas)}'>
-                    Open Canvas
-                </button>
             </div>
         `;
 
@@ -450,15 +442,18 @@ async staggeredLoadCanvasData(canvases, cardElements) {
 
                 // Get tiles for this canvas with retry
                 const tiles = await this.tileApi.getForCanvas(canvas.id);
+                console.log(`📊 Got ${tiles?.length || 0} tiles for canvas ${canvas.name}`);
             
                 if (!tiles || tiles.length === 0) {
                     // No tiles - show empty canvas
                     previewOverlay.innerHTML = '<span class="preview-empty">Empty canvas</span>';
                     previewOverlay.style.display = 'flex';
+                    console.log(`📭 Canvas ${canvas.name} is empty, showing empty state`);
                     return;
                 }
 
                 // Render preview
+                console.log(`🎨 Rendering preview for canvas ${canvas.name} with ${tiles.length} tiles`);
                 this.renderCanvasPreview(previewCanvas, canvas, tiles);
                 
                 // Hide overlay
