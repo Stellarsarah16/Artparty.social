@@ -423,18 +423,17 @@ main {
     box-shadow: var(--shadow-lg);
 }
 
-/* Canvas Preview Container - Make it prominent */
+/* Canvas Preview Container - Full width responsive */
 .canvas-preview-container {
     position: relative;
     background: var(--bg-primary);
-    border-radius: var(--border-radius-md);
-    /*margin: var(--space-md);*/
-    /*padding: var(--space-md);*/
     display: flex;
     justify-content: center;
     align-items: center;
+    width: 100%;
+    aspect-ratio: 7/5; /* 280:200 ratio */
     min-height: 160px;
-    border: 2px solid var(--border-color);
+    margin: 0; /* Full width - no margins */
 }
 
 /* Canvas Preview - Larger and more prominent */
@@ -450,8 +449,8 @@ main {
 @media (min-width: 768px) {
     .canvas-preview-container {
         min-height: 180px;
-        margin: var(--space-lg);
-        padding: var(--space-lg);
+        /*margin: var(--space-sm);*/
+        /*padding: var(--space-sm);*/
     }
 }
 
@@ -478,7 +477,6 @@ main {
 }
 
 .canvas-card-header h3 {
-    margin: 0;
     font-size: var(--font-size-lg);
     font-weight: 600;
     color: var(--text-primary);
@@ -486,10 +484,9 @@ main {
 
 /* Canvas card action section - Open button above preview */
 .canvas-card-action {
-    padding: var(--space-md) var(--space-lg);
+    padding: 0 var(--space-lg);
     text-align: center;
     background: var(--surface-color);
-    border-bottom: 1px solid var(--border-color);
 }
 
 .canvas-card-action .open-canvas-btn {
@@ -549,27 +546,17 @@ main {
     width: 16px;
 }
 
-/* Canvas Preview Container - Make it prominent */
-.canvas-preview-container {
-    position: relative;
-    background: var(--bg-primary);
-    border-radius: var(--border-radius-md);
-    margin: var(--space-md);
-    padding: var(--space-md);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 160px;
-    border: 2px solid var(--border-color);
-}
 
-/* Canvas Preview - Larger and more prominent */
+
+/* Canvas Preview - Full width responsive */
 .canvas-preview {
-    border-radius: var(--border-radius-sm);
-    box-shadow: var(--shadow-sm);
-    background: white;
+    width: 100% !important;
+    height: 100% !important;
     max-width: 100%;
-    height: auto;
+    max-height: 100%;
+    object-fit: contain;
+    background: white;
+    display: block;
 }
 
 /* Preview overlay styling */
@@ -591,8 +578,8 @@ main {
 @media (min-width: 768px) {
     .canvas-preview-container {
         min-height: 180px;
-        margin: var(--space-lg);
-        padding: var(--space-lg);
+        /*margin: var(--space-lg);*/
+        /*padding: var(--space-lg);*/
     }
 }
 
@@ -607,6 +594,10 @@ main {
         min-height: 240px;
     }
 }
+
+
+
+
 
 /* User tiles info - Really tight badge style */
 .user-tiles-info {
@@ -624,7 +615,7 @@ main {
 
 /* Override info items to be really tight */
 .canvas-card .info-item {
-    padding: 2px 4px !important;
+    padding: 0px 4px !important;
     font-size: var(--font-size-xs) !important;
     line-height: 1.2 !important;
 }
@@ -670,20 +661,20 @@ main {
 }
 
 .canvas-card-body {
-    padding: var(--space-lg);
+    padding: var(--space-sm);
 }
 
 .canvas-card-body .canvas-info {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-md);
-    margin-bottom: var(--space-md);
+
+
 }
 
 .canvas-card-body .info-item {
     display: flex;
     align-items: center;
-    gap: var(--space-xs);
+
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
 }
@@ -711,16 +702,16 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: var(--space-lg);
+    padding: var(--space-sm);
     background: transparent !important; /* Remove preview background */
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .canvas-preview {
-    border-radius: var(--border-radius);
+
     box-shadow: var(--shadow-sm);
     background: var(--color-bg-light);
-    border: 1px solid var(--border-color);
+
 }
 
 .preview-overlay {

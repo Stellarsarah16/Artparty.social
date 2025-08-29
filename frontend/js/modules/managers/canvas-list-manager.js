@@ -489,8 +489,10 @@ async staggeredLoadCanvasData(canvases, cardElements) {
      */
     renderCanvasPreview(previewCanvas, canvas, tiles) {
         const ctx = previewCanvas.getContext('2d');
-        const canvasWidth = previewCanvas.width; // 280
-        const canvasHeight = previewCanvas.height; // 200
+        
+        // Use default canvas dimensions (will be styled by CSS)
+        const canvasWidth = previewCanvas.width || 280;
+        const canvasHeight = previewCanvas.height || 200;
         
         // Clear canvas with a subtle background
         ctx.fillStyle = '#f8fafc';
