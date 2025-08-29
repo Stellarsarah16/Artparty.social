@@ -380,16 +380,16 @@ main {
     gap: var(--space-lg);
 }
 
-/* Remove background from canvas cards - keep container only */
+/* Canvas cards with proper visibility */
 .canvas-card {
     position: relative;
-    background: transparent !important; /* Remove card background */
+    background: var(--surface-color);
     border-radius: var(--border-radius-lg);
     overflow: hidden;
-    box-shadow: none !important; /* Remove shadow for cleaner look */
+    box-shadow: var(--shadow-sm);
     transition: transform var(--transition-fast);
     cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+    border: 1px solid var(--border-color);
 }
 
 .canvas-card:hover {
@@ -397,16 +397,16 @@ main {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important; /* Subtle hover shadow */
 }
 
-/* Also make card sections transparent */
+/* Canvas card sections with proper backgrounds */
 .canvas-card-header {
     padding: var(--space-lg);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: transparent !important;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--surface-color);
 }
 
 .canvas-card-body {
     padding: var(--space-lg);
-    background: transparent !important;
+    background: var(--surface-color);
 }
 
 .canvas-card-footer {
