@@ -1,0 +1,50 @@
+[
+  {
+    "id": "document-todays-changes",
+    "content": "Document all changes made today during async database migration debugging",
+    "status": "completed",
+    "dependencies": []
+  },
+  {
+    "id": "analyze-root-cause",
+    "content": "Analyze the root cause of today's 503 errors and MissingGreenlet exceptions",
+    "status": "completed",
+    "dependencies": ["document-todays-changes"]
+  },
+  {
+    "id": "create-debugging-checklist",
+    "content": "Create a comprehensive debugging checklist for future async database issues",
+    "status": "completed",
+    "dependencies": ["analyze-root-cause"]
+  },
+  {
+    "id": "document-infrastructure-issues",
+    "content": "Document the infrastructure configuration issues discovered today",
+    "status": "completed",
+    "dependencies": ["analyze-root-cause"]
+  },
+  {
+    "id": "resolve-port-conflict",
+    "content": "Resolve the port 8000 conflict between development and production services",
+    "status": "in_progress",
+    "dependencies": ["document-infrastructure-issues"]
+  },
+  {
+    "id": "start-production-services",
+    "content": "Start production services with proper port configuration",
+    "status": "pending",
+    "dependencies": ["resolve-port-conflict"]
+  },
+  {
+    "id": "test-endpoint-functionality",
+    "content": "Test all endpoints to verify functionality after infrastructure fixes",
+    "status": "pending",
+    "dependencies": ["start-production-services"]
+  },
+  {
+    "id": "create-prevention-guide",
+    "content": "Create a guide to prevent similar async database issues in the future",
+    "status": "pending",
+    "dependencies": ["test-endpoint-functionality"]
+  }
+]

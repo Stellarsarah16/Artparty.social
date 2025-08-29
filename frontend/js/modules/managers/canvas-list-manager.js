@@ -130,29 +130,48 @@ async staggeredLoadCanvasData(canvases, cardElements) {
     console.log(`🔍 Card elements valid:`, cardElements.map(c => c ? 'valid' : 'undefined'));
     
     try {
-        for (let i = 0; i < canvases.length; i++) {
-            const canvas = canvases[i];
-            const cardElement = cardElements[i];
+        // Process canvases in smaller batches to avoid overwhelming backend
+        const batchSize = 2; // Process 2 canvases at a time
+        const batchDelay = 500; // 500ms between batches
+        const requestDelay = 250; // 250ms between requests within batch
+        
+        for (let batchStart = 0; batchStart < canvases.length; batchStart += batchSize) {
+            const batchEnd = Math.min(batchStart + batchSize, canvases.length);
+            console.log(`🔍 Processing batch ${Math.floor(batchStart/batchSize) + 1}: canvases ${batchStart} to ${batchEnd - 1}`);
             
-            console.log(`🔍 Processing canvas ${canvas.id} at index ${i}, cardElement:`, cardElement ? 'valid' : 'undefined');
+            // Process this batch
+            for (let i = batchStart; i < batchEnd; i++) {
+                const canvas = canvases[i];
+                const cardElement = cardElements[i];
+                
+                console.log(`🔍 Processing canvas ${canvas.id} at index ${i}, cardElement:`, cardElement ? 'valid' : 'undefined');
+                
+                try {
+                    // Longer delay between requests to reduce database pressure
+                    if (i > batchStart) {
+                        await new Promise(resolve => setTimeout(resolve, requestDelay));
+                    }
+                    
+                    // Load user tile count
+                    await this.loadUserTileCountForCanvas(canvas.id, cardElement);
+                    
+                    // Add delay before preview
+                    await new Promise(resolve => setTimeout(resolve, requestDelay));
+                    
+                    // Load canvas preview
+                    await this.loadCanvasPreview(canvas, cardElement);
+                    
+                } catch (error) {
+                    console.warn(`⚠️ Failed to load data for canvas ${canvas.id}:`, error);
+                    // Continue with other canvases instead of failing completely
+                    continue;
+                }
+            }
             
-            try {
-                // Add delay between requests to avoid overwhelming backend
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                // Load user tile count
-                await this.loadUserTileCountForCanvas(canvas.id, cardElement);
-                
-                // Add another delay
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                // Load canvas preview
-                await this.loadCanvasPreview(canvas, cardElement);
-                
-            } catch (error) {
-                console.warn(`⚠️ Failed to load data for canvas ${canvas.id}:`, error);
-                // Continue with other canvases instead of failing completely
-                continue;
+            // Delay between batches (except for last batch)
+            if (batchEnd < canvases.length) {
+                console.log(`⏱️ Waiting ${batchDelay}ms before next batch...`);
+                await new Promise(resolve => setTimeout(resolve, batchDelay));
             }
         }
     } catch (error) {

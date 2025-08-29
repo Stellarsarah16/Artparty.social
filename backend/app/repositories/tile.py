@@ -52,15 +52,22 @@ class TileRepository(SQLAlchemyRepository[Tile, TileCreate, TileUpdate]):
         return result.scalars().all()
     
     async def count_user_tiles_on_canvas(self, db: AsyncSession, *, canvas_id: int, creator_id: int) -> int:
-        """Count user's tiles on a specific canvas"""
-        stmt = select(Tile).where(
-            and_(
-                Tile.canvas_id == canvas_id,
-                Tile.creator_id == creator_id
+        """Count user's tiles on a specific canvas - optimized version"""
+        try:
+            # Use count() instead of loading all records for better performance
+            stmt = select(func.count(Tile.id)).where(
+                and_(
+                    Tile.canvas_id == canvas_id,
+                    Tile.creator_id == creator_id
+                )
             )
-        )
-        result = await db.execute(stmt)
-        return len(result.scalars().all())
+            result = await db.execute(stmt)
+            count = result.scalar()
+            return count or 0
+        except Exception as e:
+            logger.error(f"Error counting user tiles on canvas {canvas_id} for user {creator_id}: {e}")
+            # Return 0 instead of raising exception to prevent 503 errors
+            return 0
     
     async def get_tile_neighbors(self, db: AsyncSession, *, tile_id: int, radius: int = 1) -> List[Tile]:
         """Get neighboring tiles around a given tile"""

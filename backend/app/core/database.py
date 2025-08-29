@@ -24,13 +24,15 @@ else:
     # Fallback to SQLite for development
     async_database_url = "sqlite+aiosqlite:///artparty_social.db"
 
-# Create ASYNC database engine
+# Create ASYNC database engine with more conservative settings
 engine = create_async_engine(
     async_database_url,
     echo=settings.DEBUG,  # Log SQL statements in debug mode
     pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20
+    pool_size=5,  # Reduce pool size to prevent exhaustion
+    max_overflow=10,  # Reduce max overflow
+    pool_timeout=30,  # Add timeout for getting connections
+    pool_recycle=3600,  # Recycle connections every hour
 )
 
 # Create async sessionmaker

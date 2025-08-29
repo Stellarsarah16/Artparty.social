@@ -194,22 +194,41 @@ class APIClient {
      * @param {Function} apiCall - Function to execute
      * @param {number} maxRetries - Maximum retry attempts
      * @param {number} baseDelay - Base delay between retries
+     * @param {boolean} suppressToastOnRetry - Don't show toast for retried errors
      * @returns {Promise} Result of the API call
      */
-    async executeWithRetry(apiCall, maxRetries = 3, baseDelay = 1000) {
+    async executeWithRetry(apiCall, maxRetries = 3, baseDelay = 1000, suppressToastOnRetry = true) {
+        let lastError = null;
+        
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 return await apiCall();
             } catch (error) {
+                lastError = error;
+                
                 if (error.status === 503 && attempt < maxRetries) {
                     const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
                     console.log(`🔄 API call attempt ${attempt}/${maxRetries} failed with 503, retrying in ${delay}ms...`);
+                    
+                    // Don't show toast for retry attempts, only log to console
+                    if (!suppressToastOnRetry) {
+                        // Only show toast if explicitly requested
+                        if (window.UIManager) {
+                            window.UIManager.showToast(`Server busy, retrying... (${attempt}/${maxRetries})`, 'warning');
+                        }
+                    }
+                    
                     await new Promise(resolve => setTimeout(resolve, delay));
                     continue;
                 }
+                
+                // For final failure or non-503 errors, let normal error handling occur
                 throw error;
             }
         }
+        
+        // Should never reach here, but just in case
+        throw lastError;
     }
     
     /**
@@ -339,6 +358,10 @@ class APIClient {
      * @returns {Promise} Rejected promise
      */
     async handleAPIError(error) {
+        // Don't show toasts for errors that will be retried
+        const isRetryableError = error.status === 503;
+        const showToast = !isRetryableError || error.isRetryExhausted;
+        
         if (error.status === 401) {
             // Unauthorized - redirect to login modal
             CONFIG_UTILS.removeAuthToken();
@@ -373,12 +396,17 @@ class APIClient {
             }
         } else if (error.status === 404) {
             // Not found
-            if (window.UIManager) {
+            if (showToast && window.UIManager) {
                 window.UIManager.showToast('Resource not found', 'error');
             }
+        } else if (error.status === 503) {
+            // Service unavailable - only show toast if retries are exhausted
+            if (error.isRetryExhausted && window.UIManager) {
+                window.UIManager.showToast('Service temporarily unavailable. Please try again.', 'error');
+            }
         } else if (error.status >= 500) {
-            // Server error
-            if (window.UIManager) {
+            // Other server errors
+            if (showToast && window.UIManager) {
                 window.UIManager.showToast('Server error. Please try again later.', 'error');
             }
         } else if (!this.isOnline) {
