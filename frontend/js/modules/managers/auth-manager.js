@@ -123,18 +123,10 @@ export class AuthManager {
                 this.updateNavigation();
             }, 100);
             
-            // Load canvases with delay to prevent post-login 503 errors
-            console.log('🔍 Checking canvas list manager availability:', !!window.canvasListManager);
-            if (window.canvasListManager) {
-                console.log('⏳ Waiting before loading canvases to prevent post-login 503 errors...');
-                // Add delay to prevent overwhelming backend immediately after login
-                setTimeout(async () => {
-                    console.log('🔄 Loading canvases after login...');
-                    await window.canvasListManager.loadCanvases();
-                }, 500); // 500ms delay to let backend settle
-            }
-            
-            console.log('✅ Login successful');
+            // REMOVED: Duplicate canvas loading - navigation manager handles this
+            // The showSection('canvas') call above already triggers canvas loading
+            // in navigation.js line 307, so we don't need to do it again here
+            console.log('✅ Login complete, navigation manager will handle canvas loading');
             
         } catch (error) {
             console.error('❌ Login failed:', error);

@@ -22,6 +22,10 @@ export class CanvasListManager {
         
         console.log('🔧 CanvasListManager initialized with canvasApi methods:', 
             this.canvasApi ? Object.getOwnPropertyNames(Object.getPrototypeOf(this.canvasApi)) : 'null');
+        
+        // Add loading state tracking
+        this.isLoadingCanvases = false;
+        this.isLoadingStaggeredData = false;
     }
 
     /**
@@ -53,6 +57,14 @@ export class CanvasListManager {
      * Load and display all canvases
      */
     async loadCanvases() {
+        // Prevent multiple simultaneous loading operations
+        if (this.isLoadingCanvases) {
+            console.log('⏭️ Canvas loading already in progress, skipping duplicate request');
+            return;
+        }
+        
+        this.isLoadingCanvases = true;
+        
         try {
             console.log('🔄 Loading canvases...');
             
@@ -81,6 +93,8 @@ export class CanvasListManager {
             if (window.UIManager) {
                 window.UIManager.showToast('Failed to load canvases', 'error');
             }
+        } finally {
+            this.isLoadingCanvases = false;
         }
     }
 
@@ -125,6 +139,14 @@ export class CanvasListManager {
 
 // Update the staggeredLoadCanvasData method
 async staggeredLoadCanvasData(canvases, cardElements) {
+    // Prevent multiple simultaneous staggered loading operations
+    if (this.isLoadingStaggeredData) {
+        console.log('⏭️ Staggered loading already in progress, skipping duplicate request');
+        return;
+    }
+    
+    this.isLoadingStaggeredData = true;
+
     console.log(`🔍 staggeredLoadCanvasData: Received ${canvases.length} canvases and ${cardElements.length} card elements`);
     console.log(`🔍 Canvases IDs:`, canvases.map(c => c.id));
     console.log(`🔍 Card elements valid:`, cardElements.map(c => c ? 'valid' : 'undefined'));
@@ -176,6 +198,8 @@ async staggeredLoadCanvasData(canvases, cardElements) {
         }
     } catch (error) {
         console.error('❌ Error in staggered data loading:', error);
+    } finally {
+        this.isLoadingStaggeredData = false;
     }
 }
 

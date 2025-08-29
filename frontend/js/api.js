@@ -400,9 +400,9 @@ class APIClient {
                 window.UIManager.showToast('Resource not found', 'error');
             }
         } else if (error.status === 503) {
-            // Service unavailable - don't show toast, let retry logic handle it
-            console.log('🔄 503 Service Unavailable - retry logic will handle this');
-            // No toast shown - this reduces noise for temporary issues
+            // Service unavailable - don't show toast since retry logic handles it
+            console.log('🔄 503 Service Unavailable detected - retry logic will handle this silently');
+            // NO TOAST - reduces user-facing noise for temporary backend issues
         } else if (error.status >= 500) {
             // Other server errors
             if (showToast && window.UIManager) {
