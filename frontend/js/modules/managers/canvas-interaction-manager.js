@@ -485,8 +485,11 @@ export class CanvasInteractionManager {
             const touch = e.touches[0];
             this.touchState.lastTouchX = touch.clientX;
             this.touchState.lastTouchY = touch.clientY;
+            // Track start position for movement threshold calculation
+            this.touchState.startTouchX = touch.clientX;
+            this.touchState.startTouchY = touch.clientY;
             this.touchState.isTouching = true;
-            this.touchState.isPanning = true;
+            this.touchState.isPanning = false; // Don't assume panning until significant movement
             
             // Start panning
             this.isDragging = true;
@@ -534,7 +537,25 @@ export class CanvasInteractionManager {
      */
     handleTouchMove(e) {
         e.preventDefault();
-        this.touchState.hasMoved = true;
+        
+        // Calculate movement from start position to determine if this is significant movement
+        if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - (this.touchState.startTouchX || this.touchState.lastTouchX);
+            const deltaY = touch.clientY - (this.touchState.startTouchY || this.touchState.lastTouchY);
+            const totalMovement = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            
+            // Only mark as moved if movement exceeds threshold (10 pixels for mobile)
+            if (totalMovement > 10 && !this.touchState.hasMoved) {
+                console.log('📱 Significant touch movement detected:', totalMovement);
+                this.touchState.hasMoved = true;
+                this.touchState.isPanning = true;
+            }
+        } else if (e.touches.length === 2) {
+            // For pinch gestures, always mark as moved
+            this.touchState.hasMoved = true;
+            this.touchState.isPinching = true;
+        }
         
         if (e.touches.length === 1 && this.touchState.isPanning) {
             // Single touch panning
