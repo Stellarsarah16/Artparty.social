@@ -231,8 +231,8 @@ async staggeredLoadCanvasData(canvases, cardElements) {
                 ${isOwner ? '<button class="canvas-settings-btn" title="Edit Canvas Settings"><i class="fas fa-cog"></i></button>' : ''}
             </div>
             <div class="canvas-preview-container">
-                <!-- FIXED: Changed to landscape 2:3 ratio (192x128) for better tile visibility -->
-                <canvas class="canvas-preview" width="192" height="128" data-canvas-id="${canvas.id}"></canvas>
+                <!-- Enhanced canvas preview - larger size for better showcase -->
+                <canvas class="canvas-preview" width="280" height="200" data-canvas-id="${canvas.id}"></canvas>
                 <div class="preview-overlay">
                     <span class="preview-loading">Loading preview...</span>
                 </div>
@@ -494,8 +494,8 @@ async staggeredLoadCanvasData(canvases, cardElements) {
      */
     renderCanvasPreview(previewCanvas, canvas, tiles) {
         const ctx = previewCanvas.getContext('2d');
-        const canvasWidth = previewCanvas.width; // 192
-        const canvasHeight = previewCanvas.height; // 128
+        const canvasWidth = previewCanvas.width; // 280
+        const canvasHeight = previewCanvas.height; // 200
         
         // Clear canvas with a subtle background
         ctx.fillStyle = '#f8fafc';
