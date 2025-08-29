@@ -102,10 +102,18 @@ export class CanvasListManager {
      * Render canvas list with cards and staggered loading
      */
     renderCanvasList(canvases) {
+        console.log('🔍 CRITICAL DEBUG: renderCanvasList called with', canvases.length, 'canvases');
+        
         if (!this.canvasListContainer) {
-            console.error('Canvas list container not found');
+            console.error('❌ Canvas list container not found');
             return;
         }
+        
+        // CRITICAL DEBUG: Check if canvas section is visible
+        const canvasSection = document.getElementById('canvas-section');
+        console.log('🔍 Canvas section element:', canvasSection);
+        console.log('🔍 Canvas section classes:', canvasSection?.className);
+        console.log('🔍 Canvas section display:', canvasSection ? window.getComputedStyle(canvasSection).display : 'N/A');
 
         this.canvasListContainer.innerHTML = '';
         
@@ -125,13 +133,18 @@ export class CanvasListManager {
 
         // Create all cards first (without loading data)
         const cardElements = canvases.map(canvas => this.createCanvasCard(canvas, false)); // false = don't load data yet
-        cardElements.forEach(cardElement => {
+        
+        console.log('🔍 CRITICAL DEBUG: About to append', cardElements.length, 'cards to container');
+        console.log('🔍 Container element:', this.canvasListContainer);
+        
+        cardElements.forEach((cardElement, index) => {
+            console.log(`🔍 Appending card ${index + 1}:`, cardElement);
             this.canvasListContainer.appendChild(cardElement);
         });
         
-        console.log(`🔍 Debug: Created ${cardElements.length} card elements for ${canvases.length} canvases`);
-        console.log(`🔍 Debug: Canvases:`, canvases.map(c => c.id));
-        console.log(`🔍 Debug: Card elements:`, cardElements.map(c => c ? 'valid' : 'undefined'));
+        // CRITICAL DEBUG: Check if cards were actually added
+        console.log('🔍 Container children after append:', this.canvasListContainer.children.length);
+        console.log('🔍 Container innerHTML length:', this.canvasListContainer.innerHTML.length);
         
         // Stagger the data loading to prevent server overload
         this.staggeredLoadCanvasData(canvases, cardElements);
