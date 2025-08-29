@@ -428,8 +428,8 @@ main {
     position: relative;
     background: var(--bg-primary);
     border-radius: var(--border-radius-md);
-    margin: var(--space-md);
-    padding: var(--space-md);
+    /*margin: var(--space-md);*/
+    /*padding: var(--space-md);*/
     display: flex;
     justify-content: center;
     align-items: center;
@@ -499,7 +499,7 @@ main {
 
 /* Canvas card body - Tight data layout */
 .canvas-card-body {
-    padding: var(--space-sm) var(--space-md);
+    /*padding: var(--space-sm) var(--space-md);*/
     background: var(--surface-color);
     flex: 1;
 }
