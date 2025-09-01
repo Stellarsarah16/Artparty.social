@@ -403,28 +403,36 @@ class NavigationManager {
                     }
                 }
                 
-                // Initialize chat system (with better error handling)
-                if (this.managers.chat && typeof this.managers.chat.initialize === 'function') {
-                    try {
-                        await this.managers.chat.initialize();
-                        await this.managers.chat.openCanvasChat(canvas.id);
-                        console.log('✅ Chat manager initialized for canvas');
-                    } catch (chatError) {
-                        console.warn('⚠️ Chat initialization failed (non-critical):', chatError);
-                        // Don't let chat errors bubble up to show toast
-                    }
-                }
+                // Temporarily disable chat system to prevent server errors
+                // TODO: Re-enable after fixing MissingGreenlet errors in backend
+                console.log('⚠️ Chat system temporarily disabled due to backend async issues');
                 
-                // Initialize presence system (with better error handling)
-                if (this.managers.presence && typeof this.managers.presence.initialize === 'function') {
-                    try {
-                        await this.managers.presence.initialize();
-                        console.log('✅ Presence manager initialized for canvas');
-                    } catch (presenceError) {
-                        console.warn('⚠️ Presence initialization failed (non-critical):', presenceError);
-                        // Don't let presence errors bubble up to show toast
-                    }
-                }
+                // Initialize chat system (with better error handling) - DISABLED
+                // if (this.managers.chat && typeof this.managers.chat.initialize === 'function') {
+                //     try {
+                //         await this.managers.chat.initialize();
+                //         await this.managers.chat.openCanvasChat(canvas.id);
+                //         console.log('✅ Chat manager initialized for canvas');
+                //     } catch (chatError) {
+                //         console.warn('⚠️ Chat initialization failed (non-critical):', chatError);
+                //         // Don't let chat errors bubble up to show toast
+                //     }
+                // }
+                
+                // Temporarily disable presence system to prevent 403 spam
+                // TODO: Re-enable after fixing authentication issues
+                console.log('⚠️ Presence system temporarily disabled due to authentication issues');
+                
+                // Initialize presence system (with better error handling) - DISABLED  
+                // if (this.managers.presence && typeof this.managers.presence.initialize === 'function') {
+                //     try {
+                //         await this.managers.presence.initialize();
+                //         console.log('✅ Presence manager initialized for canvas');
+                //     } catch (presenceError) {
+                //         console.warn('⚠️ Presence initialization failed (non-critical):', presenceError);
+                //         // Don't let presence errors bubble up to show toast
+                //     }
+                // }
                 
                 // Set current canvas in app state for WebSocket context
                 if (window.appState) {

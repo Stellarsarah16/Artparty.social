@@ -81,8 +81,11 @@ async def get_canvas_chat_room(
             await db.commit()
             await db.refresh(chat_room)
         
-        # Get last message
-        last_message_stmt = select(ChatMessage).where(
+        # Get last message with sender eagerly loaded to prevent MissingGreenlet errors
+        from sqlalchemy.orm import selectinload
+        last_message_stmt = select(ChatMessage).options(
+            selectinload(ChatMessage.sender)
+        ).where(
             ChatMessage.room_id == chat_room.id,
             ChatMessage.is_deleted == False
         ).order_by(desc(ChatMessage.created_at)).limit(1)
