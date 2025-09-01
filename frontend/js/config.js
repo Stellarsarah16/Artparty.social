@@ -399,8 +399,8 @@ async isAuthenticatedAsync() {
     }
     
     try {
-        // Validate token with server
-        const response = await fetch(this.getApiUrl('/api/v1/auth/verify'), {
+        // Validate token with server using the correct /me endpoint
+        const response = await fetch(this.getApiUrl(API_CONFIG.ENDPOINTS.ME), {
             method: 'GET',
             headers: this.getAuthHeaders()
         });
