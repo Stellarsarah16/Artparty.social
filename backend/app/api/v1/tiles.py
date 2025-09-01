@@ -117,23 +117,37 @@ async def get_tile_details(
             detail="Tile not found"
         )
     
-    # Get creator information
-    creator = tile.creator
+    # Get creator information with eager loading to prevent MissingGreenlet errors
+    from sqlalchemy.orm import selectinload
+    from sqlalchemy import select
+    
+    # Re-fetch tile with creator eagerly loaded
+    tile_stmt = select(Tile).options(selectinload(Tile.creator)).where(Tile.id == tile_id)
+    tile_result = await db.execute(tile_stmt)
+    tile_with_creator = tile_result.scalar_one_or_none()
+    
+    if not tile_with_creator:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tile not found"
+        )
+    
+    creator = tile_with_creator.creator
     
     return TileWithCreator(
-        id=tile.id,
-        canvas_id=tile.canvas_id,
-        creator_id=tile.creator_id,
+        id=tile_with_creator.id,
+        canvas_id=tile_with_creator.canvas_id,
+        creator_id=tile_with_creator.creator_id,
         creator_username=creator.username,
         creator_display_name=f"{creator.first_name} {creator.last_name}",
-        x=tile.x,
-        y=tile.y,
-        pixel_data=tile.pixel_data,
-        title=tile.title,
-        description=tile.description,
-        is_public=tile.is_public,
-        like_count=tile.like_count,
-        created_at=tile.created_at
+        x=tile_with_creator.x,
+        y=tile_with_creator.y,
+        pixel_data=tile_with_creator.pixel_data,
+        title=tile_with_creator.title,
+        description=tile_with_creator.description,
+        is_public=tile_with_creator.is_public,
+        like_count=tile_with_creator.like_count,
+        created_at=tile_with_creator.created_at
     )
 
 

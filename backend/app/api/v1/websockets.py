@@ -94,7 +94,7 @@ async def websocket_canvas_endpoint(
             # Listen for incoming messages (optional - for future features like chat)
             while True:
                 data = await websocket.receive_text()
-                logger.debug(f"WebSocket message received from user {user.id}: {data}")
+                logger.debug(f"WebSocket message received from user {user_id}: {data}")
                 try:
                     message = json.loads(data)
                     await handle_websocket_message(canvas_id, user_id, message, db)
@@ -123,10 +123,10 @@ async def websocket_canvas_endpoint(
             await websocket.close(code=status.WS_1011_INTERNAL_ERROR, reason="Internal server error")
     
     finally:
-        # Clean up connection
+        # Clean up connection  
         if user:
             await connection_manager.disconnect(canvas_id, user_id)
-            logger.info(f"User {username} disconnected from canvas {canvas_id}")
+            logger.info(f"User {user_id} disconnected from canvas {canvas_id}")
 
 
 async def handle_websocket_message(canvas_id: int, user_id: int, message: dict, db: AsyncSession):
