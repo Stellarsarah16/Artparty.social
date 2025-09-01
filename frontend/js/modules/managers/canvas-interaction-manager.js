@@ -72,6 +72,12 @@ export class CanvasInteractionManager {
         this.onTileDoubleClick = null;
         this.onViewportChange = null;
         
+        // Tile highlighting system
+        this.highlightOverlays = new Map(); // highlight_id -> overlay data
+        this.activeHighlights = new Set(); // Set of active highlight IDs
+        this.highlightCanvas = null;
+        this.highlightCtx = null;
+        
         // Bound event handlers - EXACT SAME as canvas viewer
         this.boundHandlers = {
             mouseDown: this.handleMouseDown.bind(this),
@@ -105,6 +111,7 @@ export class CanvasInteractionManager {
         
         this.canvas = canvas;
         this.setupEventListeners();
+        //this.setupHighlightOverlay(); we will enable this later once we get chat working.
         
         console.log('🔧 CanvasInteractionManager initialized with canvas');
     }
@@ -249,6 +256,9 @@ export class CanvasInteractionManager {
                 const viewportState = this.viewport.getViewport();
                 this.onViewportChange(viewportState.x, viewportState.y, viewportState.zoom);
             }
+            
+            // Re-render highlights when viewport changes
+            this.renderAllHighlights();
         } else if (!this.isDragging) {
             // Update cursor immediately for responsive feedback
             this.updateCursor(e);
@@ -436,6 +446,9 @@ export class CanvasInteractionManager {
                 const viewportState = this.viewport.getViewport();
                 this.onViewportChange(viewportState.x, viewportState.y, viewportState.zoom);
             }
+            
+            // Re-render highlights when viewport changes
+            this.renderAllHighlights();
         }
     }
     
@@ -581,6 +594,9 @@ export class CanvasInteractionManager {
                 const viewportState = this.viewport.getViewport();
                 this.onViewportChange(viewportState.x, viewportState.y, viewportState.zoom);
             }
+            
+            // Re-render highlights when viewport changes
+            this.renderAllHighlights();
         } else if (e.touches.length === 2 && this.touchState.isPinching) {
             // Two touch pinch-to-zoom
             const touch1 = e.touches[0];
@@ -943,6 +959,273 @@ export class CanvasInteractionManager {
         }
         
         console.log('✅ CanvasInteractionManager emergency reset complete');
+    }
+
+    // ========================================================================
+    // TILE HIGHLIGHTING SYSTEM
+    // ========================================================================
+
+    setupHighlightOverlay() {
+        // Set up tile highlight overlay canvas
+        if (!this.canvas) {
+            console.warn('🔍 Cannot setup highlight overlay - main canvas not available');
+            return;
+        }
+        
+        // Create highlight overlay canvas
+        this.highlightCanvas = document.createElement('canvas');
+        this.highlightCanvas.style.position = 'absolute';
+        this.highlightCanvas.style.top = '0';
+        this.highlightCanvas.style.left = '0';
+        this.highlightCanvas.style.pointerEvents = 'none';
+        this.highlightCanvas.style.zIndex = '10';
+        
+        // Match main canvas size
+        this.highlightCanvas.width = this.canvas.width;
+        this.highlightCanvas.height = this.canvas.height;
+        
+        // Get 2D context
+        this.highlightCtx = this.highlightCanvas.getContext('2d');
+        
+        // Add to canvas container
+        const container = this.canvas.parentElement;
+        if (container) {
+            container.appendChild(this.highlightCanvas);
+            console.log('✅ Tile highlight overlay created');
+        }
+        
+        // Listen for highlight events
+        this.eventManager.on('highlightTile', (data) => this.highlightTile(data));
+        this.eventManager.on('updateTileEditingOverlays', (data) => this.updateEditingOverlays(data));
+    }
+
+    highlightTile(data) {
+        // Highlight a specific tile
+        const { tileX, tileY, highlightType, requesterUsername, message, duration } = data;
+        
+        console.log(`🔍 Highlighting tile ${tileX},${tileY} (${highlightType})`);
+        
+        if (!this.highlightCtx || !this.viewport || !this.tileSize) {
+            console.warn('🔍 Highlight overlay not ready');
+            return;
+        }
+        
+        // Create unique highlight ID
+        const highlightId = `${highlightType}_${tileX}_${tileY}_${Date.now()}`;
+        
+        // Store highlight data
+        const highlightData = {
+            id: highlightId,
+            tileX: tileX,
+            tileY: tileY,
+            type: highlightType,
+            requesterUsername: requesterUsername,
+            message: message,
+            startTime: Date.now(),
+            duration: duration || 3000
+        };
+        
+        this.highlightOverlays.set(highlightId, highlightData);
+        this.activeHighlights.add(highlightId);
+        
+        // Render highlight
+        this.renderHighlight(highlightData);
+        
+        // Auto-remove after duration
+        setTimeout(() => {
+            this.removeHighlight(highlightId);
+        }, duration || 3000);
+        
+        // Show message if provided
+        if (message && window.UIManager) {
+            window.UIManager.showToast(
+                `${requesterUsername}: ${message}`,
+                'info'
+            );
+        }
+    }
+
+    updateEditingOverlays(data) {
+        // Update tile editing overlays for all users
+        const { editingUsers } = data;
+        
+        console.log(`🔍 Updating editing overlays for ${editingUsers.length} users`);
+        
+        // Clear existing editing highlights
+        this.clearHighlightsByType('editing');
+        
+        // Add new editing highlights
+        editingUsers.forEach(user => {
+            if (user.tileX !== null && user.tileY !== null) {
+                this.highlightTile({
+                    tileX: user.tileX,
+                    tileY: user.tileY,
+                    highlightType: 'editing',
+                    requesterUsername: user.username,
+                    message: `${user.username} is editing this tile`,
+                    duration: 60000 // Long duration for editing
+                });
+            }
+        });
+    }
+
+    renderHighlight(highlightData) {
+        // Render a single tile highlight
+        if (!this.highlightCtx || !this.viewport) {
+            return;
+        }
+        
+        const ctx = this.highlightCtx;
+        const { tileX, tileY, type } = highlightData;
+        
+        // Save context
+        ctx.save();
+        
+        // Apply viewport transformation
+        const viewportState = this.viewport.getViewport();
+        ctx.translate(-viewportState.x * viewportState.zoom, -viewportState.y * viewportState.zoom);
+        ctx.scale(viewportState.zoom, viewportState.zoom);
+        
+        // Calculate world coordinates
+        const worldX = tileX * this.tileSize;
+        const worldY = tileY * this.tileSize;
+        
+        // Set highlight style based on type
+        let strokeStyle, fillStyle, lineWidth;
+        
+        switch (type) {
+            case 'mention':
+                strokeStyle = 'rgba(255, 165, 0, 0.8)'; // Orange
+                fillStyle = 'rgba(255, 165, 0, 0.1)';
+                lineWidth = 3;
+                break;
+            case 'editing':
+                strokeStyle = 'rgba(255, 0, 0, 0.8)'; // Red
+                fillStyle = 'rgba(255, 0, 0, 0.1)';
+                lineWidth = 2;
+                break;
+            case 'chat_click':
+                strokeStyle = 'rgba(0, 255, 255, 0.8)'; // Cyan
+                fillStyle = 'rgba(0, 255, 255, 0.1)';
+                lineWidth = 4;
+                break;
+            default:
+                strokeStyle = 'rgba(255, 255, 255, 0.8)'; // White
+                fillStyle = 'rgba(255, 255, 255, 0.1)';
+                lineWidth = 2;
+                break;
+        }
+        
+        // Draw highlight
+        ctx.strokeStyle = strokeStyle;
+        ctx.fillStyle = fillStyle;
+        ctx.lineWidth = lineWidth / viewportState.zoom;
+        
+        // Fill background
+        ctx.fillRect(worldX, worldY, this.tileSize, this.tileSize);
+        
+        // Draw border
+        ctx.strokeRect(worldX, worldY, this.tileSize, this.tileSize);
+        
+        // Add pulsing animation for mentions
+        if (type === 'mention' || type === 'chat_click') {
+            const elapsed = Date.now() - highlightData.startTime;
+            const pulseSpeed = 1000; // 1 second pulse
+            const opacity = 0.3 + 0.3 * Math.sin(elapsed / pulseSpeed * Math.PI * 2);
+            
+            ctx.fillStyle = `rgba(255, 165, 0, ${opacity})`;
+            ctx.fillRect(worldX + 2, worldY + 2, this.tileSize - 4, this.tileSize - 4);
+        }
+        
+        // Restore context
+        ctx.restore();
+    }
+
+    renderAllHighlights() {
+        // Render all active highlights
+        if (!this.highlightCtx) {
+            return;
+        }
+        
+        // Clear canvas
+        this.highlightCtx.clearRect(0, 0, this.highlightCanvas.width, this.highlightCanvas.height);
+        
+        // Render each active highlight
+        this.activeHighlights.forEach(highlightId => {
+            const highlightData = this.highlightOverlays.get(highlightId);
+            if (highlightData) {
+                this.renderHighlight(highlightData);
+            }
+        });
+    }
+
+    removeHighlight(highlightId) {
+        // Remove a specific highlight
+        this.highlightOverlays.delete(highlightId);
+        this.activeHighlights.delete(highlightId);
+        
+        // Re-render all remaining highlights
+        this.renderAllHighlights();
+    }
+
+    clearHighlightsByType(type) {
+        // Clear all highlights of a specific type
+        const toRemove = [];
+        
+        this.highlightOverlays.forEach((data, id) => {
+            if (data.type === type) {
+                toRemove.push(id);
+            }
+        });
+        
+        toRemove.forEach(id => {
+            this.highlightOverlays.delete(id);
+            this.activeHighlights.delete(id);
+        });
+        
+        // Re-render all remaining highlights
+        this.renderAllHighlights();
+    }
+
+    clearAllHighlights() {
+        // Clear all highlights
+        this.highlightOverlays.clear();
+        this.activeHighlights.clear();
+        
+        if (this.highlightCtx) {
+            this.highlightCtx.clearRect(0, 0, this.highlightCanvas.width, this.highlightCanvas.height);
+        }
+    }
+
+    // ========================================================================
+    // PUBLIC HIGHLIGHT API
+    // ========================================================================
+
+    addTileHighlight(tileX, tileY, type = 'default', options = {}) {
+        // Add a tile highlight programmatically
+        this.highlightTile({
+            tileX: tileX,
+            tileY: tileY,
+            highlightType: type,
+            requesterUsername: options.username || 'System',
+            message: options.message || '',
+            duration: options.duration || 3000
+        });
+    }
+
+    removeTileHighlight(tileX, tileY, type = null) {
+        // Remove tile highlight(s) for a specific tile
+        const toRemove = [];
+        
+        this.highlightOverlays.forEach((data, id) => {
+            if (data.tileX === tileX && data.tileY === tileY) {
+                if (!type || data.type === type) {
+                    toRemove.push(id);
+                }
+            }
+        });
+        
+        toRemove.forEach(id => this.removeHighlight(id));
     }
 }
 

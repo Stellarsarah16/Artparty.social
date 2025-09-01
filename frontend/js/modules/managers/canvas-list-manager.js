@@ -352,8 +352,16 @@ async staggeredLoadCanvasData(canvases, cardElements) {
      */
     async loadUserTileCountForCanvas(canvasId, cardElement, retries = 3) {
         const currentUser = appState.get('currentUser');
+
+        // Enhanced authentication check
         if (!currentUser || !currentUser.id) {
             console.warn('❌ No current user found, skipping user tile count load');
+            return;
+        }
+
+        // Additional check: verify we have a valid auth token
+        if (!CONFIG_UTILS.isAuthenticated()) {
+            console.warn('❌ User not authenticated, skipping user tile count load');
             return;
         }
 
@@ -386,6 +394,13 @@ async staggeredLoadCanvasData(canvases, cardElements) {
                 return; // Success - exit retry loop
                 
             } catch (error) {
+                // Enhanced error handling for auth failures
+                if (error.status === 401 || error.status === 403) {
+                    console.warn(`🔐 Authentication failure loading tile count for canvas ${canvasId}`);
+                    // Don't retry auth failures - they won't succeed
+                    break;
+                }
+
                 console.warn(`❌ User tile count attempt ${attempt}/${retries} failed for canvas ${canvasId}:`, {
                     error: error.message,
                     status: error.status

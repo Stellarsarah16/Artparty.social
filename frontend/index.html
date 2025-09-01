@@ -202,8 +202,50 @@
                     </div>
                 </div>
                 
-                <!-- Sidebar Info (simplified - only online users) -->
+                <!-- Sidebar Info (chat + online users) -->
                 <div class="viewer-sidebar">
+                    <!-- Chat Section -->
+                    <div class="chat-section" id="chat-container">
+                        <div class="chat-header">
+                            <h4>
+                                <i class="fas fa-comments"></i> Canvas Chat
+                                <button class="btn btn-xs chat-toggle" id="chat-toggle-btn" title="Toggle Chat">
+                                    <i class="fas fa-chevron-up"></i>
+                                </button>
+                            </h4>
+                        </div>
+                        
+                        <div class="chat-body" id="chat-body">
+                            <div class="chat-messages" id="chat-messages-list">
+                                <div class="chat-welcome">
+                                    <i class="fas fa-comments"></i>
+                                    <p>Welcome to canvas chat!</p>
+                                    <p class="chat-tip">Mention tiles with "tile 15,20"</p>
+                                </div>
+                            </div>
+                            
+                            <div class="chat-typing-indicator" id="chat-typing-indicator" style="display: none;">
+                                <!-- Typing indicators will appear here -->
+                            </div>
+                        </div>
+                        
+                        <div class="chat-footer">
+                            <div class="chat-input-container">
+                                <input 
+                                    type="text" 
+                                    id="chat-message-input" 
+                                    placeholder="Type a message..." 
+                                    maxlength="2000"
+                                    autocomplete="off"
+                                >
+                                <button class="btn btn-sm btn-primary" id="chat-send-button" type="button" title="Send Message">
+                                    <i class="fas fa-paper-plane" ></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Online Users Section -->
                     <div class="online-users">
                         <h4>Online Users <span id="viewer-canvas-users">(0)</span></h4>
                         <div class="user-list" id="viewer-users-list">

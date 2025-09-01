@@ -358,41 +358,42 @@ class APIClient {
      * @returns {Promise} Rejected promise
      */
     async handleAPIError(error) {
-        // Don't show toasts for errors that will be retried
         const isRetryableError = error.status === 503;
         const showToast = !isRetryableError || error.isRetryExhausted;
         
         if (error.status === 401) {
-            // Unauthorized - redirect to login modal
+            console.log('🔐 Authentication failure: Session expired');
+            
+            // Clear invalid credentials
             CONFIG_UTILS.removeAuthToken();
             CONFIG_UTILS.removeUserData();
+            
+            // Update app state
+            if (window.appState) {
+                window.appState.set('currentUser', null);
+                window.appState.set('authToken', null);
+            }
             
             // Use AuthManager to handle the redirect properly
             if (window.authManager) {
                 window.authManager.handleAuthFailure('Session expired');
             } else {
-                // Fallback to old behavior
-                if (window.ArtPartySocial) {
-                    window.ArtPartySocial.showSection('welcome');
-                    window.ArtPartySocial.updateNavigation();
+                // Fallback: show welcome section
+                if (window.navigationManager) {
+                    window.navigationManager.showSection('welcome');
+                    window.navigationManager.updateNavigation();
                 }
                 
                 if (window.UIManager) {
-                    window.UIManager.showToast('Session expired. Please log in again.', 'error');
+                    window.UIManager.showToast('Session expired. Please log in again.', 'warning');
                 }
             }
         } else if (error.status === 403) {
-            // Forbidden - show actual error message from server
-            let errorMessage = 'Access denied';
-            if (error.data && error.data.detail) {
-                if (Array.isArray(error.data.detail)) {
-                    errorMessage = error.data.detail[0]?.msg || error.data.detail[0]?.detail || errorMessage;
-                } else {
-                    errorMessage = error.data.detail;
-                }
-            }
-            if (window.UIManager) {
-                window.UIManager.showToast(errorMessage, 'error');
+            console.log('🔐 Access forbidden: Insufficient permissions');
+            
+            // For 403 errors, don't clear credentials but show a more specific message
+            if (showToast && window.UIManager) {
+                window.UIManager.showToast('Access denied. You may not have permission for this action.', 'warning');
             }
         } else if (error.status === 404) {
             // Not found
@@ -830,6 +831,28 @@ const API = {
     websocket: {
         getStats: () => websocketAPI.getStats(),
         broadcast: (canvasId, message) => websocketAPI.broadcastToCanvas(canvasId, message)
+    },
+    
+    // Chat API
+    chat: {
+        // Canvas chat
+        getCanvasRoom: (canvasId) => apiClient.get(`/api/v1/chat/canvas/${canvasId}/room`),
+        getCanvasMessages: (canvasId, params = {}) => apiClient.get(`/api/v1/chat/canvas/${canvasId}/messages`, params),
+        sendCanvasMessage: (canvasId, messageData) => apiClient.post(`/api/v1/chat/canvas/${canvasId}/messages`, messageData),
+        
+        // Message operations
+        updateMessage: (messageId, messageData) => apiClient.put(`/api/v1/chat/messages/${messageId}`, messageData),
+        deleteMessage: (messageId) => apiClient.delete(`/api/v1/chat/messages/${messageId}`),
+        
+        // User presence
+        updatePresence: (presenceData) => apiClient.put('/api/v1/chat/presence', presenceData),
+        getCanvasUsers: (canvasId) => apiClient.get(`/api/v1/chat/canvas/${canvasId}/users`),
+        
+        // Direct messages (Phase 2)
+        sendDirectMessage: (messageData) => apiClient.post('/api/v1/chat/direct-messages', messageData),
+        
+        // Activity feed
+        getCanvasActivity: (canvasId, params = {}) => apiClient.get(`/api/v1/chat/canvas/${canvasId}/activity`, params)
     }
 };
 

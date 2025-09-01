@@ -22,6 +22,10 @@ export class TileEditorManager {
      * Open tile editor for a specific tile
      */
     async openTileEditor(tile) {
+        // Notify presence manager that user started editing
+        if (window.presenceManager && typeof window.presenceManager.notifyTileEditorOpened === 'function') {
+            window.presenceManager.notifyTileEditorOpened(tile.x, tile.y, tile.canvas_id);
+        }
         console.log('🎨 Opening tile editor for tile:', tile);
         
         try {

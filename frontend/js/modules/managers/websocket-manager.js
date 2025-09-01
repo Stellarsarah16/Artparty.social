@@ -26,6 +26,18 @@ export class WebSocketManager {
                 this.reconnectAttempts = 0;
             };
             
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('📨 WebSocket message received:', data);
+                    
+                    // Emit to event manager for other components to handle
+                    this.eventManager.emit('websocketMessage', data);
+                } catch (error) {
+                    console.error('❌ Failed to parse WebSocket message:', error);
+                }
+            };
+            
             ws.onclose = () => {
                 console.log(`WebSocket disconnected for canvas ${canvasId}`);
                 this.handleDisconnect(canvasId);
@@ -77,7 +89,41 @@ export class WebSocketManager {
     }
 
     /**
-     * Send message to WebSocket
+     * Check if WebSocket is connected for any canvas
+     */
+    isConnected(canvasId = null) {
+        if (canvasId) {
+            const ws = this.connections.get(canvasId);
+            return ws && ws.readyState === WebSocket.OPEN;
+        } else {
+            // Check if any connection is open
+            for (const [id, ws] of this.connections) {
+                if (ws.readyState === WebSocket.OPEN) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Send message to WebSocket (alias for send method)
+     */
+    sendMessage(message, canvasId = null) {
+        // If no canvasId provided, try to get current canvas
+        if (!canvasId) {
+            canvasId = window.appState?.get('currentCanvas')?.id;
+        }
+        
+        if (canvasId) {
+            this.send(canvasId, message);
+        } else {
+            console.warn('No canvas ID available for WebSocket message');
+        }
+    }
+
+    /**
+     * Send message to WebSocket for specific canvas
      */
     send(canvasId, message) {
         const ws = this.connections.get(canvasId);

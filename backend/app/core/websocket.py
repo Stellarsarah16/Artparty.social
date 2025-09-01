@@ -209,6 +209,61 @@ class ConnectionManager:
         """Get current timestamp in ISO format"""
         from datetime import datetime
         return datetime.now().isoformat()
+    
+    async def broadcast_chat_message(self, canvas_id: int, chat_data: dict):
+        """Broadcast chat message to all canvas users"""
+        message = {
+            "type": "canvas_chat_message",
+            **chat_data,
+            "timestamp": self._get_timestamp()
+        }
+        await self.broadcast_to_canvas(canvas_id, message)
+
+    async def send_direct_message(self, sender_id: int, recipient_id: int, message_data: dict):
+        """Send direct message between users (if they're online)"""
+        # Find which canvas the recipient is connected to
+        recipient_canvas = None
+        for canvas_id, users in self.canvas_users.items():
+            if recipient_id in users:
+                recipient_canvas = canvas_id
+                break
+        
+        if recipient_canvas:
+            dm_message = {
+                "type": "direct_message",
+                **message_data,
+                "timestamp": self._get_timestamp()
+            }
+            await self.send_to_user(recipient_canvas, recipient_id, dm_message)
+            return True
+        
+        return False  # User is offline
+
+    async def broadcast_user_activity(self, canvas_id: int, activity_data: dict):
+        """Broadcast user activity to canvas users"""
+        activity_message = {
+            "type": "user_activity",
+            **activity_data,
+            "timestamp": self._get_timestamp()
+        }
+        await self.broadcast_to_canvas(canvas_id, activity_message)
+
+    async def get_canvas_active_users(self, canvas_id: int) -> List[dict]:
+        """Get detailed info about users currently active in a canvas"""
+        active_users = []
+        
+        if canvas_id in self.canvas_users:
+            for user_id in self.canvas_users[canvas_id]:
+                user_info = self.user_info.get(user_id, {})
+                active_users.append({
+                    "user_id": user_id,
+                    "username": user_info.get("username", "unknown"),
+                    "display_name": user_info.get("display_name"),
+                    "connected_at": user_info.get("connected_at"),
+                    "is_active": True
+                })
+        
+        return active_users
 
 
 # Global connection manager instance

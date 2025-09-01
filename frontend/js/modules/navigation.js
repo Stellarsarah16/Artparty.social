@@ -388,6 +388,40 @@ class NavigationManager {
             this.updateCanvasStats(canvas, tiles);
             this.updateCanvasTitle(canvas);
             
+            // Initialize chat and presence for the canvas
+            console.log('🔄 Initializing chat and presence for canvas...');
+            try {
+                // Connect WebSocket for real-time updates
+                if (this.managers.webSocket && typeof this.managers.webSocket.connect === 'function') {
+                    console.log('🔌 Connecting WebSocket for real-time updates...');
+                    await this.managers.webSocket.connect(canvas.id);
+                    console.log('✅ WebSocket connected for canvas');
+                }
+                
+                if (this.managers.chat && typeof this.managers.chat.initialize === 'function') {
+                    await this.managers.chat.initialize();
+                    await this.managers.chat.openCanvasChat(canvas.id);
+                    console.log('✅ Chat manager initialized for canvas');
+                }
+                
+                if (this.managers.presence && typeof this.managers.presence.initialize === 'function') {
+                    await this.managers.presence.initialize();
+                    console.log('✅ Presence manager initialized for canvas');
+                }
+                
+                // Set current canvas in app state for WebSocket context
+                if (window.appState) {
+                    window.appState.set('currentCanvas', canvas);
+                    console.log('✅ Current canvas set in app state:', canvas.id);
+                }
+                
+                // Emit canvas changed event for chat and presence
+                eventManager.emit('canvasChanged', canvas);
+                
+            } catch (error) {
+                console.warn('⚠️ Failed to initialize chat/presence (non-critical):', error);
+            }
+            
             // Show viewer section
             console.log('🔄 Attempting to show viewer section...');
             this.showSection('viewer');
@@ -611,6 +645,19 @@ class NavigationManager {
             if (sectionName !== 'viewer' && this.managers.webSocket) {
                 console.log('🔧 Closing WebSocket connections (leaving viewer)');
                 this.managers.webSocket.closeAll();
+            }
+            
+            // Handle chat and presence cleanup when leaving viewer
+            if (sectionName !== 'viewer') {
+                if (this.managers.presence && typeof this.managers.presence.stopTileEditing === 'function') {
+                    // Stop any active tile editing when leaving viewer
+                    const currentUser = appState.get('currentUser');
+                    const currentCanvas = appState.get('currentCanvas');
+                    if (currentUser && currentCanvas) {
+                        console.log('🔧 Stopping tile editing presence (leaving viewer)');
+                        // This will be handled by the presence manager's cleanup
+                    }
+                }
             }
             
             // Call the original showSection method

@@ -13,6 +13,8 @@ import { CanvasInteractionManager } from './canvas-interaction-manager.js';
 import { ModalManager } from './modal-manager.js';
 import { AuthManager } from './auth-manager.js';
 import { WebSocketManager } from './websocket-manager.js';
+import { ChatManager } from './chat-manager.js';
+import { PresenceManager } from './presence-manager.js';
 import { eventManager } from '../../utils/events.js';
 
 // Export manager classes
@@ -25,7 +27,9 @@ export {
     CanvasRenderer,
     CanvasInteractionManager,
     WebSocketManager,
-    AuthManager
+    AuthManager,
+    ChatManager,
+    PresenceManager
 };
 
 // Create and export manager instances
@@ -49,8 +53,23 @@ export const createManagers = () => {
     
     const webSocketManager = new WebSocketManager(eventManager);
     
+    // Create chat and presence managers with proper dependencies
+    const chatManager = new ChatManager({
+        apiService: window.API.chat,
+        eventManager: eventManager,
+        webSocketManager: webSocketManager
+    });
+    
+    const presenceManager = new PresenceManager({
+        apiService: window.API.chat,
+        eventManager: eventManager,
+        webSocketManager: webSocketManager
+    });
+    
     const managers = {
         webSocket: webSocketManager,
+        chat: chatManager,
+        presence: presenceManager,
         canvasList: new CanvasListManager(window.API.canvas, window.API.tiles, eventManager),
         modal: new ModalManager(),
         tileEditor: new TileEditorManager(window.API.tiles, eventManager), // FIXED: Added eventManager
@@ -98,6 +117,8 @@ export const createManagers = () => {
     window.interactionManager = managers.interaction;
     window.webSocketManager = managers.webSocket;
     window.authManager = managers.auth;
+    window.chatManager = managers.chat;
+    window.presenceManager = managers.presence;
     // Don't set window.adminPanelManager here - it will be set when needed
     
     // Make event manager available globally
@@ -113,6 +134,8 @@ export const createManagers = () => {
     window.CanvasInteractionManager = CanvasInteractionManager;
     window.WebSocketManager = WebSocketManager;
     window.AuthManager = AuthManager;
+    window.ChatManager = ChatManager;
+    window.PresenceManager = PresenceManager;
     
     // Add admin panel initialization methods to the managers object
     managers.createAdminPanelManager = async function() {

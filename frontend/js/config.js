@@ -92,7 +92,7 @@ const getBaseUrls = () => {
     
     // For localhost development, always use HTTP regardless of frontend protocol
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        console.log('🔧 Localhost detected - forcing HTTP for API');
+        console.log('🔧 Localhost detected - connecting directly to backend on port 8000');
         return {
             API_BASE_URL: `http://${hostname}:8000`,
             WS_BASE_URL: `ws://${hostname}:8000`
@@ -236,7 +236,9 @@ const WS_CONFIG = {
         TILE_LIKED: 'tile_liked',
         TILE_UNLIKED: 'tile_unliked',
         USER_TYPING: 'user_typing',
-        ADMIN_MESSAGE: 'admin_message'
+        ADMIN_MESSAGE: 'admin_message',
+        CANVAS_CHAT_MESSAGE: 'canvas_chat_message',
+        USER_PRESENCE_UPDATE: 'user_presence_update'
     }
 };
 
@@ -384,15 +386,40 @@ const CONFIG_UTILS = {
     },
     
     // Authentication methods
+
+/**
+ * Check if user is authenticated with server validation
+ */
+async isAuthenticatedAsync() {
+    const token = this.getAuthToken();
+    const userData = this.getUserData();
     
-    /**
-     * Check if user is authenticated
-     */
-    isAuthenticated() {
-        const token = this.getAuthToken();
-        const userData = this.getUserData();
-        return !!(token && userData);
-    },
+    if (!token || !userData) {
+        return false;
+    }
+    
+    try {
+        // Validate token with server
+        const response = await fetch(this.getApiUrl('/api/v1/auth/verify'), {
+            method: 'GET',
+            headers: this.getAuthHeaders()
+        });
+        
+        return response.ok;
+    } catch (error) {
+        console.warn('Token validation failed:', error);
+        return false;
+    }
+},
+
+/**
+ * Synchronous check (existing behavior for backward compatibility)
+ */
+isAuthenticated() {
+    const token = this.getAuthToken();
+    const userData = this.getUserData();
+    return !!(token && userData);
+},
     
     /**
      * Get authentication token from localStorage

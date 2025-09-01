@@ -91,18 +91,38 @@ class ArtPartySocial {
     async checkInitialAuthState() {
         console.log('🔍 Checking initial authentication state...');
         
-        // Check if user is authenticated based on stored tokens
-        const isAuthenticated = CONFIG_UTILS.isAuthenticated();
-        const userData = CONFIG_UTILS.getUserData();
+        // First check if we have stored credentials
+        const hasStoredAuth = CONFIG_UTILS.isAuthenticated();
         
-        if (isAuthenticated && userData) {
-            // User has valid authentication data
-            console.log('✅ User is authenticated, showing canvas section');
-            this.modules.appState.setAuthenticated(userData);
-            this.modules.navigation.showSection('canvas');
+        if (hasStoredAuth) {
+            console.log('🔍 Found stored credentials, validating with server...');
+            
+            try {
+                // Validate with server
+                const isValid = await CONFIG_UTILS.isAuthenticatedAsync();
+                
+                if (isValid) {
+                    const userData = CONFIG_UTILS.getUserData();
+                    console.log('✅ User is authenticated, showing canvas section');
+                    this.modules.appState.setAuthenticated(userData);
+                    this.modules.navigation.showSection('canvas');
+                } else {
+                    console.log('❌ Stored credentials are invalid, clearing and showing welcome');
+                    CONFIG_UTILS.removeAuthToken();
+                    CONFIG_UTILS.removeUserData();
+                    this.modules.appState.setUnauthenticated();
+                    this.modules.navigation.showSection('welcome');
+                }
+            } catch (error) {
+                console.error('❌ Auth validation failed:', error);
+                // On validation error, clear invalid credentials and show welcome
+                CONFIG_UTILS.removeAuthToken();
+                CONFIG_UTILS.removeUserData();
+                this.modules.appState.setUnauthenticated();
+                this.modules.navigation.showSection('welcome');
+            }
         } else {
-            // User is not authenticated, show welcome/login section
-            console.log('ℹ️ User not authenticated, showing welcome section');
+            console.log('ℹ️ No stored credentials, showing welcome section');
             this.modules.appState.setUnauthenticated();
             this.modules.navigation.showSection('welcome');
         }
@@ -112,7 +132,7 @@ class ArtPartySocial {
             window.navigationManager.updateNavigation();
         }
         
-        // Hide loading screen now that initialization is complete
+        // Hide loading screen
         this.hideLoadingScreen();
         
         console.log('✅ Initial authentication state checked');
