@@ -101,7 +101,14 @@ class APIClient {
         // Response interceptor for error handling
         this.addResponseInterceptor(
             (response) => response,
-            (error) => this.handleAPIError(error)
+            async (response) => {
+                // Convert Response to proper Error object
+                const error = new Error(`HTTP ${response.status} ${response.statusText}`);
+                error.status = response.status;
+                error.response = response;
+                error.config = { url: response.url, method: 'unknown' };
+                return this.handleAPIError(error);
+            }
         );
     }
     
@@ -360,6 +367,16 @@ class APIClient {
     async handleAPIError(error) {
         const isRetryableError = error.status === 503;
         const showToast = !isRetryableError || error.isRetryExhausted;
+        
+        // Enhanced debugging for authentication issues
+        console.log('🔧 API Error Debug:', {
+            status: error.status,
+            message: error.message,
+            url: error.config?.url || error.response?.url || 'unknown',
+            hasToken: !!CONFIG_UTILS.getAuthToken(),
+            tokenLength: CONFIG_UTILS.getAuthToken()?.length || 0,
+            timestamp: new Date().toISOString()
+        });
         
         if (error.status === 401) {
             console.log('🔐 Authentication failure: Session expired');
