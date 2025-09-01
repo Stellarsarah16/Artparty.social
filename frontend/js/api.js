@@ -406,6 +406,14 @@ class APIClient {
             // NO TOAST - reduces user-facing noise for temporary backend issues
         } else if (error.status >= 500) {
             // Other server errors
+            console.error('🚨 Server Error Details:', {
+                status: error.status,
+                url: error.config?.url || 'unknown',
+                method: error.config?.method || 'unknown',
+                message: error.message,
+                timestamp: new Date().toISOString()
+            });
+            
             if (showToast && window.UIManager) {
                 window.UIManager.showToast('Server error. Please try again later.', 'error');
             }

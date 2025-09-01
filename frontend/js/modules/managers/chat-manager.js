@@ -244,7 +244,15 @@ export class ChatManager {
             
         } catch (error) {
             console.error('❌ Failed to open canvas chat:', error);
-            this.showError('Failed to load chat. Please try again.');
+            // Don't show intrusive error toast for chat failures - just log it
+            console.warn('⚠️ Chat system unavailable for this canvas (non-critical)');
+            
+            // Emit error event for debugging but don't show toast
+            this.eventManager.emit('chatError', {
+                error: error.message || error,
+                context: 'openCanvasChat',
+                timestamp: new Date().toISOString()
+            });
         } finally {
             this.isLoading = false;
             this.updateLoadingState(false);
@@ -293,7 +301,15 @@ export class ChatManager {
             
         } catch (error) {
             console.error('❌ Failed to load chat history:', error);
-            this.showError('Failed to load chat history.');
+            // Don't show intrusive error toast for chat history failures - just log it
+            console.warn('⚠️ Chat history unavailable (non-critical)');
+            
+            // Emit error event for debugging but don't show toast
+            this.eventManager.emit('chatError', {
+                error: error.message || error,
+                context: 'loadChatHistory',
+                timestamp: new Date().toISOString()
+            });
         }
     }
 
@@ -870,16 +886,21 @@ export class ChatManager {
         }
     }
 
-    showError(message) {
-        // Show error message to user
+    showError(message, showToast = false) {
+        // Show error message to user (optionally with toast)
         console.error('🗨️ Chat error:', message);
         
-        // Use global toast system if available
-        if (window.UIManager) {
+        // Only show toast if explicitly requested (for critical errors)
+        if (showToast && window.UIManager) {
             window.UIManager.showToast(message, 'error');
-        } else {
-            alert(message);
         }
+        
+        // Emit error event for debugging
+        this.eventManager.emit('chatError', {
+            error: message,
+            context: 'showError',
+            timestamp: new Date().toISOString()
+        });
     }
 
     showMentionNotification(messageData) {
@@ -927,12 +948,16 @@ export class ChatManager {
     // ERROR HANDLING
     // ========================================================================
 
-    handleError(error, context = '') {
+    handleError(error, context = '', showToast = false) {
         // Handle and log errors
         console.error(`🗨️ ChatManager error ${context}:`, error);
         
-        // Show user-friendly error message
-        this.showError('Chat error occurred. Please refresh if issues persist.');
+        // Only show user-facing error for critical chat errors
+        if (showToast) {
+            this.showError('Chat error occurred. Please refresh if issues persist.', true);
+        } else {
+            console.warn('⚠️ Chat system error (non-critical):', error.message || error);
+        }
         
         // Emit error event
         this.eventManager.emit('chatError', {

@@ -391,22 +391,39 @@ class NavigationManager {
             // Initialize chat and presence for the canvas
             console.log('🔄 Initializing chat and presence for canvas...');
             try {
-                // Connect WebSocket for real-time updates
+                // Connect WebSocket for real-time updates (with better error handling)
                 if (this.managers.webSocket && typeof this.managers.webSocket.connect === 'function') {
-                    console.log('🔌 Connecting WebSocket for real-time updates...');
-                    await this.managers.webSocket.connect(canvas.id);
-                    console.log('✅ WebSocket connected for canvas');
+                    try {
+                        console.log('🔌 Connecting WebSocket for real-time updates...');
+                        await this.managers.webSocket.connect(canvas.id);
+                        console.log('✅ WebSocket connected for canvas');
+                    } catch (wsError) {
+                        console.warn('⚠️ WebSocket connection failed (non-critical):', wsError);
+                        // Don't let WebSocket errors bubble up to show toast
+                    }
                 }
                 
+                // Initialize chat system (with better error handling)
                 if (this.managers.chat && typeof this.managers.chat.initialize === 'function') {
-                    await this.managers.chat.initialize();
-                    await this.managers.chat.openCanvasChat(canvas.id);
-                    console.log('✅ Chat manager initialized for canvas');
+                    try {
+                        await this.managers.chat.initialize();
+                        await this.managers.chat.openCanvasChat(canvas.id);
+                        console.log('✅ Chat manager initialized for canvas');
+                    } catch (chatError) {
+                        console.warn('⚠️ Chat initialization failed (non-critical):', chatError);
+                        // Don't let chat errors bubble up to show toast
+                    }
                 }
                 
+                // Initialize presence system (with better error handling)
                 if (this.managers.presence && typeof this.managers.presence.initialize === 'function') {
-                    await this.managers.presence.initialize();
-                    console.log('✅ Presence manager initialized for canvas');
+                    try {
+                        await this.managers.presence.initialize();
+                        console.log('✅ Presence manager initialized for canvas');
+                    } catch (presenceError) {
+                        console.warn('⚠️ Presence initialization failed (non-critical):', presenceError);
+                        // Don't let presence errors bubble up to show toast
+                    }
                 }
                 
                 // Set current canvas in app state for WebSocket context
@@ -420,6 +437,7 @@ class NavigationManager {
                 
             } catch (error) {
                 console.warn('⚠️ Failed to initialize chat/presence (non-critical):', error);
+                // Ensure these non-critical errors don't show user-facing toasts
             }
             
             // Show viewer section
