@@ -1110,14 +1110,7 @@ main {
     padding: var(--space-sm);
 }
 
-.position-indicator {
-    background: rgba(0, 0, 0, 0.8);
-    color: var(--text-white);
-    padding: var(--space-xs) var(--space-sm);
-    border-radius: var(--border-radius-sm);
-    font-size: var(--font-size-xs);
-    font-family: 'Courier New', monospace;
-}
+
 
 /* Shared Panel - Removed from simplified editor */
 
@@ -1367,7 +1360,7 @@ form {
     padding: var(--space-sm);
 }
 
-/* Toast Notifications */
+/*
 .toast {
     position: fixed;
     bottom: var(--space-lg);
@@ -1426,7 +1419,154 @@ form {
 
 .toast.info .toast-icon {
     color: var(--info-color);
+} 
+*/
+/* START TOAST */
+
+/* ========================================
+   TOAST NOTIFICATIONS - CONSOLIDATED
+   ======================================== */
+
+/* Base toast styling */
+.toast {
+    position: fixed;
+    bottom: 12px; /* Much closer to bottom */
+    right: var(--space-lg);
+    
+    /* Layout & sizing */
+    min-width: 240px;
+    max-width: 280px; /* Smaller than before */
+    padding: 6px 12px; /* Compact vertical padding */
+    
+    /* Visual styling */
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px; /* Smaller radius */
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(8px);
+    
+    /* Typography */
+    font-size: 13px; /* Smaller font */
+    line-height: 1.2; /* Tight line height */
+    
+    /* Positioning & interaction */
+    z-index: 3000;
+    pointer-events: auto;
+    
+    /* Animation properties */
+    transform: translateX(100%);
+    transition: transform 0.3s var(--ease-out-back, cubic-bezier(0.175, 0.885, 0.32, 1.275)),
+                opacity 0.3s ease-in-out;
+    opacity: 0;
 }
+
+/* Show state with animation */
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+/* Toast content layout */
+.toast-content {
+    display: flex;
+    align-items: center; /* Center align for compact look */
+    gap: 8px; /* Smaller gap */
+}
+
+/* Toast icon */
+.toast-icon {
+    font-size: 14px; /* Much smaller icon */
+    flex-shrink: 0;
+    margin-top: 0; /* Remove any top margin */
+}
+
+/* Toast message */
+.toast-message {
+    flex: 1;
+    line-height: 1.2;
+}
+
+/* Toast close button (if needed) */
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    margin-left: 8px;
+    opacity: 0.7;
+}
+
+.toast-close:hover {
+    opacity: 1;
+}
+
+/* Toast action buttons (if needed) */
+.toast-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+/* Toast type variants */
+.toast.success {
+    border-left: 3px solid var(--success-color); /* Thinner border */
+}
+
+.toast.success .toast-icon {
+    color: var(--success-color);
+}
+
+.toast.error {
+    border-left: 3px solid var(--error-color);
+}
+
+.toast.error .toast-icon {
+    color: var(--error-color);
+}
+
+.toast.warning {
+    border-left: 3px solid var(--warning-color);
+}
+
+.toast.warning .toast-icon {
+    color: var(--warning-color);
+}
+
+.toast.info {
+    border-left: 3px solid var(--info-color);
+}
+
+.toast.info .toast-icon {
+    color: var(--info-color);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .toast {
+        bottom: 10px;
+        right: 10px;
+        left: 10px; /* Full width on mobile with margins */
+        min-width: auto;
+        max-width: none;
+        font-size: 12px; /* Even smaller on mobile */
+    }
+}
+
+/* Animation keyframes */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* END TOAST */
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -4267,7 +4407,7 @@ form {
     z-index: 2;
 }
 
-.neighbor-cell.current .position-indicator {
+.neighbor-grid .position-indicator {
     background: rgba(0, 0, 0, 0.8);
     color: var(--text-white);
     padding: var(--space-xs) var(--space-sm);
@@ -4329,27 +4469,4 @@ form {
 /* Ensure form elements don't cause overflow during animations */
 .modal-content .form-group {
     overflow: hidden; /* Contain any shake animations */
-}
-
-/* Position indicator now overlays the entire neighbor-grid in top-right corner */
-.neighbor-grid .position-indicator {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: rgba(0, 0, 0, 0.8);
-    color: var(--text-white);
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-family: 'Courier New', monospace;
-    z-index: 10;
-    pointer-events: none;
-}
-
-/* Remove old position indicator styles since it's no longer in canvas-overlay */
-/* .neighbor-cell.current .position-indicator - this rule is no longer needed */
-
-/* Clean up canvas-overlay since we're not using it for position indicator anymore */
-.neighbor-cell.current .canvas-overlay {
-    display: none; /* Hide since we moved position indicator out */
 }

@@ -227,19 +227,6 @@
         background: #f9fafb;
     }
     
-    /* Touch-friendly position indicator */
-    .position-indicator {
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 8px 12px;
-        border-radius: 6px;
-        font-size: 14px;
-        font-family: monospace;
-        z-index: 1000;
-    }
 }
 
 /* High DPI display optimizations */
