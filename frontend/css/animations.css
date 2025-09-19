@@ -497,29 +497,6 @@
 
 /* Modal animations moved to styles.css for better organization */
 
-/* Toast Animations */
-.toast {
-    transition: transform var(--duration-normal) var(--ease-out-back),
-                opacity var(--duration-normal) var(--ease-in-out-cubic);
-    transform: translateX(100%);
-}
-
-.toast.show {
-    transform: translateX(0);
-    animation: slideInRight var(--duration-normal) var(--ease-out-back);
-}
-
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
 /* Loading States */
 .loading-skeleton {
     background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);

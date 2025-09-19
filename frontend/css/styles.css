@@ -2631,6 +2631,8 @@ form {
     border-radius: var(--border-radius);
     overflow: hidden;
     min-height: 300px;
+    /* COORDINATE FIX: Prevent layout shifts during responsive changes */
+    transition: all 0.3s ease;
 }
 
 .canvas-viewer-container canvas {
@@ -4047,6 +4049,13 @@ form {
         flex: 1;
         min-height: 250px;
     }
+    
+    /* COORDINATE FIX: Ensure stable positioning during breakpoint changes */
+    .canvas-viewer-container {
+        position: relative;
+        transform: translateZ(0); /* Force hardware acceleration */
+        will-change: transform; /* Hint browser for optimization */
+    }
 }
 
 /* ----------- END VIEWER LAYOUT ---------------*/
@@ -4320,4 +4329,27 @@ form {
 /* Ensure form elements don't cause overflow during animations */
 .modal-content .form-group {
     overflow: hidden; /* Contain any shake animations */
+}
+
+/* Position indicator now overlays the entire neighbor-grid in top-right corner */
+.neighbor-grid .position-indicator {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--text-white);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* Remove old position indicator styles since it's no longer in canvas-overlay */
+/* .neighbor-cell.current .position-indicator - this rule is no longer needed */
+
+/* Clean up canvas-overlay since we're not using it for position indicator anymore */
+.neighbor-cell.current .canvas-overlay {
+    display: none; /* Hide since we moved position indicator out */
 }

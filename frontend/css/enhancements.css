@@ -180,46 +180,6 @@
     justify-content: flex-end;
 }
 
-/* Enhanced Toast Notifications */
-.toast {
-    backdrop-filter: blur(8px);
-    border: 1px solid var(--border-color);
-    min-width: 300px;
-    max-width: 500px;
-}
-
-.toast-content {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-md);
-    padding: var(--space-md);
-}
-
-.toast-icon {
-    font-size: var(--font-size-lg);
-    margin-top: 2px;
-}
-
-.toast-message {
-    flex: 1;
-    line-height: 1.5;
-}
-
-.toast-close {
-    background: none;
-    border: none;
-    font-size: var(--font-size-lg);
-    color: var(--text-secondary);
-    cursor: pointer;
-    padding: 0;
-    margin-left: var(--space-sm);
-}
-
-.toast-actions {
-    display: flex;
-    gap: var(--space-sm);
-    margin-top: var(--space-sm);
-}
 
 /* Progress Indicators */
 .progress {

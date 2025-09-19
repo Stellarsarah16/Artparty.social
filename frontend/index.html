@@ -378,6 +378,11 @@
                 <div class="editor-panel">
                     <!-- Seamless 3x3 Grid with CSS Grid Layout -->
                     <div class="neighbor-grid">
+                        <!-- Position indicator overlay for the entire grid -->
+                        <div class="position-indicator" id="position-indicator">
+                            Position: (0, 0)
+                        </div>
+                        
                         <!-- Top Row -->
                         <div class="neighbor-cell empty" id="neighbor-top-left">
                             <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-top-left-canvas"></canvas>
@@ -395,11 +400,7 @@
                         </div>
                         <div class="neighbor-cell current" id="neighbor-current">
                             <canvas id="pixel-canvas" class="neighbor-canvas" width="512" height="512"></canvas>
-                            <div class="canvas-overlay">
-                                <div class="position-indicator" id="position-indicator">
-                                    Position: (0, 0)
-                                </div>
-                            </div>
+                            <!-- Remove the canvas-overlay div since we moved position indicator -->
                         </div>
                         <div class="neighbor-cell empty" id="neighbor-right">
                             <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-right-canvas"></canvas>
