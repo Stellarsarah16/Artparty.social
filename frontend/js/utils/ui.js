@@ -60,12 +60,8 @@ class UIUtils {
         // Set toast content and type
         toast.textContent = message;
         toast.className = `toast ${type}`;
-        toast.style.display = 'block';
-        
-        // Add show class for animation
-        requestAnimationFrame(() => {
-            toast.classList.add('show');
-        });
+        toast.classList.add('show');
+        toast.classList.remove('hide');
         
         // Auto-hide after duration
         this.toastTimeout = setTimeout(() => {
@@ -80,6 +76,7 @@ class UIUtils {
         const toast = document.getElementById('toast');
         if (toast) {
             toast.classList.remove('show');
+            toast.classList.add('hide');
             
             // Hide after animation
             setTimeout(() => {

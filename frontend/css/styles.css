@@ -4407,8 +4407,8 @@ form {
     z-index: 2;
 }
 
-.neighbor-grid .position-indicator {
-    background: rgba(0, 0, 0, 0.8);
+.position-indicator {
+    background: rgba(0, 0, 0, 0.6);
     color: var(--text-white);
     padding: var(--space-xs) var(--space-sm);
     border-radius: var(--border-radius-sm);
