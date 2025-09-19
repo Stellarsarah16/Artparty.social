@@ -377,12 +377,8 @@
                 <!-- Pixel Art Editor with Integrated Neighbors -->
                 <div class="editor-panel">
                     <!-- Seamless 3x3 Grid with CSS Grid Layout -->
-                    <div class="neighbor-grid">
-                        <!-- Position indicator overlay for the entire grid -->
-                        <div class="position-indicator" id="position-indicator">
-                            Position: (0, 0)
-                        </div>
-                        
+                    <div class="neighbor-grid">                        
+
                         <!-- Top Row -->
                         <div class="neighbor-cell empty" id="neighbor-top-left">
                             <canvas class="neighbor-canvas" width="512" height="512" id="neighbor-top-left-canvas"></canvas>
@@ -881,10 +877,11 @@
 
     <!-- Scripts -->
     <!-- Console Manager - Must load first to control logging! -->
-    <script src="js/console-manager.js"></script>
+    <!-- Smart Console Manager for intelligent filtering -->
+    <script src="js/smart-console-manager.js"></script>
     
-    <!-- Smart Logger - Load after console manager for intelligent logging -->
-    <script src="js/smart-logger.js"></script>
+    <!-- Smart Logger - DISABLED to show raw API errors for debugging -->
+    <!-- <script src="js/smart-logger.js"></script> -->
     
     <!-- HTTPS Enforcer - Must load third! -->
     <script src="js/https-enforcer.js"></script>
@@ -896,6 +893,7 @@
         
         // Dynamically load scripts with cache busting
         const scripts = [
+            'js/debug-system.js',  // Load debug system first
             'js/config.js',
             'js/api.js',
             'js/canvas-viewer.js',

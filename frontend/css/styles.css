@@ -1437,6 +1437,7 @@ form {
     min-width: 240px;
     max-width: 280px; /* Smaller than before */
     padding: 6px 12px; /* Compact vertical padding */
+    max-height: 40px;
     
     /* Visual styling */
     background: var(--bg-primary);
@@ -1447,10 +1448,10 @@ form {
     
     /* Typography */
     font-size: 13px; /* Smaller font */
-    line-height: 1.2; /* Tight line height */
+    line-height: 1; /* Tight line height */
     
     /* Positioning & interaction */
-    z-index: 3000;
+    z-index: var(--z-toast);
     pointer-events: auto;
     
     /* Animation properties */
@@ -1470,7 +1471,7 @@ form {
 .toast-content {
     display: flex;
     align-items: center; /* Center align for compact look */
-    gap: 8px; /* Smaller gap */
+    gap: 2px; /* Smaller gap */
 }
 
 /* Toast icon */
@@ -4405,15 +4406,6 @@ form {
     align-items: flex-end;
     padding: var(--space-xs);
     z-index: 2;
-}
-
-.position-indicator {
-    background: rgba(0, 0, 0, 0.6);
-    color: var(--text-white);
-    padding: var(--space-xs) var(--space-sm);
-    border-radius: var(--border-radius-sm);
-    font-size: var(--font-size-xs);
-    font-family: 'Courier New', monospace;
 }
 
 /* Remove old main-canvas-container styles that conflict */
